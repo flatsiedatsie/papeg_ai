@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="viewport" content="viewport-fit=cover,initial-scale=1, maximum-scale=1" />-->
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,interactive-widget=resizes-content">
+
+    <meta name="color-scheme" content="light dark" />
+    <title data-i18n="page_title">Papeg.ai</title>
+	<meta http-equiv="x-dns-prefetch-control" content="off" />
+	<meta name="referrer" content="no-referrer"> <!-- Protecting privacy //-->
+    <meta name="keywords" content="AI, chat, privacy, browser, LLM, research, writing, summarize, proofread, translation, story, characters, tools">
+	<meta name="description" content="Chat and write with AI, with 100% privacy">
+	<meta name="author" content="Tijmen Schep">
+    <meta property="og:title" content="Papeg.ai">
+	<meta name="twitter:card" content="summary">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://papeg.ai">
+    <meta property="og:image" content="https://papeg.ai/images/preview.png">
+    <meta property="og:description" content="Chat and write with AI, 100% privacy">
+	<meta name="application-name" content="Papeg.ai">
+	
+	<meta content="summary_large_image" name="twitter:card">
+	<meta content="@tijmenschep" name="twitter:site">
+	<meta content="@tijmenschep" name="twitter:creator">
+	<meta content="Papeg.ai" name="twitter:title">
+	<meta content="Chat and write using AI, with 100% privacy" name="twitter:description">
+	<meta content="https://papeg.ai/images/preview.png" name="twitter:image">
+	<meta content="1630" property="og:image:width">
+	<meta content="1200" property="og:image:height">
+	
+	
+	
+	<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+	<link rel="manifest" href="./site.webmanifest">
+	
+	<!--<script src="./first.js"></script>-->
+	
+	<script>
+	
+		// Cobbled together by Tijmen Schep, 2024
+		// For Fleur, Levien, Dirk, Linde and Denise
+
+		// THE CODE IS VERY MESSY. It's an experiment that became a prototype that became a website.. #cargocult
+
+
+		// SETTINGS
+
+		/*
+		var exports = {"__esModule": true};
+		var global = window;
+		*/
+
+
+
+
+
+
+		window.testing = false;
+		window.timers = [];
+		window.timer_index = 0;
+		window.first_run = false;
+		window.cached_urls = [];
+
+		window.settings = {
+			'for':'papeg.ai',
+			'version':null,
+	
+			// Assistants
+			'assistant':'danube_3_500m',
+			'assistants':{
+				'developer':{'selected':true},
+				//'speaker':{'selected':true},
+				//'musicgen':{'selected':true},
+				'text_to_image':{'selected':true},
+				'scribe':{'selected':true,'privacy_level':'Medium','add_timestamps':'Minutes','transcription_quality':'High','continuous_mic':'Detect_slow'},
+				'translator':{'selected':true,'add_both_languages_to_documents':false,'force_webgpu':false, 'prefered_voice_gender':'female'},
+		
+				//'fast_llama3_8B':{'selected':true},
+		
+				'fast_mistral':{'selected':true},
+				'mistral':{'selected':true},
+		
+				'fast_phi3_mini':{'selected':true},
+				'phi3_mini':{'selected':true},
+		
+				//'fast_phi2':{'selected':true},
+				//'phi2':{'selected':true},
+		
+		
+		
+				'fast_gemma_2_2b_it':{'selected':true},
+				'gemma_2_2b_it':{'selected':true},
+		
+				'fast_tiny_llama':{'selected':true},
+				'tiny_llama':{'selected':true},
+		
+				// I <3 Danube
+				'danube':{'selected':false},
+				'danube_3_500m':{'selected':true},
+		
+				//'llama160':{'selected':true},
+		
+				// Specialized
+				'medical1':{'selected':true},
+		
+				'mental1':{'selected':true},
+		
+		
+			},
+			'last_loaded_text_ai':null,
+			//'save_conversations':false,
+			// Blueprints
+			//'blueprints':{},
+	
+			// UI state
+			'language':'en',
+			'types':{'generic':{'last_loaded':'danube'}},
+			'settings_complexity':'normal',
+			'left_sidebar_open':false,
+			'left_sidebar':'chat',
+			'left_sidebar_settings_tab':'settings',
+			'brightness':null, // dark or light theme
+			'chat_shrink':true,
+			'received_an_ai':false,
+			'maximum_recent_files':5,
+			'docs':{
+				'open':null,
+				'recent':[]
+			},
+	
+			// Tutorials done
+			'tutorial':{
+				'add_assistants_hint_shown':false,
+				'model_tutorial_done':false,
+				'document_tutorial_done':false,
+				'voice_tutorial_done':false,
+				'ask_voice_consent':false,
+				'first_task_slow_explanation':false,
+			},
+	
+			// Image
+			'continuous_ocr_scan':true,
+			'ocr_scan_intensity':1, // take multiple OCR pictures and try to merge the text together
+			'continuous_ocr_scan_intensity':1,
+			'save_ocr_scan':false, // whether to auto-append it to a document
+			'continuous_image_to_text_scan':true,
+			'save_image_to_text_scan':false, // whether to auto-append it to a document
+	
+			// Translation
+			'favourite_translation_languages':[],
+			'input_language':'en',
+			'output_language':'nl',
+			'auto_detect_input_language':true,
+			'auto_detect_proofread_input_language':true,
+			'voice':'default',
+			'voice_gender':'female',
+	
+			// Rewrite
+			'summarize_tags':{
+				'en':[['short','very_short'],'bullet_points'],
+				'nl':[['kort','heel_kort'],'opsomming'],
+			},
+			'rewrite_tags':{
+				'en':[['formal','casual'],['rational','emotional'],['mature','youthful'],['concise','detailed'],'persuasive','inspiring','romantic','funny','readable','less_repetitive','friendly'],
+				'nl':[['formeel','informeel'],['rationeel','emotioneel'],['volwassen','jeugdig'],['kort','gedetaileerd'],'overtuigend','inspirerend','grappig','leersbaar','minder herhalend','vriendelijk']
+			},
+			'recent_rewrite_prompts':[],
+	
+			// Prompts
+			'proofread_prompt':'',
+			'summarize_prompt':'',
+			'rewrite_prompt':'',
+			'question_prompt':'',
+			'rag_search_prompt':'',
+			'image_to_text_prompt':'',
+			'prompt_at_line':'',
+		}
+
+
+
+		var tvmjsGlobalEnv = tvmjsGlobalEnv || {};
+
+		
+
+
+		console.log("first loaded");
+	
+	</script>
+	
+	
+	<style>
+		*{
+			padding: 0;
+			margin: 0;
+			background: none;
+			color: inherit;
+			border: none;
+			appearance: none;
+			outline: none;
+			box-sizing:border-box;
+		}
+		
+		html,body{
+			height:100%;
+			letter-spacing: .2px;
+			font-weight:300;
+			overflow:hidden;
+			overscroll-behavior-y: none;
+		}
+
+		body{
+			position:relative;
+		}
+		
+		
+		:root {
+		  --body-bg:#1a1924;
+		  --body-weaker-bg:#2a2934;
+		  --body-even-weaker-bg: #444;
+		  /*--chat-bg:#1A1923;*/
+		  --chat-bg:#242424;
+		  --chat-section-bg:#1c1c1c; /*#240030;*/
+		  
+		  --chat-header-bg: #333333;
+		  --chat-footer-bg: #333333;
+		  --chat-bubble-text-color:#fafafa;
+		  --user-chat-bubble-bg:rgb(49 165 66);
+		  
+		  --median-bg:#888;
+		  --chat-messages-bg:#1c1c1c;
+		  
+		  --selected-tag-bg:#292929;
+		  --editor-bg:#222;
+		  --editor-header-bg:#222;
+		  --weak-semi-transparent-bg:rgba(255,255,255,.1);
+		  --main-bg-color: #151515;
+		  --inverted-main-bg-color:#d7d7d7;
+		  
+		  --text-color: #ddd;
+		  --light-text-color:#ccc;
+		  --strong-text-color:#eee;
+		  --strongest-text-color:#fff;
+		  --inverted-text-color:#222;
+		  --inverted-strongest-text-color:#000;
+		  
+		  --green-bg:#3b7708;
+		  --green-text-color:#028d45;
+		  --assistant-status-text-color: #00B37E;
+		  
+		  /*--sidebar-bg: rgb(54, 54, 54);*/
+		  --sidebar-bg: rgb(43 43 43);
+		  
+		  --sidebar-header-bg: #333;
+		  --dialog-bg: #666;
+		  --files-bg: rgb(54, 54, 54); /*#3a2f4e;*/
+		  --highlight-bg: #151546;
+		  
+		  --selected-bg:#282c7b;
+		  /*--selected-bg:rgba(0,0,0,.3);*/
+		  --dropdown-bg:#5e5e5e;
+		  
+		  --developer-bubble-bg:#444;
+		  --assistant-bubble-bg:#633BBC;
+		  --assistant-bubble-text-color:white;
+		  --user-bubble-bg:#0e9130;  /*#07847e;   #0e9130, rgb(83, 243, 190); */
+		  --user-bubble-text-color:white;
+		  
+		  
+		  --input-bg: #1c212c;
+		  --input-focus-bg:#0c111c;
+		  --input-color: #ddd;
+		  --item-hover-bg:rgb(40,40,40);
+		  
+		  /*--button-bg: #0172ad;*/
+		  --button-blue-bg: #0e5981; /*#0172ad;*/
+		  --button-bg: #0e5981; /*#151a1d;*/ /*#171b1d;*/ /* #424a4f */
+		  
+
+
+
+		  /*--button-text-color:#ddd;*/
+		  --button-text-color:#bbb;
+		  --button-hover-bg:#027fc0;
+		  --button-hover-color:#fff;
+		  --button-warning-bg:#ad6201;
+		  
+		  /*--thin-border-color:rgb(73, 73, 73);*/
+		  --thin-border-color:transparent;
+		  --thick-border-color:#666;
+		  
+		  --indent-marker-bg-color: #6495ed;
+		  --tools-bg:#444;
+		  
+		  --light-selected-bg:#777;
+		  
+		  --code-statements:#b6b6b6;
+		  --code-functions:#b4b4fa;
+		  --code-parameters:#d486d8;
+		  --code-comments:#d4ce6b;
+		  --code-values:#CB8F5B;
+		  --code-strings:#b883bf;
+		  
+		  /* universal */
+		  --orange:#b35a03;
+		  --orange-bg:#e69603;
+		  --red-bg:red;
+		  
+		}
+		
+		/*#dddddd*/
+		.light {
+			
+  		  --body-bg:#ddd;
+  		  --main-bg-color: #eee;
+		  --body-weaker-bg: #ccc;
+		  --body-even-weaker-bg: #bbb;
+		  --chat-bg:#ccc;
+		  --chat-section-bg: #b6b6b6;/*#240030;*/
+		  
+		  --selected-tag-bg:#dcdcdc;
+		  --editor-bg:#ddd;
+		  --editor-header-bg:#d6d6d6;
+		  --weak-semi-transparent-bg:rgba(0,0,0,.1);
+		  --inverted-main-bg-color:#000;
+		  
+		  
+  		  --sidebar-bg: #d6d6d6;
+  		  --sidebar-header-bg: #bfbfbf;
+		  --chat-header-bg: #bfbfbf;
+		  --chat-footer-bg: #bfbfbf;
+		  --tools-bg:#ccc;
+  		  --dialog-bg: #666;
+  		  --files-bg: #c7c7c7;
+		  
+		  --text-color: #222;
+		  --light-text-color:#333;
+		  --strong-text-color:#111;
+		  --strongest-text-color:#000;
+		  --inverted-text-color:#ddd;
+		  --inverted-strongest-text-color:#fff;
+  		  
+  		  
+  		  --highlight-bg: #e7e7e7;
+		  --selected-bg:rgba(0,0,0,.3);
+		  --dropdown-bg:#a09e9e;
+		  --dropdown-bg:#888;
+		  
+		  --developer-bubble-bg:#e6e6e6;
+  		  --assistant-bubble-bg:#633BBC;
+  		  --user-bubble-bg:#07847e;
+		  
+		  
+		  
+  		  --input-bg: #e3ded3;
+  		  --input-focus-bg:#f3eee3;
+  		  --input-color: #222;
+		  
+		  --item-hover-bg:#eee;
+  		  --button-bg: #0e5981; /*#0172ad;*/
+		  --button-blue-bg: #0e5981;
+  		  --button-text-color:#ddd;
+  		  --button-hover-bg:#027fc0;
+  		  --button-hover-color:#fff;
+  		  --button-warning-bg:#ad6201;
+  		  --thin-border-color:#bbb;
+  		  --thick-border-color:#666;
+  		  --indent-marker-bg-color: #6495ed;
+  		  
+  		  
+  		  --light-selected-bg:#999;
+		  
+		  --code-statements:#896E4B;
+		  --code-functions:#4949ea;
+		  --code-parameters:#c128ca;
+		  --code-comments:#b05206;
+		  --code-values:#CB8F5B;
+		  --code-strings:#b883bf;
+		  
+		  --chat-messages-bg:#aaa;
+		  
+		  color:#1b1a0e;
+
+		}
+		
+		
+		
+		.center{
+			display:flex;
+			align-items:center;
+			justify-content:center;
+		}
+
+		.align-right{
+			text-align:right;
+		}
+		
+		
+		/*
+		#intro #sidebars,
+        #intro #main-view,
+		*/
+		#intro #message-form-resize-handle{
+        	display:none!important;
+        }
+		
+		body.serverless .hide-if-serverless{
+			display:none!important;
+		}
+		
+		
+		
+		#musicgen-prompt-settings-container,
+		#speaker-voice-buttons-container{
+			display:none;
+		}
+		
+		@media only screen and (max-width: 641px) {
+			.intro #tutorial,
+			.hide-if-mobile{
+				display:none;
+			}
+		}
+		
+		
+		/*body.mobile .hide-if-mobile,*/
+		.hide-if-empty:empty,
+		body:not(.mobile) .show-if-mobile,
+		body:not(.idle) .show-if-idle,
+		body:not(.doing-summarize) .show-if-summarize,
+		body:not(.doing-rewrite) .show-if-rewrite,
+		body:not(.doing-continue) .show-if-continue,
+		body:not(.doing-translation) .show-if-translation{
+			display:none;
+		}
+		
+		
+		.cm-gutters{
+			background-color:transparent!important;
+			border-right:none!important;
+		}
+		
+		body.web-gpu .hide-if-web-gpu,
+		body.web-gpu32 .hide-if-web-gpu{
+			display:none
+		}
+		
+		
+		.file-loading-warning-container,
+		.files-loading-warning-container{
+			background-color:var(--median-bg);
+			color:var(--inverted-text-color);
+		}
+		body 
+		 .file-loading-warning-container{
+			display:none;
+		}
+		body.loading-file #content-container .file-loading-warning-container{
+			display:flex;
+		}
+		
+		
+		
+		#content-container{
+			display:flex;
+			height:100%;
+			/*max-height:100vh;*/
+			/*height:-webkit-fill-available;*/
+			/*min-height: -webkit-fill-available;*/
+			/*max-height: -webkit-fill-available;*/
+			max-height:100%;
+			width:100%;
+			max-width:100vw;
+			/*max-height: calc( 100vh - env(keyboard-inset-height, 0px) );*/
+			position:fixed;
+			top:0;
+			/*bottom:0;*/
+		}
+		/*
+		body:not(.mobile) #content-container{
+			position:fixed;
+		}
+		*/
+
+
+
+		#playground-sidebar{
+			width:0;
+			overflow-x:hidden;
+			transition: 0.1s left ease;
+			position:relative;
+		}
+
+		.sidebar #playground-sidebar{
+			width:300px;
+			min-width:200px;
+			display:flex;
+			flex-direction:column;
+		}
+		
+		
+		/*
+		#papegai-logo{
+			transition: all ease 2s;
+		}
+		body.first-run #papegai-logo{
+			display:none;
+		}
+		
+		
+		body {
+		    display: grid;
+		    margin: 0;
+		    height: 100vh;
+		    grid-template:
+		      "messages" 1fr
+		      "input" auto
+		      "keyboard" env(keyboard-inset-height, 0px);
+		  }
+		*/
+		
+		
+		body.first-run:not(.show-document) #main-chat{
+			max-width:450px;
+		}
+		
+		#do-pip-button{
+			display:none;
+		}
+		
+		#tutorial-menu{
+			max-height:0;
+			padding:0;
+			overflow:hidden;
+			transition:all ease .5s;
+		}
+		
+		
+		
+		
+	</style>
+	
+	<link rel="stylesheet" href="./res/styles/main.css">
+    <!--<script src="res/lib/codemirror.js"></script>-->
+    
+	<!--<link rel="stylesheet" href="./css/pico.min.css" />-->
+	<link rel="stylesheet" href="./css/pico.css" />
+	<link rel="stylesheet" href="./css/chat_style.css" />
+	<link rel="stylesheet" href="./style.css" />
+	
+	
+    
+    <!--
+    <script src="res/lib/codemirror_dialog.js"></script>
+    <script src="res/lib/codemirror_jump-to-line.js"></script>
+    <script src="res/lib/codemirror_search.js"></script>
+    <script src="res/lib/codemirror_searchcursor.js"></script>
+    -->
+    <script defer src="./pjs/dayjs-with-plugins.min.js"></script>
+		
+    <link rel="stylesheet" href="./res/lib/codemirror.css">
+    <link rel="stylesheet" href="./res/lib/codemirror_dialog.css">
+    <link rel="stylesheet" href="./res/theme/dracula.css">
+	<link rel="stylesheet" href="./pcss/context_menu_kali_dark.css">
+	
+	
+	
+	<!--
+	<link rel="stylesheet" href="pcss/draggable-resizable-dialog.css">
+	<script src="./pjs/draggable-resizable-dialog.js">/</script>
+	-->
+    <!--<script src="res/mode/javascript/javascript.js"></script>-->
+    <script src="res/vex/js/vex.combined.min.js"></script>
+    <!--<script src="pjs/babel.min.js"></script>-->
+    
+    <link rel="stylesheet" href="./res/vex/css/vex.css" />
+    <link rel="stylesheet" href="./res/vex/css/vex-theme-top.css" />
+	<link rel="stylesheet" href="./pcss/playground.css" />
+	
+	<link rel="stylesheet" href="./combo.css" />
+
+	
+    <style id="css-output"></style>
+    
+</head>
+<body class="sidebar-chat busy-restoring-files no-files-in-folder web-gpu intro intro-ai hide-chat-form serverless no-text-ai-loaded unknown-language idle chat-shrink chat-message-form-minimum-height first-run">
+    <div id="flash-message" style="background-color:green"></div>
+	
+	<div id="bad-browser" class="fixed-hint" data-i18n="sorry_bad_browser" style="display:none">⚠️ Sorry, your browser (or at least the current version) is not supported</div>
+	
+	<button id="open-sidebar-button"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></button><!--<span class="hamburger-icon hamburger-icon-open">&#8801;</span>-->
+	<div id="content-container">
+		<div id="sidebars">
+			<div id="sidebars-header-wrapper">
+				<div id="sidebars-header">
+					<div id="sidebar-header-tab-buttons"> <!-- 📄 💬 ⚙️ -->
+						<span 
+						id="sidebar-header-docs-button" data-tab="documents" class="svg-icon"><img class="sidebar-header-icon" width="30" height="30" alt="documents icon" src="images/document.svg"></span><span 
+						id="sidebar-header-chat-button" data-tab="chat" class="svg-icon"><img class="sidebar-header-icon" width="30" height="30" alt="chat icon" src="images/chat.svg"></span><span 
+						id="sidebar-header-settings-button" data-tab="settings" title="Open settings" class="svg-icon"><img class="sidebar-header-icon" width="36" height="36" alt="settings icon" src="images/settings.svg"></span>
+					</div>
+					<div id="rewrite-results-ready-container">
+						<div id="rewrite-results-ready-hint" class="center"><span class="unicode-icon">✏️</span><span id="rewrite-results-ready-counter"></span></div>
+					</div>
+					<div id="close-sidebar-button"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></div><!--<span class="hamburger-icon hamburger-icon-close">&#8801;</span>-->
+				</div>
+			</div>
+			<div id="sidebars-content">
+				
+				<div id="file-drag-overlay" data-i18n="Drop_here_to_open">Drop<br>here<br><br>to<br>open</div>
+				
+				<div id="sidebar-filter-container">
+					
+					<div class="flex">
+						
+						<input id="sidebar-filter-input" type="search" value="" placeholder="Filter" data-i18n-placeholder="Filter" >
+						<!--
+						<div id="clear-filter-button" class="center">
+							<div class="round-button"><span class="unicode-icon">×</span></div>
+						</div>
+						-->
+					</div>
+				</div>
+				
+				<div id="select-assistants-button-wrapper">
+					<div id="create-custom-assistant-button-container">
+						<button id="add-custom-assistant-button" ><span data-i18n="Custom_AI">Custom AI</span></button>
+					</div>
+					<span></span>
+					<div class="flex">
+						<div id="add-assistants-hint-container">
+							<span id="add-assistants-hint" data-i18n="Add_more_AIs">Add more AI's</span>
+						</div>
+						<div id="select-assistants-button">
+							<div class="circle-square-button">
+								<span class="btn-stage plus-icon">+</span>
+								<span class="btn-stage">Save</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="chat-sidebar-container" class="chat">
+					<div id="chat-sidebar" class="chat-sidebar">
+				        <!--
+						<div class="search">
+				          <input type="text" placeholder="Search..." >
+				          <i class="fa fa-search"></i>
+				        </div>
+						// -->
+				
+						<!--
+						<div id="sidebar-top-menu">
+							<div>Chatbots</div>
+							<div id="select-assistants-button" class="sidebar-top-menu-button">
+								<div class="circle-square-button">
+									<span class="btn-stage">➕</span>
+									<span class="btn-stage">Save</span>
+								</div>
+							</div>
+						</div>
+						-->
+	        			
+						<div class="contacts">
+				          <ul id="contacts-list">
+				            <li class="selected-ai">
+				              <div class="contact-item">
+				                <img
+				                  src="images/developer.png"
+				                  alt="The developer"
+				                >
+				                <div class="contact">
+				                  <div class="name">Loading</div>
+				                  <div class="message" data-i18n="developer-description">One moment..</div>
+				                </div>
+				              </div>
+				            </li>
+				          </ul>
+				        </div>
+						
+						
+					</div>
+					
+				</div>
+			
+			
+				<div id="playground-sidebar">
+			
+					<div class="files-loading-warning-container center">
+						<div class="files-loading-warning center">
+							<span class="spinner rotating">&nbsp;</span> &nbsp; <span data-i18n="Loading_files">Loading files</span>
+						</div>
+					</div>
+					<!--
+					<div id="file-drag-overlay" data-i18n="Drop_here_to_open">Drop<br>here<br><br>to<br>open</div>
+					-->
+					<div id="folder-select-container" class="space-between"><button id="folder-back-button" class="icon-button no-further-up"><span class="unicode-icon-folder-up" style="font-size:1.5rem"><!--⬅⭠↖↩↸⇠⇱➞ ⟵⤒ //-->↩</span></button><select id="folder-select" class="hide-when-serverless"></select></div>
+			
+			        <div id="sidebar-tabs">
+						<div id="file-manager" class="file-pane">
+							
+							<div id="file-upload-progress-container"></div>
+							
+				            <ul id="file-manager-files-list" class="files"></ul>
+					
+							
+				            <div id="load-all-files-button" class="save button hide-if-serverless file-manager-button" title="Load all real file data into browser storage" data-i18n="Load_all_files">
+				                Load all files
+				            </div>
+							
+							<div class="padding5 space-between">
+								<div></div>
+					            <div id="save-all-files-button" class="save button show-if-modified file-manager-button" data-i18n="Save_all">
+					                Save all
+					            </div>
+					            <div id="download-all-files-button" class="save button center show-if-many-files file-manager-button">
+					                <img src="images/download.svg" class="svg-icon" width="20" height="20" alt="Download" title="Download"> <span data-i18n="Download_all">Download all</span>
+					            </div>
+								<div></div>
+				            </div>
+							
+							<div class="padding5 space-between" id="selective-files-management-buttons">
+								<div></div>
+								<!--
+					            <div id="save-all-files-button" class="save button file-manager-button" data-i18n="Save_selected">
+					                Save selected
+					            </div>
+								-->
+					            <div id="delete-selected-files-button" class="save button center show-if-many-files file-manager-button">
+					                <img src="images/delete.svg" class="svg-icon" width="20" height="20" alt="Delete selected" title="Delete selected"> <span data-i18n="Delete_selected">Delete selected</span>
+					            </div>
+								<div></div>
+				            </div>
+							
+							<div class="padding5 space-between show-if-developer">
+					            <div></div>
+								<div id="take-snapshot-button" class="save button file-manager-button" onclick="take_snapshot()" data-i18n="Take_snapshot">
+					                Take snapshot
+					            </div>
+				
+					            <div id="restore-snapshot-button" class="save button show-if-snapshot file-manager-button" onclick="choose_snapshot()" data-i18n="Restore_snapshot">
+					                Restore snapshot
+					            </div>
+								<div></div>
+							</div>
+				            
+				
+							<!--
+				            <div class="new button">
+				                <input onchange = 'file_upload(event)' type='file' multiple>
+				            </div>
+							-->
+				
+				
+				        </div>
+				
+						<div id="function-index-list"></div>
+						
+						<div id="sidebar-rag-search-container">
+							
+							<div id="sidebar-rag-header" class="centered-space-between"><span id="sidebar-rag-select-all-button" class="grey-button" data-i18n="Select_all">Select_all</span><span></span><div id="sidebar-rag-close-button" class="center" aria-label="close"><div class="round-button close-button-cross bg-icon"></div></div></div> <!-- × --><!-- <span class="bg-icon"></span> -->
+							
+							<div id="rag-info-container"></div>
+							
+							<div class="search-input-container">
+								<textarea id="rag-search-prompt" name="rag-search-prompt" class="prompt" placeholder=""></textarea>
+								<!--
+								<div id="start-rag-search-button" class="start-search-button-container center"><img class="submit-prompt-button-image" src="images/submit_question.svg" alt="submit"></div>
+								-->
+					        </div>
+						</div>
+						
+					</div>
+					<div id="sidebar-footer">
+				
+							<div id="sidebar-new-file-and-folder-container">
+					            <div id="new-folder-button" class="new button add-icon" onclick="create_folder()" title="Create new folder">
+									<span class="unicode-icon">📁</span>
+					            </div>
+							
+					            <div id="new-file-button" class="new button add-icon" onclick="create_file()" title="Create new empty document">
+									<span class="unicode-icon">📄</span>
+					            </div>
+								
+					            <div id="start-ocr-button" class="new button add-icon"  title="Start the camera to scan text">
+									<!--<span class="unicode-icon">📷</span>-->
+									<img class="" width="26" height="26" alt="Camera icon" src="images/camera.svg">
+					            </div>
+								
+								<div id="sidebar-upload-container">
+									<!--<input id="pdffile" name="pdffile" type="file" multiple>-->
+									<label class="file-input-label-container">
+										<input id="upload-file-input" type="file" multiple="multiple" name="upload-file-input" aria-label="file browser"> <!--  onchange="file_upload(this)"  -->
+										<!--<span class="file-input-custom" data-i18n="Open_file"> 📎 &nbsp; Open file</span>-->
+									</label>
+								
+								</div>
+								
+								
+							</div>
+				            
+							
+							
+							<div id="sidebar-right-container" class="center">
+								<!--<input id="pdffile" name="pdffile" type="file" multiple>-->
+					            <!--
+								<div id="toggle-rag-search-button" class="new button"  title="Chat with your documents">
+									<img width="26" height="26" alt="Search icon" src="images/search_icon.svg">
+					            </div>
+								-->
+								
+								<div id="start-rag-search-button" class="start-search-button-container center"><div id="start-rag-search-inner-button" class="center"><img class="submit-prompt-button-image" src="images/submit_rag_search.png" alt="submit"></div></div>
+							
+							</div>
+							
+							
+							<!--
+				            <div id="new-file-button-container" class="new button">
+								<span id="new-file-button" onclick="create_file()">
+				                + File
+								</span>
+								
+				            </div>
+							-->
+					
+						
+				
+					</div>
+				</div>
+				
+				<div id="settings-sidebar">
+					<div id="settings-sidebar-tabs-buttons-container">
+						<div id="settings-sidebar-tasks-button" data-i18n="tasks" class="capitalize-first-letter">Tasks</div>
+						<div id="settings-sidebar-settings-button" data-i18n="Settings" class="capitalize-first-letter">Settings</div>
+					</div>
+					<div id="settings-sidebar-tabs-container">
+						<div id="settings-sidebar-tabs-settings">
+							
+							<ul>
+								<li class="flex-space-between flex-align-center settings-select-item">
+									<span data-i18n='language'>Language</span>
+									<select id="settings-tab-language-dropdown" class="settings-dropdown">
+										<option value='en' selected data-i18n="English">English</option>
+										<option value='nl' data-i18n="Dutch">Dutch</option>
+										<option value='fr' data-i18n="French">French</option>
+										<option value='de' data-i18n="German">German</option>
+										<option value='es' data-i18n="Spanish">Spanish</option>
+										<option value='it' data-i18n="Italian">Italian</option>
+										<option value='pt' data-i18n="Portugese">Portugese</option>
+										<option value='gr' data-i18n="Greek">Greek</option>
+										<option value='pl' data-i18n="Polish">Polish</option>
+										<option value='hu' data-i18n="Hungarian">Hungarian</option>
+										<option value='uk' data-i18n="Ukranian">Ukranian</option>
+										<option value='ru' data-i18n="Russian">Russian</option>
+									</select>
+								</li>
+								<li id="speaker-voice-select-container" class="flex-space-between flex-align-center settings-select-item">
+									<span data-i18n='voice'>Voice</span>
+									<select id="speaker-voice-select" class="settings-dropdown"><option value="default" data-i18n="Automatic" selected>Automatic</option><option value="basic">📢 Basic</option><option value="US female 1">🇺🇸 US female 1</option><option value="US female 2">🇺🇸 US female 2</option><option value="US male 1">🇺🇸 US male 1</option><option value="US male 2">🇺🇸 US male 2</option><option value="Canadian male">🇨🇦 Canadian male</option><option value="Scottish male">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scottish male</option><option value="Indian male">🇮🇳 Indian male</option></select>
+								</li>
+								
+								<li id="settings-complexity-select-container" class="flex-space-between flex-align-center settings-select-item">
+									<span data-i18n="Options">Options</span>
+									<select id="settings-complexity-select" class="settings-dropdown"><option value="normal" data-i18n='Normal' selected>Normal</option><option value="advanced" data-i18n='Advanced'>Advanced</option><option value="developer" data-i18n='Developer'>Developer</option></select>
+								</li>
+								
+								<li id="settings-brightnes-select-container" class="flex-space-between flex-align-center settings-select-item">
+									<span data-i18n="Brightness">Brightness</span>
+									<select id="settings-brightness-select" class="settings-dropdown"><option value="default" data-i18n="Automatic" selected>Automatic</option><option value="dark" data-i18n='Dark'>Dark</option><option value="light" data-i18n='Light'>Light</option></select>
+								</li>
+								<li id="settings-disk-space-select-container" class="flex-space-between flex-align-center">
+									<span data-i18n="Disk_space">Disk space</span>
+									<span id="total-disk-space-used"></span>
+									<button id="show-models-list-button" data-i18n="Manage">Manage</button>
+								</li>
+								
+								<li id="settings-save-backup-select-container" class="flex-space-between flex-align-center show-if-advanced">
+									<span data-i18n="Backup settings">Backup settings</span>
+									<button id="save-settings-backup-button" data-i18n="Save">Save</button>
+								</li>
+								
+								
+								<li id="settings-update-container" class="flex-space-between flex-align-center show-if-update-available">
+									<span data-i18n="Update">New version</span>
+									<button id="apply-update-button" class="always-blue-button" data-i18n="Update">Update</button>
+								</li>
+								
+							</ul>
+							
+							
+							
+							
+							<ul id="scary-settings">
+								
+								<li id="papegai-cross-origin-result-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
+									<span>Cross origin isolated</span>
+									<div id="cross-origin-isolated-checkbox-container"></div>
+								</li>
+								<li id="papegai-test-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
+									<span>Debug</span>
+									<button onclick="test();">DEBUG</button>
+								</li>
+								<li id="papegai-limit-memory-use-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
+									<span>Limit memory use (<span id="limited-ram"></span>)</span>
+									<select id="settings-limit-memory-use-select" class="settings-dropdown" style="min-width:50px"><option value="0" selected>Auto</option><option value="2000">2GB</option><option value="4000">4GB</option><option value="8000">8GB</option><option value="16000">16GB</option></select>
+								</li>
+								<li id="papegai-unregister-service-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
+									<span>Serviceworker</span>
+									<button onclick="unregister_serviceworkers();">Unregister</button>
+								</li>
+								
+								<li id="papegai-reset-container" class="flex-space-between flex-align-center settings-button-item show-if-advanced">
+									<span>Papeg.ai <span id="papegai-version"></span></span>
+									<button id="clear-site-cache-button" data-i18n="Reload">RELOAD</button>
+								</li>
+								<li id="settings-reset-container" class="flex-space-between flex-align-center settings-button-item">
+									<!--<span data-i18n="Settings">Settings</span>-->
+									<button id="clear-local-storage-button" data-i18n="Delete_settings">CLEAR SETTINGS</button>
+								</li>
+								<!--
+								<li id="ai-reset-container" class="flex-space-between flex-align-center settings-button-item">
+									<span data-i18n="AI">AI</span>
+									<button id="clear-cache-button" data-i18n="Delete_all_AIs">DELETE ALL AI's</button>
+								</li>
+								-->
+								<li id="data-reset-container" class="flex-space-between flex-align-center settings-button-item">
+									<!--<span data-i18n="Data">Files</span>-->
+									
+									<button id="clear-data-button" data-i18n="Delete_my_files">DELETE MY FILES</button>
+								</li>
+								<li id="clear-everything-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
+									<!--<span>Everything</span>-->
+									
+									<button id="clear-everything-button">☢️ FULL RESET</button>
+								</li>
+							</ul>
+							<!--<button id="show-advanced-settings-toggle-button" data-i18n="Show_advanced_settings">Show advanced settings<button>-->
+							
+						</div>
+						<div id="settings-sidebar-tabs-tasks">
+							<div id="settings-used-memory-container" class="flex-space-between flex-align-center show-if-advanced">
+								<span data-i18n="Memory_use">Memory use</span>
+								<span>
+									<span id="used-memory">?</span><span class="gigabytes-span">GB</span>
+									<span id="total-memory-wrapper">/<span id="total-memory"></span></span>
+								</span>
+							</div>
+							<div id="running-tasks-list-container" class="show-if-advanced"></div>
+							<div id="simple-tasks-list-container"></div>
+						</div>
+						<div id="simple-task-list-play-button-container">
+							<div id="simple-task-list-play-button">▶️</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+			
+		</div>
+		
+		
+		
+		<div id="main-chat" class="chat">
+			
+			<div id="chat-content" class="content">
+				<div id="message-header-container">
+			        <div class="message-header">
+  			          	<div id="back-button-container">
+							<img id="back-button" src="images/left_arrow.svg" alt="Go back button"/>
+						</div>
+					  	
+						<div id="user-info-wrapper">
+							<div class="user-info">
+								<div id="chat-header-icon-container">
+									<div id="chat-header-emoji-icon-container" class="center"></div>
+									<img id="chat-header-icon" src="images/developer.png" alt="Current AI icon">
+								</div>
+	  			            	<div class="user">
+									<div id="chat-header-name" class="name capitalize-first-letter"></div>
+									<div class="time user-status show-if-model-loaded"><span data-i18n="online">online</span></div>
+									<div class="time user-status show-if-model-not-loaded" data-i18n="offline">offline</div>
+									<!--
+									<span class="ai-status show-if-summarize" data-i18n="Summarizing">Summarizing</span>
+									<span class="ai-status show-if-rewrite" data-i18n="Rewriting">Rewriting</span>
+									<span class="ai-status show-if-continue" data-i18n="Writing">Writing</span>
+									<span class="ai-status show-if-translation" data-i18n="Translating">Translating</span>
+									-->
+									
+								</div>
+							</div>
+						</div>
+					
+						<div id="chat-header-actions" class="actions">
+			                <div class="action-item center" id="clear-assistant-button"><span class="unicode-icon">♻️</span></div>
+			                <div class="action-item" id="stop-assistant-button"><div id="stop-assistant-button-slide-wrapper"><div id="stop-assistant-button-assistant-icon-container" class="center"><img id="stop-assistant-button-assistant-icon" class="assistant-icon-img" src="images/developer.png" alt="AI"></div><div id="stop-assistant-button-translator-icon-container" class="center"><img id="stop-assistant-button-translator-icon" class="assistant-icon-img" src="images/translator.png" alt="Translator"></div><div id="stop-assistant-interrupt-button" class="center"><span class="unicode-icon">🛑<span class="unicode-icon-overlay">✋</span></span></div></div></div>
+							<div class="action-item center" id="mobile-back-to-document-button"><img width="25" height="25" alt="documents icon" src="images/document.svg"></div><!-- 🤏 🤫 🤐 -->
+							<div class="action-item center" id="shrink-assistant-button"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></div><!-- 🤏 🤫 🤐 -->
+				        </div>
+
+					</div>
+					
+					<div id="chat-recording-warning" class="warning-section">
+						<div class="recording-warning"><span class="warning-unicode-icon">🎙️</span><span data-i18n="Recording_audio">Audio is being recorded</span></div>
+					</div>
+					
+				</div>
+				
+				
+				
+				<div id="model-info-container"></div>
+		
+				<div id="message-content-container"></div>
+		
+				<div id="message-downloads-container"></div>
+		
+				<div id="tools">
+					<div id="stop-camera-button" class="circular-corner-close-button center" aria-label="close"><div class="center close-button-cross bg-icon"><span class="bg-icon"></span></div></div> <!-- × -->
+					<div id="close-tools-button" class="circular-corner-close-button center" aria-label="close"><div class="center close-button-cross bg-icon"><span class="bg-icon"></span></div></div>
+					<!--<button id="close-tools-button" name="close-tools-button" aria-label="close" type="button" class="grey-button"><span class="unicode-icon">×</span></button>-->
+					<div id="yet-another-tools-wrapper">
+						
+						<div id="tools-content">
+						
+							<div id="camera-container">
+								<div id="video-sources-select-container" class="center">
+									<select id="video-sources-select"></select>
+								</div>
+								<div id="camera-video-wrapper">
+									<video id="camera-video" width="640" height="240" autoplay playsinline></video>
+									
+									<div id="camera-overlay-canvas-container">
+										<canvas id="camera-overlay-canvas" width="1920" height="1080"></canvas>
+									</div>
+									<div id="camera-overlay-scan-hint-container"></div>
+									<div id="camera-overlay-svg-container"></div>
+									<div id="camera-video-flasher"></div>
+								</div>
+								<div id="video-buttons">
+									<button id="camera-take-picture-button" onclick="window.take_picture()"><span class="unicode-icon">📸</span><!-- <span id="live-camera-take-picture-hint" class="hide-if-advanced" data-i18n="Take_picture">Take picture</span>--></button>
+									<button id="camera-ocr-scan-button"><span class="img-icon"><img src="images/image_to_text_ocr.png" width="20" height="20" alt="Document scanner icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Scan">Scan</span> <span id="doing-ocr-scan-counter"></span></button>
+									<button id="camera-image_to_text-describe-button"><span class="img-icon"><img src="images/image_to_text.png" width="20" height="20" alt="Describe image icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Describe">Describe</span></button>
+								</div>
+								<details id="camera-do-ocr-details" class="tools-details">
+									<summary class="summary-button" id="camera-do-ocr-summary-button">
+										<span class="h3" id="camera-ocr-scan-dialog-title"><span class="img-icon"><img src="images/image_to_text_ocr.png" width="20" height="20" alt="Document scanner icon"></span> <span data-i18n="image_to_text_ocr_name">Document scanner</span></span>
+									</summary>
+									<div class="details-content">
+										
+										<div class="camera-sleeping-hint center"><div class="flex"><span class="spinner rotating">&nbsp;</span> &nbsp; <span data-i18n="Waiting_to_scan_again">Waiting to scan again...</span></div></div>
+										<div id="live-ocr-scans-say-scan-hint" class="hint-area"><p data-i18n="Say_scan_the_document">If you use voice control, then say 'scan' or 'scan the document'.</p></div>
+										<div id="live-ocr-scans-container" class="flex-between"></div>
+										<div id="live-ocr-output-container" class="flex-between">
+											<textarea id="live-ocr-output" placeholder=""></textarea>
+											<div class="bubble-buttons-container"><div id="camera-ocr-insert-button" class="bubble-insert-into-doc-button bubble-doc-button">📄</div><div id="camera-ocr-new-document-button" class="bubble-new-doc-button bubble-doc-button add-icon">📄</div></div>
+										</div>
+										<progress id="camera-ocr-scan-progress" value="0"></progress>
+										<div id="camera-ocr-footer-buttons-container"><button id="camera-ocr-improve-button" data-i18n="Improve">Improve</button></div>
+										
+										
+										<div id="camera-ocr-scan-intensity-container" class="range-setting-container">
+											<label for="camera-ocr-scan-intensity-input" class="simple-input-label" data-i18n="Scan_intensity">Scan intensity</label>
+											<input id="camera-ocr-scan-intensity-input" type="range" min="1" max="5" step="1" value="1">
+										</div>
+										
+										<div id="camera-ocr-auto-scan-container" class="checkbox-setting-container">
+											<input id="camera-ocr-auto-scan-input" type="checkbox"><label for="camera-ocr-auto-scan-input" class="simple-input-label" data-i18n="Continuous_scanning">Continuous scanning</label>
+										</div>
+										
+										<div id="camera-ocr-save-scan-container" class="checkbox-setting-container">
+											<input id="camera-ocr-save-scan-input" type="checkbox" checked><label for="camera-ocr-save-scan-input" class="simple-input-label" data-i18n="Save_to_document">Save to document</label>
+										</div>
+										
+									
+										<!--
+										<div id="camera-ocr-buttons-container">
+											<button id="camera-ocr-save-button" data-i18n="Save">Save</button>
+											<button id="camera-do-ocr-button" onclick="window.take_picture({'state':'should_ocr'})" data-i18n="Photo_to_Text">Photo to Text</button>
+										</div>
+										-->
+									</div>
+				
+								</details>
+			
+			
+								<details id="camera-image-to-text-details" class="tools-details">
+									<summary role="button" id="camera-image_to_text-summary-button">
+										<span class="h3"  id="camera-image_to_text-scan-dialog-title"><span class="img-icon"><img src="images/image_to_text.png" width="20" height="20" alt="Describe icon"></span> <span data-i18n="image_to_text_name">Image describer</span></span>
+									</summary>
+									<div class="details-content">
+										<!--
+										<div id="live-image_to_text-scans-container" class="flex-between"></div>
+										-->
+										<div id="live-image_to_text-prompt-container" class="flex-between">
+											<div id="live-image_to_text-thumbnail-container"></div>
+											<textarea id="live-image_to_text-prompt" class="prompt" placeholder=""></textarea>
+										</div>
+										<div id="live-image_to_text-output-container" class="flex-between">
+											<textarea id="live-image_to_text-output" class="prompt" placeholder="."></textarea>
+											<div class="bubble-buttons-container"><div id="camera-image_to_text-insert-button" class="bubble-insert-into-doc-button bubble-doc-button">📄</div><div id="camera-image_to_text-new-document-button" class="bubble-new-doc-button bubble-doc-button add-icon">📄</div></div>
+										</div>
+										
+										<progress id="camera-image_to_text-scan-progress" value="0"></progress>
+										<!--
+										<div id="camera-image_to_text-footer-buttons-container"><button id="camera-image_to_text-improve-button" data-i18n="Improve">Improve</button></div>-->
+										<div id="camera-image_to_text-auto-scan-container" class="checkbox-setting-container">
+											<input id="camera-image_to_text-auto-scan-input" type="checkbox"><label for="camera-image_to_text-auto-scan-input" class="simple-input-label" data-i18n="Continuous_scanning">Continuous scanning</label>
+										</div>
+										<div id="camera-image_to_text-save-auto-scan-container" class="checkbox-setting-container">
+											<input id="camera-image_to_text-save-auto-scan-input" type="checkbox" checked><label for="camera-image_to_text-save-auto-scan-input" class="simple-input-label" data-i18n="Save_to_document">Save to document</label>
+										</div>
+									
+										<!--
+										<div id="camera-image_to_text-buttons-container">
+											<button id="camera-image_to_text-save-button" data-i18n="Save">Save</button>
+											<button id="camera-image_to_text-button" onclick="window.take_picture({'state':'should_image_to_text'})" data-i18n="Photo_to_Text">Photo to Text</button>
+										</div>
+										-->
+									</div>
+				
+								</details>
+			
+							
+								<canvas id="video-canvas" width="1920" height="1080"></canvas>
+							</div>
+						
+						
+						
+							<div id="tools-rewrite-container">
+								<div id="rewrite-dialog-header-wrapper">
+								
+									<div id="rewrite-dialog-header">
+										<!--<h3 id="rewrite-sidebar-title" data-i18n="Tools">Tools</h3>-->
+										<button id="close-rewrite-dialog-button" class="corner-close-button close-button-cross bg-icon" name="close-rewrite-tools-button" aria-label="close" type="button"></button><!-- × -->
+									</div>
+								
+								</div>
+					
+					
+								<div id="rewrite-dialog">
+						
+									<div id="tools-header" class="flex-between">
+										<div id="rewrite-dialog-selected-text-container">
+											<div id="rewrite-dialog-selected-text"></div>
+											<div id="rewrite-dialog-selected-text-overlay"></div>
+										</div>
+										<span></span>
+										<!--<button id="close-tools-button" name="close-tools-button" aria-label="close" type="button" class="grey-button"><span class="unicode-icon">×</span></button>-->
+									</div>
+									
+									
+									
+									
+									<details id="proofread-details" class="tools-details">
+										<summary>
+											<span class="h3" id="proofread-dialog-title"><span class="svg-icon"><img src="images/glasses.svg" width="25" height="25" alt="👓"></span> <span data-i18n="Proofread">Proofread</span></span>
+											<!--<span class="h3" id="proofread-document-dialog-title"><span class="svg-icon"><img src="images/glasses.svg" width="25" height="25" alt="👓"></span> <span data-i18n="Proofread_document">Proofread document</span></span>-->
+										</summary>
+										<div class="details-content">
+											<div id="proofread-dialog-content-toggles-and-tags-container">
+												<div id="proofread-dialog-content-toggles-container"></div>
+												<div id="proofread-dialog-content-tags-container"></div>
+											</div>
+											
+											<textarea id="proofread-prompt" name="proofread-prompt" class="prompt" placeholder=""></textarea>
+											
+											<div id="proofread-auto-detect-language-container" class="checkbox-setting-container">
+												<input id="proofread-auto-detect-language-input" type="checkbox" checked/><label for="proofread-auto-detect-language-input" class="simple-input-label"><span data-i18n="Auto_detect_language">Auto-detect language</span> <span id="proofread-auto-detected-language"></span></label>
+											</div>
+											
+											<!--
+											<div class="align-right">
+												<div id="dialog-proofread-submit-prompt-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div>
+											</div>
+											-->
+											<!--
+											<div id="proofread-new-file-container" class="flex-column">
+												<div id="proofread-new-file-container-close-button" class="small-corner-close-button" aria-label="close">×</div>
+												<label for="proofread-new-file-name-input" data-i18n="New_document_name" class="simple-input-label">Name of new document</label>
+												<div class="flex-space-between">
+													<input id="proofread-new-file-name-input" class="simple-text-input">
+													<button id="proofread-save-as-new-file-button"><img class="tiny-prompt-button-image" src="images/submit_prompt.svg" alt="submit"></button>
+												</div>
+											</div>
+											-->
+											
+										</div>
+										
+									</details>
+									
+								
+									<details id="summarize-details" class="tools-details">
+										<summary>
+											<span class="h3" id="summarize-dialog-title"><span class="unicode-icon brighten">🗜️</span> <span data-i18n="Summarize">Summarize</span></span>
+											<span class="h3" id="summarize-document-dialog-title"><span class="unicode-icon brighten">🗜️</span> <span data-i18n="Summarize_document">Summarize document</span></span>
+										</summary>
+										<div class="details-content">
+											<div id="summarize-dialog-content-toggles-and-tags-container">
+												<div id="summarize-dialog-content-toggles-container"></div>
+												<div id="summarize-dialog-content-tags-container"></div>
+											</div>
+								
+											<textarea id="summarize-prompt" name="summarize-prompt" class="prompt" placeholder=""></textarea>
+										
+											<div id="summarize-new-file-container" class="flex-column">
+												<div id="summarize-new-file-container-close-button" class="small-corner-close-button close-button-cross bg-icon" aria-label="close"></div> <!-- × -->
+												<label for="summarize-new-file-name-input" data-i18n="New_document_name" class="simple-input-label">Name of new document</label>
+												<div class="flex-space-between">
+													<input id="summarize-new-file-name-input" class="simple-text-input">
+													<button id="summarize-save-as-new-file-button"><img class="tiny-prompt-button-image" src="images/submit_prompt.svg" alt="submit"></button>
+												</div>
+											</div>
+										
+										</div>
+									</details>
+								
+									
+									<details id="rewrite-details" class="tools-details">
+										<summary>
+											<span class="h3" id="rewrite-dialog-title"><span class="unicode-icon">✏️</span> <span data-i18n="Rewrite">Rewrite</span></span>
+										</summary>
+										<div class="details-content">
+											<div id="rewrite-dialog-content-toggles-and-tags-container">
+												<div id="rewrite-dialog-content-toggles-container"></div>
+												<div id="rewrite-dialog-content-tags-container"></div>
+											</div>
+								
+											<textarea id="rewrite-prompt" name="rewrite-prompt" class="prompt" placeholder=""></textarea>
+								
+										</div>
+									</details>
+						
+						
+									<div id="rewrite-dialog-content-container"></div>
+						
+						
+									<details id="translation-details" class="tools-details">
+										<summary>
+											<span class="h3" id="translate-document-dialog-title"><span class="svg-icon"><img src="images/translation-icon.svg" alt="Translation icon"></span> <span data-i18n="Translate_document">Translate document</span></span>
+											<span class="h3" id="translation-dialog-title"><span class="svg-icon"><img src="images/translation-icon.svg" alt="Translation icon"></span> <span data-i18n="Translate">Translate</span></span>
+										</summary>
+										<div class="details-content flex-column">
+								
+											<div class="flex-space-between">
+												<div class="flex-vertical">
+													<span class="small-dropdown-label" data-i18n="From">From</span>
+													<span class="small-dropdown-wrapper">
+														<select id="translation-input-language-select" class="small-dropdown"></select>
+													</span>
+												</div>
+												<div id="translation-flip-languages-button-container">
+													<div id="translation-flip-languages-button"></div>
+												</div>
+												<div class="flex-vertical">
+													<span class="small-dropdown-label" data-i18n="To">To</span>
+													<span class="small-dropdown-wrapper">
+														<select id="translation-output-language-select" class="small-dropdown"></select>
+													</span>
+												</div>
+											</div>
+											<div id="translation-auto-detect-language-container" class="checkbox-setting-container">
+												<input id="translation-auto-detect-language-input" type="checkbox" checked/><label for="translation-auto-detect-language-input" class="simple-input-label"><span data-i18n="Auto_detect_language">Auto-detect language</span> <span id="translation-auto-detected-language"></span></label>
+											</div>
+										
+											<div id="translation-new-file-container" class="flex-column">
+												<div id="translation-new-file-container-close-button" class="small-corner-close-button close-button-cross bg-icon" aria-label="close"></div> <!-- × -->
+												<!--<button id="close-rewrite-dialog-button" class="corner-close-button" name="close-tools-button" aria-label="close" type="button">×</button>-->
+												<label for="translation-new-file-name-input" data-i18n="New_document_name" class="simple-input-label">Name of new document</label>
+												<div class="flex-space-between">
+													<input id="translation-new-file-name-input" class="simple-text-input">
+													<button id="translation-save-as-new-file-button"><img class="tiny-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></button>
+												</div>
+											</div>
+										
+											<div id="live-translation-output-container" class="flex-between">
+												<textarea id="live-translation-output" class="prompt" placeholder="."></textarea>
+												<div class="bubble-buttons-container"><div id="live-translation-insert-button" class="bubble-insert-into-doc-button bubble-doc-button">📄</div><div id="live-translation-new-document-button" class="bubble-new-doc-button bubble-doc-button add-icon">📄</div></div>
+											</div>
+										
+										</div>
+							
+							
+							
+									</details>
+									<!--
+									<div id="load-text-ai-hint" class="hint-area">
+										<span data-i18n="To_use_text_tools_you_will_need_to_load_an_AI_that_can_work_on_text_first"></span>
+										<div class="text-align-right"><button id="load-a-text-based-ai-button" data-i18n="Do_that">Do that</button></div>
+									</div>
+									// -->
+									<form id="tools-submit-form-container" method="dialog" class="flex-between">
+										<!--<button>Cancel</button>-->
+										<div id="submit-multi-commands-buttons-wrapper" class="submit-multi-commands-buttons-wrapper">
+			
+								  			<div id="dialog-rewrite-4x-submit-prompt-button" class="multi-submit-button"><div><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div><div><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div></div>
+			
+								  			<div id="dialog-rewrite-2x-submit-prompt-button" class="multi-submit-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div>
+			
+											<div id="dialog-rewrite-submit-prompt-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div>
+											
+											
+								  		</div>
+										<div></div>
+										<div class="submit-multi-commands-buttons-wrapper">
+											<div id="dialog-rewrite-submit-prompt-lucky-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/lucky_clover.svg" width="50" height="50" alt="Submit"><span data-i18n="I_feel_lucky">I feel lucky</span></div>
+										</div>
+									</form>
+								</div>
+	
+					
+	
+								<div id="rewrite-results-dialog">
+									<div id="rewrite-results-dialog-content-container" class="rewrite-results-dialog-content-container"></div>
+								</div>
+					
+							
+								<div id="rewrite-status-container">
+									<div id="rewrite-status" class="rewrite-status"></div>
+									<div id="rewrite-status-progress-container">
+										<progress id="rewrite-status-progress" class="progress"></progress>
+									</div>
+								</div>
+					
+					
+							</div>
+					
+						</div>
+					</div>
+					
+				</div>
+		
+		
+		
+	        	
+				<div id="image-to-text-prompt-settings-container-wrapper" class="hide-if-chat-shrink">
+					<div id="image-to-text-prompt-settings-container">
+						<img id="image-to-text-prompt-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt="current image">
+						<div id="image-to-text-prompt-settings-buttons">
+							<button id="image-to-text-prompt-settings-take-camera-picture-button" class="center"><span class="unicode-icon show-if-hiding-camera-still">📸</span><img class="hide-if-hiding-camera-still" width="26" height="26" alt="camera icon" src="images/camera.svg"></button> <!--<span class="unicode-icon hide-if-hiding-camera-still">📷</span>    onclick="toggle_image_to_text_camera();"-->
+							<input id="image-to-text-upload-input" type="file" accept="image/*" hidden >
+							<button id="image-to-text-prompt-settings-upload-button" type="button" onclick="document.getElementById('image-to-text-upload-input').click()" class="file-input-label-container"><!--<img id="image-to-text-prompt-settings-upload-button-image" src="images/upload.svg" width="50" height="50" class="svg-icon"> --></button>
+						</div>
+					</div>
+				</div>
+				
+				
+				<div id="message-form-resize-handle"><div id="message-form-resize-handle-inner"><div id="message-form-resize-handle-indicator"></div></div></div>
+				
+				<div id="message-form-container">
+			        <div class="message-form">
+			        	<div>
+	  						<div id="message-form-audio-buttons-container">
+								<div id="message-form-audio-buttons-wrapper">
+									
+									<div id="pip-icon-container">
+										<button id="do-pip-button"><img id="do-pip-button-image" height="12" width="15" class="submit-prompt-button-image" src="images/pip_icon.svg" alt="Picture in Picture"></button>
+									</div>
+		  	  		            	<div id="microphone-icon-container">
+										<div id="microphone-meta-hint-container">
+											<div id="microphone-meta-hint"></div>
+										</div>
+										
+										<div id="microphone-icon" class="form-item">
+											<div id="microphone-icon-image" class="centered-audio-icon"></div>
+										</div>
+		  	  		           	 	</div>
+		  	  		            	<div id="speaker-icon-container">
+		  	  		              		<div id="speaker-icon" class="form-item">
+		  	  		              			<div id="speaker-icon-image" class="centered-audio-icon"></div>
+		  	  		              		</div>
+		  	  		            	</div>
+									
+									
+									
+									
+								</div>
+								
+								
+								
+							</div>
+
+				            <div id="message-form-prompt-container" class="input">
+								
+								<div id="prompt-inputs-container">
+									
+									<div id="question-prompt-settings-container">
+										<div id="question-prompt-document-title"></div>
+										<textarea id="question-prompt-textarea" class="prompt" name="question-prompt-textarea" placeholder="."></textarea>
+										<div id="question-prompt-document-icon-container" class="question-prompt-icon"><span class="unicode-icon">📄</span></div>
+										<div id="question-prompt-clear-button" class="question-prompt-icon center">🧽</div>
+									</div>
+									
+									
+									
+									<div id="musicgen-prompt-settings-container" class="prompt-setting-container">
+										<div class="prompt-setting-slider-container"><span class="tiny-range-label">10</span><input id="musicgen-duration-slider" type="range" min="10" max="30" step="1" value="30"><span class="tiny-range-label">30</span></div> <span id="musicgen-prompt-duration-output-wrapper"><span class="prompt-setting-container-unicode-icon">⏱️</span><span id="musicgen-duration-output">30</span><span data-i18n="Seconds">Seconds</span></span>
+									</div>
+									
+									
+									<div id="speaker-voice-buttons-container" class="prompt-setting-container">
+										<div id="speaker-voice-buttons-background" class="width100"><span id="speaker-voice-buttons-background-ball-pusher"><span id="speaker-voice-buttons-background-ball"></span></span></div>
+                                            
+										<div id="speaker-voice-buttons" class="width100">
+                                            <span data-value="US female 1" class="speaker-voice-icon speaker-voice-icon-female speaker-voice-icon-us selected-speaker-voice-icon" title="US female 1">
+                                            👩‍⚕️
+                                            </span>
+    
+                                            <span data-value="US female 2" class="speaker-voice-icon speaker-voice-icon-female speaker-voice-icon-us" title="US female 2">
+                                            👰‍♀️
+                                            </span>
+    
+                                            <span data-value="US male 1" class="speaker-voice-icon speaker-voice-icon-us" title="US male 1">
+                                            🤦&#127998;
+                                            </span>
+    
+                                            <span data-value="US male 2" class="speaker-voice-icon speaker-voice-icon-us" title="US male 2">
+                                            🤹‍♂️
+                                            </span>
+
+                                            <span data-value="Canadian male" class="speaker-voice-icon speaker-voice-icon-canadian" title="Canadian male">
+                                            👨‍🎤
+                                            </span>
+    
+                                            <span data-value="Scottish male" class="speaker-voice-icon speaker-voice-icon-scottish" title="Scottish male">
+                                            🧟‍♂️
+                                            </span>
+
+                                            <span data-value="Indian male" class="speaker-voice-icon speaker-voice-icon-indian" title="Indian male">
+                                            🦸&#127996;
+                                            </span>
+										</div>
+                                            
+									</div>
+									<div id="chat-prompt-textareas-wrapper">
+										<div id="chat-prompt-textarea-wrapper">
+										
+											<textarea id="prompt" class="prompt" name="prompt" placeholder=""></textarea>
+											<div id="chat-prompt-textarea-eraser">🧽</div>
+										</div>
+					            		<textarea id="negative-prompt" class="prompt" name="negative-prompt" placeholder="Negative prompt">low contrast, underexposed, overexposed, ugly, disfigured, deformed, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft</textarea>
+										<textarea id="prompt-adjustments" class="prompt" name="adjustments" placeholder="."></textarea>
+									</div>
+								</div>
+				              	<div id="message-form-prompt-buttons" class="space-between">
+									<div></div>
+									
+									<div id="prompt-adjustment-toggles">
+										<div id="brevity-toggle-buttons" class="prompt-adjustment-toggles center">
+											<div id="prompt-brevity-disable-button" class="prompt-adjustment-toggle toggle-button-enabled center"><span class="unicode-icon center">🐁</span><!--<img src="images/brevity_enabled.svg" width="50" height="50" alt="Brevity" title="Brevity">--></div>
+											<div id="prompt-brevity-enable-button" class="prompt-adjustment-toggle center"><span class="unicode-icon center">🐁</span><!--<img src="images/markdown_disabled.svg" width="50" height="50" alt="Brevity" title="Brevity">--></div>
+										</div>
+										<div id="markdown-toggle-buttons" class="prompt-adjustment-toggles center">
+											<div id="prompt-markdown-disable-button" class="prompt-adjustment-toggle toggle-button-enabled center"><img src="images/markdown_enabled.svg" width="50" height="50" alt="Markdown" title="Markdown"></div>
+											<div id="prompt-markdown-enable-button" class="prompt-adjustment-toggle center"><img src="images/markdown_disabled.svg" width="50" height="50" alt="Markdown" title="Markdown"></div>
+										</div>
+										
+									</div>
+									
+									<div id="do-prompt-buttons">
+										
+										
+										<div id="document-chat-upload-button-container">
+											<input id="document-chat-upload-input" type="file" hidden />
+											<button id="document-chat-upload-button" type="button" onclick="document.getElementById('document-chat-upload-input').click()" class="file-input-label-container"></button>
+										</div>
+										
+				                		<button id="submit-prompt-button" class="submit-prompt-button"><img id="submit-prompt-button-image" class="submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></button>
+										
+										<!--
+										<button id="submit-question-button" class="submit-prompt-button"><img id="submit-question-button-image" class="submit-prompt-button-image" src="images/submit_question.svg" alt="Submit"></button>
+										<button id="submit-prompt-at-line-button" class="submit-prompt-button"><img id="submit-prompt-at-line-button-image" class="submit-prompt-button-image" src="images/submit_prompt_at_line.svg" alt="Submit"></button>
+										-->
+										
+									</div>
+				              	</div>
+								
+							</div>
+				
+						</div>
+			        </div>
+				</div>
+			</div>
+		</div>
+	
+	
+		
+		<div id="tutorial">
+			<div id="tutorial-menu">
+				<div id="tutorial-menu-inner" class="space-between center">
+					<div><img id="papegai-logo" class="flip-horizontalX show-if-developer" src="images/developer.png" alt="Papeg.ai logo" width="50" height="50"></div>
+					<div id="tutorial-menu-links" class="center">
+						<span id="about-link" data-i18n="About">About</span>
+						<span id="privacy-policy-link" data-i18n="Privacy">Privacy</span>
+					</div>
+				</div>
+			</div>
+			<div id="tutorial-header" class="space-between">
+				<span><!--Privacy + AI = Papeg.ai--></span>
+			</div>
+			
+			<div id="device-too-old-warning-container" class="device-too-old-warning-container center warning" style="display:none">
+				<div class="device-too-old-warning center" data-i18n="Your_device_does_not_seem_powerful_enough">
+					Your device does not seem powerful enough, the AI's will likely not work.
+				</div>
+			</div>
+			
+			<div class="files-loading-warning-container center">
+				<div class="files-loading-warning center">
+					<span class="spinner rotating">&nbsp;</span> &nbsp; <span data-i18n="Loading_files">Loading files</span>
+				</div>
+			</div>
+			
+			
+			
+			<div id="tutorial-content">
+				
+				<div id="recently-opened-documents-list-container">
+					<div id="recently-opened-documents-list-inner">
+						<span class="h3 tutorial-sub-title"><span class="unicode-icon">📑</span> <span data-i18n="Recent">Recent</span></span>
+						<ul id="recently-opened-documents-list"></ul>
+						<div class="align-right">
+							<button id="clear-recent-files-button" class="small-button" data-i18n="Clear">Clear</button>
+						</div>
+					</div>
+				</div>
+				
+				
+				
+				<div id="intro-tutorial-welcome-message">
+					<!--<h1>Papeg.ai</h1>-->
+					<img id="papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="50">
+					<div id="intro-tutorial-welcome-ankeilers" class="flex-wrap">
+						<p><span data-i18n="Free_and_easy_to_use_AI_for_chatting_writing_documents_and_more">Free and easy to use AI for chatting, writing documents and more.<!-- You don't need to install anything.--></span></p>
+						<p><span data-i18n="Privacy_is_guaranteed_because_this_website_downloads_the_AI_models_and_then_processes_your_data_on_your_own_device">100% Privacy is guaranteed because this website downloads the AI models, and then processes your data on your own device.</span> <span id="intro-text-privacy-learn-more-button" data-i18n="Learn_more">Learn more</span></p>
+						
+						<div id="intro-text-privacy-learn-more-explanation" style="display:none">
+							<p><span data-i18n="The_best_way_to_protect_your_privacy_is_to_never_send_your_data_to_an_AI_in_the_cloud_in_the_first_place">The best way to protect your privacy is to never send your data to an AI in the cloud in the first place</span>. <span data-i18n="Instead_Papeg_ai_brings_the_AI_to_you_by_downloading_a_complete_AI_to_your_device_first">Instead, Papeg.ai brings the AI to you, by downloading a complete AI to your device first. This takes a while, but it's worth it!</span></p>
+							<br/>
+							<ul>
+								<li><span data-i18n="You_only_need_to_download_an_AI_once_and_it_will_remain_available">You only need to download an AI once, and it will remain available. Even when the WiFi is switched off.</span></li>
+								<!--<li><span data-i18n="The_more_powerful_your_computer_is_the_more_powerful_AIs_you_can_run">The more powerful your computer is, the more powerful AI's you can run.</span></li>-->
+								<li><span data-i18n="Any_documents_you_edit_or_create_are_also_stored_inside_your_web_browser">Any documents you edit or create are also stored inside your web browser, on your own device, and not in the cloud.</span></li>
+								<li><span data-i18n="This_website_has_been_developed_by">This website does not collect any personal data. It has been developed by</span> <a href="https://www.tijmenschep.com" target="_blank" rel="noreferrer">Tijmen Schep</a>, <span data-i18n="a_digital_artist_and_privacy_designer_from_Amsterdam">a digital artist and privacy designer from Amsterdam</span>.</li>
+								<li><span data-i18n="The_AI_downloads_are_kindly_provided_by">The AI downloads are kindly provided by</span> <a href="https://www.huggingface.co" target="_blank" rel="noreferrer">www.huggingface.co</a>.</li>
+							</ul>
+						</div>
+						<!--
+						<p>100% Privacy is guaranteed because this website downloads the AI models to your own device first. All data stays on your own device, and all processing happens on your own device.</p>
+						-->
+					</div>
+				</div>
+				
+				
+				<div id="functionalities-lists" class="functionalities-lists">
+					<div class="functionalities-lists-wrapper">
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Chat icon" src="images/chat.svg"> <span data-i18n="chat">Chat</span></h3>
+							<div id="chat-functionalities-list" class="functionalities-list"></div>
+						</div>
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Documents icon" src="images/document.svg"> <span data-i18n="Writing">Writing</span></h3>
+							<div id="document-functionalities-list" class="functionalities-list"></div>
+						</div>
+					</div>
+					<div class="functionalities-lists-wrapper">
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Microphone icon" src="images/microphone_icon_with_shadow.svg"> <span data-i18n="Microphone">Microphone</span></h3>
+							<div id="microphone-functionalities-list" class="functionalities-list"></div>
+						</div>
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Camera icon" src="images/camera.svg"> <span data-i18n="Camera">Camera</span></h3>
+							<div id="camera-functionalities-list" class="functionalities-list"></div>
+						</div>
+					</div>
+				</div>
+				<div id="functionalities-lists2" class="functionalities-lists">
+					<div class="functionalities-lists-wrapper">
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Media icon" src="images/media.svg"> <span data-i18n="Media">Media</span></h3>
+							<div id="media-functionalities-list" class="functionalities-list"></div>
+						</div>
+						<div>
+							<h3 class="tutorial-sub-title">&nbsp;</h3>
+							<div id="music-functionalities-list" class="functionalities-list"></div>
+						</div>
+					</div>
+					<div class="functionalities-lists-wrapper">
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="images/learning.svg"> <span data-i18n="Research">Research</span></h3>
+							<div id="learning-functionalities-list" class="functionalities-list"></div>
+						</div>
+						<!--
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Camera icon" src="images/coding.svg"> <span data-i18n="Programming">Programming</span></h3>
+							<div id="coding-functionalities-list" class="functionalities-list"></div>
+						</div>
+						-->
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="images/programming.svg"> <span data-i18n="Programming">Programming</span></h3>
+							<div id="programming-functionalities-list" class="functionalities-list"></div>
+						</div>
+					</div>
+				</div>
+				
+				<div id="examples-lists">
+					<div class="functionalities-lists-wrapper" id="tutorial-characters-lists-container">
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Characters icon" src="images/characters.svg"> <span data-i18n="characters">Characters</span></h3>
+							<div id="fun-characters-list" class="functionalities-list"></div>
+						</div>
+						<div>
+							<h3 class="tutorial-sub-title">&nbsp;</h3>
+							<div id="serious-characters-list" class="functionalities-list"></div>
+						</div>
+					</div>
+					<div class="functionalities-lists-wrapper">
+						<div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Blueprints icon" src="images/templates.svg"> <span data-i18n="blueprints">Blueprint</span></h3>
+							<div id="personal-blueprints-list" class="functionalities-list"></div>
+						</div>
+						<div>
+							<h3 class="tutorial-sub-title">&nbsp;</h3>
+							<div id="business-blueprints-list" class="functionalities-list"></div>
+						</div>
+					</div>
+				</div>
+				
+				
+				
+				<div id="mobile-warning" class="show-if-mobile">
+					<div class="center">
+						<img src="images/papegai_laptop_hint_ankeiler.svg"><h3 class="small-hint-text"><span data-i18n="Papeg_ai_works_better_on_laptop_or_desktop_computers">Papeg.ai works better on laptop or desktop computers</span></h3>
+					</div>
+				</div>
+				
+				<div id="no-web-gpu-warning" class="hide-if-web-gpu">
+					<div class="center">
+						<img src="images/no_gpu_hint_ankeiler.svg">
+						<div class="large-hint-text">
+							<h3><span data-i18n="This_browser_does_not_support_fast_AI">This web browser does not support fast AI</span></h3>
+							<p><span data-i18n="You_will_have_a_better_experience_with_browsers_such_as">You will have a better experience with a browser such as</span>:</p>
+							<ul>
+								<li><a href="https://brave.com/download/" rel="noreferrer" target="_blank"><button><span>Brave</span> &nbsp; <span class="unicode-icon">💻</span> <span class="unicode-icon">📱</span></button></a></li>
+							</ul>
+						</div>
+					</div>
+
+				</div>
+				
+			</div>
+		</div>
+	
+		<div id="main-view">
+	
+			<div id="header">
+				<div class="space-between" id="header-layer1">
+					
+				
+					<div id="header-buttons">
+						
+						<!--<button id="toggle-css-button">CSS</button>
+						<button id="download-backup-button">DOWNLOAD BACKUP</button>-->
+						
+						
+						<!--<button id="save-file-beta-button" onclick="save_file(null,null,'beta')">SAVE BETA</button>
+						
+						<button id="inspect-button" onclick="inspect()"><span class="material-icons">fact_check</span></button>-->
+						<!--<button id="clear-local-storage-button" onclick="reset()">RESET</button>
+						<button id="open-viewer-button" onclick="open_viewer()">VIEWER</button>-->
+						<div id="file-tabs-container"></div>
+
+					</div>
+					
+					
+					
+					<div id="hamburger-options" class="context">
+						<ul>
+							<li></li>
+							<li class="hamburger-option item enabled" id="update-ui-button" onclick="update_ui()"><span class="material-icons">update</span>Update UI</li>
+							<li class="hamburger-option item enabled" id="enter-password-button" onclick="enter_password()"><span class="material-icons">password</span>Enter password</li>
+							
+							<li class="hamburger-option item enabled" id="display-projects-button" onclick="display_projects()"><span class="material-icons">menu_book</span>Projects</li>
+							<li class="hamburger-option item enabled" id="backup-all-button"><span class="material-icons">cloud_download</span>Backup all</li>
+							<!--<li class="hamburger-option item enabled" onclick="download_backup()" id="download-backup-button"><span class="material-icons">download</span>Download backup</li>-->
+							<li class="hamburger-option item enabled" onclick="inspect()"><span class="material-icons">fact_check</span>Inspect</li>
+								
+							<li class="hamburger-option item enabled"><div id="disk-space-container" class="progress-bar-container">
+								<div id="disk-space-values" class="progress-bar-values">
+									<span id="disk-space-used"></span>
+									<span id="disk-space-total"></span>
+								</div>
+								<div id="disk-space-progress-bar"></div>
+							</div></li>
+							
+							<li class="hamburger-option item enabled"><div id="db-space-container" class="progress-bar-container">
+								<div id="db-space-values" class="progress-bar-values">
+									<span id="db-space-used"></span>
+									<span id="db-space-total"></span>
+								</div>
+								<div id="db-space-progress-bar" class="progress-bar"></div>
+							</div></li>
+								
+							<li class="hamburger-option item enabled" onclick="recreate_live_backups_var()"><span class="material-icons">cloud_sync</span>Reload backups</li>
+							<li class="hamburger-option item enabled" onclick="reset()"><span class="material-icons">warning</span>Reset</li>
+							
+						</ul>
+					</div>
+					
+				</div>
+				
+				
+				<div id="header-layer2">
+					<div id="file-path">
+						<div id="current-folder"></div>
+						<div id="current-file-name"></div>
+					</div>
+					<button id="close-document-view" name="close" aria-label="close" type="button" class="center"><div class="bg-icon close-button-cross"></div></button><!-- × -->
+				</div>
+				
+				<div id="document-recording-warning" class="warning-section">
+					<div class="recording-warning"><span class="warning-unicode-icon">🎙️</span><span data-i18n="Recording_audio">Audio is being recorded</span></div>
+				</div>
+			</div>
+		
+			<div class="files-loading-warning-container center">
+				<div class="files-loading-warning center">
+					<span class="spinner rotating">&nbsp;</span> &nbsp; <span data-i18n="Loading_files">Loading files</span>
+				</div>
+			</div>
+			
+			<div class="file-loading-warning-container center">
+				<div class="file-loading-warning center">
+					<span class="spinner rotating">&nbsp;</span> &nbsp; <span data-i18n="Loading_file">Loading file</span>
+				</div>
+			</div>
+		
+		    <div id="editors">
+				
+				<div id="editor-bar" class="center">
+					<div id="bar-toggle-bold"><div>B</div></div><div id="bar-toggle-italic"><div>I</div></div>
+				</div>
+				
+			    <div id="playground" class="playground">
+					
+					<div id="full-playground-header">
+						<div class="flex-between">
+							<div class="x50y50"></div>
+							<button id="close-full-playground" class="center x50y50" name="close-full-groundground" aria-label="close" type="button"><img src="images/close_fullscreen2.svg" width="36" height="36" alt="exit full screen"></button>
+						</div>
+					</div>
+					
+					<div id="doc-selection-hint"> <!-- 👓 🧼 🐲 ✏️ 🗜️ 👄 💬 -->
+						<div id="doc-selection-hint-buttons">
+							<button id="proofread-selection-button" class="doc-selection-hint-button center"><img class="doc-selection-hint-icon" src="images/glasses.svg" width="20" height="20" alt="👓"> <span class="doc-selection-hint-text" data-i18n='Proofread'>Proofread</span></button>
+							<button id="rewrite-selection-button" class="doc-selection-hint-button center"><img class="doc-selection-hint-icon" src="images/pencil.svg" width="20" height="20" alt="✏️"><!--<span class="doc-selection-hint-icon"><span class="inline-block">✏️</span></span>--> <span class="doc-selection-hint-text" data-i18n='Rewrite'>Rewrite</span></button>
+							<button id="translate-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img src="images/translation-icon.svg" alt="Translation"></span> <span class="doc-selection-hint-text" data-i18n='Translate'>Translate</span></button>
+							<button id="summarize-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img src="images/summarize_icon.svg" alt="Summarize"></span> <span class="doc-selection-hint-text" data-i18n='Summarize'>Summarize</span></button>
+							<button id="question-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img alt="Question" src="images/chat.svg" height="20" width="20"></span> <span class="doc-selection-hint-text" data-i18n='Question'>Question</span></button>
+							<button id="speak-selection-button" class="doc-selection-hint-button center"><img class="doc-selection-hint-icon" src="images/mouth.svg" width="20" height="20" alt="👄"><!--<span class="doc-selection-hint-icon"><span class="inline-block">👄</span></span>--> <span class="doc-selection-hint-text" data-i18n='Speak'>Speak</span></button>
+						</div>
+						<div id="doc-selection-hint-quick-actions">
+							
+						</div>
+					</div>
+					
+					
+					
+					<div id="playground-overlay"></div>
+					<div id="parchment">
+						<svg viewbox="0 0 600 600">
+						  <filter id='roughpaper' x='0%' y='0%' width='100%' height="100%">
+						    <feTurbulence type="fractalNoise" baseFrequency='0.02' numOctaves="3" />
+						    <feDiffuseLighting lighting-color='#fff' surfaceScale='2'>
+						      <feDistantLight azimuth='45' elevation='60' />
+						    </feDiffuseLighting>
+						  </filter>
+						  <rect width="100%" height="100%" filter="url(#roughpaper)" />
+						</svg>
+					</div>
+			        <div class="code-editor" id="editor"></div>
+			        <div class="seperator" id="resizer"></div>
+			        <div class="code-output" id="output"></div>
+					<div class="circular-corner-close-button center" id="code-output-close-button"><div class="round-button close-button-cross bg-icon"></div></div><!-- × --><!-- <span class="bg-icon"></span> -->
+			    </div>
+
+			    <div id="bottom">
+			        <div id="html-editor">
+						<textarea id="html-editor-textarea"></textarea>
+			        </div>
+			        <div id="css-editor">
+						<textarea id="css-editor-textarea"></textarea>
+			        </div>
+			        <div id="html-output">
+	        			HTML OUTPUT
+			        </div>
+			    </div>
+				
+				
+				
+				<div id="document-form-container">
+					<div id="document-form-notifications-container"></div>
+					
+					<div id="audio-player-container"></div>
+					
+					<div id="document-translation-progress-container"></div>
+					
+					<div id="document-form">
+						<div id="document-form-limiter">
+							<div id="rewrite-document-buttons-container" class="document-footer-buttons-wrapper">
+								
+								<button id="document-search-button"><img class="iconic" src="images/submit_question.svg" height="20" width="20" alt="Search-Question"></button>
+								<button id="document-question-button"><img class="iconic" src="images/chat.svg" height="20" width="20" alt="Question"></button>
+								
+								<!--<button id="document-rewrite-button" class="show-if-doc-selection">Rewrite</button>-->
+								<button id="document-proofread-button" class="center"><img class="icon" src="images/glasses.svg" width="20" height="20" alt="👓"><span data-i18n="Proofread">Proofread</span></button>
+								
+								<button id="document-summarize-button" class="center"><img class="icon" src="images/summarize_clamp_icon.svg" width="20" height="20" alt="🗜️"><span data-i18n="Summarize">Summarize</span></button> <!-- <span class="unicode-icon icon brighten">🗜️</span> -->
+								<button id="document-continue-button" class="center"><img class="icon" src="images/fountain_pen_tip.svg" width="20" height="20" alt="✒️"><span data-i18n="Continue">Continue</span></button> <!-- <span class="unicode-icon icon">✒️</span><span data-i18n="Continue">Continue</span> ✒️ -->
+								<button id="document-translate-button" class="center"><span class="svg-icon icon"><img src="images/translation-icon.svg" alt="Translation"></span><span data-i18n="Translate" >Translate</span></button>
+								
+								<button id="import-settings-backup-button" class="center"><span data-i18n="Import"></span></button>
+								
+							</div>
+						
+							<div id="undo-redo-buttons-container" class="document-footer-buttons-wrapper">
+								<button id="undo-document-button" title="Undo" class="undo-redo-button"><span class="unicode-icon icon">⤺</span></button>
+								<button id="redo-document-button" title="Redo" class="undo-redo-button"><span class="unicode-icon icon">⤺</span></button>
+							</div>
+							
+							<div class="flex">
+								
+								
+								<div id="code-tools-buttons-container" class="document-footer-buttons-wrapper">
+									<button id="line-bookmark-button" onclick="line_bookmark()" class="show-if-advanced"><span class="unicode-icon icon rotate-45">🏷️</span></button>
+									<button id="quick-diff-button" onclick="differ();" title="Differences" class="center"  class="show-if-developer"><span class="unicode-icon icon">👀</span></button> <!-- 🔬 🐫 🕶️ -->
+									<button id="beautify-button" onclick="beautify();" title="Beautify" class="center"><span class="unicode-icon icon">🌼</span></button><!-- 🛁 🧹 🫧 🌷 🌸 -->
+								</div>
+								<div id="document-footer-mobile-space-saver" class="flex">
+									<div id="save-play-buttons-container" class="document-footer-buttons-wrapper">
+										<button id="save-document-button" title="Save" class="center"><img class="doc-selection-hint-icon unicode-icon icon" src="images/floppy.svg" width="20" height="20" alt="💾"><!--<span class="unicode-icon">💾</span>--></button>
+										<button id="audio-play-document-button" title="Speak" class="center"><img class="doc-selection-hint-icon unicode-icon icon" src="images/mouth.svg" width="20" height="20" alt="👄"><!--<span class="unicode-icon">👄</span>--></button>
+										<button id="play-document-button" title="Play" class="center"><span class="unicode-icon icon">▶</span></button>
+										<button id="stop-play-document-button" title="Stop" class="center"><img class="stop-icon icon" src="images/stop_square.svg" alt="Stop"></button><!-- ⏸ -->
+									</div>
+							
+									<!-- ⬇ -->
+									<div id="download-buttons-container" class="document-footer-buttons-wrapper">
+										<button id="download-document-button" class="center" title="Download document"><!--<img src="images/download.svg" class="svg-icon" width="24" height="24" alt="Download" title="Download">--></button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+				
+				
+			</div>
+			
+		
+		</div>
+		
+			
+	</div>
+    
+
+	
+    <div id="alert">
+        <div id="alert1"></div>
+        <div id="alert2"></div>
+    </div>
+	
+	
+	<dialog id="prompt-at-line-dialog">
+		<div class="prevent-propagation">
+			<h3 id="prompt-at-line-dialog-hint" data-i18n="Insert">Insert</h3>
+			<textarea id="prompt-at-line-input" class="prompt" data-i18n-placeholder="Write_a_paragraph_about"></textarea>
+			<form method="dialog" class="flex-between">
+	  	    	<button class="grey-button">Cancel</button>
+	  			<div class="submit-multi-commands-buttons-wrapper">
+	  				<button id="prompt-at-line-submit-button" class="submit-prompt-button" autofocus><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" width="36" height="36" alt="submit"></button>
+	  			</div>
+	  	  	</form>
+		</div>
+	</dialog>
+	
+	
+	
+	<dialog id="more-characters-dialog">
+		<div class="prevent-propagation">
+			<h3 id="more-characters-dialog-hint"><span data-i18n="You_can_add_create_and_share_characters">You can add, create and share as many characters as you like</span></h3>
+		
+			<div class="dialog-big-buttons-container">
+				<div id="more-characters-dialog-new-button"><img class="dialog-big-buttons-image" src="images/new_character.svg" alt="New custom character"><p class="dialog-big-buttons-text" data-i18n="Create_a_new_custom_character">Create a new custom character</p></div>
+				<a id="more-characters-reddit-button" href="https://www.reddit.com/r/PapegAI/" target="_blank" rel="noreferrer"><div><img class="dialog-big-buttons-image" src="images/visit_reddit.png" alt="Visit Reddit"><p class="dialog-big-buttons-text" data-i18n="Find_and_share_characters_on_Reddit">Find and share characters on Reddit.com</p></div></a>
+			</div>
+		
+			<div id="more-characters-dialog-content-container"></div>
+		
+			<form method="dialog" class="flex-between">
+				<button data-i18n="Cancel">Cancel</button><span></span>
+			</form>
+		</div>
+	</dialog>
+	
+	
+	
+	<dialog id="more-blueprints-dialog">
+		<div class="prevent-propagation">
+			<h3 id="more-blueprints-dialog-hint"><span data-i18n="You_can_add_create_and_share_blueprints">You can add, create and share as many blueprints as you like</span></h3>
+		
+			<div class="dialog-big-buttons-container">
+				<div id="more-blueprints-dialog-new-button"><img class="dialog-big-buttons-image" src="images/new_blueprint.png" alt="New blueprint"><p class="dialog-big-buttons-text" data-i18n="Create_a_new_blueprint">Create a new blueprint</p></div>
+				<a id="more-blueprints-reddit-button" href="https://www.reddit.com/r/PapegAI/" target="_blank" rel="noreferrer"><div><img class="dialog-big-buttons-image" src="images/visit_reddit.png" alt="Visit Reddit"><p class="dialog-big-buttons-text" data-i18n="Find_and_share_blueprints_on_Reddit">Find and share blueprints on Reddit.com</p></div></a>
+			</div>
+		
+			<div id="more-blueprints-dialog-content-container"></div>
+		
+			<form method="dialog" class="flex-between">
+				<button data-i18n="Cancel">Cancel</button><span></span>
+			</form>
+		</div>
+	</dialog>
+	
+	
+	
+	<dialog id="blueprint-fields-dialog">
+		<div class="prevent-propagation">
+			<h3 id="blueprint-fields-hint"><span data-i18n="Please_provide_the_following_information">Please provide the following information</span>:</h3>
+			<div id="blueprint-fields-dialog-content-container"></div>
+			<!--
+				<form method="dialog" class="flex-between">
+				<button data-i18n="Cancel">Cancel</button><span></span>
+				</form>
+			-->
+		</div>
+	</dialog>
+	
+	
+	
+	<dialog id="emoji-picker-dialog">
+		<div class="prevent-propagation">
+			<h3 id="emoji-picker-dialog-hint"><!--<span class="unicode-icon">🐹</span>--><span data-i18n="Select_an_emoji">Select an emoji</span></h3>
+			<div id="emoji-picker-container"></div>
+			<form method="dialog" class="flex-between">
+				<button data-i18n="Cancel">Cancel</button><span></span>
+			</form>
+		</div>
+	</dialog>
+	
+	
+	
+	
+	<dialog id="new-custom-ai-dialog">
+		<div class="prevent-propagation">
+			<img class="dialog-papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="25">
+			<h1 id="new-custom-ai-dialog-hint"><!--<span class="unicode-icon">🦜</span>--><span data-i18n="New_AI">New AI</span></h1>
+			
+			<div id="received-ai-dialog-warning" class="dialog-warning show-if-creating-new-ai">
+				<p><span data-i18n="You_clicked_on_a_link_to_add_an_AI">You_clicked_on_a_link_to_add_an_AI</span>. <span data-i18n="Only_continue_if_you_did_this_on_purpose">Only continue if you did this on purpose</span>.</p>
+				<!--
+				<textarea id="received-ai-prompt-preview" class="prompt"></textarea>
+				<p data-i18n="The_AI_came_with_a_command_to_run">The AI came with a command to run. Please review it to make sure you're OK with running it.</p>
+				-->
+			</div>
+			
+			<div id="new-custom-ai-error-hint" class="vertical-margin hide-if-empty"></div>
+	  
+			<div class="vertical-margin">
+	    	  	<!--<p>What should the AI be called?</p>// -->
+	    	  	<input id="new-custom-ai-model-custom_name" class="prompt new-custom-ai" type="text" placeholder="Name" data-i18n-placeholder="Name">
+			</div>
+	  
+			<div class="vertical-margin">
+	    	  	<!--<p>Very short description</p>// -->
+	    	  	<textarea id="new-custom-ai-model-custom_description" class="prompt new-custom-ai" placeholder="Description" data-i18n-placeholder="Description"></textarea>
+	    	</div>
+	  	  	
+			<div class="vertical-margin">
+				<!--<p data-i18n="Icon">Icon</p>// -->
+				<div id="new-custom-ai-model-emoji-editor-container"></div>
+			</div>
+	  
+	        <form method="dialog" class="flex-between">
+				<button id="add-custom-ai-cancel-button" data-i18n="Cancel">Cancel</button> <button id="add-custom-ai-next-button" data-i18n="Next">Next</button>
+	        </form>
+	  <!--
+  	  <h2>1</h2>
+  	  <p>Do you want to base the new AI on an existing one, or should it be completely new?</p>
+	  
+  	  <div id="new-custom-ai-type-selection">
+			
+  			<input type="radio" id="new-custom-ai-template" name="new-custom-ai-radio" value="template" selected>
+  			<label for="new-custom-ai-template" class="new-custom-ai-radio-label">Start from a template</label>
+			
+  			<input type="radio" id="new-custom-ai-clone" name="new-custom-ai-radio" value="clone">
+  			<label for="new-custom-ai-clone" class="new-custom-ai-radio-label">Clone an existing AI</label>
+			
+  			<input type="radio" id="new-custom-ai-fresh" name="new-custom-ai-radio" value="fresh">
+  			<label for="new-custom-ai-fresh" class="new-custom-ai-radio-label">Custom (advanced)</label>
+			
+  			<div id="new-custom-ai-template-container" class="new-custom-ai-radio-container">
+  				<h3>Template</h3>
+  				<ul>
+  					<li>Template 1</li>
+  				</ul>
+  			</div>
+			
+  			<div id="new-custom-ai-clone-container" class="new-custom-ai-radio-container">
+  				<h3>Clone</h3>
+  				<ul>
+  					<li>Clone 1</li>
+  				</ul>
+  			</div>
+			
+  	  </div>
+	  // -->
+	  
+	  
+		  
+		</div>
+	</dialog>
+	
+	
+	
+	<dialog id="share-prompt-dialog">
+		<div class="prevent-propagation">
+			<h3 id="share-prompt-dialog-hint"><span class="unicode-icon">🔗</span><span data-i18n="Share_a_link">Share a link with this command</span></h3>
+			<h3 id="share-prompt-dialog-edit-ai-details-hint"><!--<span class="unicode-icon">⚙️</span>--><span data-i18n="AI_settings">AI_settings</span></h3>
+			<!--<select id="share-prompt-assistants-select"></select>-->
+	  
+			<div id="share-prompt-assistant-name-container">
+				<div id="share-prompt-assistant-name-wrapper">
+					<div id="share-prompt-assistant-icon-container">
+						<div id="share-prompt-assistant-emoji" class="center"></div>
+						<img id="share-prompt-assistant-name-icon" src="images/developer.png" alt="Current AI icon">
+					</div>
+			  
+					<div id="share-prompt-assistant-custom_name" class="capitalize-first-letter"></div>
+				</div>
+			</div>
+	  
+			<textarea id="share-prompt-input" class="prompt hide-if-creating-new-ai"></textarea>
+	  
+			<div id="share-prompt-custom-parts-container" class="show-if-creating-new-ai">
+				<textarea id="share-prompt-model-download_url" class="prompt share-prompt show-if-advanced" placeholder="Model URL"></textarea>
+				<textarea id="share-prompt-model-config_url" class="prompt share-prompt show-if-advanced" placeholder="Config URL"></textarea>
+				<textarea id="share-prompt-model-role_name" class="prompt share-prompt show-if-advanced" placeholder="Role name" style="display:none"></textarea>
+			</div>
+	  
+			<div id="share-prompt-custom-prompts-container" class="show-if-creating-new-ai">
+				<textarea id="share-prompt-model-system_prompt" class="prompt share-prompt" placeholder="System prompt" data-i18n-placeholder="system_prompt"></textarea>
+				<textarea id="share-prompt-model-second_prompt" class="prompt share-prompt" placeholder="Welcome message" data-i18n-placeholder="second_prompt"></textarea>
+				<div id="share-prompt-model-system-prompt-examples" class="show-if-creating-new-ai align-right"><span data-i18n="Examples">Examples</span>: <button class="prompt-example-button" data-example-prompt="assistant"><span class="unicode=icon">🛎️</span></button><button class="prompt-example-button" data-example-prompt="mushroom"><span class="unicode=icon">❤️</span></button><button class="prompt-example-button" data-example-prompt="tv"><span class="unicode=icon">📺</span></button><button class="prompt-example-button" data-example-prompt="writer"><span class="unicode=icon">✍️</span></button></div>
+			</div>
+			<div class="align-right">
+				<button id="share-prompt-show-more-options-button" class="small-button show-if-advanced" data-i18n="More_settings">More settings</button>
+			</div>
+	  
+  	 
+	  
+			<div id="share-prompt-link-container">
+				<div id="share-prompt-link"></div>
+				<div id="share-prompt-copy-to-clipboard-button" class="svg-icon center share-prompt-copy-to-clipboard-button" title="Copy"><img src="images/copy_to_clipboard.svg" width="25" height="25" alt="Copy"></div><!-- 📋 ✂️ //-->
+			</div>
+	  
+			<form method="dialog" class="flex-between">
+				<span></span><button id="share-prompt-dialog-done-button" data-i18n="Done">Done</button><!--<button id="add-custom-ai-save-button" data-i18n="Save">Save</button>-->
+		
+			</form>
+		</div>  
+	</dialog>
+	
+	
+	
+	<dialog id="received-prompt-dialog">
+		<div class="prevent-propagation">
+			<img class="dialog-papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="25">
+			<h1 id="received-prompt-dialog-hint"><span data-i18n="Run_received_command">Run received command?</span></h1>
+			<p data-i18n="You_clicked_on_a_link_to_run_an_AI_command">You clicked on a link to run an AI command. Please review the command to make sure you're OK with running it.</p>
+			<div id="received-prompt-textarea-container">
+				<div id="received-prompt-assistant-name-wrapper" class="flex">
+					<div id="received-prompt-assistant-icon-container">
+						<div id="received-prompt-assistant-emoji" class="center"></div>
+						<img id="received-prompt-assistant-name-icon" src="images/developer.png" alt="Current AI icon">
+					</div>
+					<div id="received-prompt-assistant-name" class="capitalize-first-letter"></div>
+				</div>
+				<textarea id="received-prompt-textarea" class="prompt"></textarea>
+			</div>
+			
+			<form method="dialog" class="flex-between">
+				<button data-i18n="Cancel">Cancel</button><span></span><button id="run-the-received-prompt-button" data-i18n="Run_the_command">Run the command</button>
+			</form>
+			
+		</div>
+	</dialog>
+	
+	
+	<div id="overlay-container" class="show-if-overlay">
+		<div id="overlay-window">
+			<div id="overlay-header" class="space-between"><span></span><span id="close-overlay-button" class="button" onclick="close_overlay()">✕</span></div>
+			<div id="overlay-content"></div>
+		</div>
+	</div>
+	
+</div>
+
+
+
+
+
+	<script src="./early.js"></script>
+		
+	<script type="module" src="./service_module.js"></script>
+
+	<script src="./ai.js"></script>
+	<script src="./translations.js"></script>
+	<script src="./papeg_ai_translation.js"></script>
+
+	<script src="./papeg_ai_init.js"></script>
+	<script src="./js/various_utils.js"></script>
+	<script src="./js/promise-worker.js"></script>
+
+    
+
+	<script src="./papeg_ai_ui.js"></script>
+
+    <script src="./llama_cpp.js" type="module"></script>
+
+	<!--
+    <script src="./js/onnx_runtime.js"></script>
+    <script src="./js/vad_bundle.min.js"></script>
+	-->
+		
+	<script src="./papeg_ai_audio.js"></script>
+	
+	<!--
+	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
+	//-->
+
+
+	<script src="./papeg_ai_main.js"></script>
+
+	<script src="./papeg_ai_audio_module.js" type="module"></script>
+
+	<script src="./papeg_ai_docs.js"></script>
+	
+	<script src="./main_module.js" type="module"></script>
+
+	<script src="./pjs/first.js"></script>	
+	<script src="./pjs/data.js"></script>
+	
+	<script src="./t2i_module.js" type="module"></script>
+	<script src="./web_llm_module.js" type="module"></script>
+	
+	<script defer src="./js/chrono.js"></script>
+	
+	<script defer="" src="./pjs/context_menu.js"></script>
+	<script defer="" src="./pjs/codemirror.js"></script>
+    <script defer="" src="./pjs/codemirror-indentation-markers.js"></script>
+	<script defer="" src="./pjs/utils.js"></script>	
+	<script defer="" src="./pjs/ui.js"></script>
+	<script defer="" src="./pjs/editor.js"></script>	
+	
+    <script defer="" src="./pjs/main.js"></script>
+	<script defer="" src="./pjs/jszip.min.js"></script>
+	<script defer="" src="./pjs/crypto-js.min.js"></script>
+	
+	<script defer src="./js/canvasTxt.js"></script>
+	<script defer src="./last.js"></script>
+	<script defer src="./counter.php"></script>
+	
+	
+	<script src="./whisper_worker.js" type="module"></script>
+	
+
+</body>
+</html>

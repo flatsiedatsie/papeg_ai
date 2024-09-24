@@ -1,0 +1,1 @@
+import { DocumentScanner } from 'https://cdn.jsdelivr.net/npm/opencv-document-scanner/dist/opencv-document-scanner.js';
