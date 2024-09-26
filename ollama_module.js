@@ -1,23 +1,5 @@
 console.log("Hello from Ollama module");
-//import { Ollama } from './ollama/index.js';
-//import './ollama/ollama-js.global.js';
-//import './ollama/index.js';
-/*
-let Ollama;
-if(typeof Ollama == 'undefined' && typeof window.OllamaJS != 'undefined'){
-	console.error("HELLO FROM OLLAMA. settings window.OllamaJS as Ollama: ", window.OllamaJS);
-	Ollama = window.OllamaJS;
-}
 
-if(typeof Ollama != 'undefined'){
-	console.error("OK, Ollama class exists? ", Ollama);
-}
-else{
-	console.error("Ollama class doesn't exist??");
-}
-
-console.error("typeof Ollama: ", typeof Ollama );
-*/
 
 let ollama_task = null;
 let response_so_far = '';
@@ -32,25 +14,6 @@ if(typeof window.settings.assistants['ollama1'] != 'undefined' && typeof window.
 
 window.load_ollama = async (task) => {
 	//console.log("in load_ollama. task: ", task);
-	
-	/*
-	if(window.ollama == null){
-		if(typeof Ollama != 'undefined'){
-			console.error("creating window.ollama");
-			window.ollama = new Ollama({ host: ollama_host });
-			console.error("load_ollama: created window.ollama: ", window.ollama);
-		}
-		else{
-			console.error("Ollama class was undefined");
-			return false
-		}
-		
-	}
-	else{
-		console.error("window.ollama exists: ", window.ollama);
-	}
-	*/
-
 
 	let model = 'llama3';
 	if(typeof task.ollama_model == 'string'){
@@ -67,52 +30,6 @@ window.load_ollama = async (task) => {
 	else if(typeof task.assistant == 'string' && typeof window.assistants[task.assistant] != 'undefined' && typeof window.assistants[task.assistant].system_prompt == 'string' && window.assistants[task.assistant].system_prompt.length > 5){
 		system_prompt = window.assistants[task.assistant].system_prompt;
 	}
-	
-	/*
-	if(typeof model == 'string'){
-		window.currently_loading_ollama_model = model;
-		//console.log(`downloading ${model}...`)
-		let currentDigestDone = false
-		const stream = await window.ollama.pull({ model: model, stream: true })
-		for await (const part of stream) {
-		  if (part.digest) {
-		    let percent = 0
-		    if (part.completed && part.total) {
-		      percent = Math.round((part.completed / part.total) * 100)
-		    }
-		    process.stdout.clearLine(0) // Clear the current line
-		    process.stdout.cursorTo(0) // Move cursor to the beginning of the line
-		    process.stdout.write(`${part.status} ${percent}%...`) // Write the new text
-		    if (percent === 100 && !currentDigestDone) {
-		      console.log() // Output to a new line
-		      currentDigestDone = true
-				window.ollama_model_being_loaded = null;
-				window.currently_loaded_ollama_assistant = model;
-		    } else {
-		      currentDigestDone = false
-		    }
-		  } else {
-		    console.log(part.status)
-		  }
-		}
-		
-		
-		//const modelfile = `
-		//FROM ${model}
-		//SYSTEM "${system_prompt}"
-		//`
-		//await window.ollama.create({ model: model, modelfile: modelfile })
-		
-		
-	}
-	else{
-		console.error("load_ollama: no model id provided. task: ", task);
-	}
-	
-	*/
-
-
-	
 
 }
 
@@ -145,34 +62,13 @@ window.do_ollama = async (task) => {
 		if(typeof window.settings.assistants['ollama1'] != 'undefined' && typeof window.settings.assistants['ollama1']['ollama_model'] == 'string' && window.settings.assistants['ollama1']['ollama_model'].trim().length > 1){
 			ollama_model = window.settings.assistants['ollama1']['ollama_model'];
 		}
-		/*
-		let model = 'llama3';
-		if(typeof task.ollama_model == 'string'){
-			model = task.ollama_model;
-		}
-		//console.log("do_ollama:  model: ", model);
-		*/
-	
+		
 		if(window.ollama_online == false){
 			//console.log("window.do_ollama: calling test_ollama first");
 			await test_ollama();//window.load_ollama(task);
 		}
 	
-		/*
-	  const response = await ollama.generate({
-	  model: 'codellama:7b-code',
-	  prompt: `<PRE> ${prefix} <SUF>${suffix} <MID>`,
-	  options: {
-	    num_predict: 128,
-	    temperature: 0,
-	    top_p: 0.9,
-	    presence_penalty: 0,
-	    stop: ['<EOT>'],
-	  },
-	})
-		
-		
-		*/
+	
 	
 		if(window.ollama_online == true){
 			if(typeof task.prompt == 'string' && task.prompt.length > 2){
@@ -182,8 +78,6 @@ window.do_ollama = async (task) => {
 			
 				let chat_history = get_conversation_history(task);
 				//console.log("do_ollama: chat_history: ", chat_history);
-		        //const response = await ;
-				//console.log("Ollama chat response: ", response);
 			
 				window.ollama_abort_controller = new AbortController();
 			
@@ -273,15 +167,6 @@ const handle_chat_response = async (body) => {
 		}
 		
 		
-		//{"model":"llama3","created_at":"2024-06-05T14:22:14.869229Z","message":{"role":"assistant","content":" peace"},"done":false}
-		
-		/*
-		let new_chunk = part.message.content.substr(response_so_far.length);
-		//console.log("do_ollama: new ollama chunk: ", new_chunk);
-		
-
-		response_so_far = part.message.content;
-		*/
 	}
 	//console.log("OLLAMA: DONE!");
 	window.handle_completed_task(ollama_task, response_so_far);
@@ -397,45 +282,6 @@ window.test_ollama = async () => {
 				add_chat_message_once('ollama1','developer',get_translation('Ollama_is_offline'),'Ollama_is_offline');
 			}
 		}
-			
-				
-			
-		
-		
-		/*
-		if(typeof window.settings.assistants['ollama1'] != 'undefined' && typeof window.settings.assistants['ollama1']['ollama_host'] == 'string'){
-			ollama_host = window.settings.assistants['ollama1']['ollama_host'];
-		}
-		
-        const response = await fetch(ollama_host, { // works: "http://localhost:11434/"
-            method: "GET",
-			//mode: 'no-cors',
-			rejectUnauthorized: false,
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-		//console.log("ollama test response: ", response);
-        if (response.ok) {
-            const result = await response.text(); // Parse JSON
-			window.ollama_online = true;
-			console.error("test_ollama: Ollama is online");
-			//flash_message(get_translation('Ollama_is_online'));
-			add_chat_message_once('ollama1','developer',get_translation('Ollama_is_online'),'Ollama_is_online');
-			if(window.settings.assistant.startsWith('ollama')){
-				//console.log("window.settings.assistant startsWith ollama");
-				document.body.classList.add('model-loaded');
-				window.set_model_loaded(true);
-			}
-			else{
-				//console.log("window.settings.assistant: ->" + window.settings.assistant + "<-");
-			}
-			//console.log("test_ollama:  response: ", result);
-        } else {
-			window.ollama_online = false;
-            console.error("test_ollama: Ollama is offline");
-        }
-		*/
 		
     } catch (err) {
 		console.error("test_ollama: Ollama is very offline - caught error: ", err);
