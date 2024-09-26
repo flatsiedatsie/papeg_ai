@@ -486,9 +486,11 @@ body:not(.developer) .contact-item.too-big .assistants-checkbox-container{
 	transform:scale(1.2);
 }
 
+/*
 .chat .content .message-header .user-info img{
 	margin-right: 10px;
 }
+*/
 
 #back-button{
 	background-color:rgba(255,255,255,.1);
@@ -748,6 +750,19 @@ body:not(.has-keyboard) .chat .content .message-content:not(:empty){
 	line-height:150%;
 }
 
+
+.chat .message-content .message .small-corner-close-button{
+	opacity:0;
+}
+.chat .message-content .message:hover .small-corner-close-button{
+	opacity:.4;
+}
+.chat .message-content .message .small-corner-close-button:hover{
+	opacity:1;
+}
+#assistant-scribe .chat .message-content .message .small-corner-close-button{
+	display:none;
+}
 
 
 .image-to-process{
