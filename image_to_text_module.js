@@ -444,27 +444,12 @@ async function create_image_to_text_worker(){
 		
 		resolve(true);
 	});
-	
-	
-	
-	
 }
-
-
-//console.log("image_to_text_module.js:  calling create_image_to_text_worker");
-//create_image_to_text_worker();
-
-
-
-
 
 
 
 window.do_image_to_text = function (task){ // image_to_text_queue_item
 	console.log("in do_image_to_text. Task: ", task);
-	
-	//await caches.open(window.cache_name).then((my_cache) => my_cache.add(e.data.file))
-	//await create_image_to_text_worker();
 	
 	return new Promise((resolve, reject) => {
 		
@@ -488,30 +473,9 @@ window.do_image_to_text = function (task){ // image_to_text_queue_item
 		else{
 			console.error('do_image_to_text: NOT setting task.huggingface_id.  window.settings.assistants[image_to_text]:  ', window.settings.assistants['image_to_text']);
 		}
-		/*
-		else if(typeof window.settings['image_to_text'] != 'undefined' && typeof window.settings['image_to_text'].model_id == 'string' && window.settings['image_to_text'].model_id.toLowerCase().indexOf('moondream') != -1){
-			task['model_id'] = window.settings['image_to_text'].model_id;
-		}
-		*/
 		
-		/*
-		if(window.image_to_text_worker_busy == true){
-			console.error("do_image_to_text: ABORTING. window.image_to_text_worker_busy was already true. task: ", task);
-			reject(false);
-			return false
-		}
-		
-		window.image_to_text_worker_busy = true;
-		*/
 		my_image_to_text_task = task;
 		
-		/*
-		caches.open(window.cache_name)
-		.then((my_cache) => {
-			my_cache.add(e.data.file);
-			return create_image_to_text_worker();
-		})
-		*/
 		
 		
 		if(window.image_to_text_worker == null){
@@ -548,37 +512,7 @@ window.do_image_to_text = function (task){ // image_to_text_queue_item
 						if( ('' + err).indexOf('network error') != -1){
 							flash_message(get_translation('A_network_connection_error_occured'),5000,'error');
 						}
-						/*
-						if(window.currently_downloading()){
-							let download_interrupted_el = document.getElementById('download-interrupted-warning');
-							if(download_interrupted_el == null){
-								console.error("adding download-interrupted-warning");
-								download_interrupted_el = document.createElement('div');
-								download_interrupted_el.setAttribute('id','download-interrupted-warning');
-								
-								let download_interrupted_p_el = document.createElement('p');
-								download_interrupted_p_el.textContent = get_translation('A_network_connection_error_occured');
-								download_interrupted_el.appendChild(download_interrupted_p_el);
-								
-								let download_interrupted_button_container_el = document.createElement('div');
-								download_interrupted_button_container_el.classList.add('align-right');
-								
-								let download_interrupted_button_el = document.createElement('button');
-								download_interrupted_el.textContent = get_translation('OK');
-								download_interrupted_el.appendChild(download_interrupted_button_el);
-								download_interrupted_button_el.addEventListener('click',() => {
-									console.log("closing failed download warning");
-									download_interrupted_el.remove();
-								});
-								
-								download_interrupted_button_container_el.appendChild(download_interrupted_button_el);
-								download_interrupted_el.appendChild(download_interrupted_button_container_el);
-								
-								message_downloads_container_el.prepend(download_interrupted_el);
-								
-							}
-						}
-						*/
+						
 						
 						reject(false);
 						return false;
@@ -587,12 +521,6 @@ window.do_image_to_text = function (task){ // image_to_text_queue_item
 				}
 			
 			})
-			/*
-			.then((value) => {
-				console.log("do_image_to_text: start promise worker: final then: value: ", value);
-				resolve(value);
-			})
-			*/
 			.catch((err) => {
 				console.error("do_image_to_text: caught error from create_image_to_text_worker: ", err);
 			})
@@ -691,24 +619,6 @@ window.do_continuous_image_to_text = async function (task=null){ // image_to_tex
 			window.image_to_text_start_time = Date.now();
 			window.describe_one_camera_frame();
 			window.update_task_overview();
-			
-			
-			
-			/*
-			if(window.camera_streaming !== true){
-				window.busy_starting_camera = true;
-				window.add_script('./camera_module.js',true) // add it as a module
-				.then(() => {
-					window.start_camera();
-				})
-				.catch((err) => {
-					console.error("do_continuous_image_to_text: caught error loading camera_module script: ", err);
-					window.busy_starting_camera = false;
-				})
-			}
-			*/
-			
-			
 			
 		}
 		else{
@@ -881,27 +791,6 @@ window.new_document_from_image_to_text_scan_result = function (){
 	create_new_document(get_translation("Image_description") + ":\n\n", image_to_text_document_filename);
 	save_image_to_text_task['file'] = {'folder':folder,'filename':image_to_text_document_filename};
 	save_image_to_text_task['selection'] = {'position':'end'};
-	/*
-	if(window.settings.docs.open == null){
-		let image_to_text_document_filename = get_translation('Text_from_photo') + ' ' + make_date_string() + '.txt'
-		create_new_document(get_translation("Photo_to_text_results") + ":\n\n", image_to_text_document_filename);
-		save_image_to_text_task['file'] = {'folder':folder,'filename':image_to_text_document_filename};
-	}
-	else{
-		save_image_to_text_task['file'] = window.settings.docs.open;
-		save_image_to_text_task['selection'] = window.doc_selection;
-		
-		// insert it 1 character before the actual cursor position
-		if(save_image_to_text_task['selection'] && typeof save_image_to_text_task['selection'].from == 'number' && typeof save_image_to_text_task['selection'].to == 'number' && save_image_to_text_task['selection'].from == save_image_to_text_task['selection'].to && save_image_to_text_task['selection'].from > 0){
-			save_image_to_text_task['selection'].from = save_image_to_text_task['selection'].from - 1;
-			save_image_to_text_task['selection'].to = save_image_to_text_task['selection'].to - 1;
-		}
-		else{
-			save_image_to_text_task['selection'] = {'to':0,'from':0}
-		}
-		save_image_to_text_task['line_nr'] = window.doc_line_nr;
-	}
-	*/
 	
 	save_image_to_text_task = window.add_task(save_image_to_text_task);
 	if(save_image_to_text_task){

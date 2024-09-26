@@ -1,6 +1,6 @@
 /*! coi-serviceworker v0.1.7 - Guido Zuidhof and contributors, licensed under MIT */
 
-var service_worker_version = 148;
+var service_worker_version = 159;
 
 var previousCacheName = null; 
 var cacheName = 'v' + service_worker_version; 
@@ -69,7 +69,7 @@ if (typeof window === 'undefined') {
 	
 
     self.addEventListener("message", (ev) => {
-		console.log("service worker: received message. ev: ", ev, ev.data, ev.data.type);
+		//console.log("service worker: received message. ev: ", ev, ev.data, ev.data.type);
 		
 		if (!ev.data) {
             return;

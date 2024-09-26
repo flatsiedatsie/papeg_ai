@@ -264,7 +264,7 @@
 			document.body.classList.add('mobile');
 			window.use_simple_vad = true;
 			window.speakers_manually_overridden = true;
-			window.settings.voice = 'basic';
+			//window.settings.voice = 'basic';
 			window.opencv_interval_delay = 500;
 			
 			if(typeof window.settings.assistants['danube'] == 'undefined'){
@@ -793,9 +793,9 @@
 								cache.keys()
 								.then(items => {
 							    	items.map(item => {
-										if(item.url.indexOf('ocket') != -1){
-											console.log(cacheName + " - item - ", item.url , item);
-										}
+										//if(item.url.indexOf('ocket') != -1){
+										//	console.log(cacheName + " - item - ", item.url , item);
+										//}
 										//console.log(cacheName + " - item - ", item.url , item);
 										if(window.cached_urls.indexOf(item.url) == -1){
 											window.cached_urls.push(item.url);

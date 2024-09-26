@@ -7,7 +7,7 @@ function send_message_to_service_worker(controller,message) {
   return new Promise(function(resolve, reject) {
     var messageChannel = new MessageChannel();
     messageChannel.port1.onmessage = function(event) {
-		console.log(" send_message_to_service_worker: received ...something. event: ", event);
+		//console.log(" send_message_to_service_worker: received ...something. event: ", event);
       if (event.data.error) {
         reject(event.data.error);
       } else {
@@ -27,13 +27,13 @@ function send_message_to_service_worker(controller,message) {
 }
 
 window.service_worker_registered = async function (registration){
-	console.log("updater.js: in service_worker_registered. registration: ", registration);
+	//console.log("updater.js: in service_worker_registered. registration: ", registration);
 	if(registration.active){
 		//registration.active.postMessage({'type':'get_version_number'});
 		
 		send_message_to_service_worker(registration.active,{"type":"get_version_number"})
 		.then((response) => {
-			console.log("service_worker_registered: service worker responded: ", response);
+			//console.log("service_worker_registered: service worker responded: ", response);
 			
 			if(typeof response != 'undefined' && response != null && typeof response.version_number == 'number'){
 				console.log("service_worker_registered: returned version_number: ", response.version_number, " ,  =?= window.settings.version: ", window.settings.version);
@@ -46,7 +46,7 @@ window.service_worker_registered = async function (registration){
 				}
 				
 				else if(typeof window.settings.version == 'number' && window.settings.version < response.version_number){
-					console.log("A new version!");
+					console.log("A new version! Saving to settings: ", response.version_number);
 					window.settings.version = response.version_number;
 					save_settings();
 					
@@ -75,7 +75,7 @@ window.service_worker_ready = async function (registration){
 	
 	try{
 		registration.addEventListener("message", (event) => {
-			console.error("updater.js: HURRAY received post-registration message from service worker: ", event.data, event);
+			console.error("updater.js: received post-registration message from service worker: ", event.data, event);
 			//document.getElementById('papegai-version').innerText = 'v' + window.settings.version;
 		});
 		
@@ -85,7 +85,7 @@ window.service_worker_ready = async function (registration){
 		
 		send_message_to_service_worker(registration.active, {"type":"get_version_number"})
 		.then((response) => {
-			console.log("service_worker_ready: service worker responded: ", response);
+			//console.log("service_worker_ready: service worker responded: ", response);
 			
 			if(typeof response != 'undefined' && response != null && typeof response.data != 'undefined' && typeof response.data.version_number == 'number'){
 				
@@ -97,7 +97,7 @@ window.service_worker_ready = async function (registration){
 				}
 				
 				else if(typeof window.settings.version == 'number' && window.settings.version < response.data.version_number){
-					console.log("A new version!  response.data.version_number: ", response.data.version_number);
+					console.log("A new version!  Saving to settings: response.data.version_number: ", response.data.version_number);
 					window.settings.version = response.data.version_number;
 					save_settings();
 					
@@ -127,11 +127,11 @@ window.service_worker_ready = async function (registration){
 }
 
 
-
+/*
 navigator.serviceWorker.addEventListener("message", (message) => {
-	console.error("updater.js: HURRAY received a message from a service worker: ", message);
+	console.error("updater.js: received a message from a service worker: ", message);
 });
-
+*/
 
 window.update_site = async function (){
 	console.log("updater.js: in update_site");
@@ -193,8 +193,20 @@ if(typeof navigator.serviceWorker != 'undefined'){
 		
 		
 		if(window.first_run == false){
-			document.body.classList.add('update-available');
-			flash_message(get_translation('A_new_version_is_available'));
+			
+			if(window.time_started - Date.now() < 10000){
+				console.warn("SERVIVCE WORKER CONTROLLER CHANGE");
+				//document.body.classList.add('update-available');
+				//window.flash_message(window.get_translation('A_new_version_is_available'));
+				/*
+				window.flash_message(window. get_translation("Updating"),10000);
+				setTimeout(() => {
+					window.location.reload(true);
+				},1000);
+				*/
+			}
+			
+			
 		}
 		
 	});

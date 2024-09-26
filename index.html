@@ -973,7 +973,7 @@
 					  	
 						<div id="user-info-wrapper">
 							<div class="user-info">
-								<div id="chat-header-icon-container">
+								<div id="chat-header-icon-container" class="center">
 									<div id="chat-header-emoji-icon-container" class="center"></div>
 									<img id="chat-header-icon" src="images/developer.png" alt="Current AI icon">
 								</div>
@@ -1815,11 +1815,11 @@
 								<!--<button id="document-rewrite-button" class="show-if-doc-selection">Rewrite</button>-->
 								<button id="document-proofread-button" class="center"><img class="icon" src="images/glasses.svg" width="20" height="20" alt="👓"><span data-i18n="Proofread">Proofread</span></button>
 								
-								<button id="document-summarize-button" class="center"><img class="icon" src="images/summarize_clamp_icon.svg" width="20" height="20" alt="🗜️"><span data-i18n="Summarize">Summarize</span></button> <!-- <span class="unicode-icon icon brighten">🗜️</span> -->
-								<button id="document-continue-button" class="center"><img class="icon" src="images/fountain_pen_tip.svg" width="20" height="20" alt="✒️"><span data-i18n="Continue">Continue</span></button> <!-- <span class="unicode-icon icon">✒️</span><span data-i18n="Continue">Continue</span> ✒️ -->
-								<button id="document-translate-button" class="center"><span class="svg-icon icon"><img src="images/translation-icon.svg" alt="Translation"></span><span data-i18n="Translate" >Translate</span></button>
+								<button id="document-summarize-button" class="center"><img class="svg-icon icon" src="images/summarize_clamp_icon.svg" width="20" height="20" alt="🗜️"><span data-i18n="Summarize">Summarize</span></button> <!-- <span class="unicode-icon icon brighten">🗜️</span> -->
+								<button id="document-continue-button" class="center"><img class="svg-icon icon" src="images/fountain_pen_tip.svg" width="20" height="20" alt="✒️"><span data-i18n="Continue">Continue</span></button> <!-- <span class="unicode-icon icon">✒️</span><span data-i18n="Continue">Continue</span> ✒️ -->
+								<button id="document-translate-button" class="center"><img class="svg-icon icon" src="images/translation-icon.svg" width="20" height="20" alt="🇳🇱"></span><span data-i18n="Translate" >Translate</span></button>
 								
-								<button id="import-settings-backup-button" class="center"><span data-i18n="Import"></span></button>
+								<button id="import-settings-backup-button" class="center"><img class="svg-icon icon" src="images/import_icon.svg" width="20" height="20" alt="🔺"></span><span data-i18n="Import"></span></button>
 								
 							</div>
 						
@@ -2117,15 +2117,15 @@
 
 	<script src="./ai.js"></script>
 	<script src="./translations.js"></script>
-	<script src="./papeg_ai_translation.js"></script>
+	<script src="./p_translation.js"></script>
 
-	<script src="./papeg_ai_init.js"></script>
+	<script src="./p_init.js"></script>
 	<script src="./js/various_utils.js"></script>
 	<script src="./js/promise-worker.js"></script>
 
     
 
-	<script src="./papeg_ai_ui.js"></script>
+	<script src="./p_ui.js"></script>
 
     <script src="./llama_cpp.js" type="module"></script>
 
@@ -2134,7 +2134,7 @@
     <script src="./js/vad_bundle.min.js"></script>
 	-->
 		
-	<script src="./papeg_ai_audio.js"></script>
+	<script src="./p_audio.js"></script>
 	
 	<!--
 	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.js"></script>
@@ -2142,11 +2142,11 @@
 	//-->
 
 
-	<script src="./papeg_ai_main.js"></script>
+	<script src="./p_main.js"></script>
 
-	<script src="./papeg_ai_audio_module.js" type="module"></script>
+	<script src="./p_audio_module.js" type="module"></script>
 
-	<script src="./papeg_ai_docs.js"></script>
+	<script src="./p_docs.js"></script>
 	
 	<script src="./main_module.js" type="module"></script>
 

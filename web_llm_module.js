@@ -109,9 +109,9 @@ window.load_web_llm = async function (task){
 		previous_time = Date.now() / 1000;
 	
 		if(window.busy_loading_assistant){
-			if(window.ram < 6000 || window.web_llm_model_being_loaded != null || window.settings.settings_complexity == 'normal'){
+			if(window.web_llm_model_being_loaded != null){
 				console.error("load_web_llm: busy_loading_assistant was true - a model is already being loaded. window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
-				flash_message(get_translation("A_model_is_already_being_loaded"),3000,'error');
+				window.flash_message(window.get_translation("A_model_is_already_being_loaded"),3000,'error');
 				return
 			}
 			else{
@@ -122,7 +122,7 @@ window.load_web_llm = async function (task){
 		else if(typeof window.web_llm_model_being_loaded == 'string'){
 			window.busy_loading_assistant = window.web_llm_model_being_loaded;
 			console.error("load_web_llm: a model is already being loaded. window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
-			flash_message(get_translation("A_model_is_already_being_loaded"),3000,'error');
+			window.flash_message(window.get_translation("A_model_is_already_being_loaded"),3000,'error');
 			return
 		}
 	
@@ -146,7 +146,7 @@ window.load_web_llm = async function (task){
 			}	
 			else if(typeof window.settings.assistant == 'string'){
 				assistant_id = window.settings.assistant;
-				//console.log("load_web_llm. no task provided, fell back to window.settings.assistant: ", window.settings.assistant);
+				console.error("load_web_llm. no task provided, fell back to window.settings.assistant: ", window.settings.assistant);
 			}
 			else{
 				console.error("window.load_web_llm: no provided task, and window.settings.assistant is null. Don't know which assistant to load. Aborting.");
@@ -181,8 +181,9 @@ window.load_web_llm = async function (task){
 			
 			add_chat_message(assistant_id,assistant_id,"download_progress#setting---");
 			
-			if(window.window.web_llm_worker != null){
+			if(window.web_llm_worker != null){
 				// TODO: stop the old WebLLM first
+				console.error("window.load_web_llm:  window.web_llm_worker was not null. Should be unloaded first.");
 			}
 			
 			
@@ -269,7 +270,7 @@ export interface ChatConfig {
 		    	web_llm_model_id,
 		    	{ 
 					initProgressCallback: function (mes) { 
-						//console.log('WebLLM init progress message received: ', mes); 
+						console.log('WebLLM init progress message received: ', mes); 
 						window.handle_web_llm_init_progress(mes); 
 					}, 
 					appConfig: window.web_llm_app_config,
@@ -278,7 +279,7 @@ export interface ChatConfig {
 				chatOpts
 			);
 			
-			//console.log("load_web_llm: window.web_llm_engine is now: ", window.web_llm_engine);
+			console.log("load_web_llm: DONE, window.web_llm_engine is now: ", window.web_llm_engine);
 			window.handle_web_llm_init_complete();
 
 		 
@@ -296,7 +297,7 @@ export interface ChatConfig {
 	}
 	catch(e){
 		console.error("load_web_llm: caught error: ", e);
-		flash_message(get_translation("Loading_the_AI_failed"),3000,'error');
+		window.flash_message(window.get_translation("Loading_the_AI_failed"),3000,'error');
 		message_downloads_container_el.innerHTML = '';
 		window.web_llm_model_being_loaded = null;
 		if(window.currently_loaded_assistant == window.currently_loaded_web_llm_assistant){
@@ -323,9 +324,11 @@ window.do_web_llm = (task) => {
 		return false
 	}
 	if(typeof task.assistant != 'string'){
+		console.error("do_web_llm. task.assistant was not a string: ", task);
 		return false
 	}
 	if(window.web_llm_busy){
+		console.error("do_web_llm. window.web_llm_busy was already true.  task: ", task);
 		return false
 	}
 	
@@ -344,7 +347,7 @@ window.really_do_web_llm = async (task) => {
 	try{
 		// Start the WebLLM engine first if it hasn't been started already
 		if(typeof window.currently_loaded_web_llm_assistant != 'string' && window.web_llm_model_being_loaded == null){
-			console.error("do_web_llm: WebLLM AI wasn't loaded yet, and is not busy loading either");
+			console.error("do_web_llm: WebLLM AI wasn't loaded yet, and is not busy loading either. calling window.load_web_llm with task: ", task);
 			await window.load_web_llm(task);
 		}
 	
@@ -353,7 +356,7 @@ window.really_do_web_llm = async (task) => {
 			//console.log("do_web_llm: a WebLLM AI is currently already loaded. window.currently_loaded_web_llm_assistant ", window.currently_loaded_web_llm_assistant);
 			if(typeof task.assistant == 'string'){
 				if(task.assistant != window.currently_loaded_web_llm_assistant){
-					//console.log("do_web_llm: calling load_web_llm first, to load a different assistant: ", window.currently_loaded_web_llm_assistant, " => ", task.assistant);
+					console.log("do_web_llm: calling load_web_llm first, to load a different WebLLM assistant: ", window.currently_loaded_web_llm_assistant, " => ", task.assistant);
 				
 					//console.log("Reload model start");
 					if(window.web_llm_engine){
@@ -401,7 +404,7 @@ window.really_do_web_llm = async (task) => {
 		previous_response_so_far = '';
 		
 		if(window.web_llm_engine != null){
-			//console.log("window.web_llm_engine: ", window.web_llm_engine);
+			console.log("window.web_llm_engine: ", window.web_llm_engine);
 			
 		
 			if(typeof task.prompt == 'string' && task.prompt.length > 1){
@@ -510,7 +513,7 @@ window.really_do_web_llm = async (task) => {
 		
 		}
 		else{
-			console.error("web_llm doesn't seem to have actually loaded; window.my_webllm does not exist");
+			console.error("web_llm doesn't seem to have actually loaded; window.web_llm_engine does not exist");
 			window.handle_completed_task(my_task,previous_response_so_far,null,{"state":"failed"});
 			my_task = null;
 			return false
@@ -521,7 +524,8 @@ window.really_do_web_llm = async (task) => {
 		if( ('' + err).indexOf('ContextWindowSizeExceededError') != -1){
 			window.flash_message(window.get_translation('The_command_was_too_long'),3000,'fail');
 		}
-		window.handle_completed_task(my_task,previous_response_so_far,null,{"state":"failed"});
+		window.handle_completed_task(task,previous_response_so_far,null,{"state":"failed"});
+		window.clean_up_dead_task(task,'failed');
 		my_task = null;
 		return false
 	}
@@ -783,7 +787,7 @@ window.reset_web_llm = async function (){
 
 
 window.unload_web_llm = async function (){
-	console.log("in unload_web_llm");
+	//console.log("in unload_web_llm");
 	if(window.currently_loaded_assistant == window.currently_loaded_web_llm_assistant){
 		window.currently_loaded_assistant = null;
 	}
@@ -1042,7 +1046,7 @@ window.create_diffusion_worker = async function (task){ // task is not used for 
 				console.error("Diffusion generated an error");
 				if(typeof e.data.message == 'string'){
 					if(e.data.message.indexOf('This browser env does not support WebGPU') != -1){
-						flash_message(get_translation("Your_browser_does_not_support_running_this_model"),5000,'error');
+						window.flash_message(window.get_translation("Your_browser_does_not_support_running_this_model"),5000,'error');
 					}
 				}
 			}

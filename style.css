@@ -520,6 +520,7 @@ input[type=range]{
 	display:inline-block;
 	font-weight:bold;
 	font-size:130%;
+	margin:0 10px;
 }
 
 .model-info-settings-container details{

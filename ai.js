@@ -1493,7 +1493,7 @@ window.assistants = {
 		"download_url":null,
 		"license":"",
 		"license_url":"",
-		"homepage_url":"",
+		"homepage_url":"https://www.llama.com/",
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
@@ -1530,7 +1530,7 @@ window.assistants = {
 		"download_url":null,
 		"license":"",
 		"license_url":"",
-		"homepage_url":"",
+		"homepage_url":"https://www.llama.com/",
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
@@ -1552,6 +1552,158 @@ window.assistants = {
 		"web_llm_file_name":"Llama-3-70B-Instruct-q3f16_1-MLC",
 		"model_file_name":"Llama-3-70B-Instruct-q3f16_1-MLC",
 	},
+	
+	
+	
+	
+	"fast_llama3_1b":{
+		"name":"Llama 3.2 it 1b",
+		"real_name":"Llama 3.2 it 1b",
+		"description":"",
+		"icon":"llama3_mini",
+		"download_url":null,
+		"model_id":"Llama-3.2-1B-Instruct-q4f16_1-MLC",
+		"web_llm_file_name":"Llama-3.2-1B-Instruct-q4f16_1-MLC",
+		"model_file_name":"Llama-3.2-1B-Instruct-q4f16_1-MLC/resolve/main/params_shard_21.bin",
+		"runner":"web_llm",
+		"show_if_web_gpu":true,
+		"license":"Llama 3.2 Community License",
+		"license_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE",
+		"homepage_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"Why is the sky blue?",
+			"nl":"Why is the sky blue?"
+		},
+		"examples":{
+			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
+		},
+		"size":2,
+		"memory":3,
+		"temperature":0.7,
+		"context_size":131072,
+		"context":2048,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"system_prompt":"You are a helpful assistant.",
+	},
+	
+	
+	"llama3_1b":{
+		"name":"Llama 3.2 it 1b",
+		"real_name":"Llama 3.2 it 1b",
+		"description":"",
+		"icon":"llama3_mini",
+		"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_1b_q4_k_m_chunked/resolve/main/llama-3.2-1b-it-q4_k_m-00001-of-00005.gguf",
+		"model_file_name":"llama-3.2-1b-it-q4_k_m-00005-of-00005.gguf",
+		"runner":"llama_cpp",
+		"show_if_web_gpu":false,
+		"license":"Llama 3.2 Community License",
+		"license_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE",
+		"homepage_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"Why is the sky blue?",
+			"nl":"Why is the sky blue?"
+		},
+		"examples":{
+			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
+		},
+		"size":0.8,
+		"memory":1,
+		"temperature":0.7,
+		"context_size":131072,
+		"context":2048,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"system_prompt":"You are a helpful assistant.",
+	},
+	
+	
+	
+	"fast_llama3_3b":{
+		"name":"Llama 3.2 it 3b",
+		"real_name":"Llama 3.2 it 3b",
+		"description":"",
+		"icon":"llama3_mini",
+		"download_url":null,
+		"model_id":"Llama-3.2-3B-Instruct-q4f16_1-MLC",
+		"web_llm_file_name":"Llama-3.2-3B-Instruct-q4f16_1-MLC",
+		"model_file_name":"Llama-3.2-3B-Instruct-q4f16_1-MLC/resolve/main/params_shard_57.bin",
+		"runner":"web_llm",
+		"show_if_web_gpu":true,
+		"license":"Llama 3.2 Community License",
+		"license_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE",
+		"homepage_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"Why is the sky blue?",
+			"nl":"Why is the sky blue?"
+		},
+		"examples":{
+			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
+		},
+		"size":2,
+		"memory":3,
+		"temperature":0.7,
+		"context_size":131072,
+		"context":2048,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"system_prompt":"You are a helpful assistant.",
+	},
+	
+	"llama3_3b":{
+		"name":"Llama 3.2 it 3b",
+		"real_name":"Llama 3.2 it 3b",
+		"description":"",
+		"icon":"llama3_mini",
+		"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_3b_q4_k_m_chunked/resolve/main/llama_3_2_it_3b_q4_k_m-00001-of-00011.gguf",
+		"model_file_name":"llama_3_2_it_3b_q4_k_m-00011-of-00011.gguf",
+		"runner":"llama_cpp",
+		"show_if_web_gpu":false,
+		"license":"Llama 3.2 Community License",
+		"license_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE",
+		"homepage_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"Why is the sky blue?",
+			"nl":"Why is the sky blue?"
+		},
+		"examples":{
+			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
+		},
+		"size":2,
+		"memory":3,
+		"temperature":0.7,
+		"context_size":131072,
+		"context":2048,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"system_prompt":"You are a helpful assistant.",
+	},
+	
+	
 	
 	
 	"reyna":{
@@ -3479,6 +3631,18 @@ function add_web_gpu32_models(){
 	window.assistants["fast_llama3_8B_32bit"]["model_file_name"] = "Llama-3.1-8B-Instruct-q4f32_1-MLC/resolve/main/params_shard_107.bin";
 	window.assistants["fast_llama3_8B_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_llama3_8B_32bit"]["show_if_web_gpu32"] = true;
+	
+	window.assistants["fast_llama3_1B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_1B"]));
+	window.assistants["fast_llama3_1B_32bit"]["web_llm_file_name"] = "Llama-3.2-1B-Instruct-q4f32_1-MLC";
+	window.assistants["fast_llama3_1B_32bit"]["model_file_name"] = "Llama-3.2-1B-Instruct-q4f32_1-MLC/resolve/main/params_shard_107.bin";
+	window.assistants["fast_llama3_1B_32bit"]["show_if_web_gpu"] = false;
+	window.assistants["fast_llama3_1B_32bit"]["show_if_web_gpu32"] = true;
+	
+	window.assistants["fast_llama3_3B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_1B"]));
+	window.assistants["fast_llama3_3B_32bit"]["web_llm_file_name"] = "Llama-3.2-3B-Instruct-q4f32_1-MLC";
+	window.assistants["fast_llama3_3B_32bit"]["model_file_name"] = "Llama-3.2-3B-Instruct-q4f32_1-MLC/resolve/main/params_shard_57.bin";
+	window.assistants["fast_llama3_3B_32bit"]["show_if_web_gpu"] = false;
+	window.assistants["fast_llama3_3B_32bit"]["show_if_web_gpu32"] = true;
 	
 	window.assistants["fast_mistral_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_mistral"]));
 	window.assistants["fast_mistral_32bit"]["web_llm_file_name"] = "Mistral-7B-Instruct-v0.3-q4f32_1-MLC";
