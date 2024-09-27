@@ -55,12 +55,14 @@ register('coi-serviceworker.js', {
     },
     updated (registration) {
 		console.log('Service manager: New content is available; please refresh.')
+		/*
 		if(window.time_started  - Date.now() < 10000){
 			window.flash_message(window. get_translation("Updating"),10000);
 			setTimeout(() => {
 				window.location.reload(true);
 			},1000);
 		}
+		*/
     },
     offline () {
 		console.log('Service manager: No internet connection found. Papeg.ai is running in offline mode.');

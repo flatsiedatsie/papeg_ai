@@ -1357,7 +1357,7 @@ async function save_conversation(assistant_id){
 					conversation_to_keep_count = window.conversations[assistant_id].length;
 				}
 			}
-			//console.log("save_conversation: conversation_to_keep_count: ", conversation_to_keep_count);
+			console.log("save_conversation: conversation_to_keep_count: ", conversation_to_keep_count);
 			let conversation_to_store = [];
 			for (let c = (window.conversations[assistant_id].length - conversation_to_keep_count); c < window.conversations[assistant_id].length; c++){
 				let conversation_message = JSON.parse(JSON.stringify(window.conversations[assistant_id][c]));
@@ -1368,13 +1368,25 @@ async function save_conversation(assistant_id){
 			}
 			conversation_data = JSON.stringify(conversation_to_store,null,4);
 		}
-		//console.log("save_conversation: saving conversation_data: ", conversation_data);
+		console.log("save_conversation: saving conversation_data: ", conversation_data);
 		
-		if(typeof conversation_data == 'string' && conversation_data != ''){
+		const conversation_filename = assistant_id + "_papeg_ai_conversation.json";
+		/*
+		if(conversation_to_keep_count == 0){
+			if(typeof playground_live_backups["Papeg_ai_conversations/" + conversation_filename] == 'string'){
+				playground_live_backups["Papeg_ai_conversations/" + conversation_filename] = '';
+			}
+			if(typeof playground_saved_files["Papeg_ai_conversations/" + conversation_filename] == 'string'){
+				playground_saved_files["Papeg_ai_conversations/" + conversation_filename] = '';
+			}
+		}
+		*/
+		
+		if(typeof conversation_data == 'string' && conversation_data != '' && conversation_to_keep_count > 0){
 			// add conversations folder to root if it doesn't exist yet
 			add_sub_folder('','Papeg_ai_conversations');
 			
-			const conversation_filename = assistant_id + "_papeg_ai_conversation.json";
+			
 		
 			if(typeof playground_live_backups["Papeg_ai_conversations/" + conversation_filename] != 'string'){
 				/*
@@ -1425,6 +1437,23 @@ async function save_conversation(assistant_id){
 			
 			if(typeof playground_live_backups["Papeg_ai_conversations/" + conversation_filename] == 'string' && playground_live_backups["Papeg_ai_conversations/" + conversation_filename] != ''){
 				playground_live_backups["Papeg_ai_conversations/" + conversation_filename] = '';
+				save_file(
+					conversation_filename, 
+					'[]', 
+					"browser",
+					"/Papeg_ai_conversations"
+				)
+				.then((value) => {
+					//console.log("save_conversation: saved empty conversation history. value: ", value);
+					return true
+				})
+				.catch((err) => {
+					console.error("save_conversation: caught error saving empty conversation history");
+					return false
+				})
+			}
+			if(typeof playground_saved_files["Papeg_ai_conversations/" + conversation_filename] == 'string' && playground_saved_files["Papeg_ai_conversations/" + conversation_filename] != ''){
+				playground_saved_files["Papeg_ai_conversations/" + conversation_filename] = '';
 				save_file(
 					conversation_filename, 
 					'[]', 

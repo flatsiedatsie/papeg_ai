@@ -1532,10 +1532,10 @@ const female_browser_voices = [
 
 
 const browser_synth = window.speechSynthesis;
-console.log("browser_synth: ", typeof browser_synth, browser_synth);
+//console.log("browser_synth: ", typeof browser_synth, browser_synth);
 
 function get_browser_tts_languages() {
-	console.log("in get_browser_tts_languages. browser_synth: ", browser_synth);
+	//console.log("in get_browser_tts_languages. browser_synth: ", browser_synth);
 	if(browser_synth){
 	    window.browser_tts_voices_raw = browser_synth.getVoices();
 		if(window.browser_tts_voices_raw){

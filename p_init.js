@@ -7765,7 +7765,7 @@ function show_model_info(){
 								console.error("model info settings option value was not a string: ", value);
 								continue
 							}
-							console.log("model info settings option value: ",  value);
+							//console.log("model info settings option value: ",  value);
 							let select_option_el = document.createElement('option');
 							select_option_el.value = '' + value;
 							if(value.startsWith('Xenova/')){

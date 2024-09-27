@@ -144,7 +144,7 @@ function doc_updated(){
 	
 	//window.last_user_activity_time = Date.now();
 	if(doc_updated_rate_limiter_timeout != null){
-		console.log("doc_updated: hit rate limiter");
+		//console.log("doc_updated: hit rate limiter");
 		clearTimeout(doc_updated_rate_limiter_timeout);
 	}
 	doc_updated_rate_limiter_timeout = setTimeout(() => {

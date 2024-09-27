@@ -195,7 +195,7 @@ if(typeof navigator.serviceWorker != 'undefined'){
 		if(window.first_run == false){
 			
 			if(window.time_started - Date.now() < 10000){
-				console.warn("SERVIVCE WORKER CONTROLLER CHANGE");
+				console.warn("SERVICE WORKER CONTROLLER CHANGE");
 				//document.body.classList.add('update-available');
 				//window.flash_message(window.get_translation('A_new_version_is_available'));
 				/*

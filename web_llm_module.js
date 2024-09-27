@@ -270,7 +270,7 @@ export interface ChatConfig {
 		    	web_llm_model_id,
 		    	{ 
 					initProgressCallback: function (mes) { 
-						console.log('WebLLM init progress message received: ', mes); 
+						//console.log('WebLLM init progress message received: ', mes); 
 						window.handle_web_llm_init_progress(mes); 
 					}, 
 					appConfig: window.web_llm_app_config,

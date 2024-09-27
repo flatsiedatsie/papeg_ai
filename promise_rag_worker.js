@@ -924,372 +924,352 @@ if(pre_made_embeddings == null){
 
 async function do_embedding(task){
 	
+	try{
+		
+		// self.vector_db should have been created when this script was loaded in
+		if(self.vector_db == null){
+			console.error("do_embedding: self.vector_db was still null, calling create_db first");
+			await create_db();
+		}
+		
+		if(self.vector_db == null){
+			console.error("do_embedding: self.vector_db was still null");
+			return {
+				'task': task,
+				'status': 'error',
+				'error':'vector_db was still null'
+			};
+		}
+		//console.log("self.vector_db: ", self.vector_db);
 	
-	return new Promise((resolve, reject) => {
-		try{
-			
-			// self.vector_db should have been created when this script was loaded in
-			if(self.vector_db == null){
-				console.error("do_embedding: self.vector_db was still null");
-				reject({
-					'task': task,
-					'status': 'error',
-					'error':'vector_db was still null'
-				});
-				return
+		let search_result = [];
+		//console.log("do_embedding: task", task);
+	
+		let quick_file_path = '$totallynonexistantpath$';
+		if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
+			quick_file_path = task.file.folder + '/' + task.file.filename;
+		}
+		//console.log("RAG WORKER: do_embedding: quick_file_path: ", quick_file_path);
+	
+		// Below is an attempt to avoid re-scanning chunks
+		
+		let initial_search_result = await search(self.vector_db, {
+			term: quick_file_path,
+			properties: ['path'],
+			exact: true,
+		})
+		
+		
+		let source_text = null;
+		let embedded_property = null;
+		let embedded_property_index = null;
+
+
+		if(typeof task.silent == 'boolean' && task.silent == true && typeof task.results != 'undefined' && Array.isArray(task.results) && task.results.length){
+			source_text = task.results[task.results.length - 1];
+			embedded_property = 'result';
+			embedded_property_index = task.results.length - 1;
+			//console.log("PROMISE RAG WORKER: embedding result at index: ", embedded_property_index);			
+		}
+
+		else if(typeof task.text == 'string' && task.text.length && !task.text.startsWith('_PLAYGROUND_BINARY_')){
+			//console.log("PROMISE RAG WORKER: task had no source_text, but does have text. Using that as embedding input. ",  task.text);
+			source_text = task.text;
+			embedded_property = 'text';
+		}
+		else if(typeof task.original_prompt == 'undefined' && typeof task.prompt == 'string' && task.prompt.length){
+			source_text = task.prompt;
+			embedded_property = 'prompt';
+		}
+		else if(typeof task.results != 'undefined' && Array.isArray(task.results) && task.results.length){
+			source_text = task.results[task.results.length - 1];
+			embedded_property = 'result';
+			embedded_property_index = task.results.length - 1;
+			//console.log("PROMISE RAG WORKER: embedding result at index: ", embedded_property_index);
+		}
+
+		if(typeof task.type != 'string' || typeof task.origin != 'string'){
+			return {"status":"error","error":"Task did not have valid type or origin property","task": task};
+		}
+
+		if( (task.origin == 'selection' || task.origin == 'document') && (typeof task.file == 'undefined' || task.file == null || typeof task.file.folder != 'string' || typeof task.file.filename != 'string') ){
+			return {"status":"error","error":"Task did not have required file info","task": task};
+		}
+
+
+		if(typeof source_text == 'string' && source_text.startsWith('_PLAYGROUND_BINARY_')){
+			console.error("PROMISE RAG WORKER: almost tried to embed a binary file. Aborting.");
+			return {"status":"error","error":"File was not a text file","task": task};
+		}
+
+		if(typeof source_text == 'string'){
+
+			function progressCallback(x){
+				//console.log("PROMISE RAG embedding worker: progressCallback: ", x);
+			    self.postMessage(x);
 			}
-			//console.log("self.vector_db: ", self.vector_db);
+
+			let previous_doc_cursor = 0;
+			let done_so_far = '';
+			let so_far = '';
+			let work_text = '' + source_text;
+			let to_go_part = '' + source_text;
+			let old_text = '' + source_text;
+			let new_text = '' + source_text;
+			let sentences = [];
 		
-			let search_result = [];
-			//console.log("do_embedding: task", task);
-		
-			let quick_file_path = '$totallynonexistantpath$';
-			if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
-				quick_file_path = task.file.folder + '/' + task.file.filename;
+			if(typeof task.sentences_to_embed != 'undefined'){
+				//console.log("PROMISE RAG WORKER: TASK HAS LIST OF PRE-SPLIT sentences_to_embed: ", task.sentences_to_embed);
+				sentences = task.sentences_to_embed;
 			}
-			//console.log("RAG WORKER: do_embedding: quick_file_path: ", quick_file_path);
-		
-			// Below is an attempt to avoid re-scanning chunks
-			
-			
-			search(self.vector_db, {
-				term: quick_file_path,
-				properties: ['path'],
-				exact: true,
-			})
-			.then((initial_search_result) => {
-				search_result = initial_search_result;
-				//console.log("do_embedding:  quick_file_path, initial_search_result: ", quick_file_path, initial_search_result);
+			else if(typeof extract_sentences != 'undefined'){
+				//console.log("PROMISE RAG WORKER: going to send text to extract_sentences, which will split the text into sentences");
+				sentences = extract_sentences(source_text);
+				//console.log("PROMISE RAG WORKER: used extract_sentences. Sentences list is now: ", sentences);
+			}
+			else{
+				sentences = source_text.replace(/([.?!\n])\s*(?=[A-Z])/g, "$1|!|!|").split("|!|!|");
+				//console.log("PROMISE RAG WORKER:did split of text into sentences. Sentences list is now: ", sentences);
+			}
+			console.warn("PROMISE RAG WORKER: sentences to embed: ", sentences.length, sentences);
+			//let s = 0;
 
+			let chunks = [];
+			let chunks_list = []
+			let text_pointer = 0;
 
-				let source_text = null;
-				let embedded_property = null;
-				let embedded_property_index = null;
-	
-	
-				if(typeof task.silent == 'boolean' && task.silent == true && typeof task.results != 'undefined' && Array.isArray(task.results) && task.results.length){
-					source_text = task.results[task.results.length - 1];
-					embedded_property = 'result';
-					embedded_property_index = task.results.length - 1;
-					//console.log("PROMISE RAG WORKER: embedding result at index: ", embedded_property_index);			
-				}
-	
-				else if(typeof task.text == 'string' && task.text.length && !task.text.startsWith('_PLAYGROUND_BINARY_')){
-					//console.log("PROMISE RAG WORKER: task had no source_text, but does have text. Using that as embedding input. ",  task.text);
-					source_text = task.text;
-					embedded_property = 'text';
-				}
-				else if(typeof task.original_prompt == 'undefined' && typeof task.prompt == 'string' && task.prompt.length){
-					source_text = task.prompt;
-					embedded_property = 'prompt';
-				}
-				else if(typeof task.results != 'undefined' && Array.isArray(task.results) && task.results.length){
-					source_text = task.results[task.results.length - 1];
-					embedded_property = 'result';
-					embedded_property_index = task.results.length - 1;
-					//console.log("PROMISE RAG WORKER: embedding result at index: ", embedded_property_index);
-				}
-	
-				if(typeof task.type != 'string' || typeof task.origin != 'string'){
-					reject({"status":"error","error":"Task did not have valid type or origin property","task": task});
-					return
-				}
-	
-				if( (task.origin == 'selection' || task.origin == 'document') && (typeof task.file == 'undefined' || task.file == null || typeof task.file.folder != 'string' || typeof task.file.filename != 'string') ){
-					reject({"status":"error","error":"Task did not have required file info","task": task});
-					return
-				}
-	
-	
-				if(typeof source_text == 'string' && source_text.startsWith('_PLAYGROUND_BINARY_')){
-					console.error("PROMISE RAG WORKER: almost tried to embed a binary file. Aborting.");
-					reject({"status":"error","error":"File was not a text file","task": task});
-					return
-				}
-	
-				if(typeof source_text == 'string'){
-		
-					function progressCallback(x){
-						//console.log("PROMISE RAG embedding worker: progressCallback: ", x);
-					    self.postMessage(x);
-					}
-		
-					let previous_doc_cursor = 0;
-					let done_so_far = '';
-					let so_far = '';
-					let work_text = '' + source_text;
-					let to_go_part = '' + source_text;
-					let old_text = '' + source_text;
-					let new_text = '' + source_text;
-					let sentences = [];
-				
-					if(typeof task.sentences_to_embed != 'undefined'){
-						//console.log("PROMISE RAG WORKER: TASK HAS LIST OF PRE-SPLIT sentences_to_embed: ", task.sentences_to_embed);
-						sentences = task.sentences_to_embed;
-					}
-					else if(typeof extract_sentences != 'undefined'){
-						//console.log("PROMISE RAG WORKER: going to send text to extract_sentences, which will split the text into sentences");
-						sentences = extract_sentences(source_text);
-						//console.log("PROMISE RAG WORKER: used extract_sentences. Sentences list is now: ", sentences);
-					}
-					else{
-						sentences = source_text.replace(/([.?!\n])\s*(?=[A-Z])/g, "$1|!|!|").split("|!|!|");
-						//console.log("PROMISE RAG WORKER:did split of text into sentences. Sentences list is now: ", sentences);
-					}
-					console.warn("PROMISE RAG WORKER: sentences to embed: ", sentences.length, sentences);
-					//let s = 0;
-		
-					let chunks = [];
-					let chunks_list = []
-					let text_pointer = 0;
-		
-					let next_sentence = '';
-					let first_glued_sentence = null;
-		
-					for(let s = 0; s < sentences.length; s++){
-						let sentence = sentences[s].trim();
-						if(first_glued_sentence == null && sentence.length > 2){
-							first_glued_sentence = sentence;
-						}
-						next_sentence += ' ' + sentence;
-						if(next_sentence.length < 250 && s < (sentences.length - 1)){
-							// wait until the next sentence is long enough
-						
-						}
-						else{
-				
-							let chunk_from = null;
-							let chunk_to = null;
-							let remaining_text = source_text;
-							if(text_pointer > 0){
-								remaining_text = source_text.substr(text_pointer);
-							}
-							//console.log("PROMISE RAG WORKER: cursors: remaining_text: ", remaining_text.substr(0,10) );
-							//console.log("PROMISE RAG WORKER: cursors: next_sentence: ", next_sentence.substr(0,10) + " .... " +  next_sentence.substr(next_sentence.length-10));
-							chunks_list.push(next_sentence);
-				
-							//console.log("PROMISE RAG WORKER: cursors: text_pointer: ", text_pointer);
-							//console.log("PROMISE RAG WORKER: cursors: remaining_text.indexOf(next_sentence): ", remaining_text.indexOf(first_glued_sentence));
-							chunk_from = text_pointer + remaining_text.indexOf(first_glued_sentence);
-							if(chunk_from < 0){
-								chunk_from = 0;
-							}
-							if(typeof chunk_from == 'number'){
-								chunk_to = chunk_from + next_sentence.length;
-								if(chunk_to > (source_text.length - 1)){
-									chunk_to = source_text.length - 1;
-								}
-								text_pointer = chunk_to - 1;
-								if(text_pointer<0){
-									text_pointer = 0;
-								}
-								//console.log("PROMISE RAG WORKER: text_pointer is now: ", text_pointer)
-							}
-							else{
-								console.error("PROMISE RAG WORKER: chunk from was not a number: ", chunk_from);
-							}
-				
-							//console.log("PROMISE RAG WORKER: cursors: chunk_from, next_sentence.length, chunk_to: ", chunk_from, next_sentence.length, chunk_to);
-						
-							let brand_new_chunk = {'chunk':next_sentence,'to':chunk_to,'from':chunk_from,'chunk_index':s};
-				
-							if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
-								brand_new_chunk['folder'] = task.file.folder;
-								brand_new_chunk['filename'] = task.file.filename;
-								brand_new_chunk['path'] = task.file.folder + '/' + task.file.filename;
-							}
-							//console.log("RAG WORKER: adding brand new chunk: ", brand_new_chunk);
-							chunks.push(brand_new_chunk);
-				
-							next_sentence = '';
-							first_glued_sentence = null;
-				
-						}
-			
-					}
-		
-					let already_embedded_chunks = {};
-					if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
-						/*
-						const search_result = await do_search({
-														term: task.file.folder + '/' + task.file.filename,
-														properties: ['path'],
-														exact: true,
-													})
-			
-						*/
-			
-						if(typeof search_result != 'undefined' && search_result != null && typeof search_result.hits != 'undefined' && search_result.hits.length){
-							//console.log("RAG WORKER: looping over initial search results. search_result.hits: ", search_result.hits)
-							for(let c = 0; c < search_result.hits.length; c++){
-								if(typeof search_result.hits[c].chunk == 'string' && typeof search_result.hits[c].meta.to == 'number' && typeof search_result.hits[c].meta.from == 'number'){
-									already_embedded_chunks[ search_result.hits[c].chunk ] = search_result.hits[c].meta;
-								}
-					
-							}
-						}
-			
-					}
-					else{
-						console.warn("RAG WORKER: do_embeddings: task.file was invalid");
-					}
-		
-					//console.log("RAG WORKER: do_embeddings: already_embedded_chunks: ", already_embedded_chunks);
-					//already_embedded_chunks
-		
-					if(chunks_list.length){
-						create_embedding(chunks_list)
-						.then((embeddings) => {
-			
-							//console.log("RAG WORKER: EMBEDDINGS: ", typeof embeddings, Array.isArray(embeddings), embeddings);
-							const embeddings_list = embeddings.tolist();
-							//console.log("RAG WORKER: EMBEDDINGS_LIST: ", embeddings_list);
-				
-							let chunks_list_index = 0;
-							//for (const [chunk, details] of Object.entries(chunks)) {
-							for( let em = 0; em < chunks.length; em++){
-								//console.log("RAG WORKER: chunks[em]: ", chunks[em]);
-								//console.log("RAG WORKER: chunks[em].chunk: ", chunks[em].chunk , " =?= ", chunks_list[em] );
-								//console.log("RAG WORKER: chunks_list[em]: ", chunks_list[em]);
-								//console.log("RAG WORKER: chunks -> embeddings_list[em]: ", embeddings_list[em]);
-						
-								if(typeof chunks_list[em] == 'string' && chunks_list[em] == chunks[em]['chunk']){
-									chunks[ em ]['embedding'] = embeddings_list[em];
-									//console.log("RAG WORKER: OK, added embedding to chunk object: ", chunks[ em ]);
-								}
-								else{
-									console.error("RAG WORKER: EMBEDDINGS: chunks got out of sync");
-								}
-				
-								//chunks_list_index++;
-							}
-			
-			
-			
-							if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
-								if(embeddings_list.length == chunks.length){
-									//console.log("RAG WORKER: OK, embeddings_list.length == chunks.length == ", chunks.length);
-									/*
-									let new_records = [];
-									for(let e = 0; e < chunks.length; e++){
-										//console.log("rag_worker: adding chunk to vector_db: ", chunk[e], "\n --> ", embeddings_list[e]);
-						
-										new_records.push({
-											folder: task.file.folder,
-											filename: task.file.filename,
-											path: task.file.folder + '/' + task.file.filename,
-											chunk:chunks[e],
-											embedding: embeddings_list[e],
-											meta:{
-												chunk_index:e,
-											}
-										})
-									}
-									*/
-									//console.log("RAG WORKER: ADDING MULTIPLE: chunks: ", chunks);
-								
-									insertMultiple(self.vector_db, chunks, 500)
-									.then((ids) => {
-										//console.log("RAG WORKER: added new records to DB. ids: ", ids);
-										
-										save_db();
-										
-										resolve({
-											'task': task,
-											'status': 'embedding_complete',
-											'file':task.file,
-											//'embedded_property': embedded_property,
-											//'embedded_property_index': embedded_property_index,
-											'chunks':chunks,
-											'embeddings': embeddings_list
-										});
-									})
-									.catch((err) => {
-										console.error("RAG WORKER: caught error doing insertMultiple: ", err);
-										reject({
-											'task': task,
-											'status': 'error',
-											'error':'caught error doing insertMultiple'
-										});
-									})
-							
-							
-					
-								}
-								else{
-									console.error("RAG WORKER: chunks length and embeddings length are not the same");
-									reject({
-										'task': task,
-										'status': 'error',
-										'error':'embeddings and chunks length mismatch'
-									});
-								}
-							}
-							else{
-								resolve({
-									'task': task,
-									'status': 'embedding_complete',
-									//'embedded_property': embedded_property,
-									//'embedded_property_index': embedded_property_index,
-									'embeddings': embeddings_list
-								});
-							}
-			
-					
-						})
-						.catch((err) => {
-							console.error("PROMISE RAG WORKER: caught error generating embedding: ", err);
-							reject({
-								'task': task,
-								'status': 'error',
-								'error':'embedding failed'
-							});
-						})
-					}
-		
-					else{
-						//console.log("PROMISE RAG WORKER: no new chunks to add to the DB");
-						resolve({
-							'task': task,
-							'status': 'embedding_complete'
-						});
-					}
-		
-		
-	
-				    //let pipe = await pipeline('embedding', 'Xenova/opus-mt-nl-en'); // ,{ dtype: 'fp32' }
-		
+			let next_sentence = '';
+			let first_glued_sentence = null;
 
+			for(let s = 0; s < sentences.length; s++){
+				let sentence = sentences[s].trim();
+				if(first_glued_sentence == null && sentence.length > 2){
+					first_glued_sentence = sentence;
+				}
+				next_sentence += ' ' + sentence;
+				if(next_sentence.length < 250 && s < (sentences.length - 1)){
+					// wait until the next sentence is long enough
+				
 				}
 				else{
-					//console.log("PROMISE RAG WORKER: TEXT/PROMPT TO RAG MISSING, NOT LONG ENOUGH, OR INVALID: ", task);
-					//postMessage({"error":"Invalid source_text provided",'task': task});
-					reject({"status":"error","error":"Invalid source_text provided","task": task});
+		
+					let chunk_from = null;
+					let chunk_to = null;
+					let remaining_text = source_text;
+					if(text_pointer > 0){
+						remaining_text = source_text.substr(text_pointer);
+					}
+					//console.log("PROMISE RAG WORKER: cursors: remaining_text: ", remaining_text.substr(0,10) );
+					//console.log("PROMISE RAG WORKER: cursors: next_sentence: ", next_sentence.substr(0,10) + " .... " +  next_sentence.substr(next_sentence.length-10));
+					chunks_list.push(next_sentence);
+		
+					//console.log("PROMISE RAG WORKER: cursors: text_pointer: ", text_pointer);
+					//console.log("PROMISE RAG WORKER: cursors: remaining_text.indexOf(next_sentence): ", remaining_text.indexOf(first_glued_sentence));
+					chunk_from = text_pointer + remaining_text.indexOf(first_glued_sentence);
+					if(chunk_from < 0){
+						chunk_from = 0;
+					}
+					if(typeof chunk_from == 'number'){
+						chunk_to = chunk_from + next_sentence.length;
+						if(chunk_to > (source_text.length - 1)){
+							chunk_to = source_text.length - 1;
+						}
+						text_pointer = chunk_to - 1;
+						if(text_pointer<0){
+							text_pointer = 0;
+						}
+						//console.log("PROMISE RAG WORKER: text_pointer is now: ", text_pointer)
+					}
+					else{
+						console.error("PROMISE RAG WORKER: chunk from was not a number: ", chunk_from);
+					}
+		
+					//console.log("PROMISE RAG WORKER: cursors: chunk_from, next_sentence.length, chunk_to: ", chunk_from, next_sentence.length, chunk_to);
+				
+					let brand_new_chunk = {'chunk':next_sentence,'to':chunk_to,'from':chunk_from,'chunk_index':s};
+		
+					if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
+						brand_new_chunk['folder'] = task.file.folder;
+						brand_new_chunk['filename'] = task.file.filename;
+						brand_new_chunk['path'] = task.file.folder + '/' + task.file.filename;
+					}
+					//console.log("RAG WORKER: adding brand new chunk: ", brand_new_chunk);
+					chunks.push(brand_new_chunk);
+		
+					next_sentence = '';
+					first_glued_sentence = null;
+		
 				}
+	
+			}
+
+			let already_embedded_chunks = {};
+			if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
+				/*
+				const search_result = await do_search({
+												term: task.file.folder + '/' + task.file.filename,
+												properties: ['path'],
+												exact: true,
+											})
+	
+				*/
+	
+				if(typeof search_result != 'undefined' && search_result != null && typeof search_result.hits != 'undefined' && search_result.hits.length){
+					//console.log("RAG WORKER: looping over initial search results. search_result.hits: ", search_result.hits)
+					for(let c = 0; c < search_result.hits.length; c++){
+						if(typeof search_result.hits[c].chunk == 'string' && typeof search_result.hits[c].meta.to == 'number' && typeof search_result.hits[c].meta.from == 'number'){
+							already_embedded_chunks[ search_result.hits[c].chunk ] = search_result.hits[c].meta;
+						}
+			
+					}
+				}
+	
+			}
+			else{
+				console.warn("RAG WORKER: do_embeddings: task.file was invalid");
+			}
+
+			//console.log("RAG WORKER: do_embeddings: already_embedded_chunks: ", already_embedded_chunks);
+			//already_embedded_chunks
+
+			if(chunks_list.length){
+				let embeddings = await create_embedding(chunks_list)
 				
-				
+				//console.log("RAG WORKER: EMBEDDINGS: ", typeof embeddings, Array.isArray(embeddings), embeddings);
+				const embeddings_list = embeddings.tolist();
+				//console.log("RAG WORKER: EMBEDDINGS_LIST: ", embeddings_list);
+	
+				let chunks_list_index = 0;
+				//for (const [chunk, details] of Object.entries(chunks)) {
+				for( let em = 0; em < chunks.length; em++){
+					//console.log("RAG WORKER: chunks[em]: ", chunks[em]);
+					//console.log("RAG WORKER: chunks[em].chunk: ", chunks[em].chunk , " =?= ", chunks_list[em] );
+					//console.log("RAG WORKER: chunks_list[em]: ", chunks_list[em]);
+					//console.log("RAG WORKER: chunks -> embeddings_list[em]: ", embeddings_list[em]);
 			
-			})
-			.catch((err) => {
-				console.error("do_embedding: failed to get initial search result: ", err);
-				reject({"status":"error","error":"failed to get initial search result","task": task});
-			})
+					if(typeof chunks_list[em] == 'string' && chunks_list[em] == chunks[em]['chunk']){
+						chunks[ em ]['embedding'] = embeddings_list[em];
+						console.log("RAG WORKER: OK, added embedding to chunk object: ", chunks[ em ]);
+					}
+					else{
+						console.error("RAG WORKER: EMBEDDINGS: chunks got out of sync");
+					}
+	
+					//chunks_list_index++;
+				}
+
+
+
+				if(typeof task.file != 'undefined' && task.file != null && typeof task.file.folder == 'string' && typeof task.file.filename == 'string'){
+					if(embeddings_list.length == chunks.length){
+						//console.log("RAG WORKER: OK, embeddings_list.length == chunks.length == ", chunks.length);
+						/*
+						let new_records = [];
+						for(let e = 0; e < chunks.length; e++){
+							//console.log("rag_worker: adding chunk to vector_db: ", chunk[e], "\n --> ", embeddings_list[e]);
 			
+							new_records.push({
+								folder: task.file.folder,
+								filename: task.file.filename,
+								path: task.file.folder + '/' + task.file.filename,
+								chunk:chunks[e],
+								embedding: embeddings_list[e],
+								meta:{
+									chunk_index:e,
+								}
+							})
+						}
+						*/
+						//console.log("RAG WORKER: ADDING MULTIPLE: chunks: ", chunks);
+					
+						let ids = insertMultiple(self.vector_db, chunks, 500);
+						
+						save_db();
+						
+						return {
+							'task': task,
+							'status': 'embedding_complete',
+							'file':task.file,
+							//'embedded_property': embedded_property,
+							//'embedded_property_index': embedded_property_index,
+							'chunks':chunks,
+							'embeddings': embeddings_list
+						};
+		
+					}
+					else{
+						console.error("RAG WORKER: chunks length and embeddings length are not the same");
+						return {
+							'task': task,
+							'status': 'error',
+							'error':'embeddings and chunks length mismatch'
+						};
+					}
+				}
+				else{
+					console.warn("RAG WORKER: no file data");
+					return{
+						'task': task,
+						'status': 'embedding_complete',
+						//'embedded_property': embedded_property,
+						//'embedded_property_index': embedded_property_index,
+						'embeddings': embeddings_list
+					};
+				}
+					
+	
 			
-			
-			
-				
+			}
+
+			else{
+				console.log("PROMISE RAG WORKER: no new chunks to add to the DB");
+				return {
+					'task': task,
+					'status': 'embedding_complete'
+				};
+			}
+
+
+
+		    //let pipe = await pipeline('embedding', 'Xenova/opus-mt-nl-en'); // ,{ dtype: 'fp32' }
+
+
+		}
+		else{
+			//console.log("PROMISE RAG WORKER: TEXT/PROMPT TO RAG MISSING, NOT LONG ENOUGH, OR INVALID: ", task);
+			//postMessage({"error":"Invalid source_text provided",'task': task});
+			//reject({"status":"error","error":"Invalid source_text provided","task": task});
+			return {
+				'task': task,
+				'status': 'error',
+				'error':'source text was not a string'
+			};
+		}
+			//console.log("do_embedding:  quick_file_path, initial_search_result: ", quick_file_path, initial_search_result);
+
+
 			
 			
 			
 		
-		}
-		catch(err){
-			console.error("PROMISE RAG WORKER: CAUGHT GENERAL ERROR: ", err);
-			reject({"status":"error","error":"general error in promise rag worker"});
-		}
 		
-	});
+		
+			
+		
+		
+		
+	
+	}
+	catch(err){
+		console.error("PROMISE RAG WORKER: CAUGHT GENERAL ERROR: ", err);
+		//reject({"status":"error","error":"general error in promise rag worker"});
+		return {
+			'task': task,
+			'status': 'error',
+			'error':'general error'
+		};
+	}
+		
 }
 
 
@@ -1416,7 +1396,7 @@ function search_in_documents(task=null, prompt_embedding=null){
 
 
 async function get_database(){
-	//console.log("RAG WORKER: in get_database");
+	console.log("RAG WORKER: in get_database");
 	return search(self.vector_db, {'term':'','limit': 1000,});
 }
 
@@ -1477,7 +1457,7 @@ async function delete_file_from_db(folder,filename){
 		path = folder.folder + '/' + folder.filename;
 	}
 	if(path){
-		search(self.vector_db, {
+		let search_result = await search(self.vector_db, {
 			term: path,
 			properties: ['path'],
 			exact: true,
@@ -1492,25 +1472,22 @@ async function delete_file_from_db(folder,filename){
 			*/
 			
 		})
-		.then((search_result) => {
-			//console.log("delete_file_from_db: search_result: ", search_result);
-			let ids_to_remove = [];
-			if(typeof search_result.hits != 'undefined'){
-				for(let h = 0; h < search_result.hits.length; h++){
-					ids_to_remove.push(search_result.hits[h].id);
-					//await remove(self.vector_db, harryPotterId)
-				}
-				removeMultiple(self.vector_db,ids_to_remove,500);
+		
+		let ids_to_remove = [];
+		if(typeof search_result.hits != 'undefined'){
+			for(let h = 0; h < search_result.hits.length; h++){
+				ids_to_remove.push(search_result.hits[h].id);
+				//await remove(self.vector_db, harryPotterId)
 			}
-		})
-		.catch((err) => {
-			console.error("RAG WORKER: delete_file_from_db: caught error: ", err)
-		})
+			await removeMultiple(self.vector_db,ids_to_remove,500);
+			return true
+		}
 		
 	}
 	else{
 		console.error("RAG WORKER: delete_file_from_db: could not create path.  folder,filename: ", folder,filename);
 	}
+	return false
 	
 }
 
@@ -1518,25 +1495,33 @@ async function delete_file_from_db(folder,filename){
 
 
 async function create_db(){
-	self.vector_db = await create({
-	  schema: {
-	    folder: 'string',
-	    file: 'string',
-		path:'string',
-	    //price: 'number',
+	try{
+		self.vector_db = await create({
+		  schema: {
+		    folder: 'string',
+		    file: 'string',
+			path:'string',
+		    //price: 'number',
         
- 		chunk:'string',
-	    embedding: 'vector[384]', // Vector size must be expressed during schema initialization
-	    meta: {
-			chunk_index:'number',
-			to:'number',
-			from:'number',
-	      //rating: 'number',
-	    },
-	  },
-	})
+	 		chunk:'string',
+		    embedding: 'vector[384]', // Vector size must be expressed during schema initialization
+		    meta: {
+				chunk_index:'number',
+				to:'number',
+				from:'number',
+		      //rating: 'number',
+		    },
+		  },
+		})
 
-	postMessage({"status":"new_database_created"});
+		postMessage({"status":"new_database_created"});
+		console.error("promise_rag_worker: create_db: initial self.vector_db is now: ", self.vector_db);
+		return self.vector_db;
+	}
+	catch(err){
+		console.error("promise_rag_worker: caught error in create_db: ", err);
+		return null
+	}
 }
 
 async function save_db(){
@@ -1561,23 +1546,34 @@ async function restore_db(vector_db_as_json){
 	if(typeof vector_db_as_json == 'string'){
 		vector_db_as_json = JSON.parse(vector_db_as_json);
 	}
-	//console.log("RAG WORKER: in restore_db. vector_db_as_json: ", vector_db_as_json);
+	console.log("RAG WORKER: in restore_db. vector_db_as_json: ", vector_db_as_json);
 	
 	///const vector_db_as_json = await persist(vector_db, 'json');
 	//console.log("Vector DB as JSON: ", vector_db_as_json);
 	//self.vector_db = await restore('json', vector_db_as_json);
+	if(self.vector_db == null){
+		console.log("reestore_db: self.vector_db was null, have to call create_db first");
+		self.vector_db = await create_db();
+	}
 	
-	await create_db();
 	
-    self.vector_db.internalDocumentIDStore.load(self.vector_db, vector_db_as_json.internalDocumentIDStore);
-    self.vector_db.data.index = await self.vector_db.index.load(self.vector_db.internalDocumentIDStore, vector_db_as_json.index);
-    self.vector_db.data.docs = await self.vector_db.documentsStore.load(self.vector_db.internalDocumentIDStore, vector_db_as_json.docs);
-    self.vector_db.data.sorting = await self.vector_db.sorter.load(self.vector_db.internalDocumentIDStore, vector_db_as_json.sorting);
-    self.vector_db.tokenizer.language = vector_db_as_json.language;
+	if(typeof self.vector_db != 'undefined' && self.vector_db != null && typeof self.vector_db.internalDocumentIDStore != 'undefined' && vector_db_as_json != null && typeof vector_db_as_json.internalDocumentIDStore != 'undefined'){
+	    self.vector_db.internalDocumentIDStore.load(self.vector_db, vector_db_as_json.internalDocumentIDStore);
+	    self.vector_db.data.index = await self.vector_db.index.load(self.vector_db.internalDocumentIDStore, vector_db_as_json.index);
+	    self.vector_db.data.docs = await self.vector_db.documentsStore.load(self.vector_db.internalDocumentIDStore, vector_db_as_json.docs);
+	    self.vector_db.data.sorting = await self.vector_db.sorter.load(self.vector_db.internalDocumentIDStore, vector_db_as_json.sorting);
+	    self.vector_db.tokenizer.language = vector_db_as_json.language;
 	
-	postMessage({"status":"database_restored"});
+		postMessage({"status":"database_restored"});
 	
-	//console.log("RAG WORKER: RESTORED DATABASE: ", self.vector_db);
+		console.log("RAG WORKER: RESTORED DATABASE: ", self.vector_db);
+		return self.vector_db
+	}
+	else{
+		console.error("RAG WORKER: restore_db FAILED.  self.vector_db: ", self.vector_db);
+		return null;
+	}
+    
 	
 	/*
 	await search(newInstance, {
@@ -1590,12 +1586,12 @@ async function restore_db(vector_db_as_json){
 
 getr('$playground_vector_db_backup')
 .then((vector_db_as_json) => {
-	//console.log("vector_db_as_json: ", vector_db_as_json);
+	console.log("RAG WORKER: vector_db_as_json: ", vector_db_as_json);
 	restore_db(vector_db_as_json);
 	
 })
 .catch((err) => {
-	console.error("No database to restore");
+	console.warn("RAG WORKER: No database to restore");
 	//console.log("RAG WORKER: cannot restore vector DB, did not find it's JSON in IndexDB");
 	create_db();
 })

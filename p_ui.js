@@ -122,7 +122,7 @@ let simple_tasks_ordering = 'index';
 				if(already_existing_message_el){
 					console.error("add_chat_message: the chat message seems to already exist!  ID:  #" + message_el_id);
 				}
-				else{
+				else if(typeof message == 'string' && !message.endsWith('#setting---')){
 					chat_message_el.setAttribute('id',message_el_id);
 				}
 			}
@@ -142,7 +142,10 @@ let simple_tasks_ordering = 'index';
 			
 			
 			if(typeof task_output != 'undefined' && task_output != null){
-				task_output_el.setAttribute('id','chat-message-task-' + special_task_index_prefix + participant + task_index);
+				if(!message.endsWith('#setting---')){
+					task_output_el.setAttribute('id','chat-message-task-' + special_task_index_prefix + participant + task_index);
+				}
+				
 				//console.log("add_chat_message: task_output was provided: ", task_output);
 				if(typeof task_output == 'string'){
 					//console.log("add_chat_message: setting provided string as initial task output innerHTML: ", task_output);
@@ -1349,7 +1352,7 @@ let simple_tasks_ordering = 'index';
 			if(typeof message == 'string'){
 				
 				if(typeof i18n_code == 'string'){
-					//console.log("apply_markdown was undefined, or participant was developer");
+					//console.log("add_chat_message: i18n_code was string, not calling place_message_in_bubble: ", i18n_code);
 					let message_text_el = document.createElement('div');
 					message_text_el.classList.add('bubble-text');
 					if(typeof i18n_code == 'string'){
@@ -1655,6 +1658,10 @@ let simple_tasks_ordering = 'index';
 	
 	function place_message_in_bubble(bubble_el=null,message='',participant=null){
 		//console.log("in place_message_in_bubble.  bubble_el,message,participant: ", bubble_el, message, participant);
+		if(typeof message != 'string'){
+			console.error("place_message_in_bubble: provided message was not a string: ", message);
+			return bubble_el;
+		}
 		if(bubble_el == null){
 			console.error("place_message_in_bubble: no valid element provided");
 			return bubble_el;
@@ -1667,18 +1674,22 @@ let simple_tasks_ordering = 'index';
 		let markdown_allowed = false;
 		if(typeof participant == 'string'){
 			if(typeof window.settings.assistants[participant] != 'undefined' && typeof window.settings.assistants[participant]['markdown_supported'] == 'boolean'){
-				markdown_allowed = window.settings.assistants[participant]['markdown_allowed'];
+				markdown_allowed = window.settings.assistants[participant]['markdown_supported']; // SIC
 			}else if(typeof window.assistants[participant] != 'undefined' && typeof window.assistants[participant]['markdown_supported'] == 'boolean'){
-				markdown_allowed = window.assistants[participant]['markdown_allowed'];
+				markdown_allowed = window.assistants[participant]['markdown_supported']; // SIC
 			}
 		}
 		
+		if(markdown_allowed == false && message.indexOf('**') != -1 && message.lastIndexOf('**') != -1 && message.indexOf('**') != message.lastIndexOf('**') ){
+			console.warn("place_message_in_bubble: markdown_allowed was false, but there is some indication that the message contains markdown (**). Setting markdown_allowed to true anyway");
+			markdown_allowed = true;
+		}
 		
 		
 		//console.log("add_chat_message: markdown_allowed: ", markdown_allowed);
 	
 	
-		if(markdown_allowed && typeof apply_markdown == 'function' && participant != 'developer'){
+		if(markdown_allowed && typeof window.apply_markdown != 'undefined'){
 			let markdown_version = message.trim();
 			try{
 				if(markdown_version.length > 10){
@@ -3726,7 +3737,6 @@ function generate_task_overview(){
 			if(window.task_queue[t].assistant.startsWith('custom_saved')){
 				if(typeof window.settings.assistants[window.task_queue[t].assistant] != 'undefined' && typeof window.settings.assistants[window.task_queue[t].assistant].emoji == 'string'){
 					let assistant_emoji_icon_el = document.createElement('div');
-					assistant_emoji_icon_el.classList.add('simple-task-item-state-assistant-icon');
 					assistant_emoji_icon_el.classList.add('simple-task-item-state-assistant-emoji-icon');
 					assistant_emoji_icon_el.textContent = window.settings.assistants[window.task_queue[t].assistant].emoji;
 					if(typeof window.settings.assistants[window.task_queue[t].assistant].emoji_bg == 'string'){
@@ -3748,8 +3758,14 @@ function generate_task_overview(){
 				assistant_icon_el.setAttribute('alt',get_translation(window.task_queue[t].assistant.replace('_32bit','') + '_name'));
 				//assistant_icon_html = '<img src="images/' + window.task_queue[t].assistant.replace('_32bit','') + '.png" class="simple-task-item-state-assistant-icon"/>';
 				const my_assistant_id = window.task_queue[t].assistant;
-				assistant_icon_el.addEventListener('click', () => {
+				assistant_icon_el.addEventListener('click', (event) => {
+					event.stopPropagation();
+					event.preventDefault();
 					window.switch_assistant(my_assistant_id);
+					if(window.innerWidth < 981){
+						document.body.classList.remove('sidebar');
+					}
+					
 				});
 				simple_state_el.appendChild(assistant_icon_el);
 			}

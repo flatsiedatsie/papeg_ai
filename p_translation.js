@@ -1544,103 +1544,147 @@ prompt: {{Prompt (the command you'd like to compare)}}
 
 
 
-Change AI to Tiny budgie
 
 
+Change AI to Smallest writer
 
-**Tiny budgie (Tiny Llama 1.1)**
 
+**Smallest writer (Danube 3 500m)**
 
 
 prompt: {{Prompt (the command you'd like to compare)}}
+
+
+
+
+
+Change AI to Mini fun writer
+
+
+**Mini fun writer (Llama 3.2 it 1B)**
+
+
+prompt: {{Prompt (the command you'd like to compare)}}
+
+
+
+
+
+
+Change AI to Tiny chatter
+
+
+**Tiny chatter (Tiny Llama 1.1)**
+
+
+prompt: {{Prompt (the command you'd like to compare)}}
+
+
 
 
 
 Change AI to Zephyr
 
 
-
 **Zephyr (Zephyr 1.6B)**
-
 
 
 prompt: {{Prompt (the command you'd like to compare)}}
 
 
 
-Small summarizer
 
 
 
 Change AI to Small summarizer
 
 
-
 **Small summarizer (Danube 1.8B)**
 
 
-
 prompt: {{Prompt (the command you'd like to compare)}}
 
 
 
-Change AI to Gemma
 
 
+Change AI to Small writer
 
-**Gemma (Gemma 2B it)**
 
+**Small writer (Gemma 2B it)**
 
 
 prompt: {{Prompt (the command you'd like to compare)}}
+
 
 
 
 Change AI to Incite chat
 
 
-
 **Incite chat**
 
 
+prompt: {{Prompt (the command you'd like to compare)}}
+
+
+
+
+Change AI to Small fun writer
+
+
+**Small fun writer (Llama 3.2 it 3B)**
+
 
 prompt: {{Prompt (the command you'd like to compare)}}
 
 
 
-Change AI to Small Phi 3
 
 
 
-**Phi 3**
+Change AI to Writer
 
+
+**Writer (Phi 3.5 mini)**
+
+
+prompt: {{Prompt (the command you'd like to compare)}}
+
+
+
+
+
+Change AI to Serious Writer
+
+
+**Serious writer (Mistral 7B v3 instruct)**
 
 
 prompt: {{Prompt (the command you'd like to compare)}}
 
-
-
-Change AI to Mistral
-
-
-
-**Mistral (Mistral 7B v3 instruct)**
-
-
-
-prompt: {{Prompt (the command you'd like to compare)}}
 
 
 
 Change AI to Fun Writer
 
 
-
 **Fun Writer (Llama 3 8B)**
 
 
+prompt: {{Prompt (the command you'd like to compare)}}
+
+
+
+
+Change AI to Big Gemma
+
+
+**Big Gemma (Gemma 9B it)**
+
 
 prompt: {{Prompt (the command you'd like to compare)}}
+
 
 
 

@@ -6,7 +6,6 @@
 //
 
 window.language_names = new Intl.DisplayNames([window.settings.language], { type: 'region' });
-//window.language_names.of('US');
 
 // See also language_codes_data in index.html TODO: how do these two relate?
 window.language_codes_lookup = {
@@ -1109,78 +1108,7 @@ async function create_translation_worker(){
 					//console.log("translation worker sent download message: ", e.data.file);
 					const file_to_cache = 'https://www.huggingface.co/' + e.data.name + '/resolve/main/' + e.data.file;
 					//console.log("translation worker: file to cache: ", file_to_cache)
-					/*
-					caches.open("transformers")
-					.then((my_cache) => {
-						let request = new Request(file_to_cache, {
-						  	method: 'GET',
-						  	mode: 'no-cors',
-							credentials:'omit',
-						
-							
-						  	//headers: new Headers({
-							//  	'Content-Type': 'application/x-www-form-urlencoded'
-						  	//})
-							
-						  	headers: new Headers({
-							  	'Content-Type': 'text/plain'
-						  	})
-						
-						
-						});
-						//my_cache.add( request ); // has this been tested?
-						//my_cache.add( file_to_cache );
-					})
-					.catch((err) => {
-						console.error("translation worker:caught error adding file to cache: ", err);
-					})
-					*/
-					//cache.add(request).then(function() {
-					// //request has been added to the cache
-					//});
-				
-					//caches.open("transformers")
-					//.then((my_cache) => my_cache.add( file_to_cache ))
-					//.catch((err) => {
-					//	console.error("caught error in translate module: download response from worker: ", err);
-					//})
 					
-					
-					//caches.open("transformers")
-					//.then((my_cache) => {
-						//const myRequest = new Request(file_to_cache);
-					//	let request = new Request(file_to_cache, {
-					//	  	method: 'GET',
-					//	  	mode: 'no-cors',
-					//	  	headers: new Headers({
-					//		  	'Content-Type': 'application/x-www-form-urlencoded'
-					//	  	})
-					//	});
-					
-					//	my_cache.add( request );
-					//})
-					//.catch((err) => {
-					//	console.error("caught error in translate module: download response from worker: ", err);
-					//})
-					
-					
-					//caches.open("transformers")
-					//.then((my_cache) => {
-						//const myRequest = new Request(file_to_cache);
-					//	let request = new Request(file_to_cache, {
-					//	  	mode: 'no-cors'
-					//	});
-					
-					//	my_cache.add( request );
-					//})
-					//.catch((err) => {
-					//	console.error("caught error in translate module: download response from worker: ", err);
-					//})
-					
-					
-					//if(document.body.classList.contains('developer')){
-					//	add_chat_message('current','developer','(down)loading: ' + e.data.file);
-					//}
 					
 				}
 			
@@ -1350,12 +1278,6 @@ async function create_translation_worker(){
 }
 
 
-//console.log("translation_module.js:  calling create_translation_worker");
-//create_translation_worker();
-
-
-
-
 
 window.do_translation = async function (task){ // translation_queue_item
 	console.log("in do_translation. Task: ", task);
@@ -1378,14 +1300,6 @@ window.do_translation = async function (task){ // translation_queue_item
 		}
 		
 		window.translation_worker_busy = true;
-		
-		/*
-		caches.open(window.cache_name)
-		.then((my_cache) => {
-			my_cache.add(e.data.file);
-			return create_translation_worker();
-		})
-		*/
 		
 		
 		if(window.translation_worker == null){
