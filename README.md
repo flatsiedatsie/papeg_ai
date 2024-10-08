@@ -6,7 +6,7 @@ https://www.papeg.ai
 ## TRANSPARENCY
 Papeg.ai runs completely client-side, which means you always have access to the complete source code. The code is placed here as a convenience, to make inspecting it as easy as possible. 
 
-The code is still very messy. 
+There are likely still many bugs, and you should not rely on papeg.ai for anything serious or mission-critical.
 
 ## LICENSE
 
