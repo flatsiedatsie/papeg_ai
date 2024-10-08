@@ -1724,15 +1724,20 @@ body.hide-chat-form #message-form-container{
 	color:#fff!important;
 }
 
+.characters-button-more_characters .icon-container .center,
+.blueprints-button-more_blueprints .icon-container .center,
 .plus-icon{
 	background-image:url(images/plus.svg);
 	background-repeat:no-repeat;
 	background-position:center;
 	background-size:20px 20px;
+}
+.plus-icon{
 	width:26px;
 	height:26px;
 }
-
+	
+	
 #add-assistants-hint-container{
 	display:none;
 	align-items:center;
@@ -1975,10 +1980,6 @@ body.show-rewrite .chat .content .message-form{
 	border-radius:50%;
 	height:26px;
 	width:26px;
-}
-
-.plus-icon{
-	
 }
 
 .busy-selecting-assistants #sidebars{
