@@ -8,14 +8,17 @@ if(window.camera_streaming){
 document.body.classList.remove('hide-camera-still');
 
 const decoded_image_to_text_ocr_example_image = atob(image_to_text_ocr_example_image_as_base64);
-console.log("decoded_image_to_text_ocr_example_image: ", decoded_image_to_text_ocr_example_image);
+//console.log("decoded_image_to_text_ocr_example_image: ", decoded_image_to_text_ocr_example_image);
+
+
 
 really_create_file(false,'_PLAYGROUND_BINARY_' + decoded_image_to_text_ocr_example_image,'Alice_in_Wonderland_scan.jpg')
 .then((value) => {
-	console.log("example OCR image should now be added. value: ", value);
-
-	setTimeout(() => {
-		do_prompt({'assistant':'image_to_text_ocr'});
+	//console.log("example OCR image should now be added. value: ", value);
+	window.switch_assistant('image_to_text_ocr');
+	
+	setTimeout(() => {	
+		window.do_prompt({'assistant':'image_to_text_ocr'},'OCR');
 		window.scroll_chat_to_bottom();
 	},3000);
 	
@@ -24,4 +27,4 @@ really_create_file(false,'_PLAYGROUND_BINARY_' + decoded_image_to_text_ocr_examp
 	console.error("caught error creating OCR example image: ", err);
 })
 
-console.log("image_to_text_ocr example script loaded");
+//console.log("image_to_text_ocr example script loaded");

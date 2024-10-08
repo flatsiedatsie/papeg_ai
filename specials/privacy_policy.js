@@ -1,6 +1,8 @@
-const en_privacy_policy_doc = `PRIVACY POLICY
+const en_privacy_policy_doc = `**PRIVACY POLICY**
 
-**Papeg.ai does not collect any personal data whatsoever**. The goal of this project is to show how a combination of privacy protection and ease-of-use can be achieved through privacy design.
+*Papeg.ai does not collect any personal data whatsoever*. 
+
+The goal of this project is to show how a combination of privacy protection and ease-of-use can be achieved through privacy design.
 
 However, there are some nuances you should be aware of.
 
@@ -106,4 +108,4 @@ function create_privacy_policy_document(){
 		
 }
 
-create_privacy_policy_document();
+
