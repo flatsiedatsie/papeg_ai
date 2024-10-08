@@ -1957,7 +1957,7 @@ body.chat-shrink #chat-header-emoji-icon-container:not(:empty){
 	height:36px;
 	border-radius:50%;
 	overflow:hidden;
-	font-size:140%;
+	font-size:130%;
 }
 
 body:not(.custom-ai) #chat-header-emoji-icon-container{

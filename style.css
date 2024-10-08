@@ -1724,6 +1724,15 @@ body.hide-chat-form #message-form-container{
 	color:#fff!important;
 }
 
+.plus-icon{
+	background-image:url(images/plus.svg);
+	background-repeat:no-repeat;
+	background-position:center;
+	background-size:20px 20px;
+	width:26px;
+	height:26px;
+}
+
 #add-assistants-hint-container{
 	display:none;
 	align-items:center;
@@ -1765,7 +1774,7 @@ body.show-rewrite #message-form-container{
 
 
 body:not(.show-camera):not(.show-rewrite) #message-form-container{
-	min-height:94px;
+	min-height:92px;
 }
 
 body:not(#assistant-image_to_text):not(#assistant-image_to_text_ocr).show-camera:not(.show-rewrite) #message-form-container,
