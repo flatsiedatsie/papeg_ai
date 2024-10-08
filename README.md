@@ -10,7 +10,7 @@ There are likely still many bugs, and you should not rely on papeg.ai for anythi
 
 ## LICENSE
 
-This code is currently not available under an open source licence. You may not duplicate this code, or use it. Except in the following situations:
+This code is currently **not** available under an open source licence. You may not duplicate or use this code except under the following conditions:
 
 - A. You may use this code for individual non-profit personal use, or within a non-profit organisation. You may deploy it on the localhost on your own device, or make it available on a local network only. You may not place it online anywhere.
 - B. In any other case you may copy, deploy or use this code if given explicit written permission to do so by Tijmen Schep.
