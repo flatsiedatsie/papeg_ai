@@ -31,6 +31,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
   frame_counter = 0;
 
   last_command_was_speech = true;
+  real_sample_rate = null;
 
   debug = false;
 
@@ -78,6 +79,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 	this.flush_count = null;
 	this.flush_threshold = 15; // 15 seconds normally, but when doing non-stop recording this can be increased
 	this.optimal_flush_buffer_cut_frame = null;
+	this.sample_rate_check_recording_start_time = null;
 	
 	this.seconds_counter = 0;
 	this.ping();
@@ -172,7 +174,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 
   ping(){
     //console.log("VAD AUDIO WORKLET: SENDING PING");
-  	this.post('ping',{'listening':this.listening});
+  	this.post('ping',{'listening':this.listening,'last_command_was_speech':this.last_command_was_speech});
   }
 
 
@@ -187,7 +189,8 @@ class AudioVADProcessor extends AudioWorkletProcessor {
     console.log("VAD WORKLET: in send_recording. continuous: ", this.continuous);
     const now_stamp = Date.now();
 	this.recording_start_time = now_stamp - (this.recording.length / (this.sample_rate / 1000)); // assuming 16000 sample_rate, this would be divided by 16 to get to milliseconds (16 audio floats per millisecond);
-	  
+	this.sample_rate_check_recording_start_time = now_stamp;
+	
   	this.post("recording", {
 		'audio_data':this.recording,
 		'details':{
@@ -199,6 +202,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 			'maximum_pre_recording_buffer_size':this.maximum_pre_buffer_size,
 			'actual_pre_recording_size':this.actual_pre_recording_size,
 			'listening_start_time':this.listening_start_time,
+			'real_sample_rate':this.real_sample_rate,
 			'recording_start_time':this.recording_start_time, // TODO Start time can only be trusted if recording is non-stop, as it doesn't account for pruning of pre-buffer yet (although that could be implemented too..)
 			'recording_end_time':now_stamp,
 			'optimal_flush_buffer_cut_frame':this.optimal_flush_buffer_cut_frame, // an attempt to keep a chunk of a long recording based on an actual moment of silence instead of just cutting 5 * 16000 frames, which could cut in the middle of a word.
@@ -248,6 +252,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 	
 	if(this.recording.length == 0){
 		this.recording_start_time = Date.now();
+		
 		this.listening_start_time = Date.now();
 		this.truncated_pre_recording = 0;
 	}
@@ -269,12 +274,16 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 		this.recording.splice(0, this.recording.length - this.maximum_pre_buffer_size); // remove old audio from beginning of buffer
 		this.actual_pre_recording_size = null;
 		this.truncated_pre_recording += this.recording.length - this.maximum_pre_buffer_size;
+		this.sample_rate_check_recording_start_time = Date.now();
+		
 		
 		//console.log("pre-buffer last_value after: ",  this.recording.length, " -> ", this.recording[this.recording.length-2], this.recording[this.recording.length-1]);
 		//console.log("spliced this.recording.length: ", this.recording.length);
 	}
 	if(this.actual_pre_recording_size == null && this.last_command_was_speech == true && this.continuous == false){
 		this.actual_pre_recording_size = this.recording.length;
+		this.sample_rate_check_recording_start_time = Date.now();
+		
 		//this.recording_start_time = Date.now() - (this.actual_pre_recording_size / 16); // might be easier/more accurate to calculate this based on the current timestamp minus the total recording length instead, since this is only used when non-stop is disabled anyway
 	}
 	
@@ -289,6 +298,23 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 		}
 		
 	}
+	if(this.real_sample_rate == null && typeof this.sample_rate_check_recording_start_time == 'number' && (Date.now() - this.sample_rate_check_recording_start_time) > 1000){
+		const real_sample_rate_measuring_duration = Date.now() - this.sample_rate_check_recording_start_time;
+		console.log("real_sample_rate: real_sample_rate_measuring_duration: ", real_sample_rate_measuring_duration);
+		
+		if(typeof this.actual_pre_recording_size == 'number'){
+			console.log("real_sample_rate: recorded samples: ", (this.recording.length - this.actual_pre_recording_size));
+			
+			this.real_sample_rate = (this.recording.length - this.actual_pre_recording_size) / (real_sample_rate_measuring_duration/1000);
+			console.log("VAD audio worklet: real_sample_rate: saw this many samples in a second: ", this.real_sample_rate);
+		}
+		else{
+			console.error("unable to calculate real_sample_rate, somehow variables weren't numbers");
+			this.real_sample_rate = 0;
+		}
+		
+	}
+	
 	
 	//console.log("recording", this.recording.length);
 	
