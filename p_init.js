@@ -139,7 +139,7 @@ window.transcription_quality_options = ['Fast','Medium','High'];
 window.mp3_worker = null;
 window.mp3_worker_busy = false;
 
-
+window.minimum_prompt_height = 92;
 
 
 window.audio_player_busy = false;
@@ -1852,7 +1852,7 @@ check_gpu();
 
 
 
-document.getElementById('about-link').addEventListener("click", (event) => {
+document.getElementById('about-link').addEventListener("click", () => {
 	window.add_script('./specials/about.js')
 	.then((value) => {
 		setTimeout(create_about_document,100);
@@ -1862,7 +1862,7 @@ document.getElementById('about-link').addEventListener("click", (event) => {
 	})
 })
 
-document.getElementById('privacy-policy-link').addEventListener("click", (event) => {
+document.getElementById('privacy-policy-link').addEventListener("click", () => {
 	window.add_script('./specials/privacy_policy.js')
 	.then((value) => {
 		setTimeout(create_privacy_policy_document,100);
@@ -1884,7 +1884,7 @@ document.getElementById('sidebar-header-chat-button').addEventListener("click", 
 	save_settings();
 });
 
-document.getElementById('sidebar-header-docs-button').addEventListener("click", (event) => {
+document.getElementById('sidebar-header-docs-button').addEventListener("click", () => {
 	document.body.classList.remove('sidebar-chat');
 	document.body.classList.remove('sidebar-settings');
 	//document.body.classList.add('show-rewrite'); // TODO: only add this is there are rewrites available for inspection
@@ -1898,7 +1898,7 @@ document.getElementById('sidebar-header-docs-button').addEventListener("click", 
 	save_settings();
 });
 
-document.getElementById('sidebar-header-settings-button').addEventListener("click", (event) => {
+document.getElementById('sidebar-header-settings-button').addEventListener("click", () => {
 	document.body.classList.remove('sidebar-chat');
 	document.body.classList.remove('busy-selecting-assistants');
 	document.body.classList.add('sidebar-settings');
@@ -1909,20 +1909,28 @@ document.getElementById('sidebar-header-settings-button').addEventListener("clic
 });
 
 
-document.getElementById('settings-sidebar-settings-button').addEventListener("click", (event) => {
+document.getElementById('settings-sidebar-settings-button').addEventListener("click", () => {
 	document.body.classList.remove('sidebar-settings-show-tasks');
 	window.settings.left_sidebar_settings_tab = 'settings';
 	save_settings();
 });
 
 
-document.getElementById('settings-sidebar-tasks-button').addEventListener("click", (event) => {
+document.getElementById('settings-sidebar-tasks-button').addEventListener("click", () => {
 	//console.log("clicked on tasks button");
 	document.body.classList.add('sidebar-settings-show-tasks');
 	window.settings.left_sidebar_settings_tab = 'tasks';
 	save_settings();
 	generate_task_overview();
 });
+
+
+document.getElementById('clear-tasks-button').addEventListener("click", () => {
+	console.log("clicked on clear tasks button");
+	window.location.reload(false);
+});
+
+
 
 /*
 document.getElementById('simple-task-list-play-button').addEventListener("click", (event) => {
@@ -2951,7 +2959,7 @@ prompt_el.addEventListener("input", (e) => {
 });
 
 prompt_el.addEventListener("keyup", ({key}) => {
-    if (key === "Enter" && parseInt(message_form_container_el.style.height) == 94) {
+    if (key === "Enter" && parseInt(message_form_container_el.style.height) == window.minimum_prompt_height) {
 		//console.log("enter pressed, and prompt input is in it's smallest height, so using this to submit the prompt")
 		prompt_submit_button_clicked();
 		/*

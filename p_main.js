@@ -727,6 +727,9 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	}
 	if(typeof second_prompt == 'string' && second_prompt.length){
 		
+		if(typeof window.conversations[assistant_id] == 'undefined'){
+			window.conversations[assistant_id] = [];
+		}
 		// Add initial second_prompt to the conversation
 		if(window.conversations[assistant_id].length == 0){
 			window.conversations[assistant_id].push({'role':'assistant','content':second_prompt});

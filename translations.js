@@ -4659,8 +4659,8 @@ window.translations = {
 		"nl":"Beschrijft afbeeldingen",
 	},
 	"image_to_text_model_info":{
-		"en":"This AI model can describe the contents of pictures.\n\nYou can actually choose between multiple models here. Each perform the exact same task, but they differ in small ways. For example, 'Moondream 2' is the largest, followed quickly by NanaLlava, while Florence is by far the smallest.\n\nDespite its small size Florence performs really well, which is why it's the default.",
-		"nl":"Dit AI model kan beschrijven wat er op plaatjes te zien is.\n\nJe kunt kiezen tussen meerdere AI modellen voor deze functionaliteit. 'Moondream 2' (groot), 'NanoLlava' (klein) en 'Florence' (klein).",
+		"en":"This AI model can describe the contents of pictures.\n\nYou can actually choose between multiple models here. Each perform the exact same task, but they differ in small ways. For example, 'Moondream 2' is the largest, followed quickly by NanaLlava, while Florence is by far the smallest.\n\nFlorence has some limitation in what you can ask of it - it only responds well to certain specific sentences.",
+		"nl":"Dit AI model kan beschrijven wat er op plaatjes te zien is.\n\nJe kunt kiezen tussen meerdere AI modellen voor deze functionaliteit. 'Moondream 2' (groot), 'NanoLlava' (klein) en 'Florence' (klein).\n\n Florence heft nogal een gebruiksaanwijzing, en is vooral interessant op mobiele telefoons.",
 	},
 
 

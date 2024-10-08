@@ -1475,7 +1475,7 @@ let first_ui_generation_done = false;
 					
 				}
 				
-				chat_profile_pic_el.innerHTML = '<img src="images/' + icon_name + '.png" class="chat-bubble-assistant-icon"/>';
+				chat_profile_pic_el.innerHTML = '<img src="images/' + icon_name + '_thumb.png" class="chat-bubble-assistant-icon"/>';
 				bubble_wrap_el.appendChild(chat_profile_pic_el);
 			}
 			
@@ -2809,6 +2809,9 @@ let first_ui_generation_done = false;
 			
 			if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].real_name == 'string'){
 				assistant_icon_el.setAttribute('title',window.assistants[image_src].real_name);
+			}
+			if(typeof window.settings.assistants[assistant_id] != 'undefined' && window.settings.assistants[assistant_id].icon == 'string'){
+				image_src = window.settings.assistants[assistant_id].icon;
 			}
 			
 			if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['emoji'] == 'string'){
@@ -4194,7 +4197,7 @@ if(localStorage.getItem('message_form_container_height')){
 	if(starting_message_form_height >= 300){
 		document.body.classList.add("chat-message-form-maximum-height");
 	}
-	if(starting_message_form_height <= 94){
+	if(starting_message_form_height <= window.minimum_prompt_height){
 		document.body.classList.add("chat-message-form-minimum-height");
 	}
 }
@@ -4282,8 +4285,8 @@ function do_message_form_drag(e) {
 	}
 	*/
 	
-	if(new_form_height < 94){
-		new_form_height = 94;
+	if(new_form_height < window.minimum_prompt_height){
+		new_form_height = window.minimum_prompt_height;
 	}
 	//console.log("new_form_height: ", new_form_height);
 	
@@ -4306,7 +4309,7 @@ function do_message_form_drag(e) {
 		document.body.classList.remove("chat-message-form-more-height");
 	}
 	
-	if(new_form_height == 94){
+	if(new_form_height == window.minimum_prompt_height){
 		document.body.classList.add('chat-message-form-minimum-height');
 	}
 	else{
@@ -4344,7 +4347,7 @@ function stop_message_form_drag(e) {
 		document.body.classList.remove("chat-message-form-more-height");
 	}
 	
-	if(final_height == 94){
+	if(final_height == window.minimum_prompt_height){
 		document.body.classList.add('chat-message-form-minimum-height');
 	}
 	else{

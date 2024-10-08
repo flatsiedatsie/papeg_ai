@@ -1107,8 +1107,8 @@ Chiharu is a young, computer engineer-nerd with a knack for problem solving and 
 		"type":"serious",
 		//"i18n_code":"Donald_Trump",
 		"custom_name":"More characters",
-		"emoji":"➕",
-		"emoji_bg":"#ffffff",
+		"emoji":" ",
+		"emoji_bg":"#00314a",
 		"function":"show_more_characters_dialog"
 	},
 	
@@ -1155,10 +1155,10 @@ function generate_characters_list(){
 			else 
 			*/
 			if(key == 'Cleopatra' ){ // && window.settings.settings_complexity != 'developer'
-				switch_button_el.innerHTML = '<img src="./images/characters_mini_ankeiler_' + key.toLowerCase() + '.svg" alt="' + details.custom_name + '"/><div>' + details.custom_name + '</div>';
+				switch_button_el.innerHTML = '<img src="./images/characters_mini_ankeiler_' + key.toLowerCase() + '.png" alt="' + details.custom_name + '"/><div>' + details.custom_name + '</div>';
 			}
 			else if(key == 'brainstormer'){
-				switch_button_el.innerHTML = '<img src="./images/characters_mini_ankeiler_' + key.toLowerCase() + '.svg" alt="' + details.custom_name + '"/><div>' + details.custom_name + '</div>';
+				switch_button_el.innerHTML = '<img src="./images/characters_mini_ankeiler_' + key.toLowerCase() + '.png" alt="' + details.custom_name + '"/><div>' + details.custom_name + '</div>';
 			}
 			
 			else{
@@ -1326,7 +1326,7 @@ function show_more_blueprints_dialog(){
 
 
 //
-//   TEMPLATES
+//   BLUEPRINTS
 //
 
 
@@ -1781,8 +1781,8 @@ info: Just described an image!
 		"type":"business",
 		//"i18n_code":"Donald_Trump",
 		"custom_name":"More blueprints",
-		"emoji":"➕",
-		"emoji_bg":"#ffffff",
+		"emoji":" ",
+		"emoji_bg":"#00314a",
 		"function":"show_more_blueprints_dialog"
 	},
 	
