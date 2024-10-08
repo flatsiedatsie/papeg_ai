@@ -16,6 +16,18 @@ if(typeof window.ios_device != 'undefined'){
 }
 
 
+let konami_cursor = 0;
+const KONAMI_CODE = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+document.addEventListener('keydown', (e) => {
+  konami_cursor = (e.keyCode == KONAMI_CODE[konami_cursor]) ? konami_cursor + 1 : 0;
+  if (konami_cursor == KONAMI_CODE.length) activate_konami();
+});
+
+function activate_konami(){
+	console.warn("\n\n\n\n\n\n\n\n\n\n\n⬆⬆⬇⬇⬅➡⬅➡🅱🅰\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+	play_sound_effect('funkycats_dot_nl');
+} 
+
 
 /*
 caches.open('transformers-cache')
