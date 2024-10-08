@@ -105,8 +105,12 @@ body {
 
 
 .chat .chat-sidebar .contacts li.cached-ai:not(.loaded-ai) .assistant-loaded-indicator{
-	background-color:#999;
+	background-color:#ddd;
 	border:1px solid #888;
+}
+body.light .chat .chat-sidebar .contacts li.cached-ai:not(.loaded-ai) .assistant-loaded-indicator{
+	background-color:#999;
+	border:1px solid #ddd;
 }
 
 
@@ -115,7 +119,9 @@ body {
 }
 
 .assistant-unread-indicator{
-	background-color:var(--green-bg);
+	/*background-color:var(--green-bg);*/
+	background-color:var(--assistant-bubble-bg);
+	border:1px solid white;
 	color:white;
 	font-size:12px;
 	width:25px;
@@ -289,7 +295,8 @@ body:not(.sidebar-shrink) .chat .chat-sidebar .contacts ul li.contact-item{
 }
 .chat .chat-sidebar .contacts ul li.selected-ai.contact-item{
 	/*background: rgb(40,40,40);*/
-	background: var(--chat-bg);
+	/*background: var(--chat-bg);*/
+	background: var(--weak-semi-transparent-bg);
 }
 .chat .chat-sidebar .contacts ul li.contact-item:hover{
 	background: var(--item-hover-bg);
@@ -718,7 +725,7 @@ body:not(.has-keyboard) .chat .content .message-content:not(:empty){
 .chat .message-content .message .bubble {
     /*padding: 10px 20px 10px 12px;
 	*/
-	padding:10px 10px;
+	padding:0;
     background: var(--assistant-bubble-bg);
     border-bottom-left-radius: 0px;
     border-end-end-radius: 10px;
@@ -743,6 +750,15 @@ body:not(.has-keyboard) .chat .content .message-content:not(:empty){
 	animation-direction: normal;
 	color: var(--assistant-bubble-text-color);
 }
+
+.chat .message-content .message .bubble:not(:empty){
+	padding:10px;
+}
+.chat .message-content .message.why-so-slow-hint .bubble:not(:empty){
+	padding:30px;
+}
+
+
 .chat .message-content .message .bubble:not(.has-html),
 .chat .message-content .message .bubble:not(.has-html) > div{
 	white-space: pre-wrap;
@@ -815,13 +831,29 @@ body:not(.has-keyboard) .chat .content .message-content:not(:empty){
 }
 
 
+.message:not(.participant-user) .bubble:empty{
+	display:none;
+}
+.message.to-be-filled .time{
+	display:none!important;
+}
+
 .bubble ol,
 .bubble ul,
 .message-status-container > div ul,
 .chat .message-content .bubble ul{
-	margin:5px 0 10px 0;
+	margin:10px 0 10px 0;
 	padding-left:15px;
 	white-space:normal;
+}
+
+.bubble ul ul{
+	margin-top:3px;
+}
+
+.bubble ol > li{
+	margin-top:8px;
+	margin-bottom:8px;
 }
 
 .bubble.has-html ol > li,
@@ -988,19 +1020,19 @@ body.light .bubble-copy-to-clipboard-button-icon-wrapper{
 }
 
 
-.chat .message-content .even-time:not(:has(~ .even-time)) .bubble{
+.chat .message-content .even-time:not(.to-be-filled):not(:has(~ .even-time)) .bubble{
 	border-bottom-left-radius: 10px;
 }
 	
-.chat .message-content .even-time:not(:has(~ .even-time)) .time{
+.chat .message-content .even-time:not(.to-be-filled):not(:has(~ .even-time)) .time{
 	display:block;
 }
 
-.chat .message-content .odd-time:not(:has(~ .odd-time)) .bubble{
+.chat .message-content .odd-time:not(.to-be-filled):not(:has(~ .odd-time)) .bubble{
 	border-bottom-left-radius: 10px;
 }
 
-.chat .message-content .odd-time:not(:has(~ .odd-time)) .time{
+.chat .message-content .odd-time:not(.to-be-filled):not(:has(~ .odd-time)) .time{
 	display:block;
 }
 
@@ -1094,6 +1126,10 @@ body.light .bubble-copy-to-clipboard-button-icon-wrapper{
 	transform:scale(1.3);
 }
 
+.chat .message-content .message.model-examples-chat-message .small-corner-close-button{
+	display:none!important;
+}
+
 .chat-setting-wrapper button{
 	margin-bottom:.5rem;
 	white-space: nowrap;
@@ -1137,7 +1173,7 @@ body.light .bubble-copy-to-clipboard-button-icon-wrapper{
 	justify-content:center;
 	flex-wrap:wrap;
 }
-.chat-message-task-output:not(:empty){
+.chat-message-task-output:not(:first-child):not(:empty){
 	margin-top:5px;
 }
 p + .chat-message-task-output:not(:empty){
