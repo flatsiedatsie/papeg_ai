@@ -74,7 +74,16 @@ function strip_timestamps(text){
 window.strip_timestamps = strip_timestamps
 
 function clean_up_string_for_speaking(sentence){
-	//console.log("in clean_up_string_for_speaking. sentence BEFORE:\n", sentence);
+	console.log("in clean_up_string_for_speaking. sentence BEFORE:\n" + sentence);
+	if(typeof sentence != 'string'){
+		console.error("clean_up_string_for_speaking: sentence as not a string: ", sentence);
+		return '';
+	}
+	if(sentence.trim().length == 0){
+		console.error("clean_up_string_for_speaking: sentence was empty string: -->" + sentence + "<--");
+		return '';
+	}
+	
 	// numToWords
 	let sentence_parts = [];
 	if(typeof sentence == 'string' && sentence != ''){
@@ -85,15 +94,46 @@ function clean_up_string_for_speaking(sentence){
 			sentence = sentence.replaceAll('°F ',' degrees Fahrenheit ');
 			sentence = sentence.replaceAll('°F)',' degrees Fahrenheit)');
 			
+			
+			sentence = sentence.replaceAll(/(\s\d{1,3})(,\d{3},\d{3},\d{3})\s/g, "$1 billion $2");
+			sentence = sentence.replaceAll(/(\s\d{1,3})(,\d{3},\d{3})\s/g, "$1 million $2");
+			sentence = sentence.replaceAll(/(\s\d{1,3})(,\d{3})\s/g, "$1 thousand $2");
+			
+			sentence = sentence.replaceAll(/(\s\d{1,3})(\.\d{3}\.\d{3}\.\d{3})\s/g, "$1 billion $2");
+			sentence = sentence.replaceAll(/(\s\d{1,3})(\.\d{3}\.\d{3})\s/g, "$1 million $2");
+			sentence = sentence.replaceAll(/(\s\d{1,3})(\.\d{3})\s/g, "$1 thousand $2");
+			
+			
 			sentence = sentence.replaceAll(', ',' , ');
 			sentence = sentence.replaceAll('. ',' . ');
 			
-			sentence = sentence.replaceAll('(','');
-			sentence = sentence.replaceAll('(','');
+			sentence = sentence.replaceAll('(',' ');
+			sentence = sentence.replaceAll(')',' ');
 			
-			sentence = sentence.replaceAll(' II ','2');
-			sentence = sentence.replaceAll(' III ','3');
-			sentence = sentence.replaceAll(' IV ','4');
+			
+			
+			sentence = sentence.replaceAll('\nII. ','\nTwo. ');
+			sentence = sentence.replaceAll('\nIII. ','\nThree. ');
+			sentence = sentence.replaceAll('\nIV. ','\nFour. ');
+			sentence = sentence.replaceAll('\nV. ','\nFive. ');
+			sentence = sentence.replaceAll('\nVI. ','\nSix. ');
+			sentence = sentence.replaceAll('\nVII. ','\nSeven. ');
+			sentence = sentence.replaceAll('\nVIII. ','\nEight. ');
+			sentence = sentence.replaceAll('\nIIX. ','\nEight. ');
+			sentence = sentence.replaceAll('\nIX. ','\nNine. ');
+			
+			// (II|III|IV|V|VI|VII|VIII|IX)
+			sentence = sentence.replaceAll(/(\s[Ww]ar)\sI([\.\,\:]?)\s/g, "$1 one$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sII([\.\,\:]?)\s/g, "$1 two$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sIII([\.\,\:]?)\s/g, "$1 three$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sIII([\.\,\:]?)\s/g, "$1 three$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sIV([\.\,\:]?)\s/g, "$1 four$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sV([\.\,\:]?)\s/g, "$1 five$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sVI([\.\,\:]?)\s/g, "$1 six$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sVII([\.\,\:]?)\s/g, "$1 seven$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sVIII([\.\,\:]?)\s/g, "$1 eight$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sIIX([\.\,\:]?)\s/g, "$1 eight$2 ");
+			sentence = sentence.replaceAll(/([A-Za-z]?)\sIX([\.\,\:]?)\s/g, "$1 nine$2 ");
 			
 			sentence = sentence.replaceAll(' AI ',' "A  eye" ');
 			sentence = sentence.replaceAll(' AI,',' "A  eye",');
@@ -160,6 +200,12 @@ function clean_up_string_for_speaking(sentence){
 		}
 		
 		
+		if(sentence.trim().length == 0){
+			console.error("clean_up_string_for_speaking: might have gone to far in a few places (sentence is now empty string)");
+		}
+		else{
+			console.log("clean_up_string_for_speaking: sentence after initial clearning: ", sentence);
+		}
 		
 		
 		
@@ -170,6 +216,7 @@ function clean_up_string_for_speaking(sentence){
 		else{
 			sentence_parts = [sentence];
 		}
+		console.log("clean_up_string_for_speaking: sentence_parts: ", sentence_parts);
 		
 		for(let p = 0; p < sentence_parts.length; p++){
 			if(window.settings.language == 'en'){
@@ -197,7 +244,7 @@ function clean_up_string_for_speaking(sentence){
 				}
 				
 				if(word != '' && !isNaN(word)){
-					//console.log("attempting to turn number into words: ", word);
+					console.log("clean_up_string_for_speaking: attempting to turn number into words: ", word);
 					sentence_parts[p] = english_number_to_words(parseInt(word)); // .replaceAll('  ',' ')
 				}
 				
@@ -206,20 +253,20 @@ function clean_up_string_for_speaking(sentence){
 			
 			else{
 				// TODO: also do this for Dutch
-				console.warn("cannot clean up string for speaking for this language yet: ", window.settings.language); // but it's also not needed, as there is no non-english AI model for voice generation yet
+				console.warn("clean_up_string_for_speaking: cannot clean up string for speaking for this language yet: ", window.settings.language); // but it's also not needed, as there is no non-english AI model for voice generation yet
 			}
 			
 		}
 	}
 	if(sentence_parts.length == 0){
-		console.error("NO SENTENCE PARTS, which means the provided sentence was invalid");
-		return 'Error';
+		console.error("clean_up_string_for_speaking: NO SENTENCE PARTS, which means the provided sentence was invalid: ", sentence);
+		return '';
 	}
 	if(sentence_parts.length == 1){
-		return sentence_parts[0];
+		return sentence_parts[0].replaceAll(' , ',', ').replaceAll(' . ','. ');
 	}
 	else{
-		return sentence_parts.join(' ');
+		return sentence_parts.join(' ').replaceAll(' , ',', ').replaceAll(' . ','. ');
 	}
 }
 
