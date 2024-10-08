@@ -60,6 +60,7 @@ window.tts_queue = [];
 //const onModelLoaded = async function (task=null){
 const onModelLoaded = async (task=null,first_load=true) => {
 	
+	window.interrupt_wllama = false;
 	called_on_model_loaded = true;
 
 	if(task==null){
@@ -70,16 +71,14 @@ const onModelLoaded = async (task=null,first_load=true) => {
 	my_task = task;
 	
 	if(typeof task.assistant == 'string'){
-		let download_progress_el = document.querySelector('.message.pane-' + task.assistant + '.download-progress-chat-message');
-		if(download_progress_el){
-			download_progress_el.classList.add('download-complete-chat-message');
+		let download_progress_message_el = document.querySelector('.message.pane-' + task.assistant + '.download-progress-chat-message');
+		if(download_progress_message_el){
+			download_progress_message_el.classList.add('download-complete-chat-message');
 			setTimeout(() => {
-				download_progress_el.remove();
+				download_progress_message_el.remove();
 			},1000);
 		}
 	}
-	
-	
 	
 	
 	if(typeof window.currently_loaded_llama_cpp_assistant != 'string'){
@@ -155,7 +154,10 @@ const onModelLoaded = async (task=null,first_load=true) => {
 	else if(typeof window.currently_loaded_assistant == 'string' && typeof window.assistants[window.currently_loaded_assistant] != 'undefined' && typeof window.assistants[window.currently_loaded_assistant].temperature != 'undefined'){
 		temperature = window.assistants[window.currently_loaded_assistant].temperature;
 	}
-	
+	if(typeof temperature != 'number'){
+		console.error("wllama: temperature was not a number!: " + temperature);
+		temperature = 0;
+	}
 	
 	//let system_prompt = "A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.";
 	
@@ -267,23 +269,28 @@ const onModelLoaded = async (task=null,first_load=true) => {
 	
 		*/
 		
+		let sampling = generate_model_settings(task);
+		
+		
+		
 		
 		try{
 			
 			//window.interrupt_wllama = false;
 			//let response_so_far = "";
-			
+			window.currently_running_llm = task.assistant;
 			const outputText = await window.llama_cpp_app.createCompletion(total_prompt, {
 	            //nPredict: 500,
+				allow_offline:true,
 	            sampling: {
 					temp: temperature,
-					top_k: top_k,//40,
-					top_p: top_p, //0.9,
+					//top_k: top_k,//40,
+					//top_p: top_p, //0.9,
 	            },
 				useCache: true,
 	            onNewToken: (token, piece, currentText, { abortSignal }) => {
     				if (window.interrupt_wllama) {
-						//console.log("sending interrupt signal to Wllama");
+						console.log("sending interrupt signal to Wllama");
 						abortSignal();
 						window.interrupt_wllama = false;
 					}
@@ -298,17 +305,17 @@ const onModelLoaded = async (task=null,first_load=true) => {
 			
 			//console.log("wllama:  outputText: ", outputText);
 			if(typeof outputText == 'string' && outputText.length){
-				window.handle_completed_task(my_task, outputText);
+				await window.handle_completed_task(my_task, outputText);
 			}
 			else if(typeof outputText == 'string' && outputText == ''){
 				console.error("wllama: output text was invalid. Empty string?: -->" +  outputText + "<--");
 				flash_message(get_translation("The_AI_gave_an_empty_response"),3000,'fail');
-				window.handle_completed_task(my_task, outputText, {'state':'failed'});
+				await window.handle_completed_task(my_task, outputText, {'state':'failed'});
 			}
 			else{
 				console.error("wllama: output text was invalid, and not a string: ", outputText);
 				flash_message(get_translation("The_AI_gave_an_unexpected_response"),3000,'fail');
-				window.handle_completed_task(my_task, '', {'state':'failed'});
+				await window.handle_completed_task(my_task, '', {'state':'failed'});
 			}
 			
 			response_so_far = '';
@@ -320,13 +327,14 @@ const onModelLoaded = async (task=null,first_load=true) => {
 			console.error("caught error running Wllama: ", err);
 			
 			if( ('' + err).indexOf('Received abort signal from llama.cpp') != -1){
-				add_chat_message(window.currently_loaded_llama_cpp_assistant,window.currently_loaded_llama_cpp_assistant,'it_seems_the_AI_has_crashed#setting---');
+				window.add_chat_message(window.currently_loaded_llama_cpp_assistant,window.currently_loaded_llama_cpp_assistant,'it_seems_the_AI_has_crashed#setting---');
 			}
 			else if( ('' + err).indexOf('memory access out of bounds') != -1){
-				add_chat_message(window.currently_loaded_llama_cpp_assistant,window.currently_loaded_llama_cpp_assistant,'it_seems_the_AI_has_crashed#setting---');
+				window.add_chat_message(window.currently_loaded_llama_cpp_assistant,window.currently_loaded_llama_cpp_assistant,'it_seems_the_AI_has_crashed#setting---');
 			}
 			
 			message_downloads_container_el.innerHTML = '';
+			called_on_model_loaded = false;
 			window.llama_cpp_busy = true;
 			flash_message(get_translation("The_AI_has_crashed"));
 			setTimeout(() => {
@@ -349,27 +357,36 @@ const onModelLoaded = async (task=null,first_load=true) => {
 async function repair_wllama(){
 	console.error("in repair_wllama");
 	
-	if(typeof my_task.parent_index == 'number'){
-		window.change_tasks_with_parent_index(my_task.parent_index);
-	}
+	
 	
 	//console.log("it seems wllama crashed while loading the AI model");
 	if(my_task != null){
-		window.handle_completed_task(my_task, '', {'state':'failed'});
+		
+		if(typeof my_task.parent_index == 'number'){
+			window.change_tasks_with_parent_index(my_task.parent_index);
+		}
+		
+		console.warn("repair_wllama:  candle handle_completed_task to set my_task to failed")
+		await window.handle_completed_task(my_task, '', {'state':'failed'});
+		my_task = null;
 	}
+	
 	window.llama_cpp_busy = true;
 	called_on_model_loaded = false;
+	console.error("repair_wllama: calling restart_llama_cpp");
 	await restart_llama_cpp();
-	setTimeout(() => {
-		window.llama_cpp_busy = false;
-	},5000);
+	window.llama_cpp_busy = false;
+	
 }
 
+
+// Doesn't seem to be called anymore
+/*
 const onMessageChunk = (text) => {
-	//console.log("llama_cpp: onMessageChunk: ", text);
+	console.log("llama_cpp: onMessageChunk: ", text);
 	//console.log("llama_cpp: updated response_so_far: ", response_so_far);
 	if(text != ''){
-		window.llama_cpp_model_being_loaded = null;
+		//window.llama_cpp_model_being_loaded = null;
 		window.handle_chunk(my_task,response_so_far,text);
 	}
 	else{
@@ -382,18 +399,17 @@ const onMessageChunk = (text) => {
 };
 
 
-
-
-const onComplete = () => {
+// Doesn't seem to be called anymore
+const onComplete = async () => {
     console.debug("llama_cpp: onComplete: task completed: ", my_task);
 	
-	window.handle_completed_task(my_task, response_so_far);
+	await window.handle_completed_task(my_task, response_so_far);
 	response_so_far = "";
 	my_task = null;
 	window.llama_cpp_busy = false;
 	called_on_model_loaded = false;
 };
-
+*/
 
 
 //
@@ -411,48 +427,83 @@ const onMessage = (progression) => {
 let previous_percentage = 1;
 let previous_time = 0;
 
-function wllama_update_model_download_progress(progression){
-	//console.log("LLAMA_CPP MODEL DOWNLOAD PROGRESSION: ", progression);
+
+
+async function wllama_update_model_download_progress(progression, assistant_id=null){
+	//console.log("LLAMA_CPP MODEL DOWNLOAD:  PROGRESSION, window.llama_cpp_model_being_loaded: ", progression, window.llama_cpp_model_being_loaded, assistant_id);
 	
-	if(progression == 1){
-		//console.log("llama_cpp model download complete");
-		//flash_message(window.get_translation("Download_complete"),2000);
-		if(window.settings.assistant == window.llama_cpp_model_being_loaded){
-			document.body.classList.add('model-loaded');
-		}
-		//setTimeout(() => {
-		window.handle_download_complete(false); // TODO: delay this. This re-calculates the total used disk space. But in case of custom AI models it's called to early here, as we won't know their size until they have fully loaded. 
-		//},3000);
-		update_cached_files_list();
+	if(assistant_id == null){
+		assistant_id = window.llama_cpp_model_being_loaded;
 	}
 	
-	if(window.llama_cpp_model_being_loaded != null){
-		//console.log("a llama_cpp model is being loaded");
-		let progress_el = document.getElementById('download-progress-' + window.llama_cpp_model_being_loaded);
-		if(progress_el == null){
-			//console.log("llama_cpp (down)load progress element is missing, adding it now: ", window.llama_cpp_model_being_loaded);
-			add_chat_message(window.llama_cpp_model_being_loaded,window.llama_cpp_model_being_loaded,"download_progress#setting---");
+	if(progression == 1){
+		if(typeof assistant_id == 'string'){
+			console.log("llama_cpp model download complete: ", assistant_id);
+			//flash_message(window.get_translation("Download_complete"),2000);
+			if(window.settings.assistant == assistant_id){
+				document.body.classList.add('model-loaded');
+			}
+			let progress_el = document.querySelector('#download-progress-' + assistant_id);
+			if(progress_el != null){
+				const message_el = progress_el.closest('.message');
+				if(message_el){
+					message_el.remove();
+				}
+			}
 		}
 		else{
-			//console.log("a llama_cpp model is being loaded: found the progress element");
-			progress_el.value = progression;
+			console.error("llama_cpp model download complete, but no assistant id?");
+			const downloads_container_el = document.querySelector('#message-downloads-container');
+			if(downloads_container_el){
+				downloads_container_el.innerHTML = '';
+			}
+		}
+		
+		await update_cached_files_list();
+		window.handle_download_complete(false); // TODO: delay this. This re-calculates the total used disk space. But in case of custom AI models it's called to early here, as we won't know their size until they have fully loaded. 
+		
+	}
 	
-			const percent = Math.floor(progression * 100);
-			//console.log("wllama_update_model_download_progress: percent: ", percent);
+	if(assistant_id != null){
+		//console.log("a llama_cpp model is being loaded");
+		
+	
+		const percent = Math.floor(progression * 300);
+		//console.log("wllama_update_model_download_progress: percent: ", percent);
+		
+		if(previous_percentage > percent){
+			previous_percentage = 0;
+		}
+		
+		if(percent > previous_percentage){
+			//console.log("Wllama download percent: ", percent / 3);
+			let progress_el = document.getElementById('download-progress-' + assistant_id);
+			if(progress_el == null){
+				
+				if(progression != 1){
+					console.log("llama_cpp (down)load progress element is missing, adding it now: ", assistant_id, percent);
+					window.add_chat_message(assistant_id,assistant_id,"download_progress#setting---");
+				}
+			}
+			else{
+				//console.log("a llama_cpp model is being loaded: found the progress element");
+				progress_el.value = progression;
 			
-			if(percent > previous_percentage){
+			}
+			
+			if(percent % 3 == 0 && percent != 300){
 				//console.log("doing remaining download time estimation. percent: ", percent);
-				const now_time = Date.now() / 1000;
+				const now_time = Date.now() / 300; // SIC
 				if(previous_time == 0){
-			
+		
 					previous_time = now_time;
 					//console.log("changed previous time to: ", previous_time);
 				}
-				else{
+				else if(progress_el != null){
 					let delta = now_time - previous_time;
 					previous_time = now_time;
 					//console.log("it took this long to download the last percent: ", delta);
-					let time_remaining = (100 - percent) * delta;
+					let time_remaining = ((300 - percent)/10) * delta;
 					let time_remaining_el = progress_el.parentNode.querySelector('.time-remaining'); // #download-progress-' + window.settings.assistant + ' + 
 					if(time_remaining_el != null){
 						time_remaining_el.innerHTML = window.create_time_remaining_html(time_remaining);
@@ -461,14 +512,19 @@ function wllama_update_model_download_progress(progression){
 						console.error("could not find time-remaining element")
 					}
 				}
-		
-				previous_percentage = percent;
 			}
-			else{
-				//console.error("Download percentage is not greater: ", previous_percentage, percent);
-			}
-	    }
+			
+	
+			previous_percentage = percent;
+		}
+		else{
+			//console.error("Download percentage is not greater: ", previous_percentage, percent);
+		}
+	    
 		
+	}
+	else{
+		console.error("wllama download progress: assistant_id was null");
 	}
     
 }
@@ -477,6 +533,114 @@ window.wllama_update_model_download_progress = wllama_update_model_download_prog
 
 
 
+
+
+
+
+function generate_model_settings(task){
+	let model_settings = {'allow_offline':true};//{'cache_type_k': 'q4_0'}; // save memory
+	//let model_settings = {};
+	
+	let assistant_id = window.settings.assistant;
+	// window.currently_loaded_llama_cpp_assistant
+	if(typeof task.assistant == 'string'){
+		assistant_id = task.assistant;
+	}
+	
+	
+	let context = 1024;
+	model_settings['n_ctx'] = 1024;
+	
+	if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['context'] == 'number'){
+		context = window.settings.assistants[assistant_id]['context'];
+	}
+	else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['context'] == 'number'){
+		context = window.assistants[assistant_id]['context'];
+	}
+	
+	if(typeof context == 'number' && context > 1024){
+		
+		if(window.is_mobile){
+			//window.web_llm_app_config['context_window_size'] = 1024;
+		
+			// 1024 is the default for mobile, unless there is tons of ram
+			if(window.ram > 6000 && context > 2048){
+				model_settings['n_ctx'] = 2048;
+			}
+		
+		}
+		else{
+			model_settings['n_ctx'] = context;
+		}
+	}
+	
+	
+	
+	//model_settings['n_ctx'] = context; //typeof window.assistants[assistant_id]['context_size'] == 'number' ? window.assistants[assistant_id]['context_size'] : 1024;
+	//if(window.is_mobile){
+	//	model_settings['n_ctx'] = 1024;
+	//}
+	//model_settings['n_seq_max'] = 1; //model_settings['n_ctx'];
+	//model_settings['n_batch'] = 1024; //2048;//model_settings['n_ctx'];
+	
+	
+	//model_settings['n_threads'] = 4;
+	
+	if(typeof window.assistants[assistant_id]['cache_type_k'] == 'string'){
+		model_settings['cache_type_k'] = window.assistants[assistant_id]['cache_type_k']; //'q4_0'; = window.assistants[assistant_id]['context'];
+	}
+			
+	model_settings['embeddings'] = false;
+	
+	
+	let downloads = {};
+	let file_chunk_count = 1;
+	if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].download_url != 'undefined' && window.assistants[assistant_id].download_url != null && Array.isArray(window.assistants[assistant_id].download_url)){
+		file_chunk_count = window.assistants[assistant_id].download_url.length;
+		//console.log("wllama: downloading file in chunks: ", file_chunk_count);
+	}
+	
+	model_settings['progressCallback'] = ({ loaded, total }) => {
+		
+		//console.log(`Wllama: downloading... ${Math.round(loaded/total*100)}%`, loaded, total);
+		//console.log("percentage, loaded, total: ", Math.round(loaded/total*100) + '%', loaded, total);
+		
+		if(total != 0 && loaded > 1000000){
+			//console.log("loaded, total: ", loaded, total);
+			wllama_update_model_download_progress(loaded / total, assistant_id);
+		}
+	}
+	
+	
+	let temperature = 0;
+	// Get custom temperature from task if it is set
+	if(typeof task.temperature == 'number'){
+		temperature = task.temperature;
+	}
+	// Get custom temperature if it is set
+	else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].temperature == 'number'){
+		temperature = window.assistants[assistant_id].temperature;
+	}
+	// Fall back to temperature in assistants dict if it exists
+	else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].temperature == 'number'){
+		temperature = window.assistants[assistant_id].temperature;
+	}
+	//console.log("wllama: window.llama_cpp_app: ", window.llama_cpp_app);
+	
+	if(typeof temperature == 'number'){
+		model_settings['temp'] = temperature;
+		if(temperature == 0){
+			model_settings['seed'] = 42;
+			console.log("wllama: temperature was 0, seed set to 42");
+		}
+	}
+	return model_settings
+}
+
+
+
+
+// This function returns immediately so that the main interval loop can continue
 function do_llama_cpp(task=null, model_url=null, query=''){
 	//console.log("in do_llama_cpp.  task,model_url,query: ", task,model_url,query);
 	if(query != ''){
@@ -489,9 +653,6 @@ function do_llama_cpp(task=null, model_url=null, query=''){
 		window.llama_cpp_busy = false;
 		return false
 	}
-	
-	
-	
 	
 	if(typeof window.settings.assistant != 'string'){
 		console.error("do_llama_cpp: no valid window.settings.assistant: ", window.settings.assistant); // need to know which model to load. Or could get that from the task?
@@ -509,6 +670,7 @@ function do_llama_cpp(task=null, model_url=null, query=''){
 	}
 	if(typeof assistant_id != 'string'){
 		console.error("do_llama_cpp: no valid assistant_id");
+		window.llama_cpp_busy = false;
 		return false
 	}
 	
@@ -526,6 +688,7 @@ function do_llama_cpp(task=null, model_url=null, query=''){
 	
 	if(typeof window.settings.assistants[assistant_id] == 'undefined' || window.settings.assistants[task.assistant] == null){
 		console.error("do_llama_cpp: assistant_id not found in window.assistants: ", assistant_id);
+		window.llama_cpp_busy = false;
 		return false
 	}
 	
@@ -539,23 +702,34 @@ function do_llama_cpp(task=null, model_url=null, query=''){
 window.do_llama_cpp = do_llama_cpp;
 
 
+
+
 async function really_do_llama_cpp(task=null, model_url=null, query=''){
+	console.log("in really_do_llama_cpp. task: ", task);
+	console.log("window.llama_cpp_app: ", window.llama_cpp_app);
+	
 	window.llama_cpp_busy = true;
-	my_task = task;
+	called_on_model_loaded = false;
+	if(task == null){
+		my_task = null;
+	}
+	else{
+		my_task = JSON.parse(JSON.stringify(task));
+	}
+	
 	
 	let assistant_id = window.settings.assistant;
 	// window.currently_loaded_llama_cpp_assistant
-	if(typeof task.assistant == 'string'){
-		assistant_id = task.assistant;
+	if(typeof my_task.assistant == 'string'){
+		assistant_id = my_task.assistant;
 	}
-	
 	
 	
 	if(model_url == null){
 		
 		//console.log("do_llama_cpp: assistant_id: ",  assistant_id);
 		
-		if(task != null && typeof task.assistant == 'string'){
+		if(my_task != null && typeof assistant_id == 'string'){
 		
 			if(typeof window.settings.assistants[assistant_id]['download_url'] == 'string' 
 				&& (window.settings.assistants[assistant_id]['download_url'].startsWith('http') || window.settings.assistants[assistant_id]['download_url'].startsWith('/')) // || window.settings.assistants[task.assistant]['download_url'].startsWith('./')
@@ -573,7 +747,6 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 				catch(err){
 					console.error("do_llama_cpp: failed to parse what seemed like a custom model chunks array: ", window.settings.assistants[assistant_id]['download_url']);
 				}
-				
 			}
 			
 			if(model_url == null){
@@ -586,7 +759,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 					// custom model, but still without a URL
 					// Although technically it could also be that the assistant key is invalid
 					//console.log("do_llama_cpp: ABORTING, NO DOWNLOAD_URL (likely custom assistant)");
-					add_chat_message(assistant_id,'developer',get_translation('Missing_AI_model_URL'));
+					window.add_chat_message(assistant_id,'developer',get_translation('Missing_AI_model_URL'));
 					window.llama_cpp_busy = false;
 					return false
 				}
@@ -594,7 +767,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 			
 		}
 		else{
-			console.warn("do_llama_cpp: could not get a download URL from the task, as task.assistant was invalid: ", JSON.stringify(task,null,4));
+			console.warn("do_llama_cpp: could not get a download URL from the task, as assistant_id was likely invalid: ", assistant_id, JSON.stringify(my_task,null,4));
 		}
 		
 		// If the model_url is still an empty string, fall back to using the download URL of the currently visible assistant
@@ -621,7 +794,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 				model_url = '/' + model_url;
 			}
 			model_url = base_url + model_url;
-			//console.log("do_llama_cpp: generated model url: ", model_url);
+			//console.log("do_llama_cpp: generated relative model url: ", model_url);
 		}
 		
 		if(typeof model_url == 'string'){
@@ -636,7 +809,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 	// If the URL is not a string, that's not good
 	if(model_url == null){
 		console.error("do_llama_cpp: model_url was null. Aborting.");
-		add_chat_message(assistant_id,'developer',get_translation('Missing_AI_model_URL'));
+		window.add_chat_message(assistant_id,'developer',get_translation('Missing_AI_model_URL'));
 		window.llama_cpp_busy = false;
 		return false
 	}
@@ -644,14 +817,14 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 	// If the URL is still an empty string, that's not good
 	if(typeof model_url == 'string' && model_url == ''){
 		console.error("\n\nERROR, model_url was an empty string. Adding error chat message and aborting.\n\n");
-		if(assistant_id.startsWith('custom')){
-			add_chat_message(assistant_id,'developer','Please_provide_the_URL_of_an_AI_model#setting---');
+		if(typeof assistant_id == 'string' && assistant_id.startsWith('custom')){
+			window.add_chat_message(assistant_id,'developer','Please_provide_the_URL_of_an_AI_model#setting---');
 		}
 		else{
-			add_chat_message(assistant_id,'developer',get_translation('Missing_AI_model_URL'));
+			window.add_chat_message(assistant_id,'developer',get_translation('Missing_AI_model_URL'));
 		}
+		await window.handle_completed_task(task,false,{'state':'failed'});
 		window.llama_cpp_busy = false;
-		window.handle_completed_task(task,false,{'state':'failed'});
 		return false
 	}
 	
@@ -665,15 +838,19 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 	}
 	
 
+
+
+
+	// THE FORK IN THE ROAD
 	
     //if (app && app.url == selectModel.value) {
-	if (window.llama_cpp_app && window.currently_loaded_llama_cpp_assistant != null && window.currently_loaded_llama_cpp_assistant == assistant_id) {
-		//console.log("do_llama_cpp: this model was already the loaded model. Jumping to onModelLoaded.");
-		onModelLoaded(task, false); // false indicates that the model was already loaded
+	if (window.llama_cpp_app && typeof window.currently_loaded_llama_cpp_assistant == 'string' && window.currently_loaded_llama_cpp_assistant == assistant_id) {
+		console.log("do_llama_cpp: this model was already the loaded model. Jumping to onModelLoaded.  currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
+		await onModelLoaded(task, false); // false indicates that the model was already loaded
 		return true;
     }
 	else{
-		//console.log("do_llama_cpp: this model was NOT already the loaded model. Going to call load model, and that should then call onModelLoaded. assistant_id: ", assistant_id);
+		console.warn("do_llama_cpp: this model was NOT already the loaded model. Going to load model first, and then call onModelLoaded. assistant_id: ", assistant_id);
 		//console.log("- window.llama_cpp_app: ", window.llama_cpp_app);
 		//console.log("- window.currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
 	}
@@ -681,12 +858,13 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 	//console.log("\n\ndo_llama_cpp: LOADING FIRST/DIFFERENT MODEL: ", model_url);
 	try{
 		
-		add_chat_message(assistant_id,assistant_id,"download_progress#setting---");
-		
+		window.add_chat_message(assistant_id,assistant_id,"download_progress#setting---");
+		/*
 		if(window.llama_cpp_app != null){
-			//console.warn("do_llama_cpp:  first doing window.llama_cpp_app.exit().  typeof window.llama_cpp_app.exit: ", typeof window.llama_cpp_app.exit);
+			console.warn("do_llama_cpp:  first doing window.llama_cpp_app.exit().  typeof window.llama_cpp_app.exit: ", typeof window.llama_cpp_app.exit);
 			try{
 				if(window.llama_cpp_app != null && typeof window.llama_cpp_app['exit'] === 'function'){
+					console.log("really_do_llama_cpp:  window.llama_cpp_app.exit exists and is a function. calling exit.  window.llama_cpp_app: ", window.llama_cpp_app);
 					await window.llama_cpp_app.exit();
 				}
 				else{
@@ -701,27 +879,61 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 		}
 		
 	    create_wllama_object();
-		
-	    //window.llama_cpp_app = new Wllama(CONFIG_PATHS);
-	    //console.log("new wllama object created: ", window.llama_cpp_app);
-	
-		//window.currently_loaded_assistant = window.settings.assistant;
-		//window.currently_loaded_llama_cpp_assistant = window.settings.assistant;
-		//window.llama_cpp_model_being_loaded = assistant_id;
-		//window.busy_loading_assistant = assistant_id;
-		if(typeof window.currently_loaded_llama_cpp_assistant == 'string' && window.currently_loaded_assistant == window.currently_loaded_llama_cpp_assistant){
-			window.currently_loaded_assistant = null;
+		*/
+		if(window.llama_cpp_app == null){
+			console.warn("really_do_llama_cpp: still had to create window.llama_cpp_app");
+			create_wllama_object();
 		}
-		window.currently_loaded_llama_cpp_assistant = null;
-		//window.add_chat_message(assistant_id,assistant_id,'download_progress#setting---');
-	
-		//window.task_queue = [];
+		else{
+			
+			try{
+				await unload_llama_cpp();
+				
+			}
+			catch(err){
+				console.error("caught error trying to call wllama's isModelLoaded: ", err);
+				//called_on_model_loaded = false;
+			}
+			
+			/*
+			try{
+				
+				if(typeof window.llama_cpp_app.unloadModel != 'undefined'){
+					await window.llama_cpp_app.unloadModel();
+					console.warn("WLLAMA SHOULD NOW HAVE UNLOADED.  window.llama_cpp_app: ", window.llama_cpp_app);
+					window.currently_loaded_llama_cpp_assistant = null;
+					//called_on_model_loaded = false;
+				}else{
+					console.error("window.llama_cpp_app was not null, but had no unloadModel function?  window.llama_cpp_app: ", window.llama_cpp_app);
+					//called_on_model_loaded = false;
+					//window.currently_loaded_llama_cpp_assistant = null;
+				}
+			}
+			catch(err){
+				console.error("caught error trying to stop/unload Wllama: ", err);
+				//called_on_model_loaded = false;
+			}
+			*/
+			
+		}
+		
+		if(window.llama_cpp_app == null){
+			console.warn("really_do_llama_cpp: still had to create window.llama_cpp_app (likely just unloaded a model)");
+			create_wllama_object();
+		}
+		
+		
+		if(typeof window.currently_loaded_llama_cpp_assistant == 'string' && window.currently_loaded_assistant == window.currently_loaded_llama_cpp_assistant){
+			//window.currently_loaded_assistant = null;
+		}
+		//window.currently_loaded_llama_cpp_assistant = null;
+
 		previous_percentage = 1;
 		previous_time = 0;
 	
 	
 		if(window.llama_cpp_app != null && typeof window.llama_cpp_app.worker != 'undefined' && typeof window.llama_cpp_app.worker != null){
-			console.warn("Start assistant: terminated worker on existing app object before loading the new AI model");
+			console.warn("Start assistant: terminated worker on existing app object before loading the new AI model (blocked)");
 			//window.llama_cpp_app.worker.terminate();
 		}
 	
@@ -759,121 +971,114 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 	  cache_type_v?: 'f16',
 	  // download-specific params
 	  n_download_parallel?: number,
-		            progressCallback: (token, piece, currentText) => {
-						//console.log("wllama: onNewToken:  token,piece,currentText:", token, piece, currentText);
-						let new_chunk = currentText.substr(response_so_far.length);
-						window.handle_chunk(my_task,response_so_far,new_chunk);
-						response_so_far = currentText;
-		            },
-	};
 		
 		*/
 	
 	
 	
-		let model_settings = {'allow_offline':true};//{'cache_type_k': 'q4_0'}; // save memory
 		
 		
 		
-		let context = 1024;
-		model_settings['n_ctx'] = 1024;
-		
-		if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['context'] == 'number'){
-			context = window.settings.assistants[assistant_id]['context'];
-		}
-		else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['context'] == 'number'){
-			context = window.assistants[assistant_id]['context'];
-		}
-		
-		if(typeof context == 'number' && context > 1024){
-			
-			if(window.is_mobile){
-				//window.web_llm_app_config['context_window_size'] = 1024;
-			
-				// 1024 is the default for mobile, unless there is tons of ram
-				if(window.ram > 6000 && context > 2048){
-					model_settings['n_ctx'] = 2048;
-				}
-			
-			}
-			else{
-				model_settings['n_ctx'] = context;
-			}
-		}
 		
 		
+		let model_settings = generate_model_settings(task);
 		
-		//model_settings['n_ctx'] = context; //typeof window.assistants[assistant_id]['context_size'] == 'number' ? window.assistants[assistant_id]['context_size'] : 1024;
-		//if(window.is_mobile){
-		//	model_settings['n_ctx'] = 1024;
-		//}
-		model_settings['n_seq_max'] = 1; //model_settings['n_ctx'];
-		model_settings['n_batch'] = 1024; //2048;//model_settings['n_ctx'];
-		
-		
-		//model_settings['n_threads'] = 4;
-		
-		if(typeof window.assistants[assistant_id]['cache_type_k'] == 'string'){
-			model_settings['cache_type_k'] = window.assistants[assistant_id]['cache_type_k']; //'q4_0'; = window.assistants[assistant_id]['context'];
-		}
-				
-		model_settings['embeddings'] = false;
-		
-		
-		let downloads = {};
-		let file_chunk_count = 1;
-		if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].download_url != 'undefined' && window.assistants[assistant_id].download_url != null && Array.isArray(window.assistants[assistant_id].download_url)){
-			file_chunk_count = window.assistants[assistant_id].download_url.length;
-			//console.log("wllama: downloading file in chunks: ", file_chunk_count);
-		}
-		
-		model_settings['progressCallback'] = ({ loaded, total }) => {
-			
-			//console.log(`Wllama: downloading... ${Math.round(loaded/total*100)}%`);
-			//console.log("percentage, loaded, total: ", Math.round(loaded/total*100) + '%', loaded, total);
-			
-			if(total != 0 && loaded > 1000000){
-				//console.log("loaded, total: ", loaded, total);
-				wllama_update_model_download_progress(loaded / total);
-			}
-		}
-		
-	
-		let temperature = 0;
-		// Get custom temperature from task if it is set
-		if(typeof task.temperature == 'number'){
-			temperature = task.temperature;
-		}
-		// Get custom temperature if it is set
-		else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].temperature == 'number'){
-			temperature = window.assistants[assistant_id].temperature;
-		}
-		// Fall back to temperature in assistants dict if it exists
-		else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].temperature == 'number'){
-			temperature = window.assistants[assistant_id].temperature;
-		}
-		//console.log("wllama: window.llama_cpp_app: ", window.llama_cpp_app);
-		
-		add_chat_message(assistant_id,assistant_id,'download_progress#setting---');
-		
+		// DEBUG
+		//model_settings = { temp: 0 };
 		
 		// LOADING FROM URL
-		window.llama_cpp_model_being_loaded = assistant_id;
-		//console.log("do_llama_cpp: calling loadModelFromUrl with:  model_url,model_settings: ", model_url, model_settings);
-		await window.llama_cpp_app.loadModelFromUrl(model_url, model_settings);
+		//window.llama_cpp_model_being_loaded = assistant_id;
+		console.log("do_llama_cpp: calling loadModelFromUrl with:  model_url,model_settings: ", model_url, model_settings);
+		console.warn("do_llama_cpp: window.llama_cpp_app: ", window.llama_cpp_app);
+		console.warn("do_llama_cpp: window.currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
+		
+		if(
+			typeof window.settings.assistants[assistant_id] != 'undefined' 
+			&& typeof window.settings.assistants[assistant_id]['llama_cpp_general_name'] == 'string' 
+		){
+			console.warn("do_llama_cpp: window.settings.assistants[assistant_id]['llama_cpp_general_name']: ", window.settings.assistants[assistant_id]['llama_cpp_general_name']);
+		}
+		
+		if(
+			typeof window.llama_cpp_app.metadata != 'undefined' 
+			&& typeof window.llama_cpp_app.metadata.meta != 'undefined' 
+			&& typeof window.llama_cpp_app.metadata.meta['general.name'] == 'string'
+		){
+			console.warn("do_llama_cpp: window.llama_cpp_app.metadata.meta['general.name']: ", window.llama_cpp_app.metadata.meta['general.name']);
+		}
 		
 		
+		if(
+			typeof window.settings.assistants[assistant_id] != 'undefined' 
+			&& typeof window.settings.assistants[assistant_id]['llama_cpp_general_name'] == 'string' 
+			&& typeof window.llama_cpp_app.metadata != 'undefined' 
+			&& typeof window.llama_cpp_app.metadata.meta != 'undefined' 
+			&& typeof window.llama_cpp_app.metadata.meta['general.name'] == 'string'
+			&& window.llama_cpp_app.metadata.meta['general.name'] == window.settings.assistants[assistant_id]['llama_cpp_general_name']
+		){
+			console.warn("do_llama_cpp: it seems this model is already loaded: ", assistant_id, ", a.k.a. ", window.settings.assistants[assistant_id]['llama_cpp_general_name']);
+			console.warn("do_llama_cpp: window.currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
+		}
+		else{
+			window.add_chat_message(assistant_id,assistant_id,'download_progress#setting---');
+			try{
+				if(window.llama_cpp_app == null){
+					console.error("do_llama_cpp: window.llama_cpp_app was still NULL?!");
+				}
+				else{
+					if(typeof window.llama_cpp_app.loadModelFromUrl != 'undefined'){
+						
+						await unload_llama_cpp();
+						if(window.llama_cpp_app == null){
+							create_wllama_object();
+						}
+						await window.llama_cpp_app.loadModelFromUrl(model_url, model_settings);
+					}
+					else{
+						console.error("window.llama_cpp_app.loadModelFromUrl was undefined?", window.llama_cpp_app);
+						console.log("window.llama_cpp_busy: ", window.llama_cpp_busy);
+					}
+				}
+				
+			}
+			catch(err){
+				console.error("wllama loadModelFromUrl error: ", err);
+				//window.flash_message(window.get_translation('An_error_occured'),2000,'fail');
+				
+				window.display_error(null, '' + err);
+				
+				await window.handle_completed_task(task,null,{'state':'failed'});
+				window.llama_cpp_busy = false;
+				return false
+			}
+			
+		}
+		
+		
+		window.currently_loaded_llama_cpp_assistant = assistant_id;
+		if(typeof window.llama_cpp_app.metadata != 'undefined' && typeof window.llama_cpp_app.metadata.meta != 'undefined' && typeof window.llama_cpp_app.metadata.meta['general.name'] == 'string'){
+			window.currently_loaded_llama_cpp_assistant_general_name = window.llama_cpp_app.metadata.meta['general.name'];
+			if(typeof window.settings.assistants[assistant_id] == 'undefined'){
+				window.settings.assistants[assistant_id] = {};
+			}
+			console.log("wllama: setting general.name: ", assistant_id, " -> ", window.llama_cpp_app.metadata.meta['general.name']);
+			window.settings.assistants[assistant_id]['llama_cpp_general_name'] = window.llama_cpp_app.metadata.meta['general.name'];
+		}
+		//window.llama_cpp_model_being_loaded = null;
+		window.currently_loaded_assistant = assistant_id;
+		console.log("window.currently_loaded_llama_cpp_assistant is now: ", window.currently_loaded_llama_cpp_assistant);
+		
+		window.settings.last_loaded_text_ai = assistant_id;
+		window.save_settings();
 		
 		// Update the list of cached files
 		await update_cached_files_list();
 		
-		window.currently_loaded_llama_cpp_assistant = assistant_id;
-		window.llama_cpp_model_being_loaded = null;
-		window.currently_loaded_assistant = assistant_id;
 		
 		
+		/*
 		if(typeof window.llama_cpp_model_being_loaded == 'string'){
-			//console.log("do_llama_cpp: window.llama_cpp_model_being_loaded was string: ", window.llama_cpp_model_being_loaded);
+			console.log("do_llama_cpp: window.llama_cpp_model_being_loaded was string: ", window.llama_cpp_model_being_loaded);
 		    const progress_el = document.getElementById('download-progress-' + window.llama_cpp_model_being_loaded);
 		    if(progress_el){
 				wllama_update_model_download_progress(100);
@@ -888,7 +1093,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 				}
 		    }
 			else{
-				console.error("llama_cpp: could not find download progress to neutralize:  download-progress-" + window.llama_cpp_model_being_loaded);
+				console.error("llama_cpp: could not find download progress to remove:  download-progress-" + window.llama_cpp_model_being_loaded);
 			}
 			
 			
@@ -902,17 +1107,22 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 			}
 			
 		}
+		*/
 		
 		// Somehow this isn't called by Wllama anymore?
+		
 		if(called_on_model_loaded == false){
-			//console.log("called_on_model_loaded was false. Calling onModelLoaded now, with task: ", task);
-			await onModelLoaded(task,true);
+			console.log("called_on_model_loaded was false. Calling onModelLoaded now, with task: ", task);
+			//await onModelLoaded(task,true);
 		}
+		
+		window.set_model_loaded(true);
+		await onModelLoaded(task,true);
 		
 		//window.llama_cpp_model_being_loaded = null;
 		window.last_loaded_model_url = model_url;
 		///window.assistants_loaded_count++;
-		window.set_model_loaded(true);
+		
 		window.llama_cpp_busy = false;
 		window.generate_ui();
 		
@@ -928,37 +1138,13 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 		// Safari: TypeError: FetchEvent.respondWith received an error: TypeError: 
 		
 		//(args[0].indexOf('error loading model vocabulary') != -1 || args[0].indexOf('unknown model architecture') != -1)
-		if( (''+ err).indexOf('error loading model vocabulary') != -1 ||  (''+ err).indexOf('unknown model architecture') != -1 ){
-			console.error("wllama: it seems the error was that the model is unsupported");
-		}
-		else if( (''+ err).indexOf('Error while loading model') != -1 ||  (''+ err).indexOf('Load failed') != -1 ){
-			console.error("wllama: it seems the error was an instance of an event object. Likely a progress event, meaning the model failed to load (no internet?)");
-		}
-		else if( (''+ err).indexOf('Out of bounds') != -1 ||  (''+ err).indexOf('memory') != -1 ){
-			console.error("Crash seems related to memory access");
-			flash_message(get_translation("Not_enough_memory"),2000,'fail');
-		}
-		else if( (''+ err).indexOf('network error') != -1 ){
-			console.error("wllama: network error (likely while downloading a model)");
-			flash_message(get_translation("A_network_connection_error_occured"),2000,'fail');
-			if(my_task != null && typeof my_task.assistant == 'string'){
-				window.add_chat_message_once(my_task.assistant,'developer',get_translation('A_network_connection_error_occured'));
-			}
-			
-		}
-		else if(err instanceof Event){
-			
-		}
-		else{
-			//add_chat_message(window.currently_loaded_llama_cpp_assistant,'developer','it_seems_the_AI_has_crashed#setting---');
-			add_chat_message(assistant_id,'developer','it_seems_the_AI_has_crashed#setting---');
-		}
+		window.display_error(null, err);
 		
 		console.error("It seems the Wllama AI model crashed");
 		document.body.classList.remove('waiting-for-response');
 		document.body.classList.remove('working-on-doc');
 		document.body.classList.remove('doing-assistant');
-		window.stop_assistant();
+		window.stop_assistant(my_task);
 		
 		if(window.state == DOING_ASSISTANT){
 			window.set_state(LISTENING);
@@ -973,7 +1159,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 			//},2000);
 		
 		if(my_task != null){
-			window.handle_completed_task(my_task,false,{'state':'failed'});
+			await window.handle_completed_task(my_task,false,{'state':'failed'});
 			window.clean_up_dead_task(my_task);
 			my_task = null;
 		}
@@ -983,7 +1169,9 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 		else{
 			console.error("Wllama crashed, and my_task and window.current_task were both null");
 		}
-			
+		
+		window.llama_cpp_busy = false;
+		
 		return false
 	}
 	
@@ -991,23 +1179,78 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 }
 
 
+function display_error(task=null,err=''){
+	
+	if(task == null && my_task != null){
+		console.log("display_error: grabbing my_task: ", my_task);
+		task = my_task;
+	}
+	
+	
+	if( (''+ err).indexOf('error loading model vocabulary') != -1 ||  (''+ err).indexOf('unknown model architecture') != -1 ){
+		console.error("wllama: it seems the error was that the model is unsupported");
+		flash_message(get_translation("An_error_occured"),2000,'fail');
+	}
+	else if((''+ err).indexOf('unknown model architecture') != -1 || (''+ err).indexOf('unknown architecture') != -1){
+		console.error("detected error: architecture not supported");
+		setTimeout(() => {
+			flash_message(get_translation("This_AI_is_currently_unsupported"),3000,'fail');
+		},1000);
+	}
+	else if( (''+ err).indexOf('ailed to fetch') != -1 || (''+ err).indexOf('network error') != -1 ){
+		console.error("failed to fetch -> network error (likely while downloading a model)");
+		flash_message(get_translation("A_network_connection_error_occured"),2000,'fail');
+		if(task != null && typeof task.assistant == 'string'){
+			window.add_chat_message_once(task.assistant,'developer',get_translation('A_network_connection_error_occured'));
+		}
+	}
+	else if( (''+ err).indexOf('Error while loading model') != -1 ||  (''+ err).indexOf('Load failed') != -1 ){
+		console.error("wllama: it seems the error was an instance of an event object. Likely a progress event, meaning the model failed to load (no internet?)");
+		flash_message(get_translation("An_error_occured"),2000,'fail');
+	}
+	else if( (''+ err).indexOf('Out of bounds') != -1 || (''+ err).toLowerCase().indexOf('memory') != -1 || (''+ err).toLowerCase().indexOf('allocate') != -1){ // Android Chrome: Cannot allocate WebAssembly.Memory
+		console.error("Crash seems related to memory access");
+		flash_message(get_translation("Not_enough_memory"),2000,'fail');
+		if(task != null && typeof task.assistant == 'string'){
+			window.add_chat_message(task.assistant,'developer',window.get_translation('Not_enough_memory') + ' 🙁', 'Not_enough_memory');
+		}
+	}
+	
+	else if(err instanceof Event){
+		
+	}
+	else{
+		//add_chat_message(window.currently_loaded_llama_cpp_assistant,'developer','it_seems_the_AI_has_crashed#setting---');
+		if(task != null && typeof task.assistant == 'string'){
+			window.add_chat_message(task.assistant,'developer','it_seems_the_AI_has_crashed#setting---');
+		}
+	}
+}
+window.display_error = display_error;
+
 
 
 
 async function interrupt_llama_cpp(){
-	//console.log("in interrupt_llama_cpp. window.llama_cpp_app: ", window.llama_cpp_app);
-	if(window.llama_cpp_app){ //  && my_task != null
-		console.error("interrupt_llama_cpp: window.llama_cpp_app exists. setting window.interrupt_wllama to true");
-		//window.llama_cpp_app['interrupt'] = true;
-		window.interrupt_wllama = true;
-		if(my_task != null){
-			window.handle_completed_task(my_task, response_so_far, {'state':'interrupted'});
+	console.log("in interrupt_llama_cpp. window.llama_cpp_app: ", window.llama_cpp_app);
+	if(window.llama_cpp_busy){
+		if(window.llama_cpp_app){ //  && my_task != null
+			console.error("interrupt_llama_cpp: window.llama_cpp_app exists. setting window.interrupt_wllama to true");
+			//window.llama_cpp_app['interrupt'] = true;
+			window.interrupt_wllama = true;
+			if(my_task != null){
+				await window.handle_completed_task(my_task, response_so_far, {'state':'interrupted'});
+			}
+			window.skip_a_beat = true; // delays the next interval cycle by one, giving the runner some time to do it's thing, and for garbage collection.
 		}
-		window.skip_a_beat = true; // delays the next interval cycle by one, giving the runner some time to do it's thing, and for garbage collection.
+		else{
+			console.error("interrupt_llama_cpp: no window.llama_cpp_app, or my_task was null.  my_task,window.llama_cpp_app: ", my_task, window.llama_cpp_app);
+		}
 	}
 	else{
-		console.error("interrupt_llama_cpp: no window.llama_cpp_app, or my_task was null.  my_task,window.llama_cpp_app: ", my_task, window.llama_cpp_app);
+		console.warn("interrupt wllama: window.llama_cpp_busy was false, so nothing to interrupt? (assumption)");
 	}
+	
 	window.llama_cpp_busy = false;
 	//window.llama_cpp_busy_downloading = false;
 }
@@ -1021,34 +1264,54 @@ async function stop_llama_cpp(planned=false){
 	
 	if(typeof window.llama_cpp_app != 'undefined' && window.llama_cpp_app != null){
 
-		if(window.llama_cpp_app != null){
+		//console.log("calling Wllama exit.  typeof window.llama_cpp_app.exit: ", typeof window.llama_cpp_app.exit);
+		try{
 			
-			//console.log("calling Wllama exit.  typeof window.llama_cpp_app.exit: ", typeof window.llama_cpp_app.exit);
-			try{
-				if(window.llama_cpp_model_being_loaded){
-					if(typeof window.llama_cpp_app.unloadModel == 'function'){
-						await window.llama_cpp_app.unloadModel();
-					}else{
-						console.error("window.llama_cpp_app was not null, but had no unloadModel function?  window.llama_cpp_app: ", window.llama_cpp_app);
-					}
-					
-				}
-				else{
-					if(typeof window.llama_cpp_app.exit == 'function'){
-						await window.llama_cpp_app.exit();
-					}else{
-						console.error("window.llama_cpp_app was not null, but had no exit function?  window.llama_cpp_app: ", window.llama_cpp_app);
-					}
-				}
-			}
-			catch(err){
-				console.error("caught error trying to stop/unload Wllama: ", err);
+			await unload_llama_cpp();
+			
+		}
+		catch(err){
+			console.error("caught error trying to unloadModel Wllama: ", err);
+		}
+		
+		
+		
+		
+		
+		
+		/*
+		try{
+			
+			if(typeof window.llama_cpp_app.kvClear != 'undefined'){
+				await window.llama_cpp_app.kvClear();
+				console.warn("WLLAMA KV cache should be cleared now");
+			}else{
+				console.error("window.llama_cpp_app was not null, but had no KvClear function?  window.llama_cpp_app: ", window.llama_cpp_app);
 			}
 			
 		}
-		else{
-			console.warn(" window.llama.cpp was null, or window.llama_cpp_app.exit was undefined.  window.llama_cpp_app: ", window.llama_cpp_app);
+		catch(err){
+			console.error("caught error trying to KvClear Wllama: ", err);
 		}
+		*/
+		
+		/*
+		try{
+			
+			if(typeof window.llama_cpp_app.exit != 'undefined'){
+				await window.llama_cpp_app.exit();
+				console.warn("WLLAMA exit call complete");
+			}else{
+				console.error("window.llama_cpp_app was not null, but had no exit function?  window.llama_cpp_app: ", window.llama_cpp_app);
+			}
+			
+		}
+		catch(err){
+			console.error("caught error trying to exit Wllama: ", err);
+		}
+		*/
+			
+		
 		/*
 		if(window.llama_cpp_app != null && typeof window.llama_cpp_app.exit === 'function'){
 			//console.log("calling Wllama exit");
@@ -1065,8 +1328,8 @@ async function stop_llama_cpp(planned=false){
 		}
 		*/
 		
-		window.llama_cpp_app = null;
-		window.currently_loaded_llama_cpp_assistant = null;
+		
+		
 		//window.llama_cpp_app.worker.terminate();
 		//my_task['state'] = 'interrupted';
 		if(window.llama_cpp_busy){
@@ -1078,7 +1341,7 @@ async function stop_llama_cpp(planned=false){
 			if(my_task != null){
 				console.error("stop_llama_cpp: window.llama_cpp_busy was true, and task was not null, so this was likely an unexpected interruption. Calling handle_completed_task and asking for the task's state to be set to interrupted.");
 				//window.handle_completed_task(my_task, response_so_far);
-				window.handle_completed_task(my_task, response_so_far, {'state':'interrupted'});
+				await window.handle_completed_task(my_task, response_so_far, {'state':'interrupted'});
 				document.body.classList.remove('model-loaded');
 				set_chat_status('');
 			}
@@ -1108,9 +1371,64 @@ async function stop_llama_cpp(planned=false){
 window.stop_llama_cpp = stop_llama_cpp;
 
 
+
+async function unload_llama_cpp(){
+	if(window.llama_cpp_app != null && typeof window.llama_cpp_app.isModelLoaded != 'undefined'){
+		let a_model_is_loaded = await window.llama_cpp_app.isModelLoaded();
+		console.warn("WLLAMA: unload_llama_cpp: a_model_is_loaded?: ", a_model_is_loaded, window.llama_cpp_app);
+		
+		if(a_model_is_loaded){
+			try{
+				if(typeof window.llama_cpp_app.unloadModel === 'function'){
+					await window.llama_cpp_app.unloadModel();
+					console.log("\n\nWLLAMA\nUNLOAD MODEL SUCCESS\n\n");
+				}
+			}
+			catch(err){
+				console.error("caught error attempting unloadModel: ", err);
+			}
+		}
+		if(window.llama_cpp_app != null && typeof window.llama_cpp_app.proxy != 'undefined' && window.llama_cpp_app.proxy != null && typeof window.llama_cpp_app.proxy.worker != 'undefined'){
+			console.warn("wllama.proxy still existed, attempting to terminate it manually");
+			window.llama_cpp_app.proxy.worker.terminate();
+		}
+		/*
+		if(a_model_is_loaded && typeof window.llama_cpp_app.unloadModel != 'undefined'){
+			console.log("wllama: unloading loaded model first.  window.llama_cpp_app: ", window.llama_cpp_app);
+			await window.llama_cpp_app.unloadModel();
+		}
+		else if(a_model_is_loaded && typeof window.llama_cpp_app.exit != 'undefined'){
+			console.error("wllama: unloading loaded model first by calling exit instead of unloadModel.  window.llama_cpp_app: ", window.llama_cpp_app);
+			await window.llama_cpp_app.exit();
+			console.log("wllama exited.  window.llama_cpp_app is now: ", window.llama_cpp_app);
+		}
+		else if(a_model_is_loaded){
+			console.error("WLLAMA HAS A MODEL LOADED, BUT NO WAY TO UNLOAD IT?  window.llama_cpp_app: ", window.llama_cpp_app);
+			return false;
+		}
+		*/
+		window.currently_loaded_llama_cpp_assistant = null;
+		window.llama_cpp_app = null;
+		//create_wllama_object(); // TODO: potential memory leak if the old model isn't unloaded properly first
+		
+	}
+	else if(window.llama_cpp_app != null){
+		console.error("llama_cpp_add has no isModelLoaded: ", window.llama_cpp_app);
+	}
+	else{
+		console.log("window.llama_cpp_app is currently null");
+	}
+}
+
+window.unload_llama_cpp = unload_llama_cpp;
+
+
+
+
+
 async function restart_llama_cpp(planned=false){
-	//console.log("in restart_llama_cpp. restart is on purpose?: ", planned);
-	
+	console.log("in restart_llama_cpp. restart is on purpose? (blocked): ", planned);
+	return false
 	if(typeof window.currently_loaded_llama_cpp_assistant == 'string' && window.llama_cpp_model_being_loaded == null){
 		const current_assistant = '' + window.currently_loaded_llama_cpp_assistant;
 		try{
@@ -1120,10 +1438,10 @@ async function restart_llama_cpp(planned=false){
 			console.error("restart_llama_cpp: caught error calling stop_llama_cpp: ", err);
 		}
 		
-		setTimeout(() => {
+		//setTimeout(() => {
 			//console.log("restart_llama_cpp: calling do_llama_cpp to load: ", current_assistant);
-			do_llama_cpp({'assistant':current_assistant})
-		},2000)
+			//do_llama_cpp({'assistant':current_assistant})
+		//},2000)
 		
 	}
 	else if(typeof window.llama_cpp_model_being_loaded == 'string'){
@@ -1160,7 +1478,10 @@ function create_wllama_object(assistant_id=null){
 		logger: {
 			debug: (...args) => {
 				//console.log("🔧 args: ", typeof args, args);
-				console.debug('🔧', ...args);
+				if(window.settings.settings_complexity == 'developer'){
+					console.debug('🔧', ...args);
+				}
+				
 				
 				if(typeof assistant_id == 'string' && assistant_id.length > 1){
 					if(typeof window.settings.assistants[assistant_id] == 'undefined'){
@@ -1208,49 +1529,10 @@ function create_wllama_object(assistant_id=null){
 				console.error('☠️ WLLAMA: ', ...args);
 				//console.log("Llama.cpp: Error args: ", args);
 				if( typeof args[0] == 'string'){
+					console.error("wllama caught error: ", args[0]);
 					
-					if(args[0].indexOf('error loading model vocabulary') != -1 || args[0].indexOf('error loading vocabulary') != -1){
-						console.error("detected error: loading vocabulary failed");
-						setTimeout(() => {
-							flash_message(get_translation("This_AI_is_currently_unsupported"),3000,'fail');
-						},1000);
-					}
-					else if(args[0].indexOf('unknown model architecture') != -1 || args[0].indexOf('unknown architecture') != -1){
-						console.error("detected error: architecture not supported");
-						setTimeout(() => {
-							flash_message(get_translation("This_AI_is_currently_unsupported"),3000,'fail');
-						},1000);
-					}
-					else if( args[0].indexOf('Cannot allocate ') != -1){
-						console.error("detected error: not enough memory");
-						setTimeout(() => {
-							flash_message(get_translation("Not_enough_memory"),3000,'fail');
-						},1000);
-					}
-					else if( args[0].indexOf('offset is out of bounds ') != -1){
-						console.error("detected error: not enough memory");
-						setTimeout(() => {
-							flash_message(get_translation("Not_enough_memory"),3000,'fail');
-						},1000);
-					}
-					else if( args[0].indexOf('Error while loading model') != -1 || args[0].indexOf('Load failed') != -1 ){
-						console.error("detected error: error while loading model");
-						setTimeout(() => {
-							flash_message(get_translation("Loading_the_AI_failed"),3000,'fail');
-						},1000);
-						
-						if(my_task != null && typeof my_task.assistant == 'string' && check_if_cached(my_task.assistant)){
-							//add_chat_message(window.currently_loaded_llama_cpp_assistant,'developer','it_seems_the_AI_failed_to_load#setting---');
-							add_chat_message(assistant_id,'developer','it_seems_the_AI_failed_to_load#setting---');
-						}
-						else{
-							add_chat_message(assistant_id,'developer','it_seems_the_AI_failed_to_download#setting---');
-						}
-						
-					}
-					else{
-						flash_message(get_translation("Loading_the_AI_failed"),3000,'fail');
-					}
+					//window.display_error(null, '' + args[0]);
+					
 					
 				}
 				else{
@@ -1262,6 +1544,7 @@ function create_wllama_object(assistant_id=null){
 	});
 }
 window.create_wllama_object = create_wllama_object;
+
 //console.log("llama_cpp.js: creating initial wllama object");
 create_wllama_object();
 

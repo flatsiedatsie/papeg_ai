@@ -103,6 +103,8 @@ window.service_worker_ready = async function (registration){
 					
 					document.getElementById('papegai-version').textContent = 'v' + window.settings.version + ' -> v' + response.data.version_number;
 					document.body.classList.add('update-available');
+					window.settings.left_sidebar_settings_tab = 'settings';
+					document.body.classList.remove('sidebar-settings-show-tasks');
 					if(window.settings.settings_complexity != 'normal'){
 						//flash_message(get_translation('A_new_version_is_available'));
 					}
@@ -173,7 +175,6 @@ window.update_site = async function (){
 			    	}
 			    }
 			});
-		
 			
 			setTimeout(() => {
 				window.location.reload(true);
@@ -194,8 +195,8 @@ if(typeof navigator.serviceWorker != 'undefined'){
 		
 		if(window.first_run == false){
 			
-			if(window.time_started - Date.now() < 10000){
-				console.warn("SERVICE WORKER CONTROLLER CHANGE");
+			if(window.time_started - Date.now() < 15000){
+				console.warn("EARLY SERVICE WORKER CONTROLLER CHANGE");
 				//document.body.classList.add('update-available');
 				//window.flash_message(window.get_translation('A_new_version_is_available'));
 				/*

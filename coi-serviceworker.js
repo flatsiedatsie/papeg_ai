@@ -1,6 +1,6 @@
 /*! coi-serviceworker v0.1.7 - Guido Zuidhof and contributors, licensed under MIT */
 
-var service_worker_version = 160;
+var service_worker_version = 224;
 
 var previousCacheName = null; 
 var cacheName = 'v' + service_worker_version; 
@@ -36,6 +36,7 @@ if (typeof window === 'undefined') {
 		self.skipWaiting();
 		
     });
+	
 	
     self.addEventListener("activate", (event) => {
 		console.log("service worker: in ACTIVATE. doing clients.claim. old and current cacheName: ", previousCacheName, cacheName);
@@ -85,7 +86,6 @@ if (typeof window === 'undefined') {
             .then(clients => {
                 clients.forEach((client) => client.navigate(client.url));
             });
-			
 			
         }
 		
@@ -257,7 +257,7 @@ if (typeof window === 'undefined') {
 										
 				                    }
 									else{
-										//console.log("service worker: response status was not 0. returning crafted response");
+										console.log("service worker: response status was not 0. returning crafted response");
 					                    const newHeaders = new Headers(response.headers);
 					                    newHeaders.set("Cross-Origin-Embedder-Policy",
 					                        coepCredentialless ? "credentialless" : "require-corp"
@@ -406,7 +406,7 @@ if (typeof window === 'undefined') {
             window.sessionStorage.setItem("coiCoepHasFailed", "true");
         }
 		else if (controlling && window.crossOriginIsolated) {
-			//console.warn("OK, service worker managed to create cross origin isolation");
+			console.warn("OK, COI service worker managed to create cross origin isolation");
 		}
         const coepHasFailed = window.sessionStorage.getItem("coiCoepHasFailed");
 		//console.log("service worker: coepHasFailed?: ", coepHasFailed);
@@ -435,13 +435,13 @@ if (typeof window === 'undefined') {
             }
         }
 		else{
-			//console.log("service worker; NOT controlling");
+			console.log("service worker; NOT controlling");
 		}
 
         // If we're already coi: do nothing. Perhaps it's due to this script doing its job, or COOP/COEP are
         // already set from the origin server. Also if the browser has no notion of crossOriginIsolated, just give up here.
         if (window.crossOriginIsolated !== false || !coi.shouldRegister()) {
-        	//console.log("service worker: the site is cross origin isolated. Perhaps because of this script");
+        	console.log("service worker: the site is cross origin isolated. Perhaps because of this script");
 			return
         };
 

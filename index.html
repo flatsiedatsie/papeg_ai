@@ -45,32 +45,28 @@
 		// For Fleur, Levien, Dirk, Linde and Denise
 
 		// THE CODE IS VERY MESSY. It's an experiment that became a prototype that became a website.. #cargocult
-
-
+		
+		
+		
+		
+		
 		// SETTINGS
 
-		/*
-		var exports = {"__esModule": true};
-		var global = window;
-		*/
-
-
-
-
-
-
+		var tvmjsGlobalEnv = tvmjsGlobalEnv || {};
+		
 		window.testing = false;
 		window.timers = [];
 		window.timer_index = 0;
 		window.first_run = false;
 		window.cached_urls = [];
+		window.first_assistant = 'danube_3_500m';
 
 		window.settings = {
 			'for':'papeg.ai',
-			'version':null,
+			'version':null, // will be set by the service worker
 	
 			// Assistants
-			'assistant':'danube_3_500m',
+			'assistant':'developer',
 			'assistants':{
 				'developer':{'selected':true},
 				//'speaker':{'selected':true},
@@ -78,26 +74,28 @@
 				'text_to_image':{'selected':true},
 				'scribe':{'selected':true,'privacy_level':'Medium','add_timestamps':'Minutes','transcription_quality':'High','continuous_mic':'Detect_slow'},
 				'translator':{'selected':true,'add_both_languages_to_documents':false,'force_webgpu':false, 'prefered_voice_gender':'female'},
-		
+				
 				//'fast_llama3_8B':{'selected':true},
 		
 				'fast_mistral':{'selected':true},
 				'mistral':{'selected':true},
 		
-				'fast_phi3_mini':{'selected':true},
-				'phi3_mini':{'selected':true},
+				'fast_phi3_mini':{'selected':false},
+				'phi3_mini':{'selected':false},
 		
 				//'fast_phi2':{'selected':true},
 				//'phi2':{'selected':true},
 		
+				'fast_llama3_3b':{'selected':true},
+				'llama3_3b':{'selected':true},
+				
+				'fast_gemma_2_2b_it':{'selected':false},
+				'gemma_2_2b_it':{'selected':false},
 		
-		
-				'fast_gemma_2_2b_it':{'selected':true},
-				'gemma_2_2b_it':{'selected':true},
-		
-				'fast_tiny_llama':{'selected':true},
-				'tiny_llama':{'selected':true},
-		
+				'fast_tiny_llama':{'selected':false},
+				'tiny_llama':{'selected':false},
+				
+				
 				// I <3 Danube
 				'danube':{'selected':false},
 				'danube_3_500m':{'selected':true},
@@ -105,20 +103,20 @@
 				//'llama160':{'selected':true},
 		
 				// Specialized
-				'medical1':{'selected':true},
+				'medical6':{'selected':true},
 		
-				'mental1':{'selected':true},
-		
+				'mental6':{'selected':true},
 		
 			},
-			'last_loaded_text_ai':null,
+			'last_loaded_text_ai':window.first_assistant,
+			'limit_memory':0, // 0 = auto
 			//'save_conversations':false,
 			// Blueprints
 			//'blueprints':{},
 	
 			// UI state
 			'language':'en',
-			'types':{'generic':{'last_loaded':'danube'}},
+			'types':{'generic':{'last_loaded':window.first_assistant}}, // TODO is this still used?
 			'settings_complexity':'normal',
 			'left_sidebar_open':false,
 			'left_sidebar':'chat',
@@ -141,6 +139,11 @@
 				'ask_voice_consent':false,
 				'first_task_slow_explanation':false,
 			},
+			
+			// Audio
+			'voice':'default',
+			'voice_gender':'female',
+			'interrupt_speaking':'Auto',
 	
 			// Image
 			'continuous_ocr_scan':true,
@@ -156,8 +159,8 @@
 			'output_language':'nl',
 			'auto_detect_input_language':true,
 			'auto_detect_proofread_input_language':true,
-			'voice':'default',
-			'voice_gender':'female',
+			
+			
 	
 			// Rewrite
 			'summarize_tags':{
@@ -181,13 +184,6 @@
 		}
 
 
-
-		var tvmjsGlobalEnv = tvmjsGlobalEnv || {};
-
-		
-
-
-		console.log("first loaded");
 	
 	</script>
 	
@@ -219,6 +215,7 @@
 		
 		:root {
 		  --body-bg:#1a1924;
+		  --main-bg-color: #151515;
 		  --body-weaker-bg:#2a2934;
 		  --body-even-weaker-bg: #444;
 		  /*--chat-bg:#1A1923;*/
@@ -237,7 +234,7 @@
 		  --editor-bg:#222;
 		  --editor-header-bg:#222;
 		  --weak-semi-transparent-bg:rgba(255,255,255,.1);
-		  --main-bg-color: #151515;
+		  
 		  --inverted-main-bg-color:#d7d7d7;
 		  
 		  --text-color: #ddd;
@@ -399,14 +396,8 @@
 		}
 		
 		
-		/*
-		#intro #sidebars,
-        #intro #main-view,
-		*/
-		#intro #message-form-resize-handle{
-        	display:none!important;
-        }
-		
+		body:not(.update-available) .show-if-update-available,
+		body:not(.many-files) .show-if-many-files,
 		body.serverless .hide-if-serverless{
 			display:none!important;
 		}
@@ -419,7 +410,6 @@
 		}
 		
 		@media only screen and (max-width: 641px) {
-			.intro #tutorial,
 			.hide-if-mobile{
 				display:none;
 			}
@@ -522,21 +512,35 @@
 		  }
 		*/
 		
-		
+		/*
 		body.first-run:not(.show-document) #main-chat{
 			max-width:450px;
 		}
+		*/
 		
 		#do-pip-button{
 			display:none;
 		}
 		
 		#tutorial-menu{
-			max-height:0;
+			height:50px;
+			max-height:50px;
 			padding:0;
-			overflow:hidden;
-			transition:all ease .5s;
+			overflow:visible;
+			position:relative;
+			
 		}
+		#tutorial-menu-inner{
+			height:50px;
+		}
+		/*
+		#tutorial-menu > div{
+			transition:all ease .5s;
+			position:absolute;
+			right:0;
+			top:0;
+		}
+		*/
 		
 		
 		
@@ -586,7 +590,7 @@
     <style id="css-output"></style>
     
 </head>
-<body class="sidebar-chat busy-restoring-files no-files-in-folder web-gpu intro intro-ai hide-chat-form serverless no-text-ai-loaded unknown-language idle chat-shrink chat-message-form-minimum-height first-run">
+<body id="assistant-developer" class="sidebar-chat busy-restoring-files no-files-in-folder web-gpu intro intro-ai hide-chat-form serverless no-text-ai-loaded unknown-language idle chat-shrink chat-message-form-minimum-height first-run">
     <div id="flash-message" style="background-color:green"></div>
 	
 	<div id="bad-browser" class="fixed-hint" data-i18n="sorry_bad_browser" style="display:none">⚠️ Sorry, your browser (or at least the current version) is not supported</div>
@@ -600,7 +604,7 @@
 						<span 
 						id="sidebar-header-docs-button" data-tab="documents" class="svg-icon"><img class="sidebar-header-icon" width="30" height="30" alt="documents icon" src="images/document.svg"></span><span 
 						id="sidebar-header-chat-button" data-tab="chat" class="svg-icon"><img class="sidebar-header-icon" width="30" height="30" alt="chat icon" src="images/chat.svg"></span><span 
-						id="sidebar-header-settings-button" data-tab="settings" title="Open settings" class="svg-icon"><img class="sidebar-header-icon" width="36" height="36" alt="settings icon" src="images/settings.svg"></span>
+						id="sidebar-header-settings-button" data-tab="settings" title="Open settings" class="svg-icon"><span id="sidebar-header-settings-button-update-indicator" class="show-if-update-available">🔔</span><img class="sidebar-header-icon" width="36" height="36" alt="settings icon" src="images/settings.svg"></span>
 					</div>
 					<div id="rewrite-results-ready-container">
 						<div id="rewrite-results-ready-hint" class="center"><span class="unicode-icon">✏️</span><span id="rewrite-results-ready-counter"></span></div>
@@ -664,20 +668,22 @@
 						-->
 	        			
 						<div class="contacts">
-				          <ul id="contacts-list">
-				            <li class="selected-ai">
-				              <div class="contact-item">
-				                <img
-				                  src="images/developer.png"
-				                  alt="The developer"
-				                >
-				                <div class="contact">
-				                  <div class="name">Loading</div>
-				                  <div class="message" data-i18n="developer-description">One moment..</div>
-				                </div>
-				              </div>
-				            </li>
-				          </ul>
+				          <div id="contacts-list">
+							  <ul id="generated-contacts-list">
+						            <li class="selected-ai">
+						              <div class="contact-item">
+						                <img
+						                  src="images/developer.png"
+						                  alt="The developer"
+						                >
+						                <div class="contact">
+						                  <div class="name">Loading</div>
+						                  <div class="message" data-i18n="developer_description">One moment..</div>
+						                </div>
+						              </div>
+						            </li>
+						       </ul>
+						  </div>
 				        </div>
 						
 						
@@ -696,8 +702,11 @@
 					<!--
 					<div id="file-drag-overlay" data-i18n="Drop_here_to_open">Drop<br>here<br><br>to<br>open</div>
 					-->
-					<div id="folder-select-container" class="space-between"><button id="folder-back-button" class="icon-button no-further-up"><span class="unicode-icon-folder-up" style="font-size:1.5rem"><!--⬅⭠↖↩↸⇠⇱➞ ⟵⤒ //-->↩</span></button><select id="folder-select" class="hide-when-serverless"></select></div>
-			
+					<!--
+					<div id="folder-select-container" class="space-between"><button id="folder-back-button" class="icon-button no-further-up"><span class="unicode-icon-folder-up" style="font-size:1.5rem">↩</span></button><select id="folder-select" class="hide-when-serverless"></select></div>
+					-->
+					<div id="folder-select-container" class="space-between"></div>
+						
 			        <div id="sidebar-tabs">
 						<div id="file-manager" class="file-pane">
 							
@@ -860,6 +869,10 @@
 									<span data-i18n='voice'>Voice</span>
 									<select id="speaker-voice-select" class="settings-dropdown"><option value="default" data-i18n="Automatic" selected>Automatic</option><option value="basic">📢 Basic</option><option value="US female 1">🇺🇸 US female 1</option><option value="US female 2">🇺🇸 US female 2</option><option value="US male 1">🇺🇸 US male 1</option><option value="US male 2">🇺🇸 US male 2</option><option value="Canadian male">🇨🇦 Canadian male</option><option value="Scottish male">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scottish male</option><option value="Indian male">🇮🇳 Indian male</option></select>
 								</li>
+								<li id="interrupt-speaking-select-container" class="flex-space-between flex-align-center settings-select-item">
+									<span><img class="invert-if-light" src="./images/microphone_icon.svg" width="12" height="12"> <span data-i18n='Interrupt_speaking'>Interrupt speaking</span></span>
+									<select id="interrupt-speaking-select" class="settings-dropdown"><option value="Auto" data-i18n="Automatic" selected>Auto</option><option data-i18n="Yes" value="Yes">Yes</option><option value="No" data-i18n="No">No</option></select>
+								</li>
 								
 								<li id="settings-complexity-select-container" class="flex-space-between flex-align-center settings-select-item">
 									<span data-i18n="Options">Options</span>
@@ -900,9 +913,9 @@
 								</li>
 								<li id="papegai-test-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
 									<span>Debug</span>
-									<button onclick="test();">DEBUG</button>
+									<span><button onclick="test();">DEBUG</button> <button onclick="pause_interval();">⏸️</button></span>
 								</li>
-								<li id="papegai-limit-memory-use-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
+								<li id="papegai-limit-memory-use-container" class="flex-space-between flex-align-center settings-button-item show-if-advanced">
 									<span>Limit memory use (<span id="limited-ram"></span>)</span>
 									<select id="settings-limit-memory-use-select" class="settings-dropdown" style="min-width:50px"><option value="0" selected>Auto</option><option value="2000">2GB</option><option value="4000">4GB</option><option value="8000">8GB</option><option value="16000">16GB</option></select>
 								</li>
@@ -1349,7 +1362,7 @@
 				
 				<div id="message-form-container">
 			        <div class="message-form">
-			        	<div>
+			        	<div id="message-form-extra-wrapper">
 	  						<div id="message-form-audio-buttons-container">
 								<div id="message-form-audio-buttons-wrapper">
 									
@@ -1361,11 +1374,16 @@
 											<div id="microphone-meta-hint"></div>
 										</div>
 										
+										<div id="microphone-tasks-counter-container" class="tasks-counter-container center"></div>
+										
 										<div id="microphone-icon" class="form-item">
 											<div id="microphone-icon-image" class="centered-audio-icon"></div>
 										</div>
 		  	  		           	 	</div>
 		  	  		            	<div id="speaker-icon-container">
+										
+										<div id="speaker-tasks-counter-container" class="tasks-counter-container center"></div>
+										
 		  	  		              		<div id="speaker-icon" class="form-item">
 		  	  		              			<div id="speaker-icon-image" class="centered-audio-icon"></div>
 		  	  		              		</div>
@@ -1755,7 +1773,7 @@
 							<button id="proofread-selection-button" class="doc-selection-hint-button center"><img class="doc-selection-hint-icon" src="images/glasses.svg" width="20" height="20" alt="👓"> <span class="doc-selection-hint-text" data-i18n='Proofread'>Proofread</span></button>
 							<button id="rewrite-selection-button" class="doc-selection-hint-button center"><img class="doc-selection-hint-icon" src="images/pencil.svg" width="20" height="20" alt="✏️"><!--<span class="doc-selection-hint-icon"><span class="inline-block">✏️</span></span>--> <span class="doc-selection-hint-text" data-i18n='Rewrite'>Rewrite</span></button>
 							<button id="translate-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img src="images/translation-icon.svg" alt="Translation"></span> <span class="doc-selection-hint-text" data-i18n='Translate'>Translate</span></button>
-							<button id="summarize-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img src="images/summarize_icon.svg" alt="Summarize"></span> <span class="doc-selection-hint-text" data-i18n='Summarize'>Summarize</span></button>
+							<button id="summarize-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img src="images/summarize_clamp_icon.svg" alt="Summarize"></span> <span class="doc-selection-hint-text" data-i18n='Summarize'>Summarize</span></button>
 							<button id="question-selection-button" class="doc-selection-hint-button center"><span class="doc-selection-hint-icon"><img alt="Question" src="images/chat.svg" height="20" width="20"></span> <span class="doc-selection-hint-text" data-i18n='Question'>Question</span></button>
 							<button id="speak-selection-button" class="doc-selection-hint-button center"><img class="doc-selection-hint-icon" src="images/mouth.svg" width="20" height="20" alt="👄"><!--<span class="doc-selection-hint-icon"><span class="inline-block">👄</span></span>--> <span class="doc-selection-hint-text" data-i18n='Speak'>Speak</span></button>
 						</div>
@@ -2168,11 +2186,20 @@
     <script defer="" src="./pjs/main.js"></script>
 	<script defer="" src="./pjs/jszip.min.js"></script>
 	<script defer="" src="./pjs/crypto-js.min.js"></script>
-	
+	<script defer="" src="./p_constants.js"></script>
+	<!--
 	<script defer src="./js/canvasTxt.js"></script>
+	// -->
 	<script defer src="./last.js"></script>
 	<script defer src="./counter.php"></script>
 	
+	
+	
+	<!-- 
+	<script defer src="./tts_worker.js" type="module"></script>
+	<script defer src="./whisper_worker.js" type="module"></script>
+		
+	//-->
 	
 	
 

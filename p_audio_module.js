@@ -57,7 +57,12 @@ let recording_simple_vad = null;
 let speaker_consent_hint_given = false;
 let busy_recording_simple_vad = false;
 let previous_speaker_list = '';
-
+let last_tts_task = null;
+let maximum_stt_tasks = 9;
+if(window.is_mobile){
+	maximum_stt_tasks = 4;
+}
+let vad_state_history = []; // keep track of how often the VAD is in a recording state, and use that data to optimize interrupt_speaking
 
 
 function flattenArray(channelBuffer, recordingLength) {
@@ -167,16 +172,6 @@ window.unpauseSimpleVAD = unpauseSimpleVAD;
 // TODO Stop simpleVad is currently the same as pauseSimpleVad because starting and stopping the microphone made things rather troublesome. But this is not ideal.
 function stopSimpleVAD() {
 	//console.log("in stopSimpleVAD");
-	//window.main_audio_context?.pause();
-	//window.simple_vad_source?.mediaStream.getAudioTracks().forEach((track) => track.stop());
-	//window.simple_vad_source?.mediaStream.getAudioTracks().forEach((track) => track.enabled = true);
-	
-	//console.log("window.simple_vad_source: ", window.simple_vad_source);
-	//console.log("window.simple_vad: ", window.simple_vad);
-	//window.simple_vad_source?.mediaStream.enabled = false;
-	//window.simple_vad_source.enabled = false;
-	//window.simple_vad_source?.disconnect();
-	
 	if(window.simple_vad != null && typeof window.simple_vad.port != 'undefined'){
 		window.simple_vad.port.postMessage({'listening':false});
 	}
@@ -254,17 +249,14 @@ window.continuous_vad = continuous_vad;
 
 async function restartSimpleVAD() {
 	//console.log("in restartSimpleVAD");
-	
-	
-	//window.simple_vad_source?.mediaStream.getAudioTracks().forEach((track) => track.enabled = false);
-	//window.simple_vad_source?.mediaStream.enabled = true;
-	//window.simple_vad_source.enabled = true;
 	if(window.simple_vad != null && typeof window.simple_vad.port != 'undefined'){
 		window.simple_vad.port.postMessage({'listening':true});
 	}
 	
 }
 window.restartSimpleVAD = restartSimpleVAD;
+
+
 
 
 async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 48000
@@ -274,12 +266,6 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 	    await window.main_audio_context.audioWorklet.addModule("./simple_vad/vad-audio-worklet.js");
 		window.simple_vad_worklet_added = true;
 	}
-
-	/*
-	if(window.mediaStream == null){
-		window.mediaStream = window.main_audio_context.createMediaStreamSource(window.mic_stream);
-	}
-	*/
 	//console.log("startSimpleVAD: initial window.mic_stream: ", window.mic_stream);
     window.simple_vad_source = window.main_audio_context.createMediaStreamSource(window.mic_stream);
 
@@ -307,7 +293,7 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 	
 		if(typeof event.data["cmd"] == 'string'){
 			const cmd = event.data["cmd"];
-	  		//console.log("simple_vad command: ", cmd);
+	  		console.log("simple_vad command: ", cmd);
 	
 	
 			// SILENCE
@@ -315,22 +301,15 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 				
 				document.body.classList.remove('state-recording');
 				
-				const vad_delta = Date.now() - last_vad_start_time;
+				//const vad_delta = Date.now() - last_vad_start_time;
 				//console.log("Simple_VAD: vad_delta: ", vad_delta);
 			
-				if(last_vad_start_time != 0 && vad_delta > 1000){
+				//if(last_vad_start_time != 0 && vad_delta > 1000){
 					//console.log("more than a second of recording. window.last_vad_recording: ", window.last_vad_recording);
-					//window.last_vad_recording = flattenArray(window.last_vad_recording);
-					//console.log("more than a second of recording. Flattened window.last_vad_recording: ", window.last_vad_recording);
-					//transform_recorded_audio(window.last_vad_recording);
-			
-				}
+				//}
 				busy_recording_simple_vad = false;
+				window.possibly_resume_audio();
 		
-				//window.last_vad_recording = [];
-				//window.last_vad_recording_length = 0;
-	        	//speech.textContent = "Silence";
-	        	//speech.style.backgroundColor = "transparent";
 			}
 
 			// SPEECH
@@ -340,12 +319,26 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 				if(busy_recording_simple_vad == false){
 					busy_recording_simple_vad = true;
 					last_vad_start_time = Date.now();
-			
 				}
+				
+				if(
+					window.speaker_enabled 
+					&& typeof window.settings.interrupt_speaking == 'string' 
+					&& window.settings.interrupt_speaking != 'No'
+				){
+					let silence_threshold = 0.7;
+					if(window.settings.interrupt_speaking == 'Yes'){
+						silence_threshold = 0.5;
+					}
+		
+					console.log("VAD sent speech indication.  current recording_to_listening_ratio: ", window.recording_to_listening_ratio);
+					if(window.recording_to_listening_ratio > silence_threshold){
+						window.possibly_pause_audio();
+					}
+				}
+				
 			}
-		
-		
-		
+			
 		
 			// RECORDING
 			if (cmd === "recording") {
@@ -356,46 +349,108 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 				busy_recording_simple_vad = false;
 				if(typeof event.data["data"] != 'undefined' && typeof event.data["data"]["audio_data"] != 'undefined' && typeof event.data["data"]["details"] != 'undefined'){
 					
-					console.log("VAD recording length: ", event.data["data"]["audio_data"].length / 16000 + 's');
+					console.log("Received VAD recording. duration: ", event.data["data"]["audio_data"].length / 16000 + 's');
 					
-					if(window.stopped_whisper_because_of_low_memory){
-						console.warn("received VAD recording, but stopped_whisper_because_of_low_memory is true, so not processing the audio");
+					
+					if(typeof event.data["data"]["details"].real_sample_rate == 'number' && event.data["data"]["details"].real_sample_rate > 1000){
+						window.measured_microphone_sample_rate = Math.round(event.data["data"]["details"].real_sample_rate / 8000) * 8000;
 					}
-					else if(window.skip_first_vad_recording && event.data["data"]["audio_data"].length <= 24000){
-						console.log("not processing first short VAD audio recording");
-						window.skip_first_vad_recording = false;
+					
+					
+					if(window.stt_tasks_left < maximum_stt_tasks){
+						if(window.stopped_whisper_because_of_low_memory){
+							console.warn("received VAD recording, but stopped_whisper_because_of_low_memory is true, so not processing the audio");
+						}
+						else if(window.skip_first_vad_recording && event.data["data"]["audio_data"].length <= 24000){
+							console.log("not processing first short VAD audio recording");
+							window.skip_first_vad_recording = false;
+						}
+						else{
+							window.skip_first_vad_recording = false;
+							try{
+								if(window.settings.assistant == 'scribe' && typeof window.current_scribe_voice_parent_task_id == 'number' && window.last_time_scribe_started != null && (Date.now() - window.last_time_scribe_started) < window.maximum_scribe_duration){
+									//console.log("received VAD recording, and setting scribe parent task to: ", window.current_scribe_voice_parent_task_id);
+									event.data["data"]["details"]['parent_index'] = window.current_scribe_voice_parent_task_id;
+								}
+								if(typeof window.measured_microphone_sample_rate == 'number' && window.measured_microphone_sample_rate > 0){
+									if( (event.data["data"]["audio_data"].length / window.measured_microphone_sample_rate) > 1){
+										window.possibly_interrupt_speaking_early();
+									}
+								}
+								else if(event.data["data"]["audio_data"].length > 16000){
+									window.possibly_interrupt_speaking_early();
+								}
+								
+					
+								window.push_stt_task(event.data.data.audio_data,null,event.data.data.details); // {'origin':'voice', 'sample_rate':event.data.data.sample_rate, 'recording_start_time':event.data.data.recording_start_time, 'recording_end_time':event.data.data.recording_end_time,'flush_offset':event.data.data.flush_offset,'progress_index':event.data.data.flush_count}
+								
+								
+								// Allow early interrupting of speaking if the VAD is only sometimes in recording state, which indicates a good, quiet environment for a voice conversation.
+								
+								
+								
+								
+							}
+							catch(err){
+								console.error("caught error handling incoming audio recording data: ", err);
+							}
+						}
+						
 					}
 					else{
-						window.skip_first_vad_recording = false;
-						try{
-							if(window.settings.assistant == 'scribe' && typeof window.current_scribe_voice_parent_task_id == 'number' && window.last_time_scribe_started != null && (Date.now() - window.last_time_scribe_started) < window.maximum_scribe_duration){
-								//console.log("received VAD recording, and setting scribe parent task to: ", window.current_scribe_voice_parent_task_id);
-								event.data["data"]["details"]['parent_index'] = window.current_scribe_voice_parent_task_id;
-							}
-					
-							window.push_stt_task(event.data.data.audio_data,null,event.data.data.details); // {'origin':'voice', 'sample_rate':event.data.data.sample_rate, 'recording_start_time':event.data.data.recording_start_time, 'recording_end_time':event.data.data.recording_end_time,'flush_offset':event.data.data.flush_offset,'progress_index':event.data.data.flush_count}
-											
+						console.error("already a huge backlog of STT tasks, not adding another one");
+						if(window.whisper_loaded){
+							window.flash_message(window.get_translation('Cannot_keep_up_with_voice_input'),2000,'fail');
 						}
-						catch(err){
-							console.error("caught error handling incoming audio recording data: ", err);
-						}
+						
 					}
+					
 				}
 				else{
 					console.error("unexpected results from VAD audio worklet.  event.data: ", event.data);
 				}
 				
-				
-				
 			}
 			
 			if (cmd === "ping") {
-				if(typeof event.data["data"] != 'undefined' && typeof event.data["data"]["listening"] != 'undefined'){
-					//console.log("audio worklet ping: listening: ",  event.data["data"]["listening"]);
-					if(event.data["data"]["listening"] != window.microphone_enabled){
-						console.error("audio worklet listening and window.microphone_enabled are out of sync:  listening, microphone_enabled", event.data["data"]["listening"], window.microphone_enabled);
+				if(typeof event.data["data"] != 'undefined'){
+					
+					if(typeof event.data["data"]["listening"] != 'undefined'){
+						//console.log("audio worklet ping: listening: ",  event.data["data"]["listening"]);
+						if(event.data["data"]["listening"] != window.microphone_enabled){
+							console.error("audio worklet listening and window.microphone_enabled are out of sync:  listening, microphone_enabled", event.data["data"]["listening"], window.microphone_enabled);
+						}
 					}
+					
+					if(typeof event.data["data"]["last_command_was_speech"] == 'boolean'){
+						vad_state_history.unshift(event.data["data"]["last_command_was_speech"]);
+						if(vad_state_history.length > 120){
+							vad_state_history.length = 120;
+						}
+						//console.log("vad_state_history.length: ", vad_state_history.length);
+						
+						if(window.settings.settings_complexity == 'developer'){
+							let vad_dataviz = '';
+							for(let a = 0; a < vad_state_history.length; a++){
+								if(vad_state_history[a] == true){
+									vad_dataviz = '|' + vad_dataviz;
+								}
+								else{
+									vad_dataviz = '-' + vad_dataviz;
+								}
+								if(a > 20){
+									break;
+								}
+							}
+							console.log("vad_state_history: vad_dataviz: \n\n" +  vad_dataviz + "\n\n");
+						}
+					
+						calculate_recording_to_listening_ratio();
+					}
+					
+					
 				}
+				
 				
 			}
 			
@@ -408,6 +463,94 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 
 }
 window.startSimpleVAD = startSimpleVAD;
+
+
+
+
+function calculate_recording_to_listening_ratio(){
+	if(vad_state_history.length > 20){
+		let listening_count = 0;
+		for(let x = 0; x < vad_state_history.length; x++){
+			if(vad_state_history[x] === false){
+				listening_count++;
+			}
+		}
+		window.recording_to_listening_ratio = listening_count / vad_state_history.length;
+	}
+	else{
+		window.recording_to_listening_ratio = 0;
+	}
+	console.log("calculate_recording_to_listening_ratio:  window.recording_to_listening_ratio is now: ", window.recording_to_listening_ratio);
+}
+
+
+function possibly_interrupt_speaking_early(){
+	console.log("in possibly_interrupt_speaking_early.  vad_state_history.length: ", vad_state_history.length);
+	
+	if(
+		window.speaker_enabled 
+		&& typeof window.settings.interrupt_speaking == 'string' 
+		&& (
+			window.settings.interrupt_speaking == 'Yes' 
+			||
+			(
+				window.settings.interrupt_speaking == 'Auto' 
+				&& window.ram > 4000
+				&& typeof window.recording_to_listening_ratio == 'number' 
+				&& window.recording_to_listening_ratio > 0.7
+			)
+		)
+		&& vad_state_history.length > 20
+		//&& (window.stt_tasks_left > 1 || window.tts_tasks_left > 0) 
+		//&& window.tts_worker_busy
+	){
+		
+		//calculate_recording_to_listening_ratio();
+		
+		let silence_threshold = 0.7;
+		if(window.settings.interrupt_speaking == 'Yes'){
+			silence_threshold = 0.5;
+		}
+		
+		console.log("possibly_interrupt_speaking_early:  recording_to_listening_ratio: ", window.recording_to_listening_ratio);
+		if(window.recording_to_listening_ratio > silence_threshold){
+			console.log("VAD has spent more time in listening mode than recording mode");
+			window.interrupt_speaking_task_index = window.task_counter;
+			console.log("window.interrupt_speaking_task_index is now: ", window.interrupt_speaking_task_index);
+			
+			window.interrupt_speaker();
+			
+			return true
+		}
+	}
+	console.log("possibly_interrupt_speaking_early?: NO");
+	return false
+}
+window.possibly_interrupt_speaking_early = possibly_interrupt_speaking_early;
+
+
+function possibly_pause_audio(){
+	console.log("in possibly_pause_audio");
+	if(window.audio_player != null && window.audio_player.state === 'running') {
+	    window.audio_player.suspend().then(function() {
+			console.log("audio player paused");
+	    });
+	}
+}
+window.possibly_pause_audio = possibly_pause_audio;
+
+
+function possibly_resume_audio(){
+	console.log("in possibly_resume_audio");
+	if(window.speaker_enabled && window.audio_player != null && window.audio_player.state === 'suspended') {
+		window.audio_player.resume().then(function() {
+			console.log("audio player resumed");
+		});  
+	}
+}
+window.possibly_resume_audio = possibly_resume_audio;
+
+
 
 
 
@@ -548,11 +691,8 @@ window.start_vad = async () => {
 						//console.log("window.active_destination: ", window.active_destination);
 					
 						try{
-						
 							// the audio array received from VAD seems to be incompatible with Whisper. It must first be transformed. Perhaps it's simply an interleaving issue;
 							transform_recorded_audio(recorded_audio);
-						
-						
 						}
 						catch(e){
 							console.error("ERROR handling VAD recorded audio: ", e);
@@ -636,11 +776,14 @@ let whisper_percentage = 0;
 let whisper_previous_percentage_timestamp = 0;
 let speaker_list_info_timeout = null;
 let speaker_list_stream_timeout = null;
+let previous_stream_word = '';
+//let whisper_download_total_bytes = 0;
 
 async function create_whisper_worker(){
-	//console.log("in create_whisper_worker");
+	console.log("in create_whisper_worker");
 	
-	if(window.whisper_worker){
+	if(window.whisper_worker != null){
+		console.error("create_whisper_worker: window.whisper_worker already existed! Force-killing the worker first..")
 		window.whisper_worker.terminate();
 	}
 	window.whisper_worker = null;
@@ -653,8 +796,13 @@ async function create_whisper_worker(){
 	window.whisper_worker.addEventListener('message', e => {
 		//console.log("whisper_module: received message from whisper_worker: ", e.data);
 
-		
+
 		if(typeof e.data.status == 'string'){
+			console.warn("whisper_module: received message from whisper_worker: status:", e.data.status);
+			
+			if(e.data.status.indexOf('progress') == -1){
+				//console.log("whisper_module: received (non-progress) message from whisper_worker: ", e.data);
+			}
 			
 			if(e.data.status == 'progress'){
 				if(whisper_previous_percentage == 0){
@@ -676,20 +824,25 @@ async function create_whisper_worker(){
 						
 					}
 				}
-				if(total_bytes > 0){
-					let whisper_progress_el = document.getElementById('download-progress-whisper');
-					if(whisper_progress_el == null){
-						console.error("whisper (down)load progress element is missing");
-						add_chat_message('current','whisper','download_progress#setting---');
-					}
-					else{
-						//console.log("updating whisper (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
-						whisper_progress_el.value = loaded_bytes / total_bytes; //e.data.progress / 100;
-						
-						
-						let whisper_percentage = Math.floor((loaded_bytes / total_bytes) * 100);
+				if(total_bytes > 10000000){
 					
-						if(whisper_percentage > whisper_previous_percentage){
+					let whisper_percentage = Math.floor((loaded_bytes / total_bytes) * 100);
+				
+					if(whisper_previous_percentage > whisper_percentage){
+						whisper_previous_percentage = 0;
+					}
+				
+					if(whisper_percentage > whisper_previous_percentage){
+					
+						let whisper_progress_el = document.getElementById('download-progress-whisper');
+						if(whisper_progress_el == null){
+							console.warn("whisper (down)load progress element is missing, creating it now");
+							add_chat_message('current','whisper','download_progress#setting---'); // TODO this one is a bit different at the moment. Maybe use 'scribe' instead of 'whisper'?
+						}
+						else{
+							//console.log("updating whisper (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
+							whisper_progress_el.value = loaded_bytes / total_bytes; //e.data.progress / 100;
+							
 							//console.log("\n\nwhisper: download %: ", whisper_percentage);
 							
 							if(whisper_previous_percentage_timestamp == 0){
@@ -709,13 +862,25 @@ async function create_whisper_worker(){
 									//console.log("whisper load time_remaining: ", time_remaining);
 									whisper_time_remaining_element.innerHTML = window.create_time_remaining_html(time_remaining);
 								}
+								
+								let whisper_size_el = whisper_progress_el.parentNode.querySelector('.ai-model-size');
+								if(whisper_size_el){
+									if(total_bytes > (1024 * 1024 * 1024)){
+										whisper_size_el.innerHTML = '<span class="ai-model-size-number">' + (Math.round(total_bytes / (1024 * 1024 * 10240))/10) + '</span><span class="ai-model-size-gb">GB</span>';
+									}
+									else{
+										whisper_size_el.innerHTML = '<span class="ai-model-size-number">' + Math.round(total_bytes / (1024 * 1024)) + '</span><span class="ai-model-size-gb">MB</span>';
+									}
+									
+								}
 							
 							}
-							whisper_previous_percentage = whisper_percentage;
-							whisper_previous_percentage_timestamp = Date.now();
+							
+							
 
 						}
-						
+						whisper_previous_percentage = whisper_percentage;
+						whisper_previous_percentage_timestamp = Date.now();
 						
 					}
 				}
@@ -725,23 +890,39 @@ async function create_whisper_worker(){
 				
 			}
 			
-			else if(e.data.status == 'loading'){
-				//console.log("Whisper worker sent loading message. It's warming up")
+			else if(e.data.status == 'exists' ){
+				console.log("Whisper worker sent exists message");
+				preload_whisper();
 			}
 			
-			else if(e.data.status == 'ready'){
-				// progress callback from whisper pipeline itself
+			else if(e.data.status == 'loading' || e.data.status == 'preloading' || e.data.status == 'asr_preloading' || e.data.status == 'segmentation_loading'){
+				console.log("Whisper worker sent loading update message: ", e.data.status);
 			}
-			else if(e.data.status == 'preload_complete'){
-				//console.log("whisper worker sent preload complete message");
-				window.whisper_worker_busy = false;
+			
+			
+			else if(e.data.status == 'ready' || e.data.status == 'preload_complete'){
+				console.log("whisper worker sent preload complete message: ", e.data.status);
+				
 				window.busy_loading_whisper = false;
-				add_chat_message('current','developer',get_translation('Voice_recognition_has_loaded'));
+				window.whisper_loaded = true;
+				
+				if(e.data.status == 'segmentation_loaded' && e.data.task != 'undefined' && e.data.task != null && typeof e.data.task.assistant == 'string' && e.data.task.assistant == 'scribe'){
+					add_chat_message_once('current','developer',get_translation('Speaker_recognition_has_loaded'));
+				}
+				
+				if(e.data.status == 'preload_complete'){
+					add_chat_message_once('current','developer',get_translation('Voice_recognition_has_loaded'));
+					//window.whisper_worker_busy = false;
+				}
+				
 				let whisper_progress_el = document.getElementById('download-progress-whisper');
 				if(whisper_progress_el){
 					const whisper_progress_message_el = whisper_progress_el.closest('.message');
 					if(whisper_progress_message_el){
 						whisper_progress_message_el.classList.add('download-complete-chat-message');
+						setTimeout(() => {
+							whisper_progress_message_el.remove();
+						},1000);
 					}
 				}
 				else{
@@ -752,9 +933,14 @@ async function create_whisper_worker(){
 					set_model_loaded(true);
 					//document.body.classList.add('model-loaded');
 				}
+				/*
+				if(typeof e.data.task != 'undefined' && e.data.task != null && typeof e.data.task.index == 'number'){
+					window.handle_completed_task(e.data.task,null);
+				}
+				*/
 			}
 			else if(e.data.status == 'preload_already_complete' || e.data.status == 'pipeline_ready'){
-				//console.log("whisper worker sent preload already complete message");
+				console.log("whisper worker sent preload already complete message. e.data.status: ", e.data.status);
 				//window.whisper_worker_busy = false;
 				if(e.data.status == 'preload_already_complete'){
 					window.busy_loading_whisper = false;
@@ -766,25 +952,34 @@ async function create_whisper_worker(){
 					const whisper_progress_message_el = whisper_progress_el.closest('.message');
 					if(whisper_progress_message_el){
 						whisper_progress_message_el.classList.add('download-complete-chat-message');
+						setTimeout(() => {
+							whisper_progress_message_el.remove();
+						},1000);
 					}
 				}
 				else{
-					//console.log("whisper became ready, but cannot find loading progress indicator element");
+					console.error("whisper became ready, but cannot find loading progress indicator element");
 				}
 				if(window.settings.assistant == 'scribe'){
 					window.currently_loaded_assistant = 'scribe'; // TODO: is this wise?
 					set_model_loaded(true);
 					//document.body.classList.add('model-loaded');
 				}
+				//if(typeof e.data.task != 'undefined' && e.data.task != null){
+					//window.handle_completed_task(e.data.task,null);
+				//}
 			}
 			else if(e.data.status == 'initiate'){
 				//console.log("whisper worker sent initiate message");
 			}
 			else if(e.data.status == 'done'){
-				//console.log("whisper worker sent done message. Download/load complete");
+				console.log("whisper worker sent done message. A file has downloaded: " , e.data.file);
 			}
 			else if(e.data.status == 'download'){
-				//console.log("whisper worker sent download message: ", e.data.file);
+				console.log("whisper worker sent download start message for file: ", e.data.file);
+				if(window.settings.settings_complexity == 'developer'){
+					window.add_chat_message('current','developer','Downloading: ' + e.data.file);
+				}
 			}
 			
 			else if(e.data.status == 'stream'){
@@ -817,16 +1012,64 @@ async function create_whisper_worker(){
 							speaker_list_stream_timeout = setTimeout(() => {
 								scribe_stream_info_el.textContent = '';
 								speaker_list_stream_timeout = null;
+								previous_stream_word = '';
 							},1000);
 							
 						}
 						
 					}
 					else if(typeof e.data.task_assistant == 'string' && e.data.task_assistant != 'scribe'){
-						if(!e.data.content.trim().startsWith('[') && !e.data.content.trim().startsWith('(') && !e.data.content.trim().endsWith(')') && !e.data.content.trim().endsWith(']')){
-							window.set_chat_status({'assistant':e.data.task_assistant}, e.data.content, 2);
+						/*
+						console.log("whisper stream: previous_stream_word: -->" + previous_stream_word + "<--");
+						console.log("previous_stream_word.trim:  -->" + previous_stream_word.trim() + "<--");
+						console.log("starts with [ ?", !e.data.content.trim().startsWith('[') );
+						console.log("starts with ( ?", !e.data.content.trim().startsWith('(') );
+						console.log("ends with ] ?", !e.data.content.trim().endsWith(']') );
+						console.log("ends with ) ?", !e.data.content.trim().endsWith(')') );
+						console.log("previous word.trim == ( ?", previous_stream_word.trim() != '(' );
+						console.log("previous word.trim == [ ?", previous_stream_word.trim() != '[' );
+						*/
+						if(
+							!e.data.content.trim().startsWith('[') 
+							&& !e.data.content.trim().startsWith('(') 
+							&& !e.data.content.trim().endsWith(')') 
+							&& !e.data.content.trim().endsWith(']') 
+							&& previous_stream_word.trim() != '[' 
+							&& previous_stream_word.trim() != '('
+						){
+							//console.log("whisper stream: window.settings.interrupt_speaking: ", window.settings.interrupt_speaking);
+							if(typeof e.data.task_destination == 'string' && e.data.task_destination == 'chat'){
+								window.set_chat_status({'assistant':e.data.task_assistant}, e.data.content, 2);
+							}
+							console.log("STREAM: window.settings.interrupt_speaking: ", window.settings.interrupt_speaking);
+							console.log("STREAM: window.tts_worker_busy: ", window.tts_worker_busy);
+							console.log("STREAM: window.audio_output_tasks_left: ", window.audio_output_tasks_left);
+							console.log("STREAM: window.tts_tasks_left: ", window.tts_tasks_left);
+							if(
+								window.speaker_enabled 
+								&& typeof window.settings.interrupt_speaking == 'string' 
+								&& (
+									window.settings.interrupt_speaking == 'Yes' 
+									||
+									(
+										window.settings.interrupt_speaking == 'Auto' 
+										&& window.ram > 4000
+										&& typeof window.recording_to_listening_ratio == 'number' 
+										&& window.recording_to_listening_ratio > 0.7
+									)
+								)
+								&& (window.stt_tasks_left > 1 || window.tts_tasks_left > 0) 
+								//&& window.tts_worker_busy
+							){
+								window.interrupt_speaker();
+								flash_message(get_translation('Interrupted'),1000,'info');
+							}
+						}
+						else{
+							console.log("whisper_stream: avoiding a meta sound: ", e.data.content);
 						}
 					}
+					previous_stream_word = e.data.content;
 				}
 				
 			}
@@ -867,6 +1110,7 @@ async function create_whisper_worker(){
 				}
 			}
 			
+			
 			else if(e.data.status == 'speaker_name'){
 				//console.log("whisper worker sent update about the verification consent state of a speaker");
 				if(window.speaker_enabled){
@@ -877,6 +1121,7 @@ async function create_whisper_worker(){
 				}
 			}
 			
+			
 			else if(e.data.status == 'speakers_list'){
 				if(typeof e.data.speakers != 'undefined' && Array.isArray(e.data.speakers)){
 					update_transcription_info(e.data);
@@ -884,14 +1129,17 @@ async function create_whisper_worker(){
 			}
 			
 			
-			
+			else if(e.data.status == 'exclamation_marks'){
+				console.log("whisper worker sent message that it generated lots of exclamation_marks");
+				window.whisper_saw_exclamation_marks = true;
+			}
 			
 			
 			else if(e.data.status == 'complete'){
 				window.skip_a_beat = true;
 				
 				set_chat_status(e.data.task,'',2);
-				//console.log('\n\n\n\n\nGOT WHISPER COMPLETE FROM WORKER\n\n\n\ne.data: \n\n', e.data);
+				console.log('\n\n\n\n\nGOT WHISPER COMPLETE FROM WORKER\n\n\n\ne.data: \n\n', e.data);
 				//console.log('GOT WHISPER COMPLETE.  e.data.transcript: ', e.data.transcript);
 				//console.log('GOT WHISPER COMPLETE.  e.data.task: ', e.data.task);
 				
@@ -941,9 +1189,9 @@ async function create_whisper_worker(){
 			
 			else if(e.data.status == 'disposed'){
 				console.log("whisper worker sent message that it has disposed of the AI models");
-				if(typeof e.data.task != 'undefined' && e.data.task != null){
-					window.handle_completed_task(e.data.task,null,{'state':'interrupted'});
-				}
+				//if(typeof e.data.task != 'undefined' && e.data.task != null){
+				//	window.handle_completed_task(e.data.task,null,{'state':'interrupted'});
+				//}
 				
 				window.whisper_worker.terminate();
 				window.whisper_worker = null;
@@ -970,7 +1218,13 @@ async function create_whisper_worker(){
 				}
 			}
 			
-			else if(e.data.status == 'error' || e.data.status == 'interrupted'){
+			else if(e.data.status.startsWith('asr_')){
+				console.log("received ASR_ message from whisper worker: ", e.data.status, e.data);
+			}
+			
+			
+			
+			else if(e.data.status == 'error' || e.data.status == 'interrupted' || e.data.status == 'reset_me'){
 				
 				if(typeof e.data.error != 'undefined' && ('' + e.data.error).indexOf(' memory') != -1){
 					flash_message(get_translation("Not_enough_memory"),2000,'fail');
@@ -979,6 +1233,16 @@ async function create_whisper_worker(){
 				if(typeof e.data.task != 'undefined' && e.data.task != null){
 					console.error("transcription error occured: calling handle_completed_task.  e.data: ", e.data);
 					
+					if(e.data.status == 'reset_me'){
+						console.warn("RECEIVED RESET_ME COMMAND FROM WHISPER WORKER");
+						if(window.settings.settings_complexity == 'developer'){
+							flash_message("Resetting voice recognition",2000,'fail');
+						}
+						window.dispose_whisper();
+					}
+					else{
+						window.whisper_worker_busy = false;
+					}
 					
 					if(e.data.status == 'interrupted'){
 						handle_completed_task(e.data.task,null,{'state':'interrupted'});
@@ -986,13 +1250,19 @@ async function create_whisper_worker(){
 					else{
 						handle_completed_task(e.data.task,null,{'state':'failed'});
 					}
-					window.whisper_worker_busy = false;
+					
+					if(typeof e.data.error == 'string'){
+						console.error("whisper_worker sent error message: ", e.data.error);
+						//window.display_error(e.data.task,e.data.error);
+					}
+					
 				}
 				else{
 					console.error("transcription error occured, and no valid task in Whisper_worker response.  e.data: ", e.data);
 				}
 				
 				window.busy_loading_whisper = false;
+				//whisper_download_total_bytes = 0;
 				
 				set_state(LISTENING);
 				if(typeof e.data.error == 'string'){
@@ -1000,9 +1270,30 @@ async function create_whisper_worker(){
 					if(e.data.error == 'already busy transcribing'){
 						window.whisper_worker_busy = true;
 					}
+					else if(e.data.error.indexOf('Failed to fetch') != -1){
+						window.whisper_worker_busy = false;
+						window.flash_message("Error: " + window.get_translation('Could_not_start_voice_recognition'),3000,'fail');
+						window.add_chat_message_once('current','developer',window.get_translation('A_model_has_to_be_downloaded_from_the_internet_but_there_is_no_internet_connection'),'A_model_has_to_be_downloaded_from_the_internet_but_there_is_no_internet_connection');
+						
+					}
 					else if(e.data.error.indexOf('no available backend found') != -1){
 						window.whisper_worker_busy = false;
 						window.flash_message("Error: " + window.get_translation('Could_not_start_voice_recognition'),3000,'fail');
+						
+					}
+					else if(e.data.error.indexOf('allocation') != -1){
+						window.whisper_worker_busy = false;
+						window.flash_message("Error: " + window.get_translation('Could_not_start_voice_recognition'),3000,'fail');
+						/*
+						if(typeof typeof e.data.task != 'undefined' && e.data.task != null && typeof e.data.task.assistant == 'string'){
+							window.add_chat_message(e.data.task.assistant,'scribe',window.get_translation('Not_enough_memory') + ' 🙁', 'Not_enough_memory');
+						}
+						else{
+							window.add_chat_message('current','scribe',window.get_translation('Not_enough_memory') + ' 🙁', 'Not_enough_memory');
+						}
+						*/
+						window.add_chat_message('current','scribe',window.get_translation('Not_enough_memory') + ' 🙁', 'Not_enough_memory');
+						
 						
 					}
 					//window.flash_message(get_translation('Transcription') + ': ' + window.get_translation('An_error_occured'),3000,'fail');
@@ -1104,29 +1395,6 @@ async function create_whisper_worker(){
 				}
 			}
 		}
-			
-		if(window.enable_microphone == false){
-			//console.log("whisper worker returned audio file, but in the meantime enable_microphone was disabled. Throwing away the data.");
-		}
-		else{
-			
-			/*
-		
-			if(window.whisper_queue.length){
-				//console.log("whisper worker done, but there is more work to do. Sentences still in whisper_queue: ", window.whisper_queue.length);
-				let next_sentence = window.whisper_queue[0][0] + window.whisper_queue[0][1]; // sentence plus punctuation mark
-				window.whisper_queue.splice(0,1);
-			
-			
-				whisper_worker.postMessage({'whisper_counter':window.whisper_counter,'sentence':next_sentence});
-				window.whisper_counter++;
-			}
-			else{
-				//console.log("whisper worker was done, and there are no more sentences in the whisper queue. Worker is now idle.");
-				window.whisper_worker_busy = false;
-			}
-			*/
-		}
 	
 	});
 
@@ -1137,11 +1405,16 @@ async function create_whisper_worker(){
 		whisper_worker_error_count++;
 		
 		window.whisper_worker.terminate();
+		window.whisper_worker = null;
 		window.whisper_worker_busy = false;
-		if(typeof error != 'undefined' && whisper_worker_error_count < 10){
+		if(typeof error != 'undefined' && whisper_worker_error_count < 3){
 			setTimeout(() => {
-				//console.log("attempting to restart whisper worker");
-				create_whisper_worker();
+				
+				if(window.microphone_enabled){
+					console.warn("attempting to restart whisper worker");
+					create_whisper_worker();
+				}
+				
 			},1000);
 		}
 		else{
@@ -2018,7 +2291,7 @@ function reset_whisper_transcription(){
 	//clear_whisper_speakers();
 	
 	setTimeout(() => {
-		if(window.whisper_worker != null && window.whisper_worker_busy == false && window.stt_recordings_in_buffer == 0 && window.microphone_enabled == false){
+		if(window.whisper_worker != null && window.whisper_worker_busy == false && window.stt_tasks_left == 0 && window.microphone_enabled == false){
 			//console.log("disposing of Whisper after transcribing a file");
 			window.dispose_whisper();
 		}
@@ -3866,10 +4139,6 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		
 	}
 	
-	
-	
-	
-	
 }
 window.whisper_snippets_to_text = whisper_snippets_to_text;
 
@@ -3880,7 +4149,146 @@ window.whisper_snippets_to_text = whisper_snippets_to_text;
 
 
 
+function create_whisper_options(task=null,language=null,target_language=null){
 
+	let segmentation = false;
+	if(task != null && typeof task.assistant == 'string' && task.assistant == 'scribe'){
+		segmentation = true;
+	}
+	else if(window.settings.assistant == 'scribe'){
+		segmentation = true;
+	}
+	
+	let quantized = null;
+
+
+	let options = {
+
+	    // Greedy
+	    top_k: 0,
+		do_sample: false,
+
+		// Sliding window
+		chunk_length_s:30,
+		stride_length_s:5,
+
+		//language: 'en',
+        //task: 'transcribe',
+
+		return_timestamps: true, //'word', // true for Scribe
+		force_full_sequences: false,
+
+	};
+
+
+
+	let model = "onnx-community/whisper-base";
+
+	if(window.ram > 0 && window.ram < 3000){
+		//options['quantized'] = true;
+	}
+
+	if(window.is_mobile == true){
+		//options['quantized'] = true;
+	}
+
+
+
+	/*
+	// There is a distil-mediun available, it might be interesting for systems with lots of ram
+	if(window.ram > 11000){
+		model = "onnx-community/whisper-small";
+	}
+	else 
+	
+	if(window.ram > 7000){
+		model = "onnx-community/whisper-small";
+	}
+	
+	else 
+	*/
+	if( window.ram > 4000){
+		model = "onnx-community/whisper-base";
+	}
+	else{
+		console.warn("create_whisper_options: setting model to whisper_tiny because of low RAM");
+		model = "onnx-community/whisper-tiny";
+	}
+	
+
+	if(window.is_mobile){
+		console.warn("create_whisper_options: setting model to whisper_tiny because is_mobile is true");
+		model = "onnx-community/whisper-tiny";
+	}
+	else{
+		console.log("not mobile, so not forcing whisper_tiny");
+	}
+	//window.is_mobile = true;
+	
+
+	// TODO DEBUG
+	//options['quantized'] = true;
+
+
+	if(typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe'].transcription_quality == 'string' && window.settings.assistants['scribe'].transcription_quality == 'Medium'){
+		//console.log("scribe quality was set to low, using quantized (mobile) version");
+		//quantized = true;
+	}
+
+	if(model != "onnx-community/whisper-tiny" && typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe'].transcription_quality == 'string' && window.settings.assistants['scribe'].transcription_quality == 'Fast'){
+		//console.log("scribe quality was set to low, using quantized (mobile) version");
+		//quantized = true;
+		console.log("changing model to\n\n>>> TURBO >>>\n\n");
+		model = 'onnx-community/whisper-large-v3-turbo';
+	}
+
+
+	language = 'en';
+	
+
+	if(language != 'en' || (window.settings.assistant == 'translator' && window.microphone_enabled)){ // could also be disabled, e.g. when doing a file transcription
+		console.log("forcing whisper to be multi-lingual since the assistant is translator and the microphone is enabled");
+		options['multilingual'] = true;
+		options['task'] = 'translate'; // subtask
+		options['language'] = language;
+	}
+
+	if(typeof options['language'] == 'undefined' && model != 'onnx-community/whisper-large-v3-turbo'){
+		model += ".en";
+	}
+
+	if(!model.endsWith('_timestamped')){
+		model += "_timestamped";
+		console.log("added _timestamped to model name: ", model);
+	}
+
+
+	// Currently no distil whisper used, but could in future try distil medium.
+	let isDistilWhisper = false;
+	if(model.indexOf('distil') != -1){
+		isDistilWhisper = true;
+	}
+
+    //options['chunk_length_s'] = window.is_mobile ? 20 : 30;
+    //options['stride_length_s'] = window.is_mobile ? 3 : 5;
+	
+    options['chunk_length_s'] = isDistilWhisper ? 20 : 30;
+    options['stride_length_s'] = isDistilWhisper ? 3 : 5;
+
+	
+	// TODO sliding window experiment: does this lower memory use on moble devices?
+	/*
+	if(typeof options['quantize'] == 'boolean' && options['quantize'] === true){
+		options['chunk_length_s'] = 10;
+		options['stride_length_s'] = 3;
+	}
+	*/
+
+	// e.g. onnx-community/whisper-base.en_timestamped
+
+	console.log("create_whisper_options:  model, options: ", model, options);
+	return {'model':model, 'quantized':quantized, 'options':options}
+}
 
 
 //
@@ -3892,17 +4300,21 @@ window.whisper_snippets_to_text = whisper_snippets_to_text;
 //
 
 function do_whisper_web(task=null,language=null, target_language=null, preload=false){
-	//console.log("in do_whisper_web.  task,language,preload: ", task, language, preload);
+	console.log("in do_whisper_web.  task,language,target_languag,preload: ", task, language, target_language, preload);
 	//console.error("TEMPORARY BLOCK OF DO_WHISPER_WEB");
 	//return false
+	/*
 	if(task != null && typeof task.preload == 'boolean'){
 		preload = task.preload;
 	}
+	*/
 	
+	//window.unload_llama_cpp();
 	
 	// DISABLING PRELOAD FOR NOW
-	preload = false;
+	//preload = false;
 	
+	/*
 	if(preload === true){
 		console.log("do_whisper_web:  doing a preload run");
 		
@@ -3911,16 +4323,23 @@ function do_whisper_web(task=null,language=null, target_language=null, preload=f
 			return false
 		}
 		
+		if(window.whisper_worker_busy){
+			console.error("do_whisper_web: was asked to do a preload, but window.whisper_worker_busy is true");
+			return false
+		}
+		
 		if(task == null){
 			task = {'assistant':window.settings.assistant}
 		}
 		
 		if(typeof task.recorded_audio == 'undefined'){
+			console.warn("do_whisper_web: preload: setting fake audio");
 			task['recorded_audio'] = new Float32Array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+			task['recording_end_time'] = Date.now();
 		}
 		
 		if(window.whisper_worker == null){
-			//console.log("do_whisper_web: creating Whisper worker first");
+			console.log("do_whisper_web: creating Whisper worker first");
 		
 			// create whisper worker
 			window.busy_loading_whisper = true;
@@ -3931,96 +4350,82 @@ function do_whisper_web(task=null,language=null, target_language=null, preload=f
 	}
 	else {
 		
-		if(task == null){
-			console.error("do_whisper_web: no valid task provided. Aborting.");
-			return false
-		}
-		if(window.whisper_worker_busy){
-			console.error("do_whisper_web was called while whisper worker was busy. Aborting.");
-			return false
-		}
-		if(typeof task.recorded_audio == 'undefined'){
-			console.error("do_whisper_web: task did not contain recorded_audio. Aborting.");
-			return false
-		}
-		if(task.recorded_audio.length < 1000){
-			console.error("do_whisper_web: task had very short recorded_audio. Aborting.  task.recorded_audio.length: ", task.recorded_audio.length);
-			return false
-		}
 		
-		if(window.whisper_worker == null){
-			window.whisper_worker_busy = true;
-			console.warn("do_whisper_web: window.whisper_worker was null. Have to create Whisper worker first - preload_whisper did not run? (likely file transcription)");
-		
-			// create whisper worker
-			create_whisper_worker();
-			//window.busy_loading_whisper = true;
-		}
+	}
+	*/
+	
+	if(task == null){
+		console.error("do_whisper_web: no valid task provided. Aborting.");
+		return false
+	}
+	if(window.whisper_worker_busy){
+		console.error("do_whisper_web was called while whisper worker was busy. Aborting.");
+		return false
+	}
+	if(typeof task.recorded_audio == 'undefined'){
+		console.error("do_whisper_web: task did not contain recorded_audio. Aborting.");
+		return false
+	}
+	if(task.recorded_audio.length < 1000){
+		console.error("do_whisper_web: task had very short recorded_audio. Aborting.  task.recorded_audio.length: ", task.recorded_audio.length);
+		return false
+	}
+	
+	if(window.whisper_worker == null){
 		window.whisper_worker_busy = true;
-		
-		task.state == 'doing_stt';
+		console.warn("do_whisper_web: window.whisper_worker was null. Have to create Whisper worker first - preload_whisper did not run? (likely file transcription)");
+	
+		// create whisper worker
+		create_whisper_worker();
+		//window.busy_loading_whisper = true;
 	}
 	
+	window.whisper_worker_busy = true;
+	task.state == 'doing_stt';
 	
 	
-	
-	let quantized = false;
-	let model = "onnx-community/whisper-tiny";
-	
-	if(window.ram > 0 && window.ram < 3000){
-		quantized = true
-	}
-	
-	if(window.is_mobile == true){
-		quantized = true;
-	}
-	
-	if(typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe'].transcription_quality == 'string' && window.settings.assistants['scribe'].transcription_quality == 'Medium'){
-		//console.log("scribe quality was set to low, using quantized (mobile) version");
-		quantized = true;
-	}
-	
+	let {model,quantized,options} = create_whisper_options(task,language,target_language);
 
-	if(window.ram > 11000){
-		model = "onnx-community/whisper-small";
-	}
-	else if(window.ram > 7000){
-		model = "onnx-community/whisper-small";
-	}
-	else if( window.ram > 1000){
-		model = "onnx-community/whisper-base";
-	}
-	// TEST
-	//quantized = true;
-	
-	let multilingual = false;
-	let subtask = 'transcribe';
-	
-	if(language == null && window.settings.language == 'en'){
-		language = 'en';
-	}
-	
-	if(window.settings.assistant == 'translator' && window.microphone_enabled == true){
-		//console.log("forcing whisper to be multi-lingual since the assistant is translator and the microphone is enabled");
-		multilingual = true;
-	}
-	
-	if( ( task != null && typeof task.assistant == 'string' && task.assistant == 'translator' && typeof task.output_language == 'string' && task.output_language == 'en' && typeof task.input_language == 'string' && task.input_language != 'en') || (typeof language == 'string' && language != 'en' && typeof target_language == 'string' && target_language == 'en')){
-		//console.log("do_whisper_web: setting task to directly translate");
-		subtask = 'translate';
-		multilingual = true;
+	console.log("do_whisper_web: model,quantized,options: ", model, quantized, options);
+
+	if( 
+		(
+			task != null 
+			&& typeof task.assistant == 'string'
+			&& task.assistant == 'translator' 
+			&& typeof task.output_language == 'string' 
+			&& task.output_language == 'en' 
+			&& typeof task.input_language == 'string' 
+			&& task.input_language != 'en'
+		) 
+		|| 
+		(
+			typeof options['language'] == 'string' 
+			&& options['language'] != 'en'  // options['language'] is only set if it's not english, so this is pretty much a given
+			&& typeof target_language == 'string' 
+			&& target_language == 'en'
+		)
+	){
+
+		console.log("do_whisper_web: setting task to directly translate");
+		if(typeof options['language'] != 'string' && typeof task.input_language == 'string' && task.input_language != 'en'){
+			options['language'] = task.input_language;
+			options['task'] = 'translate';
+			options['multilingual'] = true;
+		}
+
 		if(typeof target_language != 'string' && typeof task.output_language == 'string'){
 			target_language = task.output_language
 		}
 		if(task != null && typeof target_language == 'string'){
-			task['whisper_translated_to'] = target_language; // this value should still be there when it comes back from the worker.
+			task['whisper_translated_to'] = target_language; // this value should still be there when it comes back from the worker. TODO: Won't this always be English? As far as I know it's the only language Whisper can live-translate to.
 		}
 	}
 	
-	
+	/*
 	if(typeof window.settings.language == 'string'){
 		if(window.settings.language != 'en' || (typeof language == 'string' && language != 'en') ){
-			//console.log("do_whisper_web: going multi-lingual.  window.settings.language,language: ", window.settings.language, language);
+			console.log("do_whisper_web: going multi-lingual.  window.settings.language,language: ", window.settings.language, language);
 			multilingual = true;
 			if(typeof language != 'string'){
 				language = window.settings.language;
@@ -4042,37 +4447,51 @@ function do_whisper_web(task=null,language=null, target_language=null, preload=f
 			}
 		}
 	}
+	*/
 	
 	//console.log("do_whisper_web: multilingual: ", multilingual);
 	//console.log("do_whisper_web: subtask: ", subtask);
 	//console.log("do_whisper_web: language: ", language);
+	console.log("do_whisper_web: model: ", model);
+	console.log("do_whisper_web: is_mobile: ", window.is_mobile);
+	console.log("do_whisper_web: quantized: ", quantized);
+	console.log("do_whisper_web: options: ", JSON.stringify(options,null,4));
 	
 	//console.log("do_whisper_web: sending audio to whisper worker: ", task.recorded_audio);
 	
 	let whisper_message = {
 		'task':task,
 		'model':model,
+		'quantized':quantized,
+		'options':options,
+		/*
 		'multilingual':multilingual,
 		'quantized':quantized,
 		//'subtask': multilingual ? subtask : null,
 		'subtask':subtask, // always transcribe, as translation is handled separately
 		//'language': multilingual && language !== "auto" ? language : null,
 		'language': language,
+		*/
 		'mobile':window.is_mobile,
-		'speaker_translation':window.capitalizeFirstLetter(get_translation('speaker_name'))
+		'speaker_translation':window.capitalizeFirstLetter(get_translation('speaker_name')), // what the word 'Speaker' is in the current UI language. The whisper worker uses that to generate an initial name
 	}
-	
+	/*
 	if(preload === true){
 		whisper_message['task']['preload'] = true;
 		//whisper_message['action'] = 'preload';
 	}
+	*/
+	setTimeout(()=>{
+		window.whisper_worker.postMessage(whisper_message);
+		console.log("do_whisper_web: posted message to whisper_worker: ", whisper_message);
+	},100);
 	
-	window.whisper_worker.postMessage(whisper_message);
 	
 	return true
 
 }
 window.do_whisper_web = do_whisper_web;
+
 
 
 // clear Whisper's models from memory
@@ -4110,10 +4529,56 @@ window.dispose_whisper = dispose_whisper;
 
 function preload_whisper(task=null,language=null,target_language=null){
 	console.log("in preload_whisper.  task,language: ", task,language,target_language);
+	
+	//console.error("PRELOAD WHISPER IS BLOCKED");
+	//return
+	
+	/*
+	if(window.busy_loading_whisper){
+		console.error("preload_whisper: whisper seems to already be busy preloading");
+		return false
+	}
+	*/
+	
+	if(window.whisper_worker != null && (window.whisper_worker_busy == true || window.busy_loading_whisper)){
+		console.error("preload_whisper:  aborting, whisper_worker exists, and seems busy or is already loading");
+		return false
+	}
+	
+	if(window.stt_tasks_left > 0){
+		console.error("preload_whisper: aborting: there is already an STT task ready to go, so preloading whisper offers no benefit");
+		return false
+	}
+	
+	window.busy_loading_whisper = true;
+	//whisper_download_total_bytes = 0;
+	/*
 	if(task != null){
 		task['preload'] = true;
 	}
-	return do_whisper_web(task,language,target_language,true); // do preload version of do_whisper_web
+	*/
+	
+	const {model,quantized,options} = create_whisper_options(task,language,target_language);
+	console.log("preload_whisper: model,quantized,options: ", model,quantized,options);
+	
+	if(window.whisper_worker == null){
+		console.log("preload_whisper: creating Whisper worker first");
+		create_whisper_worker();
+	}
+	if(window.whisper_worker != null){
+		let preload_segmentation = false;
+		if(task != null && typeof task.assistant == 'string' && task.assistant == 'scribe'){
+			if(task.assistant == 'scribe'){
+				preload_segmentation = true;
+			}
+		}
+		else if(window.settings.assistant == 'scribe'){
+			preload_segmentation = true;
+		}
+		window.whisper_worker.postMessage({'action':'preload', 'preload_segmentation':preload_segmentation, 'model':model, 'quantized':quantized, 'options':options});
+	}
+	return true;
+	//return do_whisper_web(task,language,target_language,true); // do preload version of do_whisper_web
 }
 window.preload_whisper = preload_whisper;
 
@@ -4135,149 +4600,280 @@ window.preload_whisper = preload_whisper;
 //
 
 
-let tts_worker_lowest_progress = 0;
 let tts_worker_last_progress_update_time = 0;
-let tts_worker_files_progress = {};
+let tts_files = {};
+let previous_total_progress = 0;
+let tts_previous_percentage = 0;
+let tts_previous_percentage_timestamp = 0;
 
-function create_tts_worker(){
+async function create_tts_worker(){
 	//console.log("in create_tts_worker");
 	
 	window.tts_worker = null;
-	window.tts_worker = new Worker('./tts_worker2.js', {
+	window.tts_worker = new Worker('./tts_worker.js', {
 		type: 'module'
 	});
 	
-	return new Promise(function(resolve, reject) {
+	tts_worker_last_progress_update_time = 0;
+	tts_files = {};
+	previous_total_progress = 0;
+	tts_previous_percentage = 0;
+	tts_previous_percentage_timestamp = 0;
 	
-		let watchdog = setTimeout(() => {
-			//console.log("create_tts_worker timed out");
-			reject("create_tts_worker: timed out");
-			return
-		},15000);
+	let watchdog = setTimeout(() => {
+		//console.log("create_tts_worker timed out");
+		reject("create_tts_worker: timed out");
+		return null
+	},15000);
+	
+	//console.log("tts_module: window.tts_worker: ", window.tts_worker);
+
+	window.tts_worker.addEventListener('message', async (e) => {
+		//console.log("tts_module: received message from tts_worker: ", e.data);
 		
-		//console.log("tts_module: window.tts_worker: ", window.tts_worker);
-	
-		window.tts_worker.addEventListener('message', e => {
-			//console.log("tts_module: received message from tts_worker: ", e.data);
-			
-			if(typeof e.data.status == 'string' && e.data.status == 'exists'){
-				resolve("create_tts_worker: exists");
-				clearTimeout(watchdog);
-				document.body.classList.remove('doing-tts');
-				return
+		if(typeof e.data.status != 'string'){
+			console.error("tts_worker: received message did not have a status string: ", e.data);
+			return null
+		}
+		if(typeof e.data.status == 'string' && e.data.status == 'exists'){
+			clearTimeout(watchdog);
+			document.body.classList.remove('doing-tts');
+			//resolve("create_tts_worker: exists");
+			return null
+		}
+		
+		else if(e.data.status == 'initiate'){
+			//console.log("TTS worker returned initiate message for: ", e.data.file);
+		}
+		
+		else if(e.data.status == 'download'){
+			//console.log("TTS worker returned download start message. e.data: ", e.data);
+		}
+		
+		else if(e.data.status == 'progress'){
+			//console.log("TTS worker returned download progress message.  file,progress: ", e.data.file, e.data.progress);
+			/*
+			if(typeof e.data.file == 'string' && typeof e.data.progress == 'number'){
+				tts_files[e.data.file] = e.data;
 			}
-			
-			else if(typeof e.data.status == 'string' && e.data.status == 'initiate'){
-				//console.log("TTS worker returned initiate message");
-			}
-			
-			else if(typeof e.data.status == 'string' && e.data.status == 'download'){
-				//console.log("TTS worker returned download start message. e.data: ", e.data);
-			}
-			
-			else if(typeof e.data.status == 'string' && e.data.status == 'progress'){
-				//console.log("TTS worker returned download progress message.  file,progress: ", e.data.file, e.data.progress);
+			const files_count = keyz(tts_files).length;
+			if(files_count){
+				//console.log("tts download progress: ", tts_files);
+				let total_progress = Object.values(tts_files).reduce((a, b) => a + b, 0) / files_count;
+				total_progress = total_progress / 100;
 				
-				if(typeof e.data.file == 'string' && typeof e.data.progress == 'number'){
-					tts_worker_files_progress[e.data.file] = e.data.progress;
+				let tts_progress_el = document.getElementById('download-progress-speaker');
+				if(tts_progress_el == null){
+					//console.error("TTS (down)load progress element is missing, adding it now");
+					add_chat_message('current','speaker','download_progress#setting---');
 				}
-				const files_count = keyz(tts_worker_files_progress).length;
-				if(files_count){
-					//console.log("tts download progress: ", tts_worker_files_progress);
-					let total_progress = Object.values(tts_worker_files_progress).reduce((a, b) => a + b, 0) / files_count;
-					total_progress = total_progress / 100;
+			
+				if(tts_progress_el){
+					//console.log("updating tts (down)load progress");
+					tts_progress_el.value = total_progress;//e.data.progress;
+					
+					if(total_progress == 1){
+						//console.log("tts_model seems to be 100% loaded");
+						document.body.classList.add('tts-loaded'); // TODO is this used for anything?
+					
+						let download_progress_el = tts_progress_el.closest('.download-progress-chat-message');
+						if(download_progress_el){
+							download_progress_el.classList.add('download-complete-chat-message');
+						}
+						setTimeout(() => {
+							download_progress_el.remove();
+						},1000);
+						//tts_progress_el.removeAttribute('id');
+					}
+				}
+			}
+			*/
+			
+			tts_files[e.data.file] = e.data;
+			
+			let total_bytes = 0;
+			let loaded_bytes = 0;
+			let tts_file_names = keyz(tts_files);
+			if(tts_file_names.length > 4){
+				for(let w = 0; w < tts_file_names.length; w++){
+					if(typeof tts_files[tts_file_names[w]].total == 'number' && typeof tts_files[tts_file_names[w]].loaded == 'number'){
+						total_bytes += tts_files[tts_file_names[w]].total;
+						loaded_bytes += tts_files[tts_file_names[w]].loaded;
+					}
+					
+				}
+			}
+			//console.log("total tts bytes: ", total_bytes);
+			if(total_bytes > 5000000){
+				
+				let tts_percentage = Math.floor((loaded_bytes / total_bytes) * 100);
+			
+				if(tts_previous_percentage > tts_percentage){
+					tts_previous_percentage = 0;
+				}
+			
+				if(tts_percentage > tts_previous_percentage){
 					
 					let tts_progress_el = document.getElementById('download-progress-speaker');
 					if(tts_progress_el == null){
-						//console.error("TTS (down)load progress element is missing, adding it now");
-						add_chat_message('current','speaker','download_progress#setting---');
-					}
-				
-					if(tts_progress_el){
-						//console.log("updating tts (down)load progress");
-						tts_progress_el.value = total_progress;//e.data.progress;
-					
-						if(total_progress == 1){
-							//console.log("tts_model seems to be 100% loaded");
-							document.body.classList.add('tts-loaded');
-						
-							let download_progress_el = tts_progress_el.closest('.download-progress-chat-message');
-							if(download_progress_el){
-								download_progress_el.classList.add('download-complete-chat-message');
-							}
-							tts_progress_el.removeAttribute('id');
+						console.error("tts (down)load progress element is missing");
+						if(tts_percentage != 100){
+							add_chat_message('speaker','speaker','download_progress#setting---');
 						}
 					}
+					else{
+						
+						//console.log("updating tts (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
+						tts_progress_el.value = loaded_bytes / total_bytes; //e.data.progress / 100;
+						
+						if(loaded_bytes == total_bytes){
+							console.log("TTS fully loaded (loaded_bytes == total_bytes)");
+							tts_previous_percentage_timestamp = 0;
+							tts_previous_percentage = 0;
+							tts_files = {};
+							tts_progress_el.closest('.message').remove();
+							return;
+						}
+						
+						//console.log("\n\ntts: download %: ", tts_percentage);
+						
+						if(tts_previous_percentage_timestamp == 0){
+							//tts_previous_percentage_timestamp = Date.now();
+						}
+						else if(tts_percentage > 1){
+						
+							let tts_time_remaining_element = tts_progress_el.parentNode.querySelector('.time-remaining');
+							if(tts_time_remaining_element){
+								const delta = Date.now() - tts_previous_percentage_timestamp;
+								//console.log("tts_progress: time it took for 1% progress: ", delta);
+								const percent_remaining = 100 - tts_percentage;
+								//console.log("tts_download_progress: seconds remaining: ", (percent_remaining * delta) / 1000);
+								//tts_time_remaining_element.innerHTML = '<span></span>';
+						
+								let time_remaining = (percent_remaining * delta)/1000;
+								//console.log("tts load time_remaining: ", time_remaining);
+								tts_time_remaining_element.innerHTML = window.create_time_remaining_html(time_remaining);
+							}
+							
+							let tts_size_el = tts_progress_el.parentNode.querySelector('.ai-model-size');
+							if(tts_size_el){
+								if(total_bytes > (1024 * 1024 * 1024)){
+									tts_size_el.innerHTML = '<span class="ai-model-size-number">' + (Math.round(total_bytes / (1024 * 1024 * 10240))/10) + '</span><span class="ai-model-size-gb">GB</span>';
+								}
+								else{
+									tts_size_el.innerHTML = '<span class="ai-model-size-number">' + Math.round(total_bytes / (1024 * 1024)) + '</span><span class="ai-model-size-gb">MB</span>';
+								}
+								
+							}
+						
+						}
+						
+					}
+					tts_previous_percentage = tts_percentage;
+					tts_previous_percentage_timestamp = Date.now();
+					
 				}
-				
-				
-				
-				
 			}
-			
-			else if(typeof e.data.status == 'string' && e.data.status == 'ready'){
-				//console.log("TTS worker is READY");
-				window.currently_loaded_assistant = 'speaker';
-				document.body.classList.add('model-loaded');
-			}
-			
-			else if(typeof e.data.status == 'string' && e.data.status == 'done'){
-				//console.log("TTS worker returned DONE");
-			}
-			
-			// status: complete
-			else if(typeof e.data.task == 'object' && e.data.task != null && typeof e.data.big_audio_array != 'undefined'){
-				
-				//console.log("create_tts_worker: received big_audio_array, calling handle_completed_task");
-				let audio_combo = {'big_audio_array':e.data.big_audio_array}
-				if(typeof e.data.wav_blob != 'undefined'){
-					//console.log("worker returned a wav_blob");
-					audio_combo['wav_blob'] = e.data.wav_blob;
-				}
-				
-				window.handle_completed_task(e.data.task, audio_combo);
-				window.tts_worker_busy = false;
-				document.body.classList.remove('doing-tts');
-				/*
-				if(window.mp3_worker != null){
-					window.mp3_worker.postMessage({'action':'encode','tts_counter':e.data.tts_counter,'data':e.data});
-				}
-				*/
-				
-			}
-			else if(typeof e.data.error == 'string'){
-				console.error("received error from tts worker: ", e.data.error);
-				window.tts_worker_busy = false;
-				document.body.classList.remove('doing-tts');
-			}
-			
 			else{
-				console.error("tts worker fell through, returned unexpected data: ", e.data);
-				window.tts_worker_busy = false;
-				document.body.classList.remove('doing-tts');
+				//console.error("tts loading: total_bytes is 0");
 			}
 			
-		});
-
-		window.tts_worker.addEventListener('error', (error) => {
-			console.error("ERROR: tts_module: tts_worker error (terminating!): ", error);
-			window.tts_worker_busy = true;
-			window.tts_worker.terminate();
-			document.body.classList.remove('doing-tts');
+		}
+		
+		else if(e.data.status == 'ready'){
+			console.log("TTS worker is READY");
+			window.currently_loaded_assistant = 'speaker';
+			document.body.classList.add('model-loaded');
+			//window.tts_worker_loading = false;
+			window.busy_loading_tts = false;
 			
-			setTimeout(() => {
-				//console.log("attempting to restart tts worker");
-				//window.tts_worker_busy = false;
-				create_tts_worker();
-			},3000);
-		});
+		}
 		
+		else if(e.data.status == 'done'){
+			console.log("TTS worker returned DONE message (file loaded)");
+		}
 		
-	
+		else if(e.data.status == 'disposed'){
+			console.log("TTS worker sent message that it has disposed of the AI models");
+			//if(typeof e.data.task != 'undefined' && e.data.task != null){
+			//	window.handle_completed_task(e.data.task,null,{'state':'interrupted'});
+			//}
+			
+			reset_tts();
+		}
+		
+		// status: complete
+		else if(e.data.status == 'complete' && typeof e.data.task == 'object' && e.data.task != null && typeof e.data.big_audio_array != 'undefined'){
+			
+			console.log("create_tts_worker: received big_audio_array, calling handle_completed_task");
+			let audio_combo = {'big_audio_array':e.data.big_audio_array}
+			if(typeof e.data.wav_blob != 'undefined'){
+				//console.log("worker returned a wav_blob");
+				audio_combo['wav_blob'] = e.data.wav_blob;
+			}
+			
+			await window.handle_completed_task(e.data.task, audio_combo);
+			window.tts_worker_busy = false;
+			window.busy_loading_tts = false;
+			document.body.classList.remove('doing-tts');
+			last_tts_task = null;
+			return null
+			/*
+			if(window.mp3_worker != null){
+				window.mp3_worker.postMessage({'action':'encode','tts_counter':e.data.tts_counter,'data':e.data});
+			}
+			*/
+			
+		}
+		else if(e.data.status == 'error'){
+			if(typeof e.data.error == 'string'){
+				console.error("received error from tts worker: ", e.data.error);
+			}
+			
+			//window.tts_worker_busy = false;
+			//document.body.classList.remove('doing-tts');
+			
+			if(typeof e.data.task != 'undefined' && e.data.task != null){
+				await window.handle_completed_task(e.data.task, null, {'state':'failed'});
+			}
+			
+			else if(last_tts_task != null){
+				console.warn("falling back to last_tts_task");
+				await window.handle_completed_task(last_tts_task, null,{'state':'failed'});
+			}
+			
+			reset_tts();
+		}
+		
+		else{
+			console.error("TTS worker message fell through: ", e.data);
+			window.tts_worker_busy = false;
+			document.body.classList.remove('doing-tts');
+			if(typeof e.data.task != 'undefined' && e.data.task != null){
+				await window.handle_completed_task(e.data.task, null,{'state':'failed'});
+			}
+			/*
+			else if(last_tts_task != null){
+				await window.handle_completed_task(last_tts_task, null,{'state':'failed'});
+			}
+			*/
+			
+			reset_tts();
+		}
+		
 	});
 	
 	
-
+	window.tts_worker.addEventListener('error', (error) => {
+		console.error("ERROR: tts_module: tts_worker error (terminating!): ", error);
+		setTimeout(() => {
+			console.log("attempting to restart tts worker");
+			//window.tts_worker_busy = false;
+			//create_tts_worker();
+			reset_tts();
+		},3000);
+		
+	});
 	
 }
 window.create_tts_worker = create_tts_worker;
@@ -4285,6 +4881,23 @@ window.create_tts_worker = create_tts_worker;
 //create_tts_worker();
 
 
+async function reset_tts(){
+	console.log("in reset_tts");
+	console.warn('in reset_tts');
+	window.tts_worker.terminate();
+	window.tts_worker = null;
+	window.tts_worker_busy = false;
+	window.busy_loading_tts = false;
+	
+	document.body.classList.remove('doing-tts');
+	
+	if(last_tts_task != null){
+		console.warn('reset_tts');
+		await window.handle_completed_task(last_tts_task, null,{'state':'failed'});
+		last_tts_task = null;
+	}
+	
+}
 
 
 // Generate speech
@@ -4295,148 +4908,187 @@ window.create_tts_worker = create_tts_worker;
 window.do_tts = async function (task){ // tts_queue_item
 	//console.log("in do_tts. Task: ", task);
 	
-	return new Promise((resolve, reject) => {
-		if(typeof task == 'undefined' || task == null){
-			console.error("do_tts: provided task was invalid: ", task);
-			reject(false);
+	if(typeof task == 'undefined' || task == null){
+		console.error("do_tts: provided task was invalid: ", task);
+		return false
+	}
+
+	if(window.tts_worker_busy == true){
+		console.error("do_tts: ABORTING. window.tts_worker_busy was already true. task: ", task);
+		return false
+	}
+
+	if(typeof task.sentence != 'string'){
+		console.error("do_tts: provided task has no sentence to speak: ", task);
+		return false
+	}
+	
+	if(task.sentence.replaceAll('\n').trim() == ''){
+		console.error("do_tts: provided task has empty sentence: ", task);
+		return false
+	}
+	
+	if(typeof task.speech_interrupted == 'boolean' && task.speech_interrupted == true){
+		console.error("do_tts: aborting, provided task had speech_interrupted set to true: ", task);
+		return false
+	}
+
+
+	if(typeof task.recorded_audio != 'undefined'){
+		console.warn("do_tts: noticed that the task still had raw recorded_audio");
+	}
+	window.tts_worker_busy = true;
+
+	let target_language = 'en';
+
+	/*
+	else{
+		target_language = window.settings.language;
+	}
+	*/
+
+	let voice = 'basic';
+	if(typeof task.voice == 'string'){
+		//console.log("do_tts: using voice from task: ", task.voice);
+		voice = task.voice;
+	}
+	else if(typeof window.settings.voice == 'string'){
+		//console.log("do_tts: falling back to voice from settings: ", task.voice);
+		voice = window.settings.voice
+	}
+
+
+
+	const choose_tts = async (task) => {
+		//console.log("in choose_tts. task: ", task);
+		if(typeof task.output_language != 'string'){
+			console.error("choose_tts: task.output_language must be a string. task: ", task);
 			return false
 		}
-	
-		if(window.tts_worker_busy == true){
-			console.error("do_tts: ABORTING. window.tts_worker_busy was already true. task: ", task);
-			reject(false);
-			return false
-		}
-	
-		if(typeof task.sentence != 'string'){
-			console.error("do_tts: provided task has no sentence to speak: ", task);
-			reject(false);
-			return false
-		}
-		
-		if(task.sentence.replaceAll('\n').trim() == ''){
-			console.error("do_tts: provided task has empty sentence: ", task);
-			reject(false);
-			return false
-		}
-	
-	
-		if(typeof task.recorded_audio != 'undefined'){
-			console.warn("do_tts: noticed that the task still had raw recorded_audio");
-		}
-		window.tts_worker_busy = true;
-	
-		let target_language = 'en';
-	
-		/*
-		else{
-			target_language = window.settings.language;
-		}
-		*/
-	
-		let voice = 'basic';
-		if(typeof task.voice == 'string'){
-			//console.log("do_tts: using voice from task: ", task.voice);
-			voice = task.voice;
-		}
-		else if(typeof window.settings.voice == 'string'){
-			//console.log("do_tts: falling back to voice from settings: ", task.voice);
-			voice = window.settings.voice
-		}
-	
-	
-	
-		const choose_tts = async (task) => {
-			//console.log("in choose_tts. task: ", task);
-			if(typeof task.output_language != 'string'){
-				console.error("choose_tts: task.output_language must be a string. task: ", task);
-				reject(false);
-				return false
+		if(task.output_language == 'en' && voice != 'basic'){
+			
+			if(window.tts_worker == null){
+				console.warn("do_tts:  need to create tts_worker first");
+				window.busy_loading_tts = true;
+				await create_tts_worker();
+				//window.tts_worker_busy = false;
+				//window.busy_loading_tts = false; // makes it useles, but it's not really needed anyway
 			}
-			if(task.output_language == 'en' && voice != 'basic'){
-				if(window.tts_worker == null){
-					console.warn("do_tts:  need to create tts_worker first");
-					window.busy_loading_tts = true;
-					await create_tts_worker();
-					window.busy_loading_tts = false;
-				}
-				if(window.tts_worker){
-					console.warn("do_tts: window.tts_worker seems to exist: ", window.tts_worker);
-					document.body.classList.add('doing-tts');
-					tts_worker.postMessage({'task':task});
-					resolve(true);
-					return true
-				}
-				else{
-					console.error("do_tts: window.tts_worker was still null");
-					window.tts_worker_busy = false;
-					reject(false);
-					return false
-				}
-			}
-			else if(window.browser_synth){
-				console.warn("do_tts: calling browser_speak with task: ", task);
-				window.browser_speak(task);
-				resolve(true);
+			
+			if(window.tts_worker){
+				console.warn("do_tts: window.tts_worker seems to exist, sending it the task: ", window.tts_worker, task);
+				document.body.classList.add('doing-tts');
+				last_tts_task = task;
+				tts_worker.postMessage({'task':task});
 				return true
 			}
 			else{
-				console.warn("do_tts: browser_speak also not an option: ", task);
-				reject(false);
+				console.error("do_tts: window.tts_worker was still null");
+				window.tts_worker_busy = false;
+				window.busy_loading_tts = false;
 				return false
 			}
 		}
-	
-	
-		if( (typeof task.sentence == 'string' && task.sentence == 'Hello World') || (typeof task.prompt == 'string' && task.prompt == 'Hello World')){
-			task.output_language = 'en';
-		}
-	
-		if(typeof task.output_language == 'string'){
-			//console.log("do_tts: task.output_language was already provided, so calling choose_tts immediately.  task.output_language: ", task.output_language);
-			choose_tts(task);
+		else if(window.browser_synth){
+			console.warn("do_tts: calling browser_speak with task: ", task);
+			window.browser_speak(task);
+			return true
 		}
 		else{
-			//if(typeof ask.state == 'string' && task.state == 'should_tts')
-			add_script('./js/eld.M60.min.js')
-			.then((value) => {
-
-				//console.log("do_tts: loaded language detection script? value: ", value);
-				//console.log("do_tts: language detection script: eld.info: ", eld.info() );
-				try{
-					let language_detection_result = eld.detect(task.sentence);
-					//console.log("do_tts: detect_language: language_detection_result: ", language_detection_result);
-					//console.log("do_tts: language detection scores: ", language_detection_result.getScores());
-					if(typeof language_detection_result.language == 'string' && language_detection_result.isReliable() && task.sentence.length > 20){
-						//console.log("do_tts: language detection sis reliable. language detected: ", language_detection_result.language);
-						task.output_language = language_detection_result.language;
-					}
-					else{
-						task.output_language = window.settings.language;
-					}
-					choose_tts(task);
-				}
-				catch(err){
-					console.error("do_tts: doing language detection caused an error: ", err);
-					//window.tts_worker_busy = false;
-					task.output_language = window.settings.language;
-					choose_tts(task);
-				}
-
-			})
-			.catch((err) => {
-				console.error("do_tts: caught general error in trying to load script to detect language of sentence: ", err);
-				window.tts_worker_busy = false;
-				reject(false);
-			})
+			console.warn("do_tts: browser_speak also not an option: ", task);
+			return false
 		}
-	})
+	}
+
+
+	if( 
+		(typeof task.sentence == 'string' && task.sentence == 'Hello World') 
+		|| (typeof task.prompt == 'string' && task.prompt == 'Hello World')
+	){
+		task.output_language = 'en';
+	}
+
+	if(typeof task.output_language == 'string'){
+		console.log("do_tts: task.output_language was already provided, so calling choose_tts immediately.  task.output_language: ", task.output_language);
+		const chosen = await choose_tts(task);
+		return chosen;
+	}
+	else{
+		//if(typeof ask.state == 'string' && task.state == 'should_tts')
+		try{
+			await add_script('./js/eld.M60.min.js');
+			
+			console.log("do_tts: loaded language detection script");
+			//console.log("do_tts: language detection script: eld.info: ", eld.info() );
+			try{
+				let language_detection_result = eld.detect(task.sentence);
+				console.log("do_tts: detect_language: language_detection_result: ", language_detection_result);
+				//console.log("do_tts: language detection scores: ", language_detection_result.getScores());
+				if(typeof language_detection_result.language == 'string' && language_detection_result.isReliable() && task.sentence.length > 20){
+					//console.log("do_tts: language detection sis reliable. language detected: ", language_detection_result.language);
+					task.output_language = language_detection_result.language;
+				}
+				else{
+					task.output_language = window.settings.language;
+				}
+				const chosen = await choose_tts(task);
+				return chosen;
+			}
+			catch(err){
+				console.error("do_tts: doing language detection caused an error: ", err);
+				//window.tts_worker_busy = false;
+				task.output_language = window.settings.language;
+				const chosen = await choose_tts(task);
+				return chosen;
+			}
+			
+		}
+		catch(err){
+			console.error("do_tts: caught error loading language detection script: ", err);
+			try{
+				task.output_language = window.settings.language;
+				const chosen = await choose_tts(task);
+				return chosen;
+			}
+			catch(err){
+				console.error('do_tts: double error: ', err);
+				window.tts_worker_busy = false;
+				return false
+			}
+			
+		}
+		
+	}
 	
 }
 
 
-
-
+let dispose_tts_timeout = null;
+function dispose_tts(){
+	console.log('in dispose_tts');
+	
+	if(window.tts_worker != null){
+	    window.tts_worker.postMessage({
+			'action':'dispose'
+	    });
+	}
+	
+	if(dispose_tts_timeout != null){
+		clearTimeout(dispose_tts_timeout);
+		dispose_tts_timeout = null;
+	}
+	
+	dispose_tts_timeout = setTimeout(() => {
+		if(window.tts_worker != null){
+			console.error("dispose_tts: had to forcefully kill tts worker, as dispose seemingly took longer than a second");
+			window.tts_worker.terminate();
+			window.tts_worker = null;
+			window.tts_worker_busy = false;
+		}
+		dispose_tts_timeout = null;
+	},1000);
+}
+window.dispose_tts = dispose_tts;
 
 
 
@@ -4623,7 +5275,12 @@ window.do_audio_player = async function (task){
 			//console.log("do_audio_player: AUDIO STOPPED PLAYING");
 			window.audio_player.stop();
 			window.audio_player = null;
-			window.remove_highlight_selection();
+			if(document.body.classList.contains('playing-document') || document.body.classList.contains('fairytale')){
+				window.remove_highlight_selection();
+			}
+			
+			
+			
 			//window.audio_to_play.splice(0,1);
 			window.handle_completed_task(task,true);
 			window.audio_player_busy = false;
@@ -4671,8 +5328,21 @@ window.do_audio_player = async function (task){
 		// start the source playing
 		window.last_time_audio_started = my_start_time;
 		if(window.microphone_enabled){
-			//console.log("temporarily pausing VAD in order to play audio");
-			window.pause_vad();
+			
+			if(
+				typeof window.settings.interrupt_speaking == 'string' 
+				&& (
+					window.settings.interrupt_speaking == 'Yes' 
+					|| (window.settings.interrupt_speaking == 'Auto' && window.ram > 4000) 
+				)
+			){
+				//console.log("temporarily pausing VAD in order to play audio without interruption");
+				console.warn("NOT disabling VAD while playing audio. window.settings.interrupt_speaking: ", window.settings.interrupt_speaking);
+			}
+			else{
+				window.pause_vad();
+			}
+			
 		}
 		window.audio_player.start();
 		if(duration > 300){

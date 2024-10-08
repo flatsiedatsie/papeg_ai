@@ -27,11 +27,7 @@
 		}
 		//console.log("is a service worker controlling? ", controlling);
 		//console.log("window.crossOriginIsolated: ", window.crossOriginIsolated);
-		/*
-		if(controlling){
-			
-		}
-		*/
+
 		
 		if(document.pictureInPictureEnabled){
 			document.body.classList.add('pip-available');
@@ -175,9 +171,9 @@
 		window.temperature = 0.7;
 		window.conversations = {};
 		window.developer_response_count = 0;
-		window.tts_queue = []; // deprecated
+		//window.tts_queue = []; // deprecated
 		
-		window.audioCtx = null;
+		window.audioCtx = null; // deprecated
 		window.transcribing = false;
 		
 		window.used_memory = 0;
@@ -187,7 +183,7 @@
 		//window.prompt_responded_counter = 0;
 		window.task_queue = [];
 		window.last_chat_response = null;
-		window.current_task = null; // what the selected AI is working on
+		window.current_task = null; // what the selected AI is working on // Deprecated in favour of:
 		window.current_tasks = {}; // what the selected AI is working on
 		
 		window.docs = {};
@@ -259,7 +255,7 @@
 		//window.is_mobile = true;
 		
 		
-		//console.log("is_mobile: ", window.is_mobile);
+		console.log("is_mobile: ", window.is_mobile);
 		if(window.is_mobile == true){
 			document.body.classList.add('mobile');
 			window.use_simple_vad = true;
@@ -437,18 +433,13 @@
 						}
 						*/
 						//handle_script_loaded(path);
-						resolve(true);
+						delay(5)
+						.then(() => {
+							resolve(true);
+						})
+						
 						//return true
 					});
-	  
-	  			    /*
-	  			    if(window.added_scripts.indexOf(path) == -1){
-	  			    	//console.log("add_script: something strange is going: almost added script that was already added: ", path);
-	  			    }
-					else{
-	  			    	document.body.appendChild(new_script_el); 
-	  			    }
-					*/
 					document.body.appendChild(new_script_el); 
 					
 				}
@@ -475,13 +466,6 @@
 			return false
 		}
 
-		/*
-		setTimeout(() => {
-			//console.log("adding web_llm script delayed");
-			window.add_script('./web_llm.js');
-		},5000);
-		*/
-
 
 
 		function handle_script_loaded(path){
@@ -490,24 +474,6 @@
 				if(window.added_scripts.indexOf(path) == -1){
 					window.added_scripts.push(path);
 				}
-				/*
-				if(path == './web_llm.js'){
-					//console.log("web_llm script has loaded");
-					//console.log("window.settings.assistant: ", window.settings.assistant);
-			
-					if(window.chatUI){
-						console.error("window.chatUI exists: ", window.chatUI);
-						if(window.settings.assistant == 'mistral'){
-							//console.log("attempting to load Mistral 7B via web_llm");
-							window.chatUI.load_model('Mistral-7B-Instruct-v0.2-q4f16_1');
-						}
-					}
-					else{
-						console.error("web_llm doesn't seem to have actually loaded");
-					}
-			
-				}
-				*/
 			}
 		}
 		
@@ -597,9 +563,7 @@
 					window.settings.output_language = 'nl';
 				}
 				
-				window.settings.assistants['fietje2'] = {'selected':true};
-				
-				
+				window.settings.assistants['fietje3'] = {'selected':true};
 				save_settings();
 			}
 			else if(browser_lang.toLowerCase() == 'de' || browser_lang.startsWith('de-')){
@@ -777,7 +741,7 @@
 		
 	
 		function check_cache() {
-			//console.log("in check_cache");
+			console.log("in check_cache");
 			return new Promise(function(resolve,reject) {
 			    try {
 					
@@ -1126,6 +1090,7 @@
 			console.log("window.idle: ", window.idle);
 			console.log("window.active_section: ", window.active_section);
 			console.log("window.active_destination: ", window.active_destination);
+			console.log("window.busy_doing_blueprint_task: ", window.busy_doing_blueprint_task);
 			
 			console.log("\nDOCS & FILES");
 			console.log("window.settings.docs.open: ", window.settings.docs.open);
@@ -1146,7 +1111,9 @@
 				}
 			}
 			else{
-				console.error("current_file_name not in files: ", typeof current_file_name, current_file_name);
+				if(current_file_name != unsaved_file_name){
+					console.error("current_file_name not in files: ", typeof current_file_name, current_file_name);
+				}
 			}
 			console.log("playground_live_backups: ", playground_live_backups);
 			console.log("playground_saved_files: ", playground_live_backups);
@@ -1161,6 +1128,7 @@
 			console.log("window.llama_cpp_model_being_loaded: ", window.llama_cpp_model_being_loaded);
 			console.log("window.currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
 			console.log("window.llama_cpp_busy: ", window.llama_cpp_busy);
+			console.log("window.llama_cpp_fresh: ", window.llama_cpp_fresh);
 			console.log("window.doing_llama_cpp_refresh: ", window.doing_llama_cpp_refresh);
 			if(window.llama_cpp_app){
 				console.log("window.llama_cpp_app: ", window.llama_cpp_app);
@@ -1174,7 +1142,7 @@
 			console.log("window.web_llm_busy: ", window.web_llm_busy);
 			console.log("window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
 			console.log("window.doing_web_llm_refresh: ", window.doing_web_llm_refresh);
-			console.log("window.chatUI: ", window.chatUI);
+			console.log("window.web_llm_engine: ", window.web_llm_engine);
 			
 			console.log("\nOLLAMA");
 			console.log("window.ollama_online: ", window.ollama_online);
@@ -1191,17 +1159,30 @@
 			console.warn("window.task_queue: ");
 			console.warn(window.task_queue);
 			console.warn("window.current_tasks: ", window.current_tasks);
+			console.log("window.stt_tasks_left: ", window.stt_tasks_left);
+			console.log("window.tts_tasks_left: ", window.tts_tasks_left);
 			
 			console.log("window.microphone_enabled: ", window.microphone_enabled);
 			console.log("window.speaker_enabled: ", window.speaker_enabled);
+			console.log("window.tts_worker_busy: ", window.tts_worker_busy);
+			console.log("window.audio_player_busy: ", window.audio_player_busy);
+			
+			console.log("\nVAD");
 			console.log("window.myvad: ", window.myvad);
+			console.log("window.busy_recording_simple_vad: ", window.busy_recording_simple_vad);
+			console.log("window.skip_first_vad_recording: ", window.skip_first_vad_recording);
+			
+			
+			
+			console.log("\nWHISPER");
+			console.log("window.whisper_worker: ", window.whisper_worker);
+			console.log("window.whisper_loading: ", window.whisper_loading);
+			console.log("window.busy_loading_whisper: ", window.busy_loading_whisper);
+			console.log("window.whisper_loaded: ", window.whisper_loaded);
+			console.log("window.whisper_worker_busy: ", window.whisper_worker_busy);
 			console.log("window.current_scribe_voice_parent_task_id: ", window.current_scribe_voice_parent_task_id);
 			
-			console.log("window.settings.auto_detect_input_language: ", window.settings.auto_detect_input_language);
-			console.log("window.diffusion_worker: ", window.diffusion_worker);
 			
-			window.used_memory = check_memory({},true);
-			console.log("window.used_memory: ", window.used_memory);
 			
 			console.log("\nRAG");
 			console.log("window.selected_rag_documents: ", window.selected_rag_documents);
@@ -1214,7 +1195,12 @@
 			console.log("window.image_to_text_worker_loaded: ", window.image_to_text_worker_loaded);
 			console.log("\n")
 			console.log("")
+			console.log("window.settings.auto_detect_input_language: ", window.settings.auto_detect_input_language);
+			console.log("window.diffusion_worker: ", window.diffusion_worker);
 			
+			window.used_memory = check_memory({},true);
+			console.log("window.used_memory: ", window.used_memory);
+			console.log("")
 			
 			
 			
@@ -1414,4 +1400,18 @@
 		
 		
 		
-console.log("second loaded");
+console.log("early loaded");
+
+
+
+
+/*
+window.onbeforeunload = function() {
+	console.log("BEFORE UNLOAD");
+	if(window.whisper_worker != null){
+		console.log("BEFORE UNLOAD:terminating whisper worker");
+		window.whisper_worker.terminate();
+	}
+	return '';
+};
+*/

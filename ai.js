@@ -144,14 +144,16 @@ window.assistants = {
 		},
 		"examples":{
 			'en':[
-				{"title":"Astronaut","prompt":"High-quality digital art, ultra-detailed, professional, clear, high contrast, high saturation, vivid deep blacks, crystal clear, ((rocket man in space)), wearing a full helmet and leather jacket, leather gloves, standing in front of an advanced high-tech space rocket, surrounded by the vastness of outer space, with intense, vibrant colors, colorful, dark, modern art style, the rocket illuminated by the cosmic light, the rocketman standing solo against the cosmic backdrop, bokeh effect creating a blurry background, photography-style composition, on eye level, masterpiece.","action":"prompt"},
-				{"title":"Van Gogh","prompt":"A painting of hot air balloons flying over a small French town, in the style of Vincent van Gogh's Starry Night.","action":"prompt"},
+				{"title":"👨‍🚀","prompt":"High-quality digital art, ultra-detailed, professional, clear, high contrast, high saturation, vivid deep blacks, crystal clear, ((rocket man in space)), wearing a full helmet and leather jacket, leather gloves, standing in front of an advanced high-tech space rocket, surrounded by the vastness of outer space, with intense, vibrant colors, colorful, dark, modern art style, the rocket illuminated by the cosmic light, the rocketman standing solo against the cosmic backdrop, bokeh effect creating a blurry background, photography-style composition, on eye level, masterpiece.","action":"prompt"},
+				{"title":"🎨","prompt":"A painting of hot air balloons flying over a small French town, in the style of Vincent van Gogh's Starry Night.","action":"prompt"},
 				{"title":"Paris","prompt":"autumn in paris, ornate, beautiful, atmosphere, vibe, mist, smoke, fire, chimney, rain, wet, pristine, puddles, melting, dripping, snow, creek, lush, ice, bridge, forest, roses, flowers, by Stanley Artgerm Lau, Greg Rutkowski, Thomas Kinkade, Alphonse Mucha, Loish, Norman Rockwell","action":"prompt"},
 				{"title":"B.A.","prompt":"B.A. Baracus, gold chains, mohawk, muscles, in the style of Vincent van Gogh's Sunflowers","action":"prompt"},
+				{"title":"🤼‍♂️","prompt":"team advanced group wrestling contact contortionist battle show","action":"prompt"},
+				
 			],
 			'nl':[
-				{"title":"Astronaut","prompt":"Een foto van een astronaut die op een paard rijdt","action":"prompt"},
-				{"title":"Van Gogh","prompt":"Een schilderij van heteluchtbalonnen die boven een klein frans dorpje zweven, in de stijl van Vincent van Gogh's Sterrennacht","action":"prompt"},
+				{"title":"👨‍🚀","prompt":"Een foto van een astronaut die op een paard rijdt","action":"prompt"},
+				{"title":"🎨","prompt":"Een schilderij van heteluchtbalonnen die boven een klein frans dorpje zweven, in de stijl van Vincent van Gogh's Sterrennacht","action":"prompt"},
 				{"title":"Parijs","prompt":"herfst in Parijs, rijk, schoonheid, atmosfeer, stemmig, mist, rook, vuur, schoorsteen, regen, nat, perfect, waterplassen, smelten, druppelen, sneeuw, kreek, ornaat, ijs, brug, bos, rozen, bloemen, door Stanley Artgerm Lau, Greg Rutkowski, Thomas Kinkade, Alphonse Mucha, Loish, Norman Rockwell","action":"prompt"}
 			]
 		},
@@ -332,7 +334,10 @@ window.assistants = {
 	
 	
 	
-	
+	"divider_language_specialists":{
+		"i18n":"Language_specialists",
+		"type":"divider",
+	},
 	
 	
 	
@@ -653,7 +658,7 @@ window.assistants = {
 		"languages":['de'], // technically it also supports English, but there are wayyy better models for English available
 		"initial_example_prompt":"Was ist die Hauptstadt von Marokko?",
 		"examples":{
-			'all':[{"title":"Smallest planet","prompt":"Was ist der kleinste Planet in unserem Sonnensystem?","action":"prompt"}]
+			'all':[{"title":"🪐","prompt":"Was ist der kleinste Planet in unserem Sonnensystem?","action":"prompt"}]
 		},
 		"size":1.6,
 		"temperature":0.7,
@@ -684,7 +689,7 @@ window.assistants = {
 		"model_type":"chat",
 		"initial_example_prompt":"Was ist die Hauptstadt von Marokko?",
 		"examples":{
-			'all':[{"title":"Smallest planet","prompt":"Was ist der kleinste Planet in unserem Sonnensystem?","action":"prompt"}]
+			'all':[{"title":"🪐","prompt":"Was ist der kleinste Planet in unserem Sonnensystem?","action":"prompt"}]
 		},
 		"media":["text"],
 		"size":0.5,
@@ -712,6 +717,44 @@ window.assistants = {
 	
 	// /https://huggingface.co/eryk-mazus/polka-1.1b-chat-gguf/resolve/main/polka-1.1b-chat-Q8_0.gguf
 	
+	
+	"polanka_polish":{
+		"name":"Polanka Polish",
+		"real_name":"Polanka Qwen2 1.5B",
+		"description":"",
+		"icon":"tiny_llama_polish",
+		"download_url":"https://huggingface.co/BoscoTheDog/polanka_qwen2_Q4_0_chunked/resolve/main/polanka_qwen2_Q4_0-00001-of-00005.gguf",
+		//"config_url":"BoscoTheDog/polanka_qwen2_Q4_0_chunked", //"TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+		"model_file_name":"polanka_qwen2_Q4_0-00005-of-00005.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://www.reddit.com/r/LocalLLaMA/comments/1fpc6um/polish_llm_15b_continual_pretrained_on_single_gpu/",
+		"type":"polish",
+		"languages":["pl"],
+		"initial_example_prompt":"Jaka jest stolica Maroka?",
+		"examples":{
+			'all':[{"title":"🪐","prompt":"Jaka jest najmniejsza planeta w naszym Układzie Słonecznym?","action":"prompt"}]
+		},
+		"model_type":"instruct",
+		"media":["text"],
+		"size":1,
+		"temperature":0.7,
+		"context_size":131072,
+		"context":2048,
+		//"template":"im_start_im_end", // web_llm handles prompt wrapping
+		//"chat_template":"{% for message in messages %}\n{% if message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'system' %}\n{{ '<|system|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}",
+		//"penalty_alpha": 0.5,
+		//"top_k": 4,
+		//"repetition_penalty": 1.01,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false
+		//"system_prompt":"You are a helpful assistant that always answers in the Polish language."
+	},
+	
+	
 	"tiny_llama_polish":{
 		"name":"TinyLlama Polish",
 		"real_name":"TinyLlama 1.1B Polka", //  Chat
@@ -728,6 +771,9 @@ window.assistants = {
 		"type":"polish",
 		"languages":["pl"],
 		"initial_example_prompt":"Jaka jest stolica Maroka?",
+		"examples":{
+			'all':[{"title":"🪐","prompt":"Jaka jest najmniejsza planeta w naszym Układzie Słonecznym?","action":"prompt"}]
+		},
 		"model_type":"chat",
 		"media":["text"],
 		"size":1.2,
@@ -895,12 +941,45 @@ window.assistants = {
 	
 	
 	
+	// JAPANESE
+	
+	"gemma_2_2b_japanese":{
+		"name":"Gemma 2 2B JPN",
+		"real_name":"Gemma 2 2B JPN",
+		"description":"",
+		"icon":"japanese",
+		"download_url":"https://huggingface.co/BoscoTheDog/gemma2_it_2b_jpn_Q4_K_M_chunked/resolve/main/gemma2_it_2b_jpn_Q4_K_M-00001-of-00004.gguf",
+		"model_file_name":"gemma2_it_2b_jpn_Q4_K_M-00004-of-00004.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://www.reddit.com/r/LocalLLaMA/comments/1exlxvv/vikhrgemma2binstruct_a_compact_and_powerful/",
+		"type":"japanese",
+		"model_type":"instruct",
+		"media":["text"],
+		"languages":["jp"],
+		"initial_example_prompt":"モロッコの首都はどこですか?",
+		"examples":{
+			"all":[{"title":"🗻","prompt":"富士山の高さはどれくらいですか?","action":"prompt"}],
+		},
+		//"show_if_web_gpu":false,
+		"size":1.7,
+		"temperature":0.7,
+		"context_size":8192,
+		"context":2048,
+		"cache_type_k":"q4_0",
+		//"template":"s_INST",
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+	},
 	
 	
 	
 	
 	// MULTI-LINGUAL
-	
+	/*
 	"fast_zephyr":{
 		"name":"Zephyr",
 		"real_name":"Zephyr 2 1.6B",
@@ -948,6 +1027,7 @@ window.assistants = {
 		"license":"STABILITY AI NON-COMMERCIAL RESEARCH COMMUNITY LICENSE AGREEMENT",
 		"license_url":"https://huggingface.co/stabilityai/stablelm-zephyr-3b/raw/main/LICENSE",
 		"homepage_url":"",
+		"runner":"llama_cpp",
 		"type":"translator",
 		"model_type":"instruct",
 		"media":["text"],
@@ -970,8 +1050,14 @@ window.assistants = {
 		"template":"user_assistant",
 		"system_prompt":"A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers."
 	},
-	
+	*/
 
+	
+	"divider_general":{
+		"i18n":"General",
+		"type":"divider",
+	},
+	
 	
 	
 	"fast_phi3_mini":{
@@ -994,11 +1080,10 @@ window.assistants = {
 		// Arabic, Chinese, Czech, Danish, Dutch, English, Finnish, French, German, Hebrew, Hungarian, Italian, Japanese, Korean, Norwegian, Polish, Portuguese, Russian, Spanish, Swedish, Thai, Turkish, Ukrainian
 		"languages":['ar', 'zh', 'cs', 'da', 'nl', 'en', 'fi', 'fr', 'de', 'he', 'hu', 'it', 'ja', 'ko', 'no', 'pl', 'pt', 'ru', 'es', 'sv', 'th', 'tr','uk'],
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"show_if_web_gpu":true,
-		"champion":true,
 		"size":2.2,
 		"temperature":0.7,
 		"context_size":131072,
@@ -1028,11 +1113,10 @@ window.assistants = {
 		"model_type":"instruct",
 		"media":["text"],
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"show_if_web_gpu":false,
-		"champion":true,
 		"size":2.5,
 		"temperature":0.7,
 		"context_size":4096,
@@ -1070,11 +1154,10 @@ window.assistants = {
 		"model_type":"instruct",
 		"media":["text"],
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"show_if_web_gpu":false,
-		"champion":true,
 		"size":2.1,
 		"temperature":0.7,
 		"context_size":131072,
@@ -1106,11 +1189,10 @@ window.assistants = {
 		"model_type":"instruct",
 		"media":["text"],
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"show_if_web_gpu":false,
-		"champion":true,
 		"size":2.3,
 		"temperature":0.7,
 		"context_size":4096,
@@ -1143,7 +1225,7 @@ window.assistants = {
 		"model_type":"instruct",
 		"media":["text"],
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"size":2.3,
@@ -1156,177 +1238,6 @@ window.assistants = {
 		"brevity_supported":true,
 		"brevity_enabled":false,
 		"availability":"developer"
-	},
-	
-	
-	
-	//
-	//  BITNET
-	//
-	
-	
-	"bitnet1":{
-		"name":"Bitnet 1",
-		"real_name":"bitnet_b1_58-xl",
-		"description":"",
-		"icon":"bitnet",
-		//"download_url":"https://huggingface.co/gate369/Bitnet-M7-70m-Q8_0-GGUF/resolve/main/bitnet-m7-70m.Q8_0.gguf",
-		//"download_url":"/models/bitnet/bitnet_b1_58-3B.i2_s.gguf",
-		//"download_url":"/models/bitnet/bitnet_b1_58-3B.q2_2.gguf",
-		//"download_url":"/models/bitnet/ggml-model-q8_0.gguf",
-		//"download_url":"/models/bitnet/bitnet_instruct.fp16.gguf",
-		//"download_url":"/models/bitnet/bitnet_b1_58-large-q8_0.gguf",
-		"download_url":"https://huggingface.co/BoscoTheDog/bitnet_b1_58-xl_q8_0_gguf/resolve/main/ggml-model-q8_0.gguf",
-		"model_file_name":"ggml-model-q8_0.gguf",
-		//"download_url":"/models/bitnet/bitnet_b1_58-3B-Q1_3-1.63bpw.gguf",
-		"config_url":"1bitLLM/bitnet_b1_58-xl",
-		"runner":"llama_cpp",
-		//"config_url":"1bitLLM/bitnet_b1_58-3B",
-		"license":"MIT",
-		"license_url":"https://en.wikipedia.org/wiki/MIT_License",
-		"homepage_url":"https://huggingface.co/1bitLLM/bitnet_b1_58-xl",
-		"type":"generic",
-		"model_type":"base",
-		"media":["text"],
-		"examples":{
-			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
-			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
-		},
-		"size":1.6,
-		"temperature":0.7,
-		"context_size":2048,
-		"context":1024,
-		//"template":"user_end_asistant_end",
-		//"system_prompt":""
-		"no_system_prompt":true,
-		"markdown_supported":false,
-		"markdown_enabled":false,
-		"brevity_supported":true,
-		"brevity_enabled":false,
-		"availability":"advanced"
-	},
-	
-	"bitnet2":{
-		"name":"Bitnet 2",
-		"real_name":"bitnet_b1_58-3B",
-		"description":"",
-		"icon":"bitnet",
-		"download_url":"https://huggingface.co/BoscoTheDog/bitnet_b1_58_3B_gguf/resolve/main/bitnet_b1_58-3b.Q4_K_M-00001-of-00011.gguf",
-		"model_file_name":"bitnet_b1_58-3b.Q4_K_M-00001-of-00011.gguf",
-		"config_url":"1bitLLM/bitnet_b1_58-3B",
-		"runner":"llama_cpp",
-		"license":"MIT",
-		"license_url":"https://en.wikipedia.org/wiki/MIT_License",
-		"homepage_url":"https://huggingface.co/1bitLLM/bitnet_b1_58-3B",
-		"type":"generic",
-		"model_type":"base",
-		"media":["text"],
-		"examples":{
-			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
-			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
-		},
-		"size":2.5,
-		"temperature":0.7,
-		"context_size":4096,
-		"context":1024,
-		"no_system_prompt":true,
-		"markdown_supported":false,
-		"markdown_enabled":false,
-		"brevity_supported":true,
-		"brevity_enabled":false,
-		"availability":"advanced"
-	},
-	
-	
-	
-	"bitnet3":{
-		"name":"Bitnet 3.9B TQ1",
-		"real_name":"TriLM 3.9B TQ1",
-		"description":"",
-		"icon":"",
-		"download_url":"https://huggingface.co/basavyr/TriLM_3.9B_Unpacked_quantized/resolve/main/TriLM_3.9B_Unpacked_quant_TQ1_0.gguf",
-		"model_file_name":"TriLM_3.9B_Unpacked_quant_TQ1_0.gguf",
-		"runner":"llama_cpp",
-		"license":"Apache",
-		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
-		"homepage_url":"https://huggingface.co/SpectraSuite/TriLM_3.9B_Unpacked",
-		"type":"generic",
-		"model_type":"base",
-		"media":["text"],
-		"examples":{
-			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
-			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
-		},
-		"size":1,
-		"temperature":0.7,
-		"context_size":2048,
-		"context":2048,
-		"no_system_prompt":true,
-		"markdown_supported":false,
-		"markdown_enabled":false,
-		"brevity_supported":true,
-		"brevity_enabled":false,
-		"availability":"advanced"
-	},
-	
-	"bitnet4":{
-		"name":"Bitnet 3.9B TQ2",
-		"real_name":"TriLM 3.9B TQ2",
-		"description":"",
-		"icon":"",
-		"download_url":"https://huggingface.co/basavyr/TriLM_3.9B_Unpacked_quantized/resolve/main/TriLM_3.9B_Unpacked_quant_TQ2_0.gguf",
-		"model_file_name":"TriLM_3.9B_Unpacked_quant_TQ2_0.gguf",
-		"runner":"llama_cpp",
-		"license":"Apache",
-		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
-		"homepage_url":"https://huggingface.co/SpectraSuite/TriLM_3.9B_Unpacked",
-		"type":"generic",
-		"model_type":"base",
-		"media":["text"],
-		"examples":{
-			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
-			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
-		},
-		"size":1.2,
-		"temperature":0.7,
-		"context_size":2048,
-		"context":2048,
-		"no_system_prompt":true,
-		"markdown_supported":false,
-		"markdown_enabled":false,
-		"brevity_supported":true,
-		"brevity_enabled":false,
-		"availability":"advanced"
-	},
-	
-	
-	"bitnet_llama3_8b":{
-		"name":"Bitnet Llama3 8B",
-		"real_name":"Llama3 8B 1.58 TQ1_0",
-		"description":"",
-		"icon":"bitnet",
-		"download_url":"https://huggingface.co/BoscoTheDog/Llama3-8B-1.58-100B-tokens-TQ1_0_gguf_chunked/resolve/main/Llama3-8B-1.58-100B-tokens-TQ1_0-00001-of-00005.gguf",
-		"model_file_name":"Llama3-8B-1.58-100B-tokens-TQ1_0-00005-of-00005.gguf",
-		"runner":"llama_cpp",
-		"license":"Apache",
-		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
-		"homepage_url":"https://www.reddit.com/r/LocalLLaMA/comments/1fjtm86/llama_8b_in_bitnets/",
-		"type":"generic",
-		"model_type":"instruct",
-		"media":["text"],
-		"examples":{
-			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
-			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
-		},
-		"size":2.2,
-		"temperature":0.7,
-		"context_size":8192,
-		"context":2048,
-		"markdown_supported":true,
-		"markdown_enabled":false,
-		"brevity_supported":true,
-		"brevity_enabled":false,
-		"availability":"advanced"
 	},
 	
 	
@@ -1347,13 +1258,13 @@ window.assistants = {
 		"model_type":"instruct",
 		"media":["text"],
 		"show_if_web_gpu":true,
-		"champion":true,
+		//"champion":true,
 		"initial_example_prompt":{
 			"en":"Why is the sky blue?",
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"},{"title":"Quantum","prompt":"Name the top five physicists involved in the development of quantum mechanics.","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"},{"title":"Quantum","prompt":"Name the top five physicists involved in the development of quantum mechanics.","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"size":1.5,
@@ -1378,7 +1289,7 @@ window.assistants = {
 		"real_name":"Gemma 2 2B it",
 		"description":"",
 		"icon":"",
-		"download_url":"https://huggingface.co/BoscoTheDog/gemma_2_2b_Q4_gguf_chunked/resolve/main/gemma-2-2b-it-Q4_0_4_4-00001-of-00003.gguf",
+		"download_url":"https://huggingface.co/BoscoTheDog/gemma_2_2b_it_Q4_gguf_chunked/resolve/main/gemma-2-2b-it-Q4_0_4_4-00001-of-00003.gguf",
 		"model_file_name":"gemma-2-2b-it-Q4_0_4_4-00003-of-00003.gguf",
 		"runner":"llama_cpp",
 		"config_url":"BoscoTheDog/gemma_2_2b_Q4_gguf_chunked",
@@ -1389,9 +1300,9 @@ window.assistants = {
 		"model_type":"instruct",
 		"media":["text"],
 		"show_if_web_gpu":false,
-		"champion":true,
+		//"champion":true,
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}, {"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}, {"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}, {"title":"Tiananmen","prompt":"Wat is er gebeurd op het Tiananmen plein?","action":"prompt"}, ]
 		},
 		"size":1.6,
@@ -1429,7 +1340,7 @@ window.assistants = {
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"},{"title":"Quantum","prompt":"Name the top five physicists involved in the development of quantum mechanics.","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"},{"title":"Quantum","prompt":"Name the top five physicists involved in the development of quantum mechanics.","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"size":5.2,
@@ -1466,7 +1377,7 @@ window.assistants = {
 		"media":["text"],
 		"show_if_web_gpu":false,
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}, {"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}, {"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}, {"title":"Tiananmen","prompt":"Wat is er gebeurd op het Tiananmen plein?","action":"prompt"}, ]
 		},
 		"size":3.1,
@@ -1502,7 +1413,7 @@ window.assistants = {
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"},{"title":"Quantum","prompt":"Name the top five physicists involved in the development of quantum mechanics.","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"},{"title":"Quantum","prompt":"Name the top five physicists involved in the development of quantum mechanics.","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"size":4.7,
@@ -1539,7 +1450,7 @@ window.assistants = {
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"size":30,
@@ -1573,16 +1484,17 @@ window.assistants = {
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
+		"languages":["en","es","de","it","fr","pt","hi","th"],
 		"initial_example_prompt":{
 			"en":"Why is the sky blue?",
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
-		"size":2,
-		"memory":3,
+		"size":0.8,
+		"memory":1.5,
 		"temperature":0.7,
 		"context_size":131072,
 		"context":2048,
@@ -1599,8 +1511,15 @@ window.assistants = {
 		"real_name":"Llama 3.2 it 1b",
 		"description":"",
 		"icon":"llama3_mini",
-		"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_1b_q4_k_m_chunked/resolve/main/llama-3.2-1b-it-q4_k_m-00001-of-00005.gguf",
-		"model_file_name":"llama-3.2-1b-it-q4_k_m-00005-of-00005.gguf",
+		//"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_1b_q4_k_m_chunked/resolve/main/llama-3.2-1b-it-q4_k_m-00001-of-00005.gguf",
+		//"model_file_name":"llama-3.2-1b-it-q4_k_m-00005-of-00005.gguf",
+		//"download_url":"https://huggingface.co/hugging-quants/Llama-3.2-1B-Instruct-Q4_K_M-GGUF/resolve/main/llama-3.2-1b-instruct-q4_k_m.gguf",
+		//"model_file_name":"llama-3.2-1b-instruct-q4_k_m.gguf",
+		//"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_1b_q4_k_m_chunked/resolve/main/llama-3_2_it_1b_q4_0-00001-of-00004.gguf",
+		//"model_file_name":"llama-3_2_it_1b_q4_0-00004-of-00004.gguf",
+		"download_url":"https://huggingface.co/Felladrin/gguf-sharded-Q5_K_L-Llama-3.2-1B-Instruct/resolve/main/model.shard-00001-of-00005.gguf",
+		"model_file_name":"gguf-sharded-Q5_K_L-Llama-3.2-1B-Instruct/resolve/main/model.shard-00005-of-00005.gguf",
+		"config_url":"BoscoTheDog/llama_3_2_it_1b_q4_k_m_chunked",
 		"runner":"llama_cpp",
 		"show_if_web_gpu":false,
 		"license":"Llama 3.2 Community License",
@@ -1609,12 +1528,13 @@ window.assistants = {
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
+		"languages":["en","es","de","it","fr","pt","hi","th"],
 		"initial_example_prompt":{
 			"en":"Why is the sky blue?",
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
 		"size":0.8,
@@ -1622,6 +1542,7 @@ window.assistants = {
 		"temperature":0.7,
 		"context_size":131072,
 		"context":2048,
+		"cache_type_k":"q4_0",
 		"markdown_supported":true,
 		"markdown_enabled":false,
 		"brevity_supported":true,
@@ -1642,21 +1563,23 @@ window.assistants = {
 		"model_file_name":"Llama-3.2-3B-Instruct-q4f16_1-MLC/resolve/main/params_shard_57.bin",
 		"runner":"web_llm",
 		"show_if_web_gpu":true,
+		"champion":true,
 		"license":"Llama 3.2 Community License",
 		"license_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE",
 		"homepage_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md",
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
+		"languages":["en","es","de","it","fr","pt","hi","th"],
 		"initial_example_prompt":{
 			"en":"Why is the sky blue?",
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
-		"size":2,
+		"size":1.8,
 		"memory":3,
 		"temperature":0.7,
 		"context_size":131072,
@@ -1673,29 +1596,39 @@ window.assistants = {
 		"real_name":"Llama 3.2 it 3b",
 		"description":"",
 		"icon":"llama3_mini",
-		"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_3b_q4_k_m_chunked/resolve/main/llama_3_2_it_3b_q4_k_m-00001-of-00011.gguf",
-		"model_file_name":"llama_3_2_it_3b_q4_k_m-00011-of-00011.gguf",
+		//"download_url":"https://huggingface.co/BoscoTheDog/llama_3_2_it_3b_q4_k_m_chunked/resolve/main/llama_3_2_it_3b_q4_k_m-00001-of-00011.gguf",
+		//"model_file_name":"llama_3_2_it_3b_q4_k_m-00011-of-00011.gguf",
+		//"download_url":"https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_0.gguf",
+		//"model_file_name":"Llama-3.2-3B-Instruct-Q4_0.gguf",
+		"download_url":"https://huggingface.co/Felladrin/gguf-sharded-Q5_K_L-Llama-3.2-3B-Instruct/resolve/main/model.shard-00001-of-00007.gguf",
+		"model_file_name":"gguf-sharded-Q5_K_L-Llama-3.2-3B-Instruct/resolve/main/model.shard-00007-of-00007.gguf",
+		//"config_url":"BoscoTheDog/llama_3_2_it_3b_q4_k_m_chunked",
+		//"config_url":"onnx-community/Llama-3.2-3B",
+		"config_url":"alpindale/Llama-3.2-3B-Instruct",
 		"runner":"llama_cpp",
 		"show_if_web_gpu":false,
+		"champion":true,
 		"license":"Llama 3.2 Community License",
 		"license_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE",
 		"homepage_url":"https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md",
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
+		"languages":["en","es","de","it","fr","pt","hi","th"],
 		"initial_example_prompt":{
 			"en":"Why is the sky blue?",
 			"nl":"Why is the sky blue?"
 		},
 		"examples":{
-			'en':[{"title":"Smallest planet","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
+			'en':[{"title":"🪐","prompt":"What is the smallest planet in our solar system?","action":"prompt"}],
 			'nl':[{"title":"Kleinste planeet","prompt":"Wat is de kleinste planeet in ons zonnestelsel?","action":"prompt"}]
 		},
-		"size":2,
-		"memory":3,
+		"size":2.5,
+		"memory":3.9,
 		"temperature":0.7,
 		"context_size":131072,
 		"context":2048,
+		"cache_type_k":"q4_0",
 		"markdown_supported":true,
 		"markdown_enabled":false,
 		"brevity_supported":true,
@@ -1738,6 +1671,7 @@ window.assistants = {
 		"markdown_enabled":false,
 		"brevity_supported":true,
 		"brevity_enabled":false,
+		"availability":"developer"
 	},
 		
 	
@@ -1853,11 +1787,12 @@ window.assistants = {
 	//Qwen2-1.5B-Instruct-q4f16_1-MLC
 	"fast_qwen2_1_5B":{
 		"name":"Qwen 2 1.5B",
-		"real_name":"Qwen 2 1.5B", // Chat
+		"real_name":"Qwen 2.5 It 1.5B", // Chat
 		"description":"",
 		"icon":"",
 		"download_url":null,
 		"runner":"web_llm",
+		"model_id":"Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
 		"web_llm_file_name":"Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
 		"model_file_name":  "Qwen2.5-1.5B-Instruct-q4f16_1-MLC/resolve/main/params_shard_29.bin",
 		"show_if_web_gpu":true,
@@ -1930,14 +1865,15 @@ window.assistants = {
 	// QWEN 2 - 0.5B 
 	
 	"fast_qwen2_0_5b":{
-		"name":"Qwen 2 0.5B Instruct",
-		"real_name":"Qwen 2 0.5B Instruct",
+		"name":"Qwen 2.2 Instruct 0.5B",
+		"real_name":"Qwen 2.5 It 0.5B",
 		"description":"",
 		"icon":"",
 		"download_url":null,
 		"runner":"web_llm",
-		"web_llm_file_name":"Qwen2-0.5B-Instruct-q4f16_1-MLC",
-		"model_file_name":  "Qwen2-0.5B-Instruct-q4f16_1-MLC/resolve/main/params_shard_7.bin",
+		"model_id":"Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+		"web_llm_file_name":"Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+		"model_file_name":  "Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/params_shard_7.bin",
 		"show_if_web_gpu":true,
 		"license":"Apache",
 		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
@@ -1971,7 +1907,7 @@ window.assistants = {
 		"icon":"",
 		"download_url":"https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q4_0.gguf",
 		"config_url":"Qwen/Qwen2-0.5B",
-		"model_file_name":"qwen2-0_5b-instruct-q4_0.gguf",
+		"model_file_name":"qwen2-0_5b",
 		"runner":"llama_cpp",
 		"show_if_web_gpu":false,
 		"license":"Apache",
@@ -2085,10 +2021,14 @@ window.assistants = {
 		"real_name":"Danube 3 500M",
 		"description":"",
 		"icon":"",
-		"download_url":"https://huggingface.co/BoscoTheDog/h2o-danube3-500m-chat_chunked/resolve/main/h2o-danube3-500m-chat.Q4_K_M-00001-of-00007.gguf",
+		//"download_url":"https://huggingface.co/BoscoTheDog/h2o-danube3-500m-chat_chunked/resolve/main/h2o-danube3-500m-chat.Q4_K_M-00001-of-00007.gguf",
+		"download_url":"https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF/resolve/main/h2o-danube3-500m-chat-Q4_K_M.gguf",
 		//"config_url":"BoscoTheDog/h2o-danube3-500m-chat_chunked",
+		"config_url":"h2oai/h2o-danube3-500m-chat",
+		
 		//"chat_template":"{% for message in messages %}{% if message['role'] == 'system' %}{{ raise_exception('System role not supported') }}{% endif %}{% if ((message['role'] == 'user') != (loop.index0 % 2 == 0)) or ((message['role'] == 'assistant') != (loop.index0 % 2 == 1)) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if message['role'] == 'user' %}{{ '<|prompt|>' + message['content'].strip() + eos_token }}{% elif message['role'] == 'assistant' %}{{ '<|answer|>' + message['content'].strip() + eos_token }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|answer|>' }}{% endif %}",
 		"runner":"llama_cpp",
+		"champion":true,
 		"license":"Apache",
 		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
 		"homepage_url":"https://h2o.ai",
@@ -2108,6 +2048,7 @@ window.assistants = {
 		"temperature":0.2,
 		"context_size":8192,
 		"context":2048,
+		"cache_type_k":"q4_0",
 		"repetition_penalty": 1.02,
 		"languages":['en'], // ,'nl'
 		"no_system_prompt":true,
@@ -2118,6 +2059,99 @@ window.assistants = {
 		//"availability":"advanced"
 	},
 	
+	
+	
+	"fast_smol_360m":{
+		"name":"Smol 360M",
+		"real_name":"Smol 360M", //  Chat
+		"description":"",
+		"icon":"smol",
+		"download_url":null,
+		"web_llm_file_name":"SmolLM-360M-Instruct-q4f16_1-MLC",
+		"model_file_name":"SmolLM-360M-Instruct-q4f16_1-MLC/resolve/main/params_shard_6.bin",
+		"runner":"web_llm",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://huggingface.co/blog/smollm",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"What is the capital of Morocco?",
+			"nl":"Wat is de hoofdstad van Spanje?"
+		},
+		"examples":{
+			'en':[	
+				{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, 
+				{"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'nl':[	
+				{"title":"Rottweilers","prompt":"Wat zijn de kenmerken van Rottweiler honden? Antwoord in het Nederlands: ","action":"prompt"},
+				{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire soorten autos?\nGeef antwoord in de vorm van een lijst.\nGeef geen uitleg, alleen de lijst.","action":"prompt"}],
+		},
+		"show_if_web_gpu":true,
+		"size":0.2,
+		"temperature":0.2,
+		"context_size":2048,
+		"context":2048,
+		//"template":"im_start_im_end", // web_llm handles prompt wrapping
+		
+		
+		//"penalty_alpha": 0.5,
+		//"top_k": 10,
+		//"repetition_penalty": 1.01,
+		
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":false,
+		"brevity_enabled":false
+		//"system_prompt":"You are a helpful assistant that always answers in the Dutch language."
+	},
+	
+	
+	
+	"smol_360m":{
+		"name":"Smol 360M",
+		"real_name":"Smol 360M",
+		"description":"",
+		"icon":"smol",
+		"download_url":"https://huggingface.co/mradermacher/SmolLM-360M-Instruct-GGUF/resolve/main/SmolLM-360M-Instruct.Q2_K.gguf",
+		"model_file_name":"SmolLM-360M-Instruct.Q2_K.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://huggingface.co/blog/smollm",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"What is the capital of Morocco?",
+			"nl":"Wat is de hoofdstad van Spanje?"
+		},
+		"examples":{
+			'en':[	
+				{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, 
+				{"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'nl':[	
+				{"title":"Rottweilers","prompt":"Wat zijn de kenmerken van Rottweiler honden? Antwoord in het Nederlands: ","action":"prompt"},
+				{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire soorten autos?\nGeef antwoord in de vorm van een lijst.\nGeef geen uitleg, alleen de lijst.","action":"prompt"}],
+		},
+		"show_if_web_gpu":false,
+		"size":0.2,
+		"temperature":0.2,
+		"context_size":2048,
+		"context":2048,
+		//"template":"im_start_im_end", // web_llm handles prompt wrapping
+		//"web_llm_file_name":"SmolLM-360M-Instruct-q4f16_1-MLC",
+		//"penalty_alpha": 0.5,
+		//"top_k": 10,
+		//"repetition_penalty": 1.01,
+		
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":false,
+		"brevity_enabled":false
+		//"system_prompt":"You are a helpful assistant that always answers in the Dutch language."
+	},
 	
 	
 	
@@ -2295,76 +2329,197 @@ window.assistants = {
 	},
 
 
+	
+	"divider_bitnet":{
+		"i18n":"Bitnet",
+		"type":"divider",
+		"css_class":"show-if-advanced"
+	},
+
 
 	
-	"llama160":{
-		"name":"Llama 160M",
-		"real_name":"Llama 160M",
-		"description":"",
-		"icon":"",
-		"download_url":"https://huggingface.co/Felladrin/gguf-Llama-160M-Chat-v1/resolve/main/Llama-160M-Chat-v1.Q8_0.gguf",
-		"config_url":"Felladrin/Llama-160M-Chat-v1",
-		"model_file_name":"Llama-160M-Chat-v1",
-		"runner":"llama_cpp",
-		"license":"Apache",
-		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
-		"homepage_url":"",
-		"type":"generic",
-		"model_type":"chat",
-		"media":["text"],
-		"initial_example_prompt":{
-			"en":"What is the capital of Spain?",
-			"nl":"What is the capital of Spain?",
-		},
-		"examples":{
-			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-		},
-		"size":0.2,
-		"temperature":0.7,
-		"context_size":2048,
-		"context":1024,
-		"markdown_supported":false,
-		"markdown_enabled":false,
-		"brevity_supported":false,
-		"brevity_enabled":false,
-		"template":"im_start_im_end",
-	},
+	
+	//
+	//  BITNET
+	//
 	
 	
-	"tiny_stories":{
-		"name":"Tiny Llama Stories 15M",
-		"real_name":"Tiny Llama Stories 15M",
+	"bitnet1":{
+		"name":"Bitnet 1",
+		"real_name":"bitnet_b1_58-xl",
 		"description":"",
-		"icon":"",
-		"download_url":"https://huggingface.co/ngxson/tinyllama_split_test/resolve/main/stories15M-q8_0-00001-of-00003.gguf",
-		"config_url":"Xenova/llama2.c-stories15M",
-		"model_file_name":"stories15M-q8_0-00003-of-00003.gguf",
+		"icon":"bitnet",
+		//"download_url":"https://huggingface.co/gate369/Bitnet-M7-70m-Q8_0-GGUF/resolve/main/bitnet-m7-70m.Q8_0.gguf",
+		//"download_url":"/models/bitnet/bitnet_b1_58-3B.i2_s.gguf",
+		//"download_url":"/models/bitnet/bitnet_b1_58-3B.q2_2.gguf",
+		//"download_url":"/models/bitnet/ggml-model-q8_0.gguf",
+		//"download_url":"/models/bitnet/bitnet_instruct.fp16.gguf",
+		//"download_url":"/models/bitnet/bitnet_b1_58-large-q8_0.gguf",
+		"download_url":"https://huggingface.co/BoscoTheDog/bitnet_b1_58-xl_q8_0_gguf/resolve/main/ggml-model-q8_0.gguf",
+		"model_file_name":"ggml-model-q8_0.gguf",
+		//"download_url":"/models/bitnet/bitnet_b1_58-3B-Q1_3-1.63bpw.gguf",
+		"config_url":"1bitLLM/bitnet_b1_58-xl",
 		"runner":"llama_cpp",
-		"license":"",
-		"license_url":"",
-		"homepage_url":"",
+		//"config_url":"1bitLLM/bitnet_b1_58-3B",
+		"license":"MIT",
+		"license_url":"https://en.wikipedia.org/wiki/MIT_License",
+		"homepage_url":"https://huggingface.co/1bitLLM/bitnet_b1_58-xl",
 		"type":"generic",
 		"model_type":"base",
 		"media":["text"],
-		"initial_example_prompt":{
-			"en":"What is the capital of Spain?",
-			"nl":"What is the capital of Spain?",
-		},
 		"examples":{
-			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
+			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
 		},
-		"size":0.01,
+		"size":1.6,
 		"temperature":0.7,
-		"context_size":256,
-		"context":256,
-		"template":"none",
+		"context_size":2048,
+		"context":1024,
+		//"template":"user_end_asistant_end",
+		//"system_prompt":""
+		"no_system_prompt":true,
 		"markdown_supported":false,
 		"markdown_enabled":false,
-		"brevity_supported":false,
+		"brevity_supported":true,
 		"brevity_enabled":false,
 		"availability":"advanced"
+	},
+	
+	"bitnet2":{
+		"name":"Bitnet 2",
+		"real_name":"bitnet_b1_58-3B",
+		"description":"",
+		"icon":"bitnet",
+		"download_url":"https://huggingface.co/BoscoTheDog/bitnet_b1_58_3B_gguf/resolve/main/bitnet_b1_58-3b.Q4_K_M-00001-of-00011.gguf",
+		"model_file_name":"bitnet_b1_58-3b.Q4_K_M-00001-of-00011.gguf",
+		"config_url":"1bitLLM/bitnet_b1_58-3B",
+		"runner":"llama_cpp",
+		"license":"MIT",
+		"license_url":"https://en.wikipedia.org/wiki/MIT_License",
+		"homepage_url":"https://huggingface.co/1bitLLM/bitnet_b1_58-3B",
+		"type":"generic",
+		"model_type":"base",
+		"media":["text"],
+		"examples":{
+			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
+			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
+		},
+		"size":2.5,
+		"temperature":0.7,
+		"context_size":4096,
+		"context":1024,
+		"no_system_prompt":true,
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"availability":"advanced"
+	},
+	
+	
+	
+	"bitnet3":{
+		"name":"Bitnet 3.9B TQ1",
+		"real_name":"TriLM 3.9B TQ1",
+		"description":"",
+		"icon":"",
+		"download_url":"https://huggingface.co/basavyr/TriLM_3.9B_Unpacked_quantized/resolve/main/TriLM_3.9B_Unpacked_quant_TQ1_0.gguf",
+		"model_file_name":"TriLM_3.9B_Unpacked_quant_TQ1_0.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://huggingface.co/SpectraSuite/TriLM_3.9B_Unpacked",
+		"type":"generic",
+		"model_type":"base",
+		"media":["text"],
+		"examples":{
+			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
+			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
+		},
+		"size":1,
+		"temperature":0.7,
+		"context_size":2048,
+		"context":2048,
+		"no_system_prompt":true,
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"availability":"advanced"
+	},
+	
+	"bitnet4":{
+		"name":"Bitnet 3.9B TQ2",
+		"real_name":"TriLM 3.9B TQ2",
+		"description":"",
+		"icon":"",
+		"download_url":"https://huggingface.co/basavyr/TriLM_3.9B_Unpacked_quantized/resolve/main/TriLM_3.9B_Unpacked_quant_TQ2_0.gguf",
+		"model_file_name":"TriLM_3.9B_Unpacked_quant_TQ2_0.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://huggingface.co/SpectraSuite/TriLM_3.9B_Unpacked",
+		"type":"generic",
+		"model_type":"base",
+		"media":["text"],
+		"examples":{
+			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
+			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
+		},
+		"size":1.2,
+		"temperature":0.7,
+		"context_size":2048,
+		"context":2048,
+		"no_system_prompt":true,
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"availability":"advanced"
+	},
+	
+	
+	"bitnet_llama3_8b":{
+		"name":"Bitnet Llama3 8B",
+		"real_name":"Llama3 8B 1.58 TQ1_0",
+		"description":"",
+		"icon":"bitnet",
+		"download_url":"https://huggingface.co/BoscoTheDog/Llama3-8B-1.58-100B-tokens-TQ1_0_gguf_chunked/resolve/main/Llama3-8B-1.58-100B-tokens-TQ1_0-00001-of-00005.gguf",
+		"model_file_name":"Llama3-8B-1.58-100B-tokens-TQ1_0-00005-of-00005.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://www.reddit.com/r/LocalLLaMA/comments/1fjtm86/llama_8b_in_bitnets/",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"examples":{
+			'en':[{"title":"Fairytale","prompt":"Once upon a time, in a land far","action":"prompt"}],
+			'nl':[{"title":"Sprookje","prompt":"Lang, lang geleden, in een land hier ver vandaan","action":"prompt"}]
+		},
+		"size":2.2,
+		"temperature":0.7,
+		"context_size":8192,
+		"context":2048,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"availability":"advanced"
+	},
+	
+	
+	
+	
+	//
+	//   OTHER
+	//
+	
+	
+	
+	"divider_other":{
+		"i18n":"Other",
+		"type":"divider",
 	},
 	
 	
@@ -2504,11 +2659,83 @@ window.assistants = {
 	
 	
 	
+	"llama160":{
+		"name":"Llama 160M",
+		"real_name":"Llama 160M",
+		"description":"",
+		"icon":"",
+		"download_url":"https://huggingface.co/Felladrin/gguf-Llama-160M-Chat-v1/resolve/main/Llama-160M-Chat-v1.Q8_0.gguf",
+		"config_url":"Felladrin/Llama-160M-Chat-v1",
+		"model_file_name":"Llama-160M-Chat-v1",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"",
+		"type":"generic",
+		"model_type":"chat",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"What is the capital of Spain?",
+			"nl":"What is the capital of Spain?",
+		},
+		"examples":{
+			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+		},
+		"size":0.2,
+		"temperature":0.7,
+		"context_size":2048,
+		"context":1024,
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":false,
+		"brevity_enabled":false,
+		"template":"im_start_im_end",
+	},
+	
+	
+	"tiny_stories":{
+		"name":"Tiny Llama Stories 15M",
+		"real_name":"Tiny Llama Stories 15M",
+		"description":"",
+		"icon":"",
+		"download_url":"https://huggingface.co/ngxson/tinyllama_split_test/resolve/main/stories15M-q8_0-00001-of-00003.gguf",
+		"config_url":"Xenova/llama2.c-stories15M",
+		"model_file_name":"stories15M-q8_0-00003-of-00003.gguf",
+		"runner":"llama_cpp",
+		"license":"",
+		"license_url":"",
+		"homepage_url":"",
+		"type":"generic",
+		"model_type":"base",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"What is the capital of Spain?",
+			"nl":"What is the capital of Spain?",
+		},
+		"examples":{
+			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+		},
+		"size":0.01,
+		"temperature":0.7,
+		"context_size":256,
+		"context":256,
+		"template":"none",
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":false,
+		"brevity_enabled":false,
+		"availability":"advanced"
+	},
 	
 	
 	
 	
-	
+	"divider_programming":{
+		"i18n":"Programming",
+		"type":"divider",
+	},
 	
 	
 	
@@ -2573,7 +2800,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 		},
 		"type":"coder",
 		"model_type":"instruct",
-		"media":["text"],
+		"media":["text","code"],
+		"show_if_web_gpu":false,
 		"folder":"code",
 		"examples":{'en':[{"title":"Create a loop","prompt":"Please write a Javascript for-loop with 7 iterations which prints out the number of the iteration on every loop.","action":"prompt"},{"title":"Code analysis","prompt":`What does this script do?  
 \`\`\`python
@@ -2669,7 +2897,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 		},
 		"type":"coder",
 		"model_type":"instruct",
-		"media":["text"],
+		"media":["text","code"],
+		"show_if_web_gpu":false,
 		"folder":"code",
 		"examples":{'en':[{"title":"Create a loop","prompt":"Please write a Javascript for-loop with 7 iterations which prints out the number of the iteration on every loop.","action":"prompt"},{"title":"Code analysis","prompt":`What does this script do?  
 \`\`\`python
@@ -2912,6 +3141,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 	},
 	
 	
+	// No longer useful
 	"code_qwen":{
 		"name":"CodeQwen 1.5 7B",
 		"real_name":"CodeQwen 1.5 7B",
@@ -2943,11 +3173,51 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"markdown_enabled":false,
 		"brevity_supported":false,
 		"brevity_enabled":false,
-		"availability":"advanced",
+		"availability":"developer",
 	},
 	
 	
 	
+	"divider_medical":{
+		"i18n":"Medical",
+		"type":"divider",
+	},
+	
+	
+	"medical6":{
+		"name":"Medical Conversational",
+		"real_name":"Llama 3.2 it 3B Medical-Conversational",
+		"description":"",
+		"icon":"medical1", 
+		"download_url":"https://huggingface.co/BoscoTheDog/llama3_2_it_3b_medical_conversational_Q4_0_chunked/resolve/main/llama3_2_it_3b_medical_conversational_Q4_0-00001-of-00013.gguf",
+		//"config_url":"",
+		"model_file_name":"llama3_2_it_3b_medical_conversational_Q4_0-00013-of-00013.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://huggingface.co/Joycean0301/Llama-3.2-3B-Instruct-Medical-Conversational",
+		"initial_example_prompt":{
+			"en":"What are the health risks and benefits of going to the sauna?",
+			"nl":"Wat zijn de voordelen en nadelen voor je gezondheid van naar de sauna gaan?"
+		},
+		"languages":["en","cn","fr","hi","es","ar"], // English, Chinese, French, Hindi, Spanish, Hindi, Arabic
+		"examples":{
+			'en':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}],
+			'nl':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}]
+		},
+		"type":"medical",
+		"model_type":"instruct", // guess
+		"media":["text"],
+		"size":2,
+		"temperature":0,
+		"context_size":8192,
+		"context":1024,
+		//"template":"im_start_im_end",
+		"markdown_supported":false,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+	},
 	
 	// https://huggingface.co/afrideva/phi-2-meditron-GGUF/resolve/main/phi-2-meditron.q4_k_m.gguf
 	// /models/gemma-medical_qa-finetune.Q5_K_M.gguf
@@ -2991,7 +3261,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"Second opinion",
 		"real_name":"Tiny Llama Medical", // Chat
 		"description":"",
-		"icon":"",
+		"icon":"medical1", 
 		"download_url":"https://huggingface.co/emir12/tinyllama-medical-chat-v1.3.gguf/resolve/main/tinyllama-medical-chat-v1.3.gguf",
 		"config_url":"emir12/tinyllama-medical-chat-v1.3",
 		"runner":"llama_cpp",
@@ -3024,7 +3294,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"Third opinion",
 		"real_name":"Llama2 7B Medquad",
 		"description":"",
-		"icon":"",
+		"icon":"medical1", 
 		"download_url":"https://huggingface.co/praneshgunner/llama2-trained-medical-v2-GGUF-GGUF/resolve/main/llama-2-7b-medquad-merged.Q3_K_M.gguf",
 		"config-url":"praneshgunner/llama2-trained-medical-v2",
 		"runner":"llama_cpp",
@@ -3058,7 +3328,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"Fourth opinion",
 		"real_name":"Apollo 2B",
 		"description":"",
-		"icon":"", 
+		"icon":"medical1", 
 		"download_url":"https://huggingface.co/BoscoTheDog/Apollo_medical_gguf/resolve/main/apollo-2b.Q4_K_M.gguf",
 		"config_url":"FreedomIntelligence/Apollo-2B",
 		"runner":"llama_cpp",
@@ -3077,7 +3347,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"type":"medical",
 		"model_type":"chat", // guess
 		"media":["text"],
-		"size":3.3,
+		"size":1.7,
 		"temperature":0,
 		"context_size":8192,
 		"context":2048,
@@ -3094,7 +3364,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"Big fourth opinion",
 		"real_name":"Apollo 6B",
 		"description":"",
-		"icon":"", 
+		"icon":"medical1", 
 		"download_url":"https://huggingface.co/BoscoTheDog/apollo_6b_Q4_0_gguf_chunked/resolve/main/apollo-6b.Q4_0-00001-of-00024.gguf",
 		"config_url":"FreedomIntelligence/Apollo-6B",
 		"model_file_name":"apollo-6b.Q4_0-00024-of-00024.gguf",
@@ -3131,6 +3401,19 @@ Let’s think step by step.`,"action":"prompt"}]},
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	"divider_therapy":{
+		"i18n":"Therapy",
+		"type":"divider"
+	},
+	
+	
+	
 	"mental1":{
 		"name":"Therapeutic",
 		"real_name":"Tiny Llama Therapy Bot",
@@ -3158,6 +3441,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"temperature":0.7,
 		"context_size":2048,
 		"context":2048,
+		"cache_type_k":"q4_0",
 		//"template":"s_INST",
 		"markdown_supported":false,
 		"markdown_enabled":false,
@@ -3234,7 +3518,9 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"markdown_enabled":false,
 		"brevity_supported":false,
 		"brevity_enabled":false,
-		"availability":"advanced"
+		"availability":"advanced",
+		"system_prompt":"You are a mental health adviser, talking to an individual who is looking for guidance and advice on managing their emotions, stress, anxiety and other mental health issues. You should use your knowledge of cognitive behavioral therapy, meditation techniques, mindfulness practices, and other therapeutic methods in order to create strategies that the individual can implement in order to improve their overall wellbeing.",
+		"second_prompt":"Hello. How are you?"
 	},
 	
 	"mental4":{
@@ -3270,6 +3556,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"markdown_enabled":false,
 		"brevity_supported":false,
 		"brevity_enabled":false,
+		"system_prompt":"You are a mental health adviser, talking to an individual who is looking for guidance and advice on managing their emotions, stress, anxiety and other mental health issues. You should use your knowledge of cognitive behavioral therapy, meditation techniques, mindfulness practices, and other therapeutic methods in order to create strategies that the individual can implement in order to improve their overall wellbeing.",
+		"second_prompt":"Hello. How are you?"
 	},
 	
 	"mental5":{
@@ -3298,16 +3586,61 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"temperature":0.7,
 		"context_size":4096,
 		"context":2048,
+		"cache_type_k":"q4_0",
 		//"template":"s_INST",
 		"chatter":true,
 		"markdown_supported":true,
 		"markdown_enabled":false,
 		"brevity_supported":true,
 		"brevity_enabled":false,
+		"system_prompt":"You are a mental health adviser, talking to an individual who is looking for guidance and advice on managing their emotions, stress, anxiety and other mental health issues. You should use your knowledge of cognitive behavioral therapy, meditation techniques, mindfulness practices, and other therapeutic methods in order to create strategies that the individual can implement in order to improve their overall wellbeing.",
+		"second_prompt":"Hello. How are you?"
 	},
 	
 	
+	"mental6":{
+		"name":"Gemma 2b Therapy",
+		"real_name":"Gemma 2b Therapy",
+		"description":"",
+		"icon":"mental1",
+		"runner":"llama_cpp",
+		"download_url":"https://huggingface.co/BoscoTheDog/gemma2b_therapy_Q4_0_chunked/resolve/main/gemma2b_therapy_Q4_0-00001-of-00003.gguf",
+		//"config_url":"BoscoTheDog/phi-3-mental-health_Q4_K_M_chunked",
+		"license":"Gemma",
+		"license_url":"https://ai.google.dev/gemma/terms",
+		"homepage_url":"https://huggingface.co/naomipeng/gemma2-2b-therapy",
+		"initial_example_prompt":{
+			"en":"I need a hug", 
+			"nl":"Ik heb een knuffel nodig"
+		},
+		"examples":{
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
+		},
+		"type":"mental",
+		"model_type":"instruct",
+		"media":["text"],
+		"size":1.7,
+		"temperature":0.7,
+		"context_size":8192,
+		"context":2048,
+		"cache_type_k":"q4_0",
+		//"template":"s_INST",
+		"chatter":true,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"system_prompt":"You are a mental health adviser, talking to an individual who is looking for guidance and advice on managing their emotions, stress, anxiety and other mental health issues. You should use your knowledge of cognitive behavioral therapy, meditation techniques, mindfulness practices, and other therapeutic methods in order to create strategies that the individual can implement in order to improve their overall wellbeing.",
+		"second_prompt":"Hello. How are you?"
+	},
 	
+	
+	// Could place this under 'other' instead
+	"divider_actors":{
+		"i18n":"Actors",
+		"type":"divider",
+	},
 	
 	
 	
@@ -3435,6 +3768,12 @@ Chiharu is a young, computer engineer-nerd with a knack for problem solving and 
 		"brevity_enabled":false,
 	},
 	
+	
+	
+	"divider_custom":{
+		"i18n":"Custom",
+		"type":"divider",
+	},
 	
 	
 	"custom1":{
@@ -3627,24 +3966,28 @@ for (const key of Object.keys(window.assistants)) {
 // TODO: add Mistral 7B
 function add_web_gpu32_models(){
 	window.assistants["fast_llama3_8B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_8B"]));
+	window.assistants["fast_llama3_8B_32bit"]["model_id"] = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_llama3_8B_32bit"]["web_llm_file_name"] = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_llama3_8B_32bit"]["model_file_name"] = "Llama-3.1-8B-Instruct-q4f32_1-MLC/resolve/main/params_shard_107.bin";
 	window.assistants["fast_llama3_8B_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_llama3_8B_32bit"]["show_if_web_gpu32"] = true;
 	
 	window.assistants["fast_llama3_1B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_1B"]));
+	window.assistants["fast_llama3_1B_32bit"]["model_id"] = "Llama-3.2-1B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_llama3_1B_32bit"]["web_llm_file_name"] = "Llama-3.2-1B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_llama3_1B_32bit"]["model_file_name"] = "Llama-3.2-1B-Instruct-q4f32_1-MLC/resolve/main/params_shard_107.bin";
 	window.assistants["fast_llama3_1B_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_llama3_1B_32bit"]["show_if_web_gpu32"] = true;
 	
-	window.assistants["fast_llama3_3B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_1B"]));
+	window.assistants["fast_llama3_3B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_3B"]));
+	window.assistants["fast_llama3_3B_32bit"]["model_id"] = "Llama-3.2-3B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_llama3_3B_32bit"]["web_llm_file_name"] = "Llama-3.2-3B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_llama3_3B_32bit"]["model_file_name"] = "Llama-3.2-3B-Instruct-q4f32_1-MLC/resolve/main/params_shard_57.bin";
 	window.assistants["fast_llama3_3B_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_llama3_3B_32bit"]["show_if_web_gpu32"] = true;
 	
 	window.assistants["fast_mistral_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_mistral"]));
+	window.assistants["fast_mistral_32bit"]["model_id"] = "Mistral-7B-Instruct-v0.3-q4f32_1-MLC";
 	window.assistants["fast_mistral_32bit"]["web_llm_file_name"] = "Mistral-7B-Instruct-v0.3-q4f32_1-MLC";
 	window.assistants["fast_mistral_32bit"]["model_file_name"] = "Mistral-7B-Instruct-v0.3-q4f32_1-MLC/resolve/main/params_shard_107.bin";
 	window.assistants["fast_mistral_32bit"]["show_if_web_gpu"] = false;
@@ -3694,24 +4037,37 @@ function add_web_gpu32_models(){
 	window.assistants["fast_zephyr_32bit"]["show_if_web_gpu32"] = true;
 
 	window.assistants["fast_tiny_llama_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_tiny_llama"]));
+	window.assistants["fast_tiny_llama_32bit"]["model_id"] = "TinyLlama-1.1B-Chat-v0.4-q4f32_1-1k-MLC";
 	window.assistants["fast_tiny_llama_32bit"]["web_llm_file_name"] = "TinyLlama-1.1B-Chat-v0.4-q4f32_1-1k-MLC";
 	window.assistants["fast_tiny_llama_32bit"]["model_file_name"] = "TinyLlama-1.1B-Chat-v0.4-q4f32_1-MLC/resolve/main/params_shard_23.bin";
 	window.assistants["fast_tiny_llama_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_tiny_llama_32bit"]["show_if_web_gpu32"] = true;
 	
 	window.assistants["fast_qwen2_0_5b_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_qwen2_0_5b"]));
-	window.assistants["fast_qwen2_0_5b_32bit"]["web_llm_file_name"] = "Qwen2-0.5B-Instruct-q0f32-MLC";
-	window.assistants["fast_qwen2_0_5b_32bit"]["model_file_name"] = "Qwen2-0.5B-Instruct-q0f32-MLC/resolve/main/params_shard_24.bin";
+	window.assistants["fast_qwen2_0_5b_32bit"]["model_id"] = "Qwen2.5-0.5B-Instruct-q4f32_1-MLC"; 
+	window.assistants["fast_qwen2_0_5b_32bit"]["web_llm_file_name"] = "Qwen2.5-0.5B-Instruct-q4f32_1-MLC"; 
+	window.assistants["fast_qwen2_0_5b_32bit"]["model_file_name"] = "Qwen2.5-0.5B-Instruct-q4f32_1-MLC/resolve/main/params_shard_7.bin";
 	window.assistants["fast_qwen2_0_5b_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_qwen2_0_5b_32bit"]["show_if_web_gpu32"] = true;
 	
+	window.assistants["fast_qwen2_1_5B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_qwen2_0_5b"]));
+	window.assistants["fast_qwen2_1_5B_32bit"]["model_id"] = "Qwen2.5-1.5B-Instruct-q4f32_1-MLC"; 
+	window.assistants["fast_qwen2_1_5B_32bit"]["web_llm_file_name"] = "Qwen2.5-1.5B-Instruct-q4f32_1-MLC"; 
+	window.assistants["fast_qwen2_1_5B_32bit"]["model_file_name"] = "Qwen2.5-1.5B-Instruct-q4f32_1-MLC/resolve/main/params_shard_29.bin";
+	window.assistants["fast_qwen2_1_5B_32bit"]["show_if_web_gpu"] = false;
+	window.assistants["fast_qwen2_1_5B_32bit"]["show_if_web_gpu32"] = true;
+	
+	
+	
 	window.assistants["fast_qwen2_5_coder_7b_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_qwen2_5_coder_1_5b"]));
+	window.assistants["fast_qwen2_5_coder_7b_32bit"]["model_id"] = "Qwen2.5-Coder-7B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_qwen2_5_coder_7b_32bit"]["web_llm_file_name"] = "Qwen2.5-Coder-7B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_qwen2_5_coder_7b_32bit"]["model_file_name"] = "Qwen2.5-Coder-7B-Instruct-q4f32_1-MLC/resolve/main/params_shard_87.bin";
 	window.assistants["fast_qwen2_5_coder_7b_32bit"]["show_if_web_gpu"] = false;
 	window.assistants["fast_qwen2_5_coder_7b_32bit"]["show_if_web_gpu32"] = true;
 	
 	window.assistants["fast_qwen2_5_coder_1_5b_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_qwen2_5_coder_1_5b"]));
+	window.assistants["fast_qwen2_5_coder_1_5b_32bit"]["model_id"] = "Qwen2.5-Coder-1.5B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_qwen2_5_coder_1_5b_32bit"]["web_llm_file_name"] = "Qwen2.5-Coder-1.5B-Instruct-q4f32_1-MLC";
 	window.assistants["fast_qwen2_5_coder_1_5b_32bit"]["model_file_name"] = "Qwen2.5-Coder-1.5B-Instruct-q4f32_1-MLC/resolve/main/params_shard_29.bin";
 	window.assistants["fast_qwen2_5_coder_1_5b_32bit"]["show_if_web_gpu"] = false;

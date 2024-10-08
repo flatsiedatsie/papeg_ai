@@ -1,5 +1,5 @@
 let simple_tasks_ordering = 'index';
-
+let first_ui_generation_done = false;
 
 
 
@@ -13,7 +13,8 @@ let simple_tasks_ordering = 'index';
 	
 	//window.last_chat_times = {};
 	function add_chat_message(pane,participant,message,i18n_code=null,task_output=null,task_index=null){  //,save_to_conversations=false){
-		save_to_conversations = false;
+		//save_to_conversations = false;
+		let message_to_be_filled_later = false;
 		/*
 		//console.log("in add_chat_message.");
 		//console.log("- pane: ", pane);
@@ -91,6 +92,10 @@ let simple_tasks_ordering = 'index';
 				console.error("add_chat_message: message was empty string, not adding it.");
 				return false
 			}
+			if(message.trim() == '......'){
+				message_to_be_filled_later = true;
+				message = '';
+			}
 			
 			if(participant == 'user' && message.trim() == ''){
 				console.error("add_chat_message: user's message was empty, not posting it");
@@ -113,10 +118,13 @@ let simple_tasks_ordering = 'index';
 			let chat_message_el = document.createElement('div');
 			chat_message_el.classList.add('message');
 			chat_message_el.classList.add('pane-' + participant);
+			if(message_to_be_filled_later){
+				chat_message_el.classList.add('to-be-filled');
+			}
 			chat_message_el.setAttribute('data-message-nr', my_message_nr);
 			
 			// TODO check if assistant has 'chatter' enabled? If so, then there's no need to add an ID.
-			if(typeof task_index == 'number' && original_participant != 'developer' && pane != 'developer'){
+			if(typeof task_index == 'number' && original_participant != 'developer' && original_participant != 'user' && pane != 'developer'){
 				const message_el_id = 'chat-message-' + pane + '-' + original_participant + task_index;
 				const already_existing_message_el = document.querySelector('#' + message_el_id);
 				if(already_existing_message_el){
@@ -684,7 +692,7 @@ let simple_tasks_ordering = 'index';
 					setting_wrapper_el.appendChild(download_message_footer);
 					
 					setting_wrapper_el.addEventListener('click', () => {
-						//console.log("clicked on download message");
+						console.log("clicked on download message");
 						
 						if(pane != 'current' && pane != window.settings.assistant){
 							switch_assistant(pane); // switch to the AI being downloaded
@@ -876,7 +884,10 @@ let simple_tasks_ordering = 'index';
 					if(typeof assistant_to_load_examples_for != 'string'){
 						console.error("add_chat_message: adding model examples: assistant_to_load_examples_for was not a string. Aborting.");
 					}
-					else if( (typeof window.assistants[assistant_to_load_examples_for] != 'undefined' && typeof window.assistants[assistant_to_load_examples_for]['examples'] != 'undefined') || (typeof window.settings.assistants[assistant_to_load_examples_for] != 'undefined' && typeof window.settings.assistants[assistant_to_load_examples_for]['examples'] != 'undefined') ){
+					else if( 
+						(typeof window.assistants[assistant_to_load_examples_for] != 'undefined' && typeof window.assistants[assistant_to_load_examples_for]['examples'] != 'undefined') 
+						|| (typeof window.settings.assistants[assistant_to_load_examples_for] != 'undefined' && typeof window.settings.assistants[assistant_to_load_examples_for]['examples'] != 'undefined') 
+					){
 						//console.log("add_chat_message: examples data: ", window.assistants[assistant_to_load_examples_for]['examples']);
 						
 						message.innerHTML = '<div class="model-example-title" data-i18n="model_examples">' + get_translation('model_examples') + '</div>';
@@ -896,7 +907,10 @@ let simple_tasks_ordering = 'index';
 						}
 						if(examples.length == 0 && typeof window.assistants[assistant_to_load_examples_for]['examples'] != 'undefined'){
 							
-							if(typeof window.assistants[assistant_to_load_examples_for]['examples'][window.settings.language] != 'undefined'){
+							if(typeof window.assistants[assistant_to_load_examples_for]['examples']['all'] != 'undefined'){
+								examples = window.assistants[assistant_to_load_examples_for]['examples']['all'];
+							}
+							else if(typeof window.assistants[assistant_to_load_examples_for]['examples'][window.settings.language] != 'undefined'){
 								examples = window.assistants[assistant_to_load_examples_for]['examples'][window.settings.language];
 							}
 							else if(typeof window.assistants[assistant_to_load_examples_for]['examples']['en'] != 'undefined'){
@@ -906,7 +920,7 @@ let simple_tasks_ordering = 'index';
 						
 						
 						if(examples.length == 0){
-							console.warn("add_chat_message: the examples list for this model in the current language existed, but was empty: ", window.settings.language);
+							console.warn("add_chat_message: the examples list for this model in the current language existed, but was likely empty: ", assistant_to_load_examples_for, window.settings.language);
 							//return
 						}
 						
@@ -1009,6 +1023,8 @@ let simple_tasks_ordering = 'index';
 					else if(special_type == 'voice_tutorial'){
 						message.innerHTML = '<p>' + get_translation("You_can_use_voice_control_to_talk_to_an_AI_dictate_into_a_document_and_even_give_voice_commands_like_start_a_new_document") + '</p><img src="./images/voice_ankeiler.svg">';
 					}
+					
+					message.classList.add('padding25');
 				
 					let learn_more_button_el = document.createElement('button');
 					learn_more_button_el.textContent = get_translation('Learn_more');
@@ -1450,11 +1466,16 @@ let simple_tasks_ordering = 'index';
 			}
 			
 			
-			
 			if(participant != window.settings.assistant && participant != 'user'){
 				//console.log("adding profile pic to chat bubble");
 				chat_profile_pic_el.classList.add('chat-bubble-assistant-icon-container');
-				chat_profile_pic_el.innerHTML = '<img src="images/' + participant.replace('_32bit','') + '.png" class="chat-bubble-assistant-icon"/>';
+				
+				let icon_name = participant.replace('_32bit','');
+				if(typeof window.assistants[participant] != 'undefined' && typeof window.assistants[participant].icon == 'string'){
+					
+				}
+				
+				chat_profile_pic_el.innerHTML = '<img src="images/' + icon_name + '.png" class="chat-bubble-assistant-icon"/>';
 				bubble_wrap_el.appendChild(chat_profile_pic_el);
 			}
 			
@@ -1463,10 +1484,13 @@ let simple_tasks_ordering = 'index';
 				bubble_el.appendChild(task_output_el);
 			}
 			
+			
+			
+			
+			
 			bubble_wrap_el.appendChild(bubble_el);
 			
 			chat_message_el.appendChild(bubble_wrap_el);
-		
 			
 			
 		
@@ -1479,7 +1503,7 @@ let simple_tasks_ordering = 'index';
 			let hours = local_time_parts[0].slice(-2);
 			let minutes = local_time_parts[1];
 			if(isNaN(hours) || isNaN(minutes)){
-				console.warn("bad time");
+				console.warn("add_chat_message: bad time");
 			}
 			else{
 				if(parseInt(minutes) % 2 == 0){
@@ -1494,9 +1518,7 @@ let simple_tasks_ordering = 'index';
 				time_el.classList.add('time');
 				time_el.textContent = local_time;
 				//console.log("local time: ", local_time);
-				
 				chat_message_el.appendChild(time_el);
-				//window.last_chat_times[participant] = local_time;
 				
 			}
 			
@@ -1635,7 +1657,7 @@ let simple_tasks_ordering = 'index';
 			if(typeof message == 'string' && typeof i18n_code == 'string'){
 				if(window.intro_explanations_given[real_pane].indexOf(i18n_code) == -1){
 					add_chat_message(real_pane,participant,message,i18n_code,task_output,task_index);
-					window.intro_explanations_given[pane].push(i18n_code);
+					window.intro_explanations_given[real_pane].push(i18n_code);
 				}
 			}
 			else if(typeof message == 'string'){
@@ -2436,13 +2458,44 @@ let simple_tasks_ordering = 'index';
 	//
 	
 	
+	let generate_ui_timeout = null;
+	let last_time_ui_generated = 0;
+	let already_added_panes = [];
+	
 	function generate_ui(){
-		//console.log("in generate_ui");
+		/*
+		if(last_time_ui_generated < Date.now() - 1000){
+			console.log("generate_ui: generating immediately");
+			really_generate_ui();
+		}
+		else{
+			
+		}
+		*/
+		if(generate_ui_timeout != null){
+			clearTimeout(generate_ui_timeout);
+			//console.warn("generate_ui: a timer was already set");
+		}
+		generate_ui_timeout = setTimeout(really_generate_ui,300);
 		
+	}
+	window.generate_ui = generate_ui;
+	
+	function really_generate_ui(){
+		//console.log("in really_generate_ui");
+		last_time_ui_generated = Date.now();
+		if(generate_ui_timeout != null){
+			clearTimeout(generate_ui_timeout);
+			generate_ui_timeout = null;
+		}
+		/*
 		if(typeof window.assistants == 'undefined'){
 			console.error("generate_ui: error, window.assistants was undefined");
 			return false
 		}
+		*/
+		
+		const start_time = Date.now();
 		
 		let custom_saved_assistant_counter = 0;
 		
@@ -2450,13 +2503,13 @@ let simple_tasks_ordering = 'index';
 		// and that is updated when window.settings.assistants is updated/saved.
 		for (const [assistant_id, details] of Object.entries(window.settings.assistants)) {
 			if(assistant_id.startsWith('custom_saved_') && typeof window.assistants[assistant_id] == 'undefined'){
-				//console.log("adding custom assistant to window.assistants: ", details);
+				console.warn("really_generate_ui: adding custom assistant to window.assistants: ", details);
 				//window.assistants[assistant_id] = details;
 				window.assistants[assistant_id] = {};
 			}
 		}
 		
-		contacts_list_el.innerHTML = '';
+		
 		chat_header_emoji_icon_container_el.innerHTML = '';
 		
 		
@@ -2494,27 +2547,56 @@ let simple_tasks_ordering = 'index';
 		}
 		
 		
-		
+		let new_pane_els = [];
+		let new_contant_list_els = [];
+		let extra_contacts_wrapper = document.createElement('ul');
 		
 		for (let [assistant_id, details] of Object.entries(window.assistants)) {
 			//console.log("-------")
 		  	//console.log(`${assistant_id} -> ${details}`);
 			
+			
+			if(assistant_id.startsWith('divider_')){
+				let divider_el = document.createElement('div');
+				divider_el.classList.add('show-if-busy-selecting-assistants');
+				if(typeof details.i18n == 'string'){
+					divider_el.textContent = get_translation(details.i18n);
+					if(typeof details.css_class == 'string' && details.css_class.length){
+						divider_el.classList.add(details.css_class);
+					}
+					extra_contacts_wrapper.appendChild(divider_el);
+					//new_contant_list_els.push(divider_el);
+				}
+				continue
+			}
+			
+			
+			
+			
+			
+			
+			
+			//
+			//  CHAT PANES
+			//
+			
+			
+			// Custom model's details are stored in settings, and need to quickly be copied as if it was present in the main assistants dictionary
 			if(keyz(details).length == 0){
 				if(typeof window.settings.assistants[assistant_id] != 'undefined'){
 					details = window.settings.assistants[assistant_id];
 				}
 			}
 			
-			
 			let clone_original_assistant_id = assistant_id;
 			if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && !window.settings.assistants[assistant_id]['clone_original'].startsWith('custom')){
 				clone_original_assistant_id = window.settings.assistants[assistant_id]['clone_original'];
 			}
 			
+			let skip_it = false;
 			if(assistant_id == 'custom_received' && !(window.settings.settings_complexity == 'developer')){ // window.settings.received_an_ai == true || 
 				//console.log("generate_ui: not adding 'received' AI to contacts list");
-				continue;
+				skip_it = true;
 			}
 			
 			if(typeof window.conversations[assistant_id] == 'undefined'){
@@ -2524,52 +2606,67 @@ let simple_tasks_ordering = 'index';
 				window.unread_messages[assistant_id] = 0;
 			}
 			
-			
-			
-			// chat messages container
-			let chat_pane_id = 'pane-content-' + assistant_id;
-			let chat_pane_el = document.getElementById(chat_pane_id);
-			if(chat_pane_el == null){
-				chat_pane_el = document.createElement('div');
-				chat_pane_el.setAttribute('id',chat_pane_id);
-				chat_pane_el.classList.add('message-content-wrapper');
+			if(already_added_panes.indexOf(assistant_id) == -1){
 				
-				// The chat messages are in an extra 'reverser' wrapper that lets CSS keep the latest added message in view automatically.
-				chats_reverser_el = document.createElement('div');
-				chats_reverser_el.setAttribute('id',chat_pane_id + '-reverser');
-				chats_reverser_el.classList.add('message-content-reverser');
+				if(typeof window.settings.assistants[assistant_id] == 'undefined'){
+					skip_it = true
+				}
+				else if(typeof window.settings.assistants[assistant_id].selected == 'undefined'){
+					skip_it = true
+				}
+				else if(window.settings.assistants[assistant_id].selected == false){
+					skip_it = true
+				}
 				
-					chats_el = document.createElement('div');
-					chats_el.setAttribute('id',chat_pane_id + '-chats');
-					chats_el.classList.add('message-content');
+				if(skip_it == false){
+					let chat_pane_id = 'pane-content-' + assistant_id;
 				
-					chats_reverser_el.appendChild(chats_el);
+					chat_pane_el = document.createElement('div');
+					chat_pane_el.setAttribute('id',chat_pane_id);
+					chat_pane_el.classList.add('message-content-wrapper');
 				
-				chat_pane_el.appendChild(chats_reverser_el);
+					// The chat messages are in an extra 'reverser' wrapper that lets CSS keep the latest added message in view automatically.
+					chats_reverser_el = document.createElement('div');
+					chats_reverser_el.setAttribute('id',chat_pane_id + '-reverser');
+					chats_reverser_el.classList.add('message-content-reverser');
 				
-				// The status element shows hint about message being generated or audio being processed
-				let chat_status_el = document.createElement('div');
-				chat_status_el.setAttribute('id',chat_pane_id + '-status');
-				chat_status_el.classList.add('message-status-container');
+						chats_el = document.createElement('div');
+						chats_el.setAttribute('id',chat_pane_id + '-chats');
+						chats_el.classList.add('message-content');
 				
-					let chat_status_div_el = document.createElement('div');
-					chat_status_div_el.classList.add('message-status1');
-					chat_status_el.appendChild(chat_status_div_el);
-					let chat_status_div_el2 = document.createElement('div');
-					chat_status_div_el2.classList.add('message-status2');
-					chat_status_el.appendChild(chat_status_div_el2);
+						chats_reverser_el.appendChild(chats_el);
 				
-				chat_pane_el.appendChild(chat_status_el);
+					chat_pane_el.appendChild(chats_reverser_el);
 				
-				message_container_el.appendChild(chat_pane_el);
+					// The status element shows hint about message being generated or audio being processed
+					let chat_status_el = document.createElement('div');
+					chat_status_el.setAttribute('id',chat_pane_id + '-status');
+					chat_status_el.classList.add('message-status-container');
+				
+						let chat_status_div_el = document.createElement('div');
+						chat_status_div_el.classList.add('message-status1');
+						chat_status_el.appendChild(chat_status_div_el);
+						let chat_status_div_el2 = document.createElement('div');
+						chat_status_div_el2.classList.add('message-status2');
+						chat_status_el.appendChild(chat_status_div_el2);
+				
+					chat_pane_el.appendChild(chat_status_el);
+				
+				
+					new_pane_els.push(chat_pane_el);
+					already_added_panes.push(assistant_id);
+				}
 				
 			}
+			
 			
 			
 			
 			//
 			//  ASSISTANTS LIST IN SIDEBAR
 			//
+			
+			
 			
 			// item in chat partners list sidebar
 			let assistant_el = document.createElement('li');
@@ -2584,9 +2681,9 @@ let simple_tasks_ordering = 'index';
 				//console.log("this is the selected assistant");
 				assistant_el.classList.add('selected-ai');
 				chat_pane_el.classList.add('selected-pane');
-				if(typeof window.translations[assistant_id + '_name'] != 'undefined'){
-					chat_header_name_el.textContent = get_translation(assistant_id + '_name');
-				}
+				//if(typeof window.translations[assistant_id + '_name'] != 'undefined'){
+				chat_header_name_el.textContent = get_translation(assistant_id + '_name');
+				//}
 				
 			}
 			else{
@@ -2622,7 +2719,7 @@ let simple_tasks_ordering = 'index';
 			
 			
 			
-			if(assistant_id == 'custom_received' && window.settings.received_an_ai == 'true'){
+			if(assistant_id == 'custom_received' && window.settings.received_an_ai == true){
 				//assistant_el.classList.add('cached-ai');
 			}
 			
@@ -2689,7 +2786,7 @@ let simple_tasks_ordering = 'index';
 			}
 			
 			
-			assistant_el.addEventListener("click", (event) => {
+			assistant_el.addEventListener('click', (event) => {
 				//console.log("clicked on assistant in sidebar. assistant_id: ", assistant_id);
 				clicked_on_assistant(assistant_el,assistant_id,details);
 			});
@@ -2733,12 +2830,11 @@ let simple_tasks_ordering = 'index';
 				assistant_icon_inner_wrapper_el.appendChild(emoji_icon_el);
 				image_src = null;
 			}
+			
 			else if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].icon == 'string' && window.assistants[image_src].icon.length){
 				image_src = window.assistants[image_src].icon;
-				stop_assistant_button_assistant_icon_el.src = 'images/' + image_src + '_thumb.png';
-				
-				
 			}
+			
 			else if(assistant_id.startsWith('custom_saved')){
 				custom_saved_assistant_counter++;
 				if(custom_saved_assistant_counter > 20){
@@ -2798,118 +2894,134 @@ let simple_tasks_ordering = 'index';
 			
 			
 			// Add more general details
-			let details_copy = JSON.parse(JSON.stringify(details));
+			//let details_copy = JSON.parse(JSON.stringify(details));
+			
 			//console.log("details_copy: ", details_copy);
-			for (const details_key of Object.keys(details_copy)) {
+			//for (const details_key of Object.keys(details_copy)) {
+			for (let de = 0; de < contact_details.length; de++){
+				const details_key = contact_details[de];
 				
-				if(contact_details.indexOf(details_key) != -1){
-					//console.log("adding contact detail: ", details_key);
+				const i18n_code = assistant_id + '_' + details_key;
+				//console.log("i18n_code: ", i18n_code);
+				/*
+				if(typeof window.translations[ i18n_code] != 'undefined'){
+					details_copy[details_key] = get_translation(i18n_code);
+				}
+				*/
+				let el = document.createElement('div');
+				el.classList.add(details_key);
+				
+				el.setAttribute('id',assistant_id + '-contacts-' + details_key); // TODO not really used? Though it should be..
+				//el.setAttribute('data-i18n',i18n_code);
+				//el.classList.add('sidebar-assistant-' + details_key);
+				/*
+				let value = details_copy[details_key];
+				if(details_key == 'size'){
+					value = value + ' ' + translations['gigabytes'][window.settings.language];
+					el.classList.add('show-if-developer');
+				}
+				*/
+				
+				let advanced_details = '';
+				if(details_key == 'name'){
 					
-					const i18n_code = assistant_id + '_' + details_key;
-					//console.log("i18n_code: ", i18n_code);
-					if(typeof window.translations[ i18n_code] != 'undefined'){
-						details_copy[details_key] = get_translation(i18n_code);
-					}
-					
-					let el = document.createElement('div');
-					el.classList.add(details_key);
-					
-					el.setAttribute('id',assistant_id + '-contacts-' + details_key);
-					//el.setAttribute('data-i18n',i18n_code);
-					//el.classList.add('sidebar-assistant-' + details_key);
-					let value = details_copy[details_key];
-					if(details_key == 'size'){
-						value = value + ' ' + translations['gigabytes'][window.settings.language];
-						el.classList.add('show-if-developer');
-					}
-					
-					let advanced_details = '';
-					if(details_key == 'name'){
+					let advanced_details_name_el = document.createElement('span');
+					advanced_details_name_el.classList.add('nice-name');
+					if(typeof details.custom_name == 'string'){
+						//console.log("details.custom_name exists: ", details.custom_name);
+						advanced_details_name_el.textContent = details.custom_name;
 						
-						let advanced_details_name_el = document.createElement('span');
-						advanced_details_name_el.classList.add('nice-name');
-						if(typeof details.custom_name == 'string'){
-							//console.log("details.custom_name exists: ", details.custom_name);
-							advanced_details_name_el.textContent = details.custom_name;
-							
-							if(assistant_id == window.settings.assistant){
-								chat_header_name_el.textContent = details.custom_name;
+						if(assistant_id == window.settings.assistant){
+							chat_header_name_el.textContent = details.custom_name;
+						}
+						
+					}
+					else if(
+						typeof window.settings.assistants[assistant_id] != 'undefined' 
+						&& typeof window.settings.assistants[assistant_id]['custom_name'] == 'string' 
+					){
+						//console.log("window.settings.assistants[assistant_id]['custom_name'] exists: ", window.settings.assistants[assistant_id]['custom_name']);
+						//flash_message("found it");
+						advanced_details_name_el.textContent = window.settings.assistants[assistant_id]['custom_name'];
+					}
+					else if(
+						!assistant_id.startsWith('custom_saved_') 
+						&& typeof i18n_code == 'string' 
+						&& (
+							typeof window.translations[i18n_code] != 'undefined' 
+							|| (i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined') 
+						)
+					){
+						advanced_details_name_el.setAttribute('data-i18n',i18n_code);
+						advanced_details_name_el.textContent = get_translation(i18n_code);
+						
+					}
+					else {
+						console.error("generate_ui: creating contact list name fell through (missing translation?). Details: ", assistant_id, details);
+						advanced_details_name_el.textContent = '?';
+					}
+					
+					el.appendChild(advanced_details_name_el);
+					
+					let advanced_details_real_name_el = null;
+					if(typeof details.real_name == 'string'){
+						advanced_details_real_name_el = document.createElement('span');
+						advanced_details_real_name_el.classList.add('real-name');
+						advanced_details_real_name_el.classList.add('show-if-advanced');
+						advanced_details_real_name_el.textContent = details['real_name'];
+						el.appendChild(advanced_details_real_name_el);
+					}
+					
+				}
+				else if(details_key == 'description'){
+					
+					let advanced_details_description_el = document.createElement('span');
+					
+					if(typeof details.custom_description == 'string'){
+						//console.warn("generate_ui: LLM in assistants dict has custom description: ", details.custom_description);
+						advanced_details_description_el.textContent = details.custom_description;
+					}
+					else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_description'] == 'string'){
+						//console.log("generate_ui: spotted custom description: ", window.settings.assistants[assistant_id]['custom_description']);
+						
+						advanced_details_description_el.textContent = window.settings.assistants[assistant_id]['custom_description'];
+					}
+					else if(
+						!assistant_id.startsWith('custom_saved_') 
+						&& typeof i18n_code == 'string' 
+						&& (
+							typeof window.translations[i18n_code] != 'undefined' 
+							|| (i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined') 
+						)
+					){
+						advanced_details_description_el.setAttribute('data-i18n',i18n_code);
+						advanced_details_description_el.textContent = get_translation(i18n_code);
+					}
+					else if(assistant_id.startsWith('custom') && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].download_url == 'string' && window.settings.assistants[assistant_id].download_url.indexOf('.gguf') != -1 && window.settings.assistants[assistant_id].download_url.indexOf('/') != -1){
+						if(window.settings.assistants[assistant_id].download_url.endsWith('.gguf') && window.settings.assistants[assistant_id].download_url.indexOf('0000') == -1){
+							let gguf_filename = window.settings.assistants[assistant_id].download_url.substr( window.settings.assistants[assistant_id].download_url.lastIndexOf('/') + 1);
+							gguf_filename = gguf_filename.replaceAll('.gguf','');
+							gguf_filename = gguf_filename.replaceAll('-',' ');
+							gguf_filename = gguf_filename.replaceAll('_',' ');
+							gguf_filename = gguf_filename.replace('.Q',' Q');
+							if(gguf_filename.length > 4){
+								details_text = gguf_filename;
+								el.innerHTML = '<span>' + gguf_filename + '</span>';
+								contact_el.appendChild(el);
+								continue
 							}
-							
 						}
-						else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_name'] == 'string' ){
-							//console.log("window.settings.assistants[assistant_id]['custom_name'] exists: ", window.settings.assistants[assistant_id]['custom_name']);
-							//flash_message("found it");
-							advanced_details_name_el.textContent = window.settings.assistants[assistant_id]['custom_name'];
-						}
-						else if(!assistant_id.startsWith('custom_saved_') && typeof i18n_code == 'string' && typeof window.translations[i18n_code] != 'undefined'){
-							advanced_details_name_el.setAttribute('data-i18n',i18n_code);
-							advanced_details_name_el.textContent = get_translation(i18n_code);
-							
-						}
-						else {
-							console.error("generate_ui: creating contact list name fell through (missing translation?). Details: ", details);
-							advanced_details_name_el.textContent = '?';
-						}
-						
-						el.appendChild(advanced_details_name_el);
-						
-						let advanced_details_real_name_el = null;
-						if(typeof details_copy.real_name == 'string'){
-							advanced_details_real_name_el = document.createElement('span');
-							advanced_details_real_name_el.classList.add('real-name');
-							advanced_details_real_name_el.classList.add('show-if-advanced');
-							advanced_details_real_name_el.textContent = details_copy['real_name'];
-							el.appendChild(advanced_details_real_name_el);
-						}
-						
 					}
-					else if(details_key == 'description'){
-						
-						let advanced_details_description_el = document.createElement('span');
-						
-						if(typeof details.custom_description == 'string'){
-							//console.warn("generate_ui: LLM in assistants dict has custom description: ", details.custom_description);
-							advanced_details_description_el.textContent = details.custom_description;
-						}
-						else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_description'] == 'string'){
-							//console.log("generate_ui: spotted custom description: ", window.settings.assistants[assistant_id]['custom_description']);
-							
-							advanced_details_description_el.textContent = window.settings.assistants[assistant_id]['custom_description'];
-						}
-						else if(!assistant_id.startsWith('custom_saved_') && typeof i18n_code == 'string' && typeof window.translations[i18n_code] != 'undefined'){
-							advanced_details_description_el.setAttribute('data-i18n',i18n_code);
-							advanced_details_description_el.textContent = get_translation(i18n_code);
-						}
-						else if(assistant_id.startsWith('custom') && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].download_url == 'string' && window.settings.assistants[assistant_id].download_url.indexOf('.gguf') != -1 && window.settings.assistants[assistant_id].download_url.indexOf('/') != -1){
-							if(window.settings.assistants[assistant_id].download_url.endsWith('.gguf') && window.settings.assistants[assistant_id].download_url.indexOf('0000') == -1){
-								let gguf_filename = window.settings.assistants[assistant_id].download_url.substr( window.settings.assistants[assistant_id].download_url.lastIndexOf('/') + 1);
-								gguf_filename = gguf_filename.replaceAll('.gguf','');
-								gguf_filename = gguf_filename.replaceAll('-',' ');
-								gguf_filename = gguf_filename.replaceAll('_',' ');
-								gguf_filename = gguf_filename.replace('.Q',' Q');
-								if(gguf_filename.length > 4){
-									details_text = gguf_filename;
-									el.innerHTML = '<span>' + gguf_filename + '</span>';
-									contact_el.appendChild(el);
-									continue
-								}
-							}
-						}
 
-						else {
-							console.error("generate_ui: creating contact list description fell through. Details: ", details);
-							advanced_details_description_el.textContent = '?';
-						}
-						el.appendChild(advanced_details_description_el);
+					else {
+						console.error("generate_ui: creating contact list description fell through. Details: ", details);
+						advanced_details_description_el.textContent = '?';
 					}
-					
-					
-					contact_el.appendChild(el);
+					el.appendChild(advanced_details_description_el);
 				}
-				else{
-					//console.log("not adding this detail: ", details_key);
-				}
+				
+				
+				contact_el.appendChild(el);
 			}
 			
 			
@@ -2975,19 +3087,80 @@ let simple_tasks_ordering = 'index';
 			
 			assistant_el.appendChild(checkbox_container_el);
 			
-			contacts_list_el.appendChild(assistant_el);
+			//new_contant_list_els.push(assistant_el);
+			extra_contacts_wrapper.appendChild(assistant_el);
+			
+			/*
+			if( Date.now() - start_time ){
+				console.warn("generate UI: loop took: ", Date.now() - start_time, assistant_id);
+			}
+			*/
+			
+			
 			
 			
 		} // end of loop over all assistants
+		
+		//let extra_panes_wrapper = document.createElement('div');
+		for(let d = 0; d < new_pane_els.length; d++){
+			//extra_panes_wrapper.appendChild(new_pane_els[d]);
+			message_container_el.appendChild(new_pane_els[d]);
+		}
+		
+		contacts_list_el.innerHTML = '';
+		contacts_list_el.appendChild(extra_contacts_wrapper);
+		//
+		//for(let c = 0; c < new_contant_list_els.length; c++){
+			//extra_contacts_wrapper.appendChild(new_contant_list_els[c]);
+		//	contacts_list_el.appendChild(new_contant_list_els[c]);
+		//}
+		//message_container_el.appendChild(extra_panes_wrapper);
+		
+		//contacts_list_el.appendChild(extra_contacts_wrapper);
+		
+		for(let g = 0; g < message_container_el.childNodes.length; g++){
+			const pane_id = message_container_el.childNodes[g].getAttribute('id');
+			if(typeof pane_id == 'string'){
+				//console.log("selected_pane? pane_id: ", pane_id, " =?= ", window.settings.assistant);
+				if(pane_id.replace('pane-content-','') == window.settings.assistant){
+					//console.error("BINGO");
+					message_container_el.childNodes[g].classList.add('selected-pane');
+				}
+				else{
+					//console.log("no bingo");
+					message_container_el.childNodes[g].classList.remove('selected-pane');
+				}
+			}
+			else{
+				console.error("pane has no id");
+			}
+			
+		}
+		
+		
+		if( Date.now() - start_time > 50){
+			console.warn("generate UI took more than 50ms: ", Date.now() - start_time);
+		}
+		
+		
 		
 		// Now that the chat panes exist, they can be filled;
 		if(window.generate_ui_first_run){
 			window.generate_ui_first_run = false;
 			setTimeout(recreate_timers,3000);
+			
+			let selected_assistant_el = document.querySelector('.contact-item.selected-ai.selected');
+			if(selected_assistant_el){
+				selected_assistant_el.scrollIntoView({
+					behavior: 'smooth',
+					block: 'center',
+					inline: 'center'
+        		});
+			}
 			//recreate_timers();
 		}
 	}
-	window.generate_ui = generate_ui;
+	
 	
 	
 	// generate_ui helper functions
@@ -3050,11 +3223,16 @@ let simple_tasks_ordering = 'index';
 			
 			else{
 				
-				if(window.innerWidth < 981){
-					close_sidebar();
+				if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+					if(typeof close_sidebar == 'function'){
+						close_sidebar();
+					}
+					
 				}
 				window.switch_assistant(assistant_id);
 			}
+
+			really_generate_ui();
 			
 		}
 		catch(err){
@@ -3484,9 +3662,13 @@ function update_task_overview(){
 window.update_task_overview = update_task_overview;
 
 function do_overviews(){
-	generate_task_overview();
-	if(window.settings.settings_complexity == 'developer'){
-		generate_running_tasks_overview();
+	console.log("in do_overviews");
+	if(window.settings.left_sidebar_open == true && window.settings.left_sidebar == 'settings' && window.settings.left_sidebar_settings_tab == 'tasks'){
+		generate_task_overview();
+		if(window.settings.settings_complexity == 'developer'){
+			generate_running_tasks_overview();
+		}
+		
 	}
 }
 
@@ -3631,11 +3813,14 @@ function generate_task_overview(){
 			simple_task_el.classList.add('simple-task-item-origin-blueprint');
 		}
 		
-		if(window.task_queue[t].state.startsWith('doing_') || window.task_queue[t].state.startsWith('should_')){
+		if(window.task_queue[t].state.startsWith('doing_') ){
 			simple_task_el.classList.add('simple-task-item-currently-doing');
 			simple_task_details_el.open = true;
 		}
-		
+		if(window.task_queue[t].state.startsWith('should_')){
+			simple_task_el.classList.add('simple-task-item-should');
+			simple_task_details_el.open = true;
+		}
 		
 		
 		// Add a progress indicator to task summary element if multiple results are desired
@@ -3732,6 +3917,8 @@ function generate_task_overview(){
 		//let assistant_icon_html = '';
 		let assistant_icon_el = document.createElement('img');
 		assistant_icon_el.classList.add('simple-task-item-state-assistant-icon');
+		assistant_icon_el.setAttribute('alt',window.get_translation(window.task_queue[t].assistant + '_name'));
+		assistant_icon_el.setAttribute('title',window.get_translation(window.task_queue[t].assistant + '_name'));
 		
 		if(typeof window.task_queue[t].assistant == 'string'){
 			if(window.task_queue[t].assistant.startsWith('custom_saved')){
@@ -3862,6 +4049,10 @@ function generate_task_overview(){
 		else{
 			sentence_text_el.textContent = '';
 		}
+		
+		while (sentence_text_el.textContent.startsWith('\n')){
+			sentence_text_el.textContent = sentence_text_el.textContent.substr(1);
+		}
 
 		simple_task_details_container_el.appendChild(sentence_text_el);
 		
@@ -3869,6 +4060,7 @@ function generate_task_overview(){
 		simple_task_details_el.appendChild(simple_task_details_container_el);
 		simple_task_el.appendChild(simple_task_details_el);
 		
+		/*
 		if(typeof window.task_queue[t].index == 'number'){
 			let children_container_el = document.createElement('div');
 			children_container_el.classList.add('simple-task-children-container');
@@ -3876,7 +4068,18 @@ function generate_task_overview(){
 		
 			simple_task_el.appendChild(children_container_el);
 		}
+		*/
 		
+		
+		
+		if(typeof my_task.index == 'number'){
+			let chunk_text_el = document.createElement('p');
+			chunk_text_el.classList.add('simple-task-details-chunk');
+			chunk_text_el.classList.add('align-right');
+			chunk_text_el.classList.add('hide-if-empty');
+			chunk_text_el.setAttribute('id','simple-task-details-chunk' + my_task.index);
+			simple_task_details_container_el.appendChild(chunk_text_el);
+		}
 		
 
 		if(simple_tasks_ordering == 'index'){
@@ -5139,7 +5342,7 @@ function detect_language(text=null, element_id=null, flash_detected_language=fal
 	
 		if(typeof text != 'string' && typeof element_id != 'string'){
 			console.error("detect_input_language:  provided text or element_id was not a string: ", text,element_id);
-			reject(false);
+			resolve(false);
 			return false
 		}
 		if(typeof text != 'string' && typeof element_id == 'string'){
@@ -5163,22 +5366,24 @@ function detect_language(text=null, element_id=null, flash_detected_language=fal
 			}
 			catch(err){
 				console.error("detect_language: caught error: ", err);
-				reject(false);
+				resolve(false);
 				return false
 			}
 		
 		}
 		
-		if(typeof text == 'string'){
-			//console.log("in detect_language.  detecting from text: ", text,element_id);
+		if(typeof text == 'string' && text.length > 10){
+			console.log("in detect_language.  detecting from:  text,element_id: ", text, element_id);
 		
 			add_script('./js/eld.M60.min.js')
 			.then((value) => {
 	
-				//console.log("detect_language: loaded language detection script? value: ", value);
-				//console.log("window.eld: ", window.eld);
-				//console.log("detect_language: language detection script: eld.info: ", eld.info() );
-				if(typeof prompt_el.value == 'string' && typeof eld != 'undefined'){
+				console.log("detect_language: loaded language detection script? value: ", value);
+				
+				if(typeof eld != 'undefined'){  // typeof prompt_el.value == 'string' && 
+					//console.log("window.eld: ", window.eld);
+					//console.log("detect_language: language detection script: eld.info: ", eld.info() );
+					
 					language_detection_result = eld.detect(text);
 					//console.log("detect_language: language_detection_result: ", language_detection_result);
 					
@@ -5217,7 +5422,7 @@ function detect_language(text=null, element_id=null, flash_detected_language=fal
 						else{
 							console.warn("detect_language: detection was not reliable: ", language_detection_result);
 							
-							reject(null);
+							resolve(null);
 							return false
 						}
 					}
@@ -5231,14 +5436,14 @@ function detect_language(text=null, element_id=null, flash_detected_language=fal
 								}
 							}
 						}
-						reject(false);
+						resolve(false);
 						return false
 						
 					}
 				}
 				else{
 					console.error("detect_language: failed to load language detection script?");
-					reject(false);
+					resolve(false);
 					return false
 				}
 				
@@ -5246,13 +5451,13 @@ function detect_language(text=null, element_id=null, flash_detected_language=fal
 			})
 			.catch((err) => {
 				console.error("detect_language: caught error: ", err);
-				reject(false);
+				resolve(false);
 				return false
 			});
 		
 		}
 		else{
-			reject(false);
+			resolve(false);
 			return false
 		}
 	
@@ -5616,19 +5821,24 @@ function load_chat_example(){
 	
 	// If first run, try to start with a small model so that the user doesn't have to wait too long
 	if(window.first_run){
-		if(window.ram > 3000 && window.settings.language == 'en'){
+		if(window.is_mobile || window.innerWidth < 641){
+			switch_assistant(window.first_assistant);
+		}
+		else if(window.ram > 3000 && window.settings.language == 'en'){
 			if(window.web_gpu_supported){
-				switch_assistant('fast_gemma_2_2b');
+				switch_assistant('fast_llama3_3b');
 			}
 			else if(window.web_gpu32_supported){
-				switch_assistant('fast_gemma_2_2b_32bit');
+				//switch_assistant('fast_gemma_2_2b_32bit');
+				switch_assistant('fast_llama3_3b_32bit');
+				
 			}
 			else{
-				switch_assistant('gemma_2_2b');
+				switch_assistant('llama3_3b');
 			}
 		}
 		else{
-			switch_assistant('danube_3_500m');
+			switch_assistant(window.first_assistant);
 		}
 	}
 	else{
@@ -5784,12 +5994,15 @@ function load_voice_chat_example(){
 		let tts_task = {
 			'prompt':null,
 			'type':'speak',
+			'assistant':'speak',
 			'state':'should_tts',
-			'sentence': get_translation("Hello"),
+			'origin':'chat',
+			'sentence': get_translation("Hello") + '!',
 			'destination':'audio_player'
 		}
-	
+		
 		window.add_task(tts_task);
+		add_chat_message('current','current',get_translation("Hello") + '!','Hello');
 	}
 	
 }
@@ -5871,6 +6084,9 @@ async function load_meeting_notes_example(type='txt',document_content='', filena
 		else{
 			if(type == 'media_transcription'){
 				type = 'notes';
+			}
+			if(filename.length > 11 && filename.lastIndexOf('.') > filename.length - 10){
+				filename = window.remove_file_extension(filename);
 			}
 			filename = filename + ' ' + date_string + '.' + type;
 		}
@@ -6283,21 +6499,21 @@ window.clean_up_dead_task = clean_up_dead_task;
 
 
 
-function update_interrupt_button_icon(){
-	//console.log("in update_interrupt_button_icon");
+function update_interrupt_button_icon(task=null){
+	console.log("in update_interrupt_button_icon. window.currently_running_llm, task: ", window.currently_running_llm, task);
 	if(typeof window.currently_running_llm == 'string' || window.idle){
 		
-		let icon_name = window.settings.assistant;
+		let icon_name = 'developer';
 		if(typeof window.currently_running_llm == 'string' && !window.currently_running_llm.startsWith('custom_saved')){
 			icon_name = window.currently_running_llm;
 		}
-		
-		if(typeof window.assistants[icon_name] != 'undefined' && typeof window.assistants[icon_name].icon == 'string' && window.assistants[icon_name].icon.length){
-			icon_name = window.assistants[icon_name].icon;
+		if(task != null && typeof task.assistant == 'string' && !task.assistant.startsWith('custom_saved')){
+			icon_name = task.assistant;
 		}
-		stop_assistant_button_assistant_icon_el.src = 'images/' + icon_name + '_thumb.png';
 		
-		if(window.currently_running_llm != window.settings.assistant){
+		
+		// stop_assistant_icon_button_el
+		if(icon_name != window.settings.assistant && icon_name != 'developer'){
 			//console.log("currently running AI is different than the one being viewed.  window.currently_running_llm vs window.settings.assistant: ", window.currently_running_llm, window.settings.assistant);
 			document.body.classList.add('other-ai-running');
 		}
@@ -6305,6 +6521,23 @@ function update_interrupt_button_icon(){
 			document.body.classList.remove('other-ai-running');
 			//console.log("currently running AI is the same as the one being viewed: ", window.currently_running_llm);
 		}
+		
+		if(typeof window.assistants[icon_name] != 'undefined' && typeof window.assistants[icon_name].icon == 'string' && window.assistants[icon_name].icon.length){
+			icon_name = window.assistants[icon_name].icon;
+		}
+		
+		if(icon_name != 'ignore'){
+			console.log("update_interrupt_button_icon: final icon_name: ", icon_name);
+			stop_assistant_button_assistant_icon_el.src = 'images/' + icon_name + '_thumb.png';
+		}
+		
+		
+		/*
+		else if(typeof window.settings.assistants[icon_name] != 'undefined' && typeof window.settings.assistants[icon_name].icon == 'string' && window.assistants[icon_name].icon.length){
+			icon_name = window.settings.assistants[icon_name].icon;
+		}
+		*/
+		
 	}
 	else{
 		console.error("update_interrupt_button_icon: window.currently_running_llm was not a string (null)");
@@ -6624,66 +6857,75 @@ pip_button_el.addEventListener('click', async (event) => {
 });
 
 
-function write_on_pip_canvas(text=null){
+async function write_on_pip_canvas(text=null){
 	
-	if(window.pip_started && window.canvasTxt && typeof text == 'string'){
-		//console.log("write_on_pip_canvas: writing");
-		const { drawText, getTextHeight, splitText } = window.canvasTxt; // https://github.com/geongeorge/Canvas-Txt/
+	if(window.pip_started){
+		await window.add_script('./js/canvasTxt.js');
+		// test
 		
-		window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
+		if(window.canvasTxt && typeof text == 'string'){
+	   		//console.log("write_on_pip_canvas: writing");
+	   		const { drawText, getTextHeight, splitText } = window.canvasTxt; // https://github.com/geongeorge/Canvas-Txt/
+		
+	   		window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
 		
 		
 		
 		
-		//window.pip_canvas_context.fillStyle = "white";
-		//window.pip_canvas_context.font = "bold 16px Arial";
+	   		//window.pip_canvas_context.fillStyle = "white";
+	   		//window.pip_canvas_context.font = "bold 16px Arial";
 		
-		if(text.length < 500){
+	   		if(text.length < 500){
 			
-			window.pip_canvas_context.drawImage(window.pip_header_canvas, 5, 5);
+	   			window.pip_canvas_context.drawImage(window.pip_header_canvas, 5, 5);
 			
-			const { height } = drawText(window.pip_canvas_context, text, {
-				x: 20,
-				y: 70,
-				width: (window.pip_canvas.width - 40),
-				height: (window.pip_canvas.height - 90),
-				fontSize: 24,
-				align:'left',
-				vAlign:'top',
-				lineHeight:35,
-				debug:false,
-			});
+	   			const { height } = drawText(window.pip_canvas_context, text, {
+	   				x: 20,
+	   				y: 70,
+	   				width: (window.pip_canvas.width - 40),
+	   				height: (window.pip_canvas.height - 90),
+	   				fontSize: 24,
+	   				align:'left',
+	   				vAlign:'top',
+	   				lineHeight:35,
+	   				debug:false,
+	   			});
 		
 			
 			
-			//console.log(`write_on_canvas: total height = ${height}`);
+	   			//console.log(`write_on_canvas: total height = ${height}`);
 		
-			if(height < window.pip_canvas.height - 90){
-				window.pip_video.srcObject = window.pip_canvas.captureStream(0);
-				return
-			}
-			else{
-				window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
-			}
+	   			if(height < window.pip_canvas.height - 90){
+	   				window.pip_video.srcObject = window.pip_canvas.captureStream(0);
+	   				return
+	   			}
+	   			else{
+	   				window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
+	   			}
+	   		}
+		
+		
+	   		drawText(window.pip_canvas_context, text, {
+	   			x: 20,
+	   			y: 20,
+	   			width: (window.pip_canvas.width - 40),
+	   			height: (window.pip_canvas.height - 40),
+	   			fontSize: 24,
+	   			align:'left',
+	   			vAlign:'bottom',
+	   			lineHeight:35,
+	   			debug:false,
+	   		});
+		
+		
+	   		window.pip_video.srcObject = window.pip_canvas.captureStream(0);
+		
 		}
 		
-		
-		drawText(window.pip_canvas_context, text, {
-			x: 20,
-			y: 20,
-			width: (window.pip_canvas.width - 40),
-			height: (window.pip_canvas.height - 40),
-			fontSize: 24,
-			align:'left',
-			vAlign:'bottom',
-			lineHeight:35,
-			debug:false,
-		});
-		
-		
-		window.pip_video.srcObject = window.pip_canvas.captureStream(0);
-		
+
+			
 	}
+	 
 	
 }
 window.write_on_pip_canvas = write_on_pip_canvas;

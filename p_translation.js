@@ -45,7 +45,7 @@ window.functionality = {
 		"classes_to_add":["sidebar-chat"],
 		"classes_to_remove":["show-document","sidebar-settings","show-rewrite","chat-shrink"],
 	},
-	"make_pictures":{
+	"pictures":{
 		"type":"media",
 		"i18n_code":"make_pictures",
 		"assistant_id":"text_to_image",
@@ -53,7 +53,7 @@ window.functionality = {
 		"classes_to_remove":["show-rewrite","sidebar-settings"],
 		"requires_web_gpu":true,
 	},
-	"make_music":{
+	"music":{
 		"type":"music",
 		"i18n_code":"make_music",
 		"assistant_id":"musicgen",
@@ -61,7 +61,7 @@ window.functionality = {
 		"classes_to_remove":["show-rewrite","sidebar-settings"],
 	},
 	
-	"new_document":{
+	"new":{
 		"type":"document",
 		"i18n_code":"New_document",
 		//"assistant_id":"any_writer",
@@ -70,7 +70,7 @@ window.functionality = {
 		"classes_to_remove":["sidebar-chat","sidebar-settings","show-rewrite"],
 		"better_with_web_gpu":true,
 	},
-	"transcribe_an_audio_file":{
+	"transcribe":{
 		"type":"document",
 		"i18n_code":"Transcribe_an_audio_file",
 		"assistant_id":"scribe",
@@ -80,7 +80,7 @@ window.functionality = {
 		//"requires_web_gpu":true,
 		"functions":["load_generate_a_subtitle_example"],
 	},
-	"improve_a_document":{
+	"rewrite":{
 		"type":"document",
 		"i18n_code":"improve_a_document",
 		"assistant_id":"any_writer",
@@ -90,7 +90,7 @@ window.functionality = {
 		"better_with_web_gpu":true,
 		"functions":["load_improve_a_document_example"],
 	},
-	"summarize_a_document":{
+	"summarize":{
 		"type":"document",
 		"i18n_code":"summarize_a_document",
 		//"assistant_id":"any_small_writer",
@@ -99,7 +99,7 @@ window.functionality = {
 		"better_with_web_gpu":true,
 		"functions":["load_summarize_a_document_example"],
 	},
-	"translate_a_document":{
+	"translate":{
 		"type":"document",
 		"i18n_code":"translate_a_document",
 		//"assistant_id":"any_small_writer",
@@ -109,7 +109,7 @@ window.functionality = {
 		"functions":["load_translate_a_document_example"],
 	},
 	
-	"take_meeting_notes":{
+	"meeting":{
 		"type":"microphone",
 		"i18n_code":"take_meeting_notes",
 		"assistant_id":"scribe",
@@ -129,17 +129,17 @@ window.functionality = {
 	},
 	*/
 	
-	"help_with_homework":{
+	"homework":{
 		"type":"chat",
 		"i18n_code":"help_with_homework",
 		"assistant_id":"phi3_mini",
 		"fast_assistant_id":"fast_phi3_mini",
 		"better_with_web_gpu":true,
 	},
-	"ask_medical_questions":{
+	"medical":{
 		"type":"chat",
 		"i18n_code":"ask_medical_questions",
-		"assistant_id":"medical1"
+		"assistant_id":"medical6"
 	},
 	"live_audio_translation":{
 		"type":"microphone",
@@ -148,7 +148,7 @@ window.functionality = {
 		"functions":["enable_microphone"]
 	},
 	
-	"generate_a_subtitle":{
+	"subtitles":{
 		"type":"music",
 		"i18n_code":"Generate_a_subtitle",
 		"assistant_id":"scribe",
@@ -158,7 +158,7 @@ window.functionality = {
 		//"requires_web_gpu":true,
 		"functions":["load_generate_a_subtitle_example"],
 	},
-	"scan_a_document":{
+	"scan":{
 		"type":"camera",
 		"i18n_code":"scan_a_document",
 		//"assistant_id":"any",
@@ -167,7 +167,7 @@ window.functionality = {
 		"functions":["load_scan_a_document_example"]
 	},
 	
-	"describe_images":{
+	"describe":{
 		"type":"media",
 		"i18n_code":"Describe_images",
 		"assistant_id":"image_to_text",
@@ -209,13 +209,13 @@ window.functionality = {
 		"functions":["load_cleopatra_example","enable_microphone","enable_speaker"],
 	},
 	*/
-	"get_a_hug":{
+	"therapy":{
 		"type":"chat",
 		"i18n_code":"get_a_hug",
-		"assistant_id":"mental1"
+		"assistant_id":"mental6"
 	},
 	
-	"voice_chat":{
+	"voice":{
 		"type":"microphone",
 		"i18n_code":"Voice_chat",
 		"assistant_id":"any_writer",
@@ -225,7 +225,7 @@ window.functionality = {
 		"classes_to_remove":["show-document","sidebar-settings","show-rewrite","chat-shrink"],
 	},
 	
-	"search_your_documents":{
+	"search":{
 		"type":"learning",
 		"i18n_code":"Search_your_documents",
 		"assistant_id":"any_writer",
@@ -251,7 +251,7 @@ window.functionality = {
 		"functions":["load_chat_with_a_document_example"],
 	},
 	
-	"research_a_topic":{
+	"research":{
 		"type":"learning",
 		"i18n_code":"Research_a_topic",
 		"assistant_id":"clone_researcher1",
@@ -260,7 +260,7 @@ window.functionality = {
 		//"classes_to_add":["sidebar-chat"],
 		"classes_to_remove":["show-document","sidebar-settings","show-rewrite","chat-shrink"],
 	},
-	"write_code":{
+	"code":{
 		"type":"programming",
 		"i18n_code":"write_code",
 		"assistant_id":"any_coder",
@@ -462,7 +462,7 @@ function get_translation(i18n_code, target_language=null, return_empty_string=fa
 			return i18n_code;
 		}
 		else{
-			return 'error';
+			return '';
 		}
 		
 	}
@@ -481,6 +481,14 @@ function get_translation(i18n_code, target_language=null, return_empty_string=fa
 		
 		translated = i18n_code.replaceAll('_',' ');
 		//translated = translated.replaceAll('-',' ');
+		
+		
+		
+		if(typeof window.translations[i18n_code] == 'undefined' && i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined'){
+			//console.warn("get_translation: removing 'fast_' from beginning of i18n code: ", i18n_code);
+			i18n_code = i18n_code.replace('fast_','');
+		}
+		
 		if(typeof window.translations[i18n_code] != 'undefined'){
 			if(typeof window.translations[i18n_code][target_language] == 'string'){
 				translated = window.translations[i18n_code][target_language];
@@ -872,25 +880,25 @@ function generate_functionalities_list(){
 			if(key == 'chat'){
 				switch_button_el.innerHTML = '<img src="./images/chat_mini_ankeiler.png" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'new_document'){
+			else if(key == 'new'){
 				switch_button_el.innerHTML = '<img src="./images/new_document_mini_ankeiler.png" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'make_pictures'){
+			else if(key == 'pictures'){
 				switch_button_el.innerHTML = '<img src="./images/make_pictures_mini_ankeiler.png" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'scan_a_document'){
+			else if(key == 'scan'){
 				switch_button_el.innerHTML = '<img src="./images/scan_document_mini_ankeiler.png" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'take_meeting_notes'){
+			else if(key == 'meeting'){
 				switch_button_el.innerHTML = '<img src="./images/take_meeting_notes_mini_ankeiler.svg" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'make_music'){
+			else if(key == 'music'){
 				switch_button_el.innerHTML = '<img src="./images/make_music_mini_ankeiler.svg" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'search_your_documents'){
+			else if(key == 'search'){
 				switch_button_el.innerHTML = '<img src="./images/search_your_documents_mini_ankeiler.svg" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
-			else if(key == 'write_code'){
+			else if(key == 'code'){
 				switch_button_el.innerHTML = '<img src="./images/write_code_mini_ankeiler.png" alt="' + get_translation(details.i18n_code) + '"/><div data-i18n="' + details.i18n_code + '">' + get_translation(details.i18n_code) + '</div>';
 			}
 			

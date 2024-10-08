@@ -571,7 +571,7 @@ class PipelineSingleton {
 
 
 registerPromiseWorker(function (message) {
-	console.log("registerPromiseWorker: translation worker got message");
+	console.log("registerPromiseWorker: translation worker got message: ", message);
 	////console.log("WORKER: registerPromiseWorker: GOT MESSAGE: ", message); // { hello: 'world', answer: 42, 'this is fun': true }
 	
 	
@@ -681,7 +681,7 @@ registerPromiseWorker(function (message) {
 					
 					if(typeof message.task.translation_details != 'undefined' && message.task.translation_details != null){
 						if(typeof message.task.translation_details.model == 'string'){
-							////console.log("TRANSLATION WORKER: found model name in translation_details: ", message.task.translation_details.model);
+							console.log("TRANSLATION WORKER: found model name in translation_details: ", message.task.translation_details.model);
 							hf_model_url = message.task.translation_details.model;
 						}
 					}
@@ -770,10 +770,10 @@ let translator = await pipeline(
 									return
 								}
 								const pre_part = ahead_text.substr(0,ahead_text.indexOf(sentence));
-								////console.log("pre_part: ", pre_part);
+								console.log("pre_part: -->" + pre_part + "<--");
 								////console.log("next cursor with pre_part + sentence: ", ahead_text.indexOf(sentence) + sentence.length);
 								ahead_text = ahead_text.substr(ahead_text.indexOf(sentence) + sentence.length);
-								//console.log("ahead text has shrunk to: ", ahead_text);
+								console.log("ahead text has shrunk to:  -->" +  ahead_text);
 								//console.log("TRANSLATION WORKER: TRANSLATING: SENTENCE:", sentence);
 								
 								self.postMessage({
@@ -927,6 +927,13 @@ const result = await pipe(">>jpn<< I love pizza", {
 										console.error("translation result was not an array: ", err);
 									}
 									
+									let extra_space = '';
+									if((constructed_text + pre_part).length && !(constructed_text + pre_part).endsWith(' ') && !(constructed_text + pre_part).endsWith('\n') && !translation[0].translation_text.startsWith(' ') && translation[0].translation_text.length && !translation[0].translation_text.startsWith('\n')){
+										console.log("translation worker: injecting an extra space");
+										extra_space = ' ';
+									}
+									
+									
 									self.postMessage({
 										task: message.task,
 										translated_property:translated_property,
@@ -938,13 +945,20 @@ const result = await pipe(">>jpn<< I love pizza", {
 										output_sentence:translation[0].translation_text,
 										response_so_far:constructed_text + pre_part,
 										pre_part:pre_part,
-										chunk:pre_part + translation[0].translation_text,
+										chunk:pre_part + extra_space + translation[0].translation_text,
 										old_text:constructed_text,
-										new_text:constructed_text + pre_part + translation[0].translation_text,
+										new_text:constructed_text + pre_part + extra_space + translation[0].translation_text,
 									});
 									
 									constructed_text += pre_part;
-									constructed_text += translation[0].translation_text;
+									
+									if(typeof pre_part == 'string' && typeof translation[0].translation_text == 'string'){
+										console.log("TRANSLATION WORKER: JOINING:  ", pre_part + "-XXX-" + translation[0].translation_text.substr(0,10) + "...");
+									}
+									
+									
+									
+									constructed_text = constructed_text + extra_space + translation[0].translation_text;
 									//previous_constructed_text = constructed_text;
 									////console.log("NEW constructed_text: ", constructed_text);
 									do_translation_loop();
@@ -1047,21 +1061,23 @@ const result = await pipe(">>jpn<< I love pizza", {
 						}
 						
 						
-						console.log("translation worker: actual_device: ", actual_device);
+						console.log("translation worker:  actual_device,hf_model_url: ", actual_device, hf_model_url);
 						
 						// let pipe = 
 						pipeline(
 							'translation', 
 							hf_model_url, 
 							{
-			                	progress_callback: progressCallback,
-			    				//dtype: dtype_settings,
+			                	
+			    				//dtype: dtype_settings, // { dtype: 'fp32' }
 			    				device: actual_device,
-								//quantified: true,
+								//quantized: true,
+								progress_callback: progressCallback,
 			            	},
 			    			
-						)  ///; // ,{ dtype: 'fp32' }
+						)
 						.then((pipe) => {
+							console.log("TRANSLATION WORKER: MADE PIPE");
 							console.log("TRANSLATION WORKER: pipeline_constructed.  pipe, sentences: ", pipe, sentences);
 					
 							self.postMessage({
@@ -1260,12 +1276,13 @@ addEventListener('message', async (event) => {
 		
 		// Interrupt
 		if(message.action == 'interrupt' && self.running){
+			console.log("translation worker: setting interrupt to true");
 			self.interrupt = true;
 		}
 		
 		// Stop
 		else if(typeof message.action == 'stop'){
-		
+			console.log("translation worker: action was STOP");
 			if(self.running){
 				self.stop = true;
 				self.interrupt = true;

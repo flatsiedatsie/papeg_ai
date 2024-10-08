@@ -524,7 +524,7 @@ self.model = null;
 self.busy_preloading = false;
 
 async function preload_image_to_text(task){
-	//console.log("IMAGE TO TEXT WORKER: in preload_image_to_text. task: ",task);
+	console.log("IMAGE TO TEXT WORKER: in preload_image_to_text. task: ",task);
 	self.busy_preloading = true;
 	//let huggingface_id = 'onnx-community/Florence-2-base-ft';
 	let huggingface_id = 'Xenova/moondream2';
@@ -533,11 +533,11 @@ async function preload_image_to_text(task){
 		huggingface_id = task.huggingface_id;
 	}
 	if(typeof self.current_huggingface_id == 'string' && self.current_huggingface_id != huggingface_id){
-		//console.log("IMAGE TO TEXT WORKER: SWITCHING TO DIFFERENT MODEL: ", huggingface_id);
+		console.warn("IMAGE TO TEXT WORKER: SWITCHING TO DIFFERENT MODEL: ", huggingface_id);
 		self.processor = null;
 		self.tokenizer = null;
 		if(self.model != null){
-			//console.log("IMAGE TO TEXT WORKER: Disposing of old model first");
+			console.log("IMAGE TO TEXT WORKER: Disposing of old model first");
 			await self.model.dispose();
 		}
 		self.model = null;
@@ -646,10 +646,10 @@ async function preload_image_to_text(task){
 
 
 
-async function image_to_text(task){
-	//console.log("IMAGE TO TEXT WORKER: in image_to_text. task: ",task);
+async function image_to_text(task=null){
+	console.log("IMAGE TO TEXT WORKER: in image_to_text. task: ",task);
 	
-	if(typeof task.prompt != 'string' || typeof task.image_blob == 'undefined' || typeof task.type != 'string'){
+	if(task == null || typeof task.prompt != 'string' || typeof task.image_blob == 'undefined' || typeof task.type != 'string'){
 		console.error("IMAGE TO TEXT WORKER: image_to_text: missing inputs (prompt,image_blog,type)");
 		return null
 	}

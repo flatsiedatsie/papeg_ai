@@ -410,6 +410,10 @@ window.translations = {
 		"en":"Running in offline mode",
 		"nl":"Er is geen internet verbinding",
 	},
+	"No_internet_connection":{
+		"en":"No internet connection",
+		"nl":"Er is geen internet verbinding",
+	},
 	
 	"The_download_may_take_a_while_as_the_file_size_is":{
 		"en":"The download may take a while, as the file size is",
@@ -418,6 +422,10 @@ window.translations = {
 	"gigabytes":{
 		"en":"Gigabytes",
 		"nl":"Gigabyte",
+	},
+	"Cannot_scan":{
+		"en":"Cannot scan",
+		"nl":"Kan niet scannen",
 	},
 	
 	"role_playing":{ 
@@ -1655,10 +1663,18 @@ window.translations = {
 		"nl":"Geef een gedetailleerde beschrijving van deze afbeelding",
 	},
 	
-	
+	"Speaker_recognition_has_loaded":{
+		"en":"🎤 🧑‍⚖️👩‍⚕️🧑‍🚀 Speaker recognition has loaded",
+		"nl":"🎤 🧑‍⚖️👩‍⚕️🧑‍🚀 Spreker stemherkenning is gestart",
+	},
 	"Voice_recognition_has_loaded":{
 		"en":"⌛ 🎤 👂 👍 Voice recognition has loaded",
 		"nl":"⌛ 🎤 👂 👍 Stemherkenning is gestart",
+	},
+	
+	"Cannot_keep_up_with_voice_input":{
+		"en":"🤯 Cannot keep up with voice input",
+		"nl":"🤯 Kan de steminvoer niet bijhouden",
 	},
 	
 	"idle":{
@@ -2036,8 +2052,8 @@ window.translations = {
 	},
 	
 	"Reloading_the_page":{ 
-		"en":"This website shall now be reloaded",
-		"nl":"Deze website zal nu worden herladen",
+		"en":"Reloading...",
+		"nl":"Aan 't herladen...",
 	},
 	
 	"🍏🍎":{ 
@@ -2153,6 +2169,54 @@ window.translations = {
 		"nl":"Stem commando",
 	},
 	
+	"Interrupt_speaking":{ 
+		"en":"Interrupt speaking",
+		"nl":"Onderbreek spreken",
+	},
+	
+	"Yes":{ 
+		"en":"Yes",
+		"nl":"Ja",
+	},
+	
+	"No":{ 
+		"en":"No",
+		"nl":"Nee",
+	},
+	
+	"Language_specialists":{ 
+		"en":"Language specialists",
+		"nl":"Taal specialisten",
+	},
+	"General":{ 
+		"en":"General",
+		"nl":"Algemeen",
+	},
+	"Bitnet":{ 
+		"en":"Bitnet",
+		"nl":"Bitnet",
+	},
+	"Medical":{ 
+		"en":"Medical",
+		"nl":"Medisch",
+	},
+	"Therapy":{ 
+		"en":"Therapy",
+		"nl":"Therapie",
+	},
+	"Actors":{ 
+		"en":"Actors",
+		"nl":"Acteurs",
+	},
+	"Other":{ 
+		"en":"Other",
+		"nl":"Anders",
+	},
+	"Custom":{ 
+		"en":"Custom",
+		"nl":"Aangepast",
+	},
+	
 	"Read":{ 
 		"en":"Read",
 		"nl":"Lees",
@@ -2171,6 +2235,10 @@ window.translations = {
 		"nl":"Vertaling",
 	},
 	
+	"Interrupted":{ 
+		"en":"Interrupted",
+		"nl":"Onderbroken",
+	},
 	"interrupted":{ 
 		"en":"Interrupted",
 		"nl":"Onderbroken",
@@ -2182,6 +2250,10 @@ window.translations = {
 	"assistant":{  // used in simple task list
 		"en":"AI",
 		"nl":"AI",
+	},
+	"Export":{
+		"en":"Export",
+		"nl":"Exporteren",
 	},
 	
 	"stt":{ 
@@ -2283,6 +2355,15 @@ window.translations = {
 	"Find_and_share_blueprints_on_Reddit":{
 		"en":"Find and share blueprints on Reddit",
 		"nl":"Vind en deel blauwdrukken op Reddit",
+	},
+	
+	"Words_in_the_current_document":{
+		"en":"Words in the current document",
+		"nl":"Woorden in het huidige document",
+	},
+	"Words_in_the_current_selection":{
+		"en":"Words in the selection",
+		"nl":"Woorden in de selectie",
 	},
 	
 	"More_settings":{
@@ -2809,18 +2890,6 @@ window.translations = {
 		"nl":"Dit model, dat eigenlijk 'Stable LM 2 1.6B' wordt genoemd, is ontwikkeld door het bedrijf 'Stability AI'. Het is sinds januari 2024 voor het brede publiek beschikbaar. \n\nAls je je bedenkt hoe relatief klein het is, is het ongelofelijk wat het allemaal kan. En dat het ook nog eens meerdere talen ondersteunt: Engels, Spaans, Duits, Italiaans, Frans, Portugees, en.. Nederlands!",
 	},
 	
-	"fast_zephyr_name":{
-		"en":"Zephyr",
-		"nl":"Zephyr",
-	},
-	"fast_zephyr_description":{
-		"en":"I might not be very smart, but I speak 10 languages",
-		"nl":"Niet heel slim, maar spreekt wel 10 talen, waaronder Nederlands",
-	},
-	"fast_zephyr_model_info":{
-		"en":"The model, officially called 'Stable LM 2 1.6B' was created by a company called 'Stability AI'. It was released to the public in Januari of 2024. \n\nIt's quite capable for its size, and on top of that it supports multiple languages: English, Spanish, German, Italian, French, Portuguese, and Dutch.",
-		"nl":"Dit model, dat eigenlijk 'Stable LM 2 1.6B' wordt genoemd, is ontwikkeld door het bedrijf 'Stability AI'. Het is sinds januari 2024 voor het brede publiek beschikbaar. \n\nAls je je bedenkt hoe relatief klein het is, is het ongelofelijk wat het allemaal kan. En dat het ook nog eens meerdere talen ondersteunt: Engels, Spaans, Duits, Italiaans, Frans, Portugees, en.. Nederlands!",
-	},
 	
 	
 	"mermaid_name":{
@@ -2864,16 +2933,6 @@ window.translations = {
 		"nl":"Dit AI model is ontwikkeld door Microsoft, en is bijzonder door de licentie: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld wiskunde vragen.",
 	},
 	
-	"fast_phi2_name":{
-		"en":"Small homework tutor",
-		"nl":"Kleine huiswerk hulp",
-	},
-	"fast_phi2_description":{
-		"en":"Trained on school books, I've been called long-winded",
-		"nl":"Getraind op duizenden (Engelstalig) schoolboeken. Soms langdradig",
-	},
-	// "fast_phi2_model_info" is copied later
-	*/
 	
 	"phi3_name":{
 		"en":"Writer",
@@ -2887,7 +2946,7 @@ window.translations = {
 		"en":"This AI model, which is actually called 'Phi 3 mini', was developed by Microsoft. What's nice about it is that it has a very open license - you can do just about anything you want with it. Well done Microsoft!\n\nBecause it was trained on a boat load of school books it's a good choice if, for example, you've got questions relating to math. ",
 		"nl":"Dit AI model, dat eigenlijk 'Phi 3 mini' heet, is ontwikkeld door Microsoft. De licentie is fijn: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld vragen over biologie.",
 	},
-	
+	*/
 	
 	"phi3_1_mini_4k_name":{
 		"en":"Phi 3.1",
@@ -2902,7 +2961,7 @@ window.translations = {
 		"nl":"Dit AI model, dat eigenlijk 'Phi 3 mini' heet, is ontwikkeld door Microsoft. De licentie is fijn: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld vragen over biologie.",
 	},
 	
-	
+	/*
 	"fast_phi3_mini_name":{
 		"en":"Writer",
 		"nl":"Schrijver",
@@ -2921,7 +2980,7 @@ window.translations = {
 		"en":"Medium. Recommended.",
 		"nl":"Middel. Aanrader.",
 	},
-	
+	*/
 	
 	"phi3_mini_name":{
 		"en":"Medium writer",
@@ -3046,7 +3105,7 @@ window.translations = {
 		"nl":"Bitnet AI modellen zijn een erg toffe, gloednieuwe technologie. Ze hebben minder processorkracht nodig (en dus ook minder electriciteit), waardoor ze goed geschikt lijken voor mobiele en web-browser toepassingen. Ze zijn wel iets lastiger om te bouwen, maar daar hebben we hier geen last van. Wel is het zo dat er nog geen goeie BitNet modellen beschikbaar zijn. Maar dat zal niet lang meer duren. Deze AIis vooral een klein test-model om de technologie te kunnen uitproberen.",
 	},
 	
-	
+	/*
 	"fast_gemma_name":{
 		"en":"Gemma",
 		"nl":"Gemma",
@@ -3059,6 +3118,7 @@ window.translations = {
 		"en":"This AI model was developed by Google. It's not really all that much to write home about to be honest. But it should at least be a little bit fast. Still, Phi is probably more useful. ",
 		"nl":"Dit AI model is ontwikkeld door Google. Het is niet echt om over naar huis te schrijven, maar het zou wel relatief snel moeten zijn. Waarschijnlijk is Phi nuttiger.",
 	},
+	*/
 	
 	
 	"gemma_name":{
@@ -3093,7 +3153,7 @@ window.translations = {
 	
 	
 	
-	
+	/*
 	"fast_gemma_2_2b_name":{
 		"en":"Small writer",
 		"nl":"Kleine schrijver",
@@ -3106,6 +3166,7 @@ window.translations = {
 		"en":"This AI model was developed by Google. It has 2.6 billion parameters, which may sound like a lot, but for an AI model it's tiny.",
 		"nl":"Dit AI model is ontwikkeld door Google. Het heeft 2.6 miljard parameters. Dat klinkt groot, maar voor een AI model is het erg klein.",
 	},
+	*/
 	
 	"gemma_2_2b_name":{
 		"en":"Small writer",
@@ -3121,7 +3182,7 @@ window.translations = {
 	},
 	
 	
-	
+	/*
 	"fast_gemma_2_9b_it_name":{
 		"en":"Big Gemma",
 		"nl":"Grote Gemma",
@@ -3134,6 +3195,7 @@ window.translations = {
 		"en":"This AI model was developed by Google. It has 9 billion parameters, which means that you use it you will be loading 9 billion numbers into your device's memory when you use it. In other words: it's relatively big (while still being relatively small compared to the AI models that professionals run on larger cloud servers).",
 		"nl":"Dit AI model is ontwikkeld door Google. Het heeft 9 miljard parameters, wat betekent dat je 9 miljard cijfers in het geheugen van je computer gaat inladen wanneer je het gebruikt. Met andere woorden: het is een (relatief) groot AI model. Er zijn nog veel grotere, maar daar heb je een monster van een computer voor nodig.",
 	},
+	*/
 	
 	"gemma_2_9b_it_name":{
 		"en":"Big Gemma",
@@ -3221,7 +3283,7 @@ window.translations = {
 	
 	
 	
-	
+	/*
 	"fast_incite_chat_name":{
 		"en":"Incite chat",
 		"nl":"Incite chat",
@@ -3230,6 +3292,7 @@ window.translations = {
 		"en":"A small fast chat bot",
 		"nl":"Een kleine snelle kletsmajoor",
 	},
+	*/
 	
 	"incite_chat_name":{
 		"en":"Incite chat",
@@ -3239,8 +3302,12 @@ window.translations = {
 		"en":"A small chat bot",
 		"nl":"Een kleine kletsmajoor",
 	},
+	"incite_chat_model_info":{
+		"en":"A small chat bot",
+		"nl":"Een kleine kletsmajoor",
+	},
 	
-	
+	/*
 	"fast_tiny_llama_name":{
 		"en":"Tiny chatter",
 		"nl":"Kleine kletser",
@@ -3253,6 +3320,7 @@ window.translations = {
 		"en":"This AI model, which is actually called Tiny Llama, is not that smart. But because it's to tiny it doesn't use a lot of memory either, and as a result it's blazingly fast.",
 		"nl":"Dit AI model, dat eigenlijk 'Tiny llama' heet, is niet zo slim. Het is simpelweg te klein om veel informatie te bevatten. Maar het heeft wel een ander voordeel: het is super snel, juist doordat het klein is en weinig geheugen gebruikt.",
 	},
+	*/
 	
 	"tiny_llama_name":{
 		"en":"Tiny chatter",
@@ -3281,18 +3349,20 @@ window.translations = {
 		"nl":"Dit AI model, dat eigenlijk 'Tiny llama' heet, is niet zo slim. Deze versie is getraind om Duits te kunnen spreken. Het is simpelweg te klein om veel informatie te bevatten.\n\nWees voorbereid op een zwaar teleurstellende ervaring.",
 	},
 	
+	
 	"fast_llama3_8B_name":{
-		"en":"Fun Writer",
-		"nl":"Vrolijke Schrijver",
+		"en":"Large fun Writer",
+		"nl":"Grote vrolijke Schrijver",
 	},
 	"fast_llama3_8B_description":{
 		"en":"Large & populair. Built by Facebook",
 		"nl":"groot & populair. Gemaakt door Facebook",
 	},
 	"fast_llama3_8B_model_info":{
-		"en":"This AI model, which is actually called 'Llama 3 8B', was highly anticipated when it came out in april of 2024. It's very capable, but does have a higer than average tendency to 'hallucinate' - to make up things that false.\n\nIt was built by Facebook, a company not known for it's protection of privacy. Yet by making this very capable model available they allow for a lot of privacy protecting use cases, such as this very website.\n\nTo clarify: even though it's been developed by Facebook, this AI does not and can not make any connection to the internet.",
+		"en":"This AI model, which is actually called 'Llama 3 8B', was highly anticipated when it came out in april of 2024. It's very capable, but does have a higer than average tendency to 'hallucinate' - to make up things that false.\n\nIt was built by Facebook, a company not known for it's protection of privacy. Yet by making this model available they allow for a lot of privacy protecting use cases, such as this very website.\n\nTo clarify: even though it's been developed by Facebook, this AI does not and can not make any connection to the internet.",
 		"nl":"Dit AI model, dat eigenlijk 'Llama 3 8B' heet, kwam met veel bombarie uit in april 2024. Het is zeer capabel voor z'n grootte, al heeft het helaas ook een bovengemiddelde neiging tot 'hallucinatie', want betekent dat het soms dingen verzint. Het houdt ook te stug vol dat de onzin klopt. Dus neem de antwoorden op vragen met een bovengemiddelde korrel zout. \n\nOok al is dit model door Facebook gebouwd, zorgen over privacy zijn niet nodig. Dit soort AI modellen kunnen gelukkig niet uit zichzelf internet verbindingen maken.",
 	},
+	
 	
 	
 	"fast_llama70_name":{
@@ -3307,6 +3377,34 @@ window.translations = {
 		"en":"This AI model is actually called 'Llama 3 70B'. The 70B refers to the fact that it has 70 billion weights. That's 10 to 35 times more than the other models you can try here. It's huge and extrely capable, but you need a beast of a computer to run it. \n\nEven though it's been built by Facebook, this AI does not make any connections to Facebook's servers. Fortunately that's not how these AI's work, they can't do that.",
 		"nl":"Dit AI model heet eigenlijk 'Llama 3 70B'. En het is een gigantisch beest! Dit model is 10 tot 35 keer groter dan de andere AI modellen die je op deze website kunt proberen. \n\nOok al is dit model door Facebook gebouwd, zorgen over privacy zijn niet nodig. Dit soort AI modellen kunnen gelukkig niet uit zichzelf internet verbindingen maken.",
 	},
+	
+	
+	"llama3_1b_name":{
+		"en":"Mini fun writer",
+		"nl":"Mini vrolijke schrijver",
+	},
+	"llama3_1b_description":{
+		"en":"The smallest AI built by Facebook",
+		"nl":"De kleinste door Facebook gemaakte AI",
+	},
+	"llama3_1b_model_info":{
+		"en":"This AI model is actually called 'Llama 3.2 Instruct 1B'.\n\nIt was built by Facebook, a company not known for it's protection of privacy. Yet by making this model available they allow for a lot of privacy protecting use cases, such as this very website.\n\nTo clarify: even though it's been developed by Facebook, this AI does not and cannot make any connection to the internet.",
+		"nl":"Dit AI model heet eigenlijk 'Llama 3.2 Instruct 1B'.\n\nOok al is dit model door Facebook gebouwd, zorgen over privacy zijn niet nodig. Dit soort AI modellen kunnen gelukkig niet uit zichzelf internet verbindingen maken.",
+	},
+	
+	"llama3_3b_name":{
+		"en":"Small fun writer",
+		"nl":"Kleine vrolijke schrijver",
+	},
+	"llama3_3b_description":{
+		"en":"The second-smallest AI built by Facebook",
+		"nl":"De op één na kleinste door Facebook gemaakte AI",
+	},
+	"llama3_3b_model_info":{
+		"en":"This AI model is actually called 'Llama 3.2 Instruct 3B'.\n\nIt was built by Facebook, a company not known for it's protection of privacy. Yet by making this model available they allow for a lot of privacy protecting use cases, such as this very website.\n\nTo clarify: even though it's been developed by Facebook, this AI does not and cannot make any connection to the internet.",
+		"nl":"Dit AI model heet eigenlijk 'Llama 3.2 Instruct 3B'.\n\nOok al is dit model door Facebook gebouwd, zorgen over privacy zijn niet nodig. Dit soort AI modellen kunnen gelukkig niet uit zichzelf internet verbindingen maken.",
+	},
+	
 	
 	
 	"danube_name":{
@@ -3337,17 +3435,32 @@ window.translations = {
 	
 	
 	"danube_3_500m_name":{
-		"en":"Tiny writer",
-		"nl":"Kleine schrijver",
+		"en":"Smallest writer",
+		"nl":"Kleinste schrijver",
 	},
 	"danube_3_500m_description":{
 		"en":"Minuscule",
 		"nl":"Minuscuul",
 	},
 	"danube_3_500m_model_info":{
-		"en":"The smaller useable AI model. Extremely impressive for it's size. \n\nIt was built by a company called H2O.ai.",
+		"en":"The smallest useable AI model. Extremely impressive for it's size. \n\nIt was built by a company called H2O.ai.",
 		"nl":"Het kleinste enigszins bruikbare AI model. Enorm indrukwekkend voor z'n grootte.\n\nHet is gebouwd door een bedrijf genaamd H20.ai.",
 	},
+	
+	"smol_360m_name":{
+		"en":"Smol",
+		"nl":"Smol",
+	},
+	"smol_360m_description":{
+		"en":"Minuscule",
+		"nl":"Minuscuul",
+	},
+	"smol_360m_model_info":{
+		"en":"So small that it is likely to produce gibberish.",
+		"nl":"Dit superkleine AI model heet 'Smol 360m', een verwijzing naar 'small'. Het is zo piepklein dat het waarschijnlijk veel onzin produceert.",
+	},
+	
+	
 	/*
 	"fietje_chat_name":{
 		"en":"Dutch chat",
@@ -3656,6 +3769,39 @@ window.translations = {
 	
 	
 	
+	"polanka_polish_name":{
+	        "en":"Polish writer",
+	        "nl":"Poolse schrijver",
+	        "de":"Polnischer Schriftsteller",
+	        "fr":"Écrivain Polonais",
+	        "it":"Scrittore Polacca",
+	        "es":"Escritor Polaco",
+	        "pt":"Escritor Polonês",
+	        "pl":"Włoski w języku Polskim",
+	        "uk":"Польська письменниця",
+	        "gr":"Πολωνική συνομιλία",
+	        "hu":"Lengyel csevegés",
+	        "ru":"Польский чат",
+	},
+	"polanka_polish_description":{
+	        "en":"🇵🇱 Speaks Polish",
+	        "nl":"🇵🇱 Spreekt Pools",
+	        "de":"🇵🇱 Spricht Polnisch",
+	        "fr":"🇵🇱 Parle Polonais",
+	        "it":"🇵🇱 Parla Polacco",
+	        "es":"🇵🇱 Habla Polaco",
+	        "pt":"🇵🇱 Línguas faladas Polaco",
+	        "pl":"🇵🇱 Posługuje się językiem Polskim",
+	        "uk":"🇵🇱 Володіє польською мовою",
+	        "gr":"🇵🇱 Μιλάει Πολωνικά",
+	        "hu":"🇵🇱 Lengyelül beszél",
+	        "ru":"🇵🇱 Говорит по-польски",
+	},
+	"polanka_polish_model_info":{
+		"en":"This small Polish speaking model is based on Qwen2 1.5B, a Chinese-English AI model.",
+		"nl":"Dit Pools sprekende AI model is gebaseerd op Qwen2 1.5B, oorspronkelijk een Chinees-Engels AI model.",
+	},
+	
 	
 	"tiny_llama_polish_name":{
 	        "en":"Polish chat",
@@ -3724,6 +3870,11 @@ window.translations = {
 	},
 	
 	
+	
+	
+	
+	// RUSSIAN
+	
 	"phi3_mini_russian_name":{
 		"en":"Russian writer",
 		"nl":"Russische schrijver",
@@ -3758,7 +3909,6 @@ window.translations = {
 	},
 	
 	
-	
 	"gemma_2_2b_russian_name":{
 		"en":"Small Russian writer",
 		"nl":"Kleine Russische schrijver",
@@ -3790,6 +3940,46 @@ window.translations = {
 	"gemma_2_2b_russian_model_info":{
 		"en":"This Russian speaking model is based on Gemma 2 2B. It was trained to speak Russian.",
 		"nl":"Dit Russisch sprekende AI model is gebaseerd op Gemma 2 2B. Het is getraind om Russisch te spreken.",
+	},
+	
+	
+	
+	
+	// JAPANESE
+	
+	"gemma_2_2b_japanese_name":{
+		"en":"Small Japanese writer",
+		"nl":"Kleine Japanse schrijver",
+		"de":"Kleiner Japanischer Schriftsteller",
+		"fr":"Petit Écrivain Japonais",
+		"it":"Piccolo Scrittore giapponese",
+		"es":"Pequeño Escritor Japonés",
+		"pt":"Pequeno Escritor Japonês",
+		"pl":"Mały japoński pisarz",
+		"uk":"Маленький японський письменник",
+		"gr":"Μικρός Ιάπωνας συγγραφέας",
+		"hu":"Kis japán író",
+		"ru":"Мелкий японский писатель",
+		"jp":"小さな日本の作家",
+	},
+	"gemma_2_2b_japanese_description":{
+		"en":"🇯🇵 Speaks Japanese",
+		"nl":"🇯🇵 Spreekt Japans",
+		"de":"🇯🇵 Spricht Japanisch",
+		"fr":"🇯🇵 Parle Japonais",
+		"it":"🇯🇵 Parla giapponese",
+		"es":"🇯🇵 Habla Japonés",
+		"pt":"🇯🇵 Línguas faladas Japonês",
+		"pl":"🇯🇵 Mówi po Japońsku",
+		"uk":"🇯🇵 Володіє японською мовою",
+		"gr":"🇯🇵 Μιλάει Ιαπωνικά",
+		"hu":"🇯🇵 Japánul beszél",
+		"ru":"🇯🇵 Владеет японским языком",
+		"jp":"🇯🇵 日本語を話す",
+	},
+	"gemma_2_2b_japanese_model_info":{
+		"en":"This Japanese speaking model is based on Gemma 2 2B. It was trained to speak Japanese by Google itself, as an official release.",
+		"nl":"Dit Japans sprekende AI model is gebaseerd op Gemma 2 2B. Het is getraind om Japans te spreken door Google zelf - het is een officieële versie van Gemma 2 2B.",
 	},
 	
 	
@@ -3836,6 +4026,7 @@ window.translations = {
 	    "de":"Großartig... wenn dein Computer es verarbeiten kann",
 	},
 
+	/*
 	"fast_mistral_name":{
 	    "en":"Serious Writer",
 	    "nl":"Serieuze schrijver",
@@ -3854,6 +4045,7 @@ window.translations = {
 	    "fr":"C'est l'un des modèles d'IA les plus populaires et les plus célébrés. Il a été développé par la société française Mistral AI, et depuis qu'ils ont publié cet IA, ils ont été très populaires. C'est un excellent modèle polyvalent. Notez que la version disponible ici est l'une des versions les plus simples du modèle disponible.",
 	    "de":"Dies ist eines der beliebtesten und gefeiertsten KI-Modelle. Es wurde von der französischen Firma Mistral AI entwickelt und seitdem sie dieses KI veröffentlicht haben, sind sie sehr beliebt. Es ist ein großartiges Allround-Modell. Beachten Sie, dass die hier verfügbare Version eine der einfachsten Versionen des Modells ist, das verfügbar ist.",
 	},
+	*/
 	/*
 	"mistral2_name":{
 		"en":"Mistral",
@@ -4008,7 +4200,7 @@ window.translations = {
 		"nl":"De echte naam van dit AI model is Qwen 2 1.5B.",
 	},
 	
-	
+	/*
 	"fast_qwen2_0_5b_name":{
 		"en":"Qwen 2 tiny",
 		"nl":"Qwen 2 tiny",
@@ -4021,6 +4213,7 @@ window.translations = {
 		"en":"The real name of this model is Qwen 2 1.5B.",
 		"nl":"De echte naam van dit AI model is Qwen 2 1.5B.",
 	},
+	*/
 	
 	"qwen2_0_5b_name":{
 		"en":"Qwen 2 tiny",
@@ -4079,8 +4272,8 @@ window.translations = {
 	
 
 	"stable_code_name":{
-		"en":"Programmer",
-		"nl":"Programmeur",
+		"en":"Old programmer",
+		"nl":"Oude programmeur",
 	},
 	"stable_code_description":{
 		"en":"I'm only good at programming computer code",
@@ -4092,8 +4285,8 @@ window.translations = {
 	},
 
 	"stable_code_3B_instruct_name":{
-		"en":"Small programmer",
-		"nl":"Kleine programmeur",
+		"en":"Small old programmer",
+		"nl":"Kleine oude programmeur",
 	},
 	"stable_code_3B_instruct_description":{
 		"en":"I'm good at programming computer code... and nothing else",
@@ -4132,6 +4325,7 @@ window.translations = {
 		"nl":"Dit model is voornamelijk bedoeld om Python programmeercode te schrijven en analyzeren.",
 	},
 
+	/*
 	"fast_code_llama_name":{
 		"en":"Big and fast programmer",
 		"nl":"Grote snelle programmeur",
@@ -4144,6 +4338,7 @@ window.translations = {
 		"en":"This is a fast and capable programming companion. It's called CodeLlama 7B.\n\nOne downside is that it's been made available under the Llama2 license, which restricts how it may be used.",
 		"nl":"Dit AI model is een snelle en capabele hulp bij het programmeren. Het heet eigenlijk 'CodeLlama 7B'.\n\nWel iets om op te letten: het is beschikbaar gemaakt onder de Llama2 licentie, wat enige restricties met zich meebrengt.",
 	},
+	*/
 
 	"code_qwen_name":{
 		"en":"CodeQwen 7B",
@@ -4159,7 +4354,7 @@ window.translations = {
 	},
 
 
-
+	/*
 	"fast_qwen2_5_coder_1_5b_name":{
 		"en":"Small Qwen coder",
 		"nl":"Kleine Qwen coder",
@@ -4172,14 +4367,15 @@ window.translations = {
 		"en":"This is a larger (and slower) AI model that can help with programming. It's actually called 'Qwen 2.5 Coder 1.5B'.",
 		"nl":"Dit is een wat groter (en trager) AI model dat kan helpen bij programmeren. Het heet eigenlijk 'Qwen 2.5 Coder 1.5B'.",
 	},
+	*/
 	
 	"qwen2_5_coder_1_5b_name":{
-		"en":"Small Qwen coder",
-		"nl":"Kleine Qwen coder",
+		"en":"Small coder",
+		"nl":"Kleine coder",
 	},
 	"qwen2_5_coder_1_5b_description":{
 		"en":"Small programming assistant",
-		"nl":"KLeine programmeer assistent",
+		"nl":"Kleine programmeur",
 	},
 	"qwen2_5_coder_1_5b_model_info":{
 		"en":"This is a larger (and slower) AI model that can help with programming. It's actually called 'Qwen 2.5 Coder 1.5B'.",
@@ -4187,6 +4383,7 @@ window.translations = {
 	},
 	
 	
+	/*
 	"fast_qwen2_5_coder_7b_name":{
 		"en":"Big Qwen coder",
 		"nl":"Grote Qwen coder",
@@ -4199,10 +4396,11 @@ window.translations = {
 		"en":"This is a larger AI model that can help with programming. It's actually called 'Qwen 2.5 Coder 7B'.",
 		"nl":"Dit is een wat groter AI model dat kan helpen bij programmeren. Het heet eigenlijk 'Qwen 2.5 Coder 7B'.",
 	},
+	*/
 	
 	"qwen2_5_coder_7b_name":{
-		"en":"Big Qwen coder",
-		"nl":"Grote Qwen coder",
+		"en":"Big coder",
+		"nl":"Grote programmeur",
 	},
 	"qwen2_5_coder_7b_description":{
 		"en":"Large programming assistant",
@@ -4218,8 +4416,8 @@ window.translations = {
 
 
 	"medical1_name":{
-		"en":"Nurse",
-		"nl":"Zuster",
+		"en":"Small nurse",
+		"nl":"Kleine zuster",
 	},
 	"medical1_description":{
 		"en":"Not a substitute for medical advice from a professional!",
@@ -4257,8 +4455,8 @@ window.translations = {
 	},
 	
 	"medical4_name":{
-		"en":"Apollo",
-		"nl":"Apollo",
+		"en":"Small Nurse Apollo",
+		"nl":"Kleine zuster Apollo",
 	},
 	"medical4_description":{
 		"en":"Not a substitute for medical advice from a professional!",
@@ -4270,8 +4468,8 @@ window.translations = {
 	},
 	
 	"medical5_name":{
-		"en":"Big Apollo",
-		"nl":"Grote Apollo",
+		"en":"Big nurse Apollo",
+		"nl":"Grote zuster Apollo",
 	},
 	"medical5_description":{
 		"en":"Not a substitute for medical advice from a professional!",
@@ -4282,6 +4480,23 @@ window.translations = {
 		"nl":"Vertrouw nooit op de antwoorden van dit model. Neem bij medische klachten altijd contact op met een echte arts or medische specialist.",
 	},
 	
+	"medical6_name":{
+		"en":"Nurse",
+		"nl":"Zuster",
+	},
+	"medical6_description":{
+		"en":"Not a substitute for medical advice from a professional!",
+		"nl":"Ga bij medische klachten naar een echte dokter!",
+	},
+	"medical6_model_info":{
+		"en":"You should absolutely not trust this model's medical opinion! Always consult a real medical practitioner if you're experience medical issues.\n\nAlways remember: there is nothing intelligent about what is popularly called 'artifial intelligence'. In reality it's just auto-correct on steroids.",
+		"nl":"Vertrouw nooit op de antwoorden van dit model. Neem bij medische klachten altijd contact op met een echte arts or medische specialist.",
+	},
+	
+	
+	
+	
+	// THERAPY
 	
 	"mental1_name":{
 		"en":"Small Therapeutic",
@@ -4351,6 +4566,20 @@ window.translations = {
 	},
 	
 	
+	"mental6_name":{
+		"en":"Small Therapist",
+		"nl":"Kleine Therapeut",
+	},
+	"mental6_description":{
+		"en":"Not a substitute for a real psychologist!",
+		"nl":"Ga bij problemen naar een echte psycholoog!",
+	},
+	"mental6_model_info":{
+		"en":"You should absolutely not use this AI model (which is actually called 'Gemma 2B Therapy') as a form of therapy! Always consult a real medical practitioner or psychologist if you're experience issues.\n\nAlways remember: there is nothing intelligent about what is popularly called 'artifial intelligence'. In reality it's just auto-correct on steroids, based on advanced statistics about which words are likely next words based on the words in the conversation so far, and what it has seen in the texts it was trained on.",
+		"nl":"Vertrouw nooit op de antwoorden van dit AI model (dat eigenlijk 'Gemma 2B Therapy' heet). Neem bij psychologische klachten altijd contact op met je huisarts of een psychologische specialist.\n\nVergeet nooit dat AI niks meer is dan opgeklopte auto-correct. Het AI model begrijpt niks, het produceert slechts vervolg tekst op basis van de voorgaande tekst. Het is puur gebaseerd op statistiek.",
+	},
+	
+	
 
 	"actor1_name":{
 		"en":"Actor",
@@ -4366,8 +4595,8 @@ window.translations = {
 	},
 	
 	"gemmasutra_name":{
-		"en":"Actor",
-		"nl":"Acteur",
+		"en":"Erotic actor",
+		"nl":"Erotische acteur",
 	},
 	"gemmasutra_description":{
 		"en":"Who do you want me to be?",
@@ -4888,6 +5117,15 @@ window.translations = {
 	
 	
 	
+	// ABOUT
+	
+	
+	
+	"about_extra":{
+		"en":"Hello, I am Cleopatra.",
+		"nl":"Hallo, ik ben Cleopatra."
+	},
+	
 	// Privacy tutorial
 	
 	
@@ -5017,8 +5255,6 @@ window.translations = {
 		"nl":"Meer karakters"
 	},
 	
-	
-	
 }
 
 
@@ -5037,5 +5273,38 @@ window.translations["custom2_model_info"] = window.translations["custom1_model_i
 window.translations["custom3_model_info"] = window.translations["custom1_model_info"];
 
 
+
+// add fast_ translations
+
+/*
+let models_to_copy_translations_for = ['llama3_1b','llama3_3b'];
+
+for(let p = 0; p < models_to_copy_translations_for.length; p++){
+	let model_name = models_to_copy_translations_for[p];
+	if(
+		typeof window.translations[model_name + '_name'] != 'undefined' 
+		&& typeof window.translations[model_name + '_description'] != 'undefined'
+		&& typeof window.translations[model_name + '_model_info'] != 'undefined'
+	){
+		console.log("adding automated model name,description and model_info translation for: ", model_name);
+		if(typeof window.translations['fast_' + model_name + '_name'] == 'undefined' ){
+			//console.log("translations: setting: ", 'fast_' + model_name + '_name');
+			window.translations['fast_' + model_name + '_name'] = window.translations[model_name + '_name'];
+		}
+		if(typeof window.translations['fast_' + model_name + '_description'] == 'undefined' ){
+			//console.log("translations: setting: ", 'fast_' + model_name + '_description');
+			window.translations['fast_' + model_name + '_description'] = window.translations[model_name + '_description'];
+		}
+		if(typeof window.translations['fast_' + model_name + '_model_info'] == 'undefined' ){
+			//console.log("translations: setting: ", 'fast_' + model_name + '_model_info');
+			window.translations['fast_' + model_name + '_model_info'] = window.translations[model_name + '_model_info'];
+		}
+		
+	}
+	else{
+		console.error("translations: name,description and/or model_info missing for: ", model_name);
+	}
+}
+*/
 
 

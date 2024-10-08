@@ -334,7 +334,7 @@ body:not(.loading) #flash_message{
 
 #model-info-container > .corner-close-content{
 	display:flex;
-	flex-wrap:wrap;
+	flex-direction:column;
 	overflow:auto;
 	max-height:100%;
 }
@@ -369,7 +369,7 @@ body.custom-ai #model-info-icon-container{
 #model-info-content{
 	/*padding:1rem;*/
 	min-width:240px;
-	width:20%;
+	width:auto;
 	height:100%;
 	flex-grow:1;
 	box-sizing:border-box;
@@ -522,6 +522,15 @@ input[type=range]{
 	font-size:130%;
 	margin:0 10px;
 }
+
+
+.model-info-content-current-document-stats{
+	padding:15px;
+}
+.model-info-content-current-document-stats > div:not(:last-of-type){
+	border-bottom:1px solid var(--weak-semi-transparent-bg);
+}
+
 
 .model-info-settings-container details{
 	margin-top:1rem;
@@ -974,13 +983,14 @@ header,
 	height:auto;
 }
 #message-downloads-container .message.download-complete-chat-message{
-	opacity:0;
+	/*opacity:0;
 	max-height:0;
 	padding:0;
 	border-bottom:none;
 	max-height:0;
 	max-width:0;
-	overflow:hidden;
+	overflow:hidden;*/
+	background-color:var(--green);
 }
 
 .download-message-footer{
@@ -997,11 +1007,6 @@ header,
 	opacity:.5;
 }
 
-/*
-.download-complete-chat-message h5{
-	display:none;
-}
-*/
 
 .message-content-reverser{
 	display: flex;
@@ -1224,6 +1229,43 @@ body.microphone-sleeping #microphone-icon{
 }
 
 
+.tasks-counter-container{
+	pointer-events:none;
+	position:absolute;
+	top:0;
+	left:0;
+	width:16px;
+	height:16px;
+	font-size:12px;
+	border-radius:50%;
+	z-index:1;
+	opacity:1;
+	background-color: var(--button-blue-bg);
+	transition:opacity ease .5s;
+	color:#ccc;
+}
+.tasks-counter-container:empty{
+	opacity:0;
+	transition:opacity ease .5s;
+}
+
+body.many-stt-tasks #microphone-tasks-counter-container{
+	background-color: var(--orange);
+	color:white;
+}
+
+body:not(.settings-complexity-advanced) .tasks-counter-container{
+	display:none;
+}
+
+
+
+/*  STT SPEAKER ICON  */
+
+#speaker-icon-container{
+	position:relative;
+	max-width:50px;
+}
 
 #speaker-icon{
 	background-color:var(--button-bg);
@@ -1248,6 +1290,7 @@ body.microphone-sleeping #microphone-icon{
 #speaker-icon-image:hover{
 	background-size:70%;
 }
+
 .speaking-out-loud #speaker-icon{
 	background-color:green;
 }
@@ -1269,6 +1312,8 @@ body.no-audio #microphone-icon{
 
 #microphone-icon-container{
 	margin-bottom:10px;
+	position:relative;
+	max-width:50px;
 }
 
 body.show-camera #microphone-icon-container{
@@ -1303,10 +1348,14 @@ body.doing-stt.show-document.document-active #header,
 body.working-on-doc #header{
     background-size: 250% 250%;
 	background-image: linear-gradient(-90deg,
-            rgba(59, 173, 227, .5) 0%,
-            rgba(87, 111, 230, .5) 50%,
-            rgba(152, 68, 183, .5) 51%,
-            rgba(59, 173, 227, .5) 100%);
+			rgba(59, 173, 227, .5) 0%,
+			rgba(59, 173, 227, .5) 45%,
+			rgba(87, 111, 230, .7) 50%,
+			rgba(152, 68, 183, .5) 51%,
+			rgba(59, 173, 227, .5) 60%,
+			rgba(59, 173, 227, .5) 100%);
+			
+			
     animation: bg-sweep-to-right 7s linear infinite;
 }
 .simple-task-item-currently-doing details{
@@ -2063,6 +2112,10 @@ body:not(.sidebar-chat) #select-assistants-button-wrapper{
   border: 1px solid #888;
   transition: all 0.2s ease;
 }
+#file-manager-files-list .assistants-checkbox-container .assistants-checkbox span:first-child{
+    margin-top:5px;
+}
+
 .assistants-checkbox-container .assistants-checkbox span:first-child svg {
   position: absolute;
   z-index: 1;

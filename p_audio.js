@@ -142,13 +142,16 @@ function enable_microphone(also_enable_speaker=true){
 	
 	
 	
-	if(window.whisper_loaded == false && window.busy_loading_whisper == false){
+	if(window.whisper_loaded == false && window.busy_loading_whisper == false && window.whisper_worker_busy == false){
 		console.log("enable_microphone: whisper does not seem to be loaded, calling preload_whisper");
+		
 		//window.whisper_loading = true;
 		window.add_chat_message('current','developer','_$_downloading_speech_recognition_model');
 		
 		console.log("enable_microphone: window.whisper_loaded was false. Calling preload_whisper");
 		window.preload_whisper({'assistant':window.settings.assistant,'preload':true});
+		
+		
 		/*
 		window.do_whisper_web({'recorded_audio':[
 			-0.0005011023604311049,
@@ -167,6 +170,8 @@ function enable_microphone(also_enable_speaker=true){
 		    0.00018674119201023132
 		]});
 		*/
+		
+		
 		if(voice_tutorial_shown == false && window.settings.tutorial.voice_tutorial_done == false && window.settings.assistant != 'scribe'){
 			voice_tutorial_shown = true;
 			setTimeout(() => {
@@ -187,9 +192,11 @@ function enable_microphone(also_enable_speaker=true){
 		}
 	}
 	
-	//
+	
 }
 window.enable_microphone = enable_microphone;
+
+
 
 
 function disable_microphone(){
@@ -295,18 +302,17 @@ window.enable_speaker = enable_speaker;
 function disable_speaker(){
 	window.speaker_enabled = false;
 	document.body.classList.remove('speaking-out-loud');
-	//window.tts_queue = [];
-	//window.audio_to_play = [];
+
 	// TODO: set all 'speak' tasks to interrupted
 	try{
 		if(window.audio_player != null){
 			window.audio_player.stop();
 			window.audio_player_busy = false;
 		}
-		if(window.main_audio_context){
+		//if(window.main_audio_context){
 			//console.log("disable_speaker: suspending window.audioCxt (blocked)");
 			//window.main_audio_context.suspend();
-		}
+		//}
 	}
 	catch(e){
 		console.error("caught error trying to stop audio from playing: ", e);
@@ -315,12 +321,8 @@ function disable_speaker(){
 	if(window.microphone_enabled){
 		window.speakers_manually_overridden = true; // user may prefer STT without TTS. This will stop automatically also switching on the speakers whenever the microphone is enabled
 	}
-	change_tasks_with_state('doing_tts');
-	change_tasks_with_state('should_tts');
-	change_tasks_with_state('should_audio_player');
-	change_tasks_with_state('doing_audio_player');
-	set_speaker_progress(100);
 	
+	interrupt_speaker();
 	
 	if(window.busy_doing_blueprint_task == false && typeof current_file_name == 'string' && current_file_name.endsWith('.blueprint') && typeof window.doc_text == 'string' && window.settings.docs.open != null){
 		const blueprint_prompt_command = '\n\nDisable audio\n\n';
@@ -336,6 +338,40 @@ function disable_speaker(){
 }
 window.disable_speaker = disable_speaker;
 
+
+function interrupt_speaker(){
+	console.log("in interrupt_speaker");
+	if(window.audio_player != null){
+		window.audio_player.stop();
+		window.audio_player_busy = false;
+	}
+	
+	if(window.llama_cpp_busy){
+		window.interrupt_llama_cpp();
+	}
+	else if(window.web_llm_busy){
+		window.interrupt_web_llm();
+	}
+	
+	change_tasks_with_state('should_assistant');
+	change_tasks_with_state('doing_tts');
+	change_tasks_with_state('should_tts');
+	change_tasks_with_state('should_audio_player');
+	change_tasks_with_state('doing_audio_player');
+	set_speaker_progress(100);
+	
+	window.interrupt_speaking_task_index = window.task_counter;
+	console.log("window.interrupt_speaking_task_index is now: ", window.interrupt_speaking_task_index);
+	
+	for(let t = 0; t < window.task_queue.length; t++){
+		if(typeof window.task_queue[t].state == 'string' && window.task_queue[t].state == 'doing_assistant'){
+			window.task_queue[t].speech_interrupted = true;
+		}
+	}
+	
+	update_buffer_counts();
+}
+window.interrupt_speaker = interrupt_speaker;
 
 
 function set_voice(new_voice='default'){
@@ -520,7 +556,7 @@ window.transform_recorded_audio = transform_recorded_audio;
 // PUSH_STT_TASK  (ADD STT TASK add_stt_task)
 // input audio may be basic array of floats
 async function push_stt_task(audio,force_document_destination=false,stt_task=null,prefered_extension=null){ // origin="voice",
-	console.log("in push_stt_task. window.settings.docs.open, window.active_destination: ", window.settings.docs.open, window.active_destination);
+	//console.log("in push_stt_task. window.settings.docs.open, window.active_destination: ", window.settings.docs.open, window.active_destination);
 	
 	if(typeof audio == 'undefined' || audio == null){
 		console.error("push_stt_task: no valid audio provided: ", typeof audio);
@@ -556,7 +592,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 		
 	}
-	console.log("push_stt_task: origin: ", origin);
+	//console.log("push_stt_task: origin: ", origin);
 	
 	
 	const minimum_length = 4000; //Math.floor(task["sample_rate"] / 2); // half a second
@@ -568,11 +604,12 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 
 		
 		let skip_factor = 1;
+		
 		if(stt_task != null && typeof stt_task["sample_rate"] == 'number'){
 			skip_factor = Math.round(stt_task["sample_rate"] / 16000);
 			
 			if(typeof window.main_audio_context_sample_rate == 'number' && stt_task["sample_rate"] != window.main_audio_context_sample_rate){
-				console.warn("skip_factor doubt: window.main_audio_context_sample_rate was different from provided sample rate: ", window.main_audio_context_sample_rate, stt_task["sample_rate"])
+				console.warn("push_stt_task: skip_factor doubt: window.main_audio_context_sample_rate was different from provided sample rate: ", window.main_audio_context_sample_rate, stt_task["sample_rate"])
 				
 				skip_factor = Math.round(window.main_audio_context_sample_rate / 16000);
 				
@@ -580,19 +617,43 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 			}
 		}
 		else{
-			console.error("task had no sample_rate data, cannot calculate a skip-factor: ", stt_task);
+			console.error("push_stt_task: task had no sample_rate data, cannot calculate a skip-factor: ", stt_task);
 		}
 		
+		if(window.whisper_saw_exclamation_marks){
+			console.warn("push_stt_task: forcing skip factor to 3, as a previous message returned only exclamation marks");
+			skip_factor = 3;
+		}
+		
+		if(window.is_firefox){
+			// TODO: EXPERIMENTAL
+			skip_factor = 3;
+		}
+		
+		
+		if(typeof window.measured_microphone_sample_rate == 'number' && window.measured_microphone_sample_rate >= 16000){
+			if(window.measured_microphone_sample_rate == 16000){
+				console.log("OK, detected real_sample_rate, and it was the optimal sample rate: ", window.measured_microphone_sample_rate);
+				skip_factor = 1;
+			}
+			else{
+				skip_factor = window.measured_microphone_sample_rate / 16000;
+				console.log("detected real_sample_rate, and it was a non-optimal sample rate. Skip_factor is now: ", skip_factor, window.measured_microphone_sample_rate);
+			}
+			
+		}
+		
+		
 		if(skip_factor != 1){
-			console.warn("audio recording skip_factor: ", skip_factor);
+			console.warn("push_stt_task: audio recording skip_factor: ", skip_factor);
 		}
 		
 		
 		function trim_recording(recording){
-			console.log("in push_stt_task sub-function trim_recording.  recording.length: ", typeof recording, recording.length, recording);
+			console.log("push_stt_task: in push_stt_task sub-function trim_recording.  recording.length: ", typeof recording, recording.length, recording);
 			
 			if(recording == null || !Array.isArray(recording)){
-				console.error("TRIM_RECORDING: recording was invalid: ", typeof recording, recording);
+				console.error("push_stt_task: TRIM_RECORDING: recording was invalid: ", typeof recording, recording);
 				return null
 			}
 			
@@ -601,20 +662,20 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 				
 				let trim_end = true;
 				if(typeof stt_task["assistant"] == 'string' && stt_task["assistant"] == 'scribe'){
-					console.log("Not trimming end of recording because assistant is Scribe");
+					console.log("push_stt_task: Not trimming end of recording because assistant is Scribe");
 					return recording
 					trim_end = false;
 				}
 				
 				else if(typeof stt_task["add_timestamps"] == 'string' && (stt_task["add_timestamps"] == 'Precise' || stt_task["add_timestamps"] == 'Detailed')){
-					console.log("Precise timestamps set in task, so not trimming end of recording");
+					console.log("push_stt_task: Precise timestamps set in task, so not trimming end of recording");
 					//return recording
 					trim_end = false;
 				}
 				
 				// At the moment this can only by set for the 'scribe' assistant
 				else if(typeof stt_task["assistant"] == 'string' && typeof window.settings.assistants[ stt_task["assistant"] ] != 'undefined' && typeof window.settings.assistants[ stt_task["assistant"] ]['add_timestamps'] == 'string' && (window.settings.assistants[ stt_task["assistant"] ]['add_timestamps'] == 'Detailed' || window.settings.assistants[ stt_task["assistant"] ]['add_timestamps'] == 'Precise')){
-					console.log("Precise timestamps selected for assistant, so not trimming end of recording");
+					console.log("push_stt_task: Precise timestamps selected for assistant, so not trimming end of recording");
 					//return recording
 					trim_end = false;
 				}
@@ -634,7 +695,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 				if(audio_points_with_zero_value > 128){ // leave a little 
 					audio_points_with_zero_value = audio_points_with_zero_value - 128;
 				}
-				console.log("trim_recording: removing audio with zero value from beginning of recording: ", audio_points_with_zero_value);
+				console.log("push_stt_task: trim_recording: removing audio with zero value from beginning of recording: ", audio_points_with_zero_value);
 				recording.splice(0,audio_points_with_zero_value);
 			}
 			
@@ -659,7 +720,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 					else if(audio_points_with_zero_value > 128){ // leave a little 
 						audio_points_with_zero_value = audio_points_with_zero_value - 128;
 					}
-					console.log("trim_recording: removing audio with zero value from end of recording: ", audio_points_with_zero_value);
+					console.log("push_stt_task: trim_recording: removing audio with zero value from end of recording: ", audio_points_with_zero_value);
 					recording.splice(recording.length - audio_points_with_zero_value, audio_points_with_zero_value);
 				}
 			}
@@ -676,16 +737,12 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 		
 		
-		if(window.is_firefox){
-			// TODO: EXPERIMENTAL
-			skip_factor = 3;
-		}
 		
 		
 		// Decimate to get to 16000 samplerate
 		if(skip_factor > 1){
 			//skip_factor = skip_factor--;
-			console.log("decimating audio, because of skip_factor: ", skip_factor, ", audio.length before: ", audio.length);
+			console.log("push_stt_task: decimating audio, because of skip_factor: ", skip_factor, ", audio.length before: ", audio.length);
 			for(let x = 0; x < audio.length; x = x + skip_factor){
 				recording.push(audio[x]);
 			}
@@ -746,7 +803,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	}
 	
 	
-	console.log("push_stt_task: destination: ", destination);
+	//console.log("push_stt_task: destination: ", destination);
 	
 	if(stt_task == null || (stt_task != null && typeof stt_task.index != 'number')){
 		let new_stt_task = {
@@ -790,9 +847,29 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	let created_new_file = false;
 	let document_filename = null;
+	
+	
 	if(window.settings.docs.open != null && typeof window.settings.docs.open.filename == 'string'){
 		document_filename = window.settings.docs.open.filename;
 	}
+	
+	if(typeof prefered_extension == 'string' && prefered_extension.length){
+		if(typeof document_filename == 'string' && !document_filename.toLowerCase().endsWith(prefered_extension.toLowerCase())){
+			let new_filename = window.remove_file_extension(document_filename);
+			await window.load_meeting_notes_example(prefered_extension,'\n',new_filename); //remove_file_extension(document_filename));
+			created_new_file = true;
+			if(typeof current_file_name == 'string'){
+				document_filename = current_file_name;
+			}
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
 	
 	if(
 		window.settings.assistant == 'scribe'
@@ -867,7 +944,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 	}
 	
-	console.log("push_stt_task: created_new_file: ", created_new_file);
+	//console.log("push_stt_task: created_new_file: ", created_new_file);
 	
 	if(typeof stt_task['assistant'] != 'string'){
 		stt_task['assistant'] = window.settings.assistant;
@@ -901,7 +978,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	const recording_length = recording.length;
 	let total_snippets = Math.floor(recording_length / frames_min) + 1;
-	console.log("push_stt_task:  recording.length,total_snippets: ", recording.length,total_snippets);
+	//console.log("push_stt_task:  recording.length,total_snippets: ", recording.length,total_snippets);
 	
 	let parent_stt_task = JSON.parse(JSON.stringify(stt_task));
 	parent_stt_task['state'] = 'parent';
@@ -943,7 +1020,9 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 			frame_to += frames_overlap; // adds 4 seconds from the next snippet
 		}
 		else{
-			console.log("looping over recording data: no longer possible to get 29 seconds of audio data: ", recording_length);
+			if(d > 0){
+				console.log("looping over recording data: no longer possible to get 29 seconds of audio data: ", recording_length);
+			}
 			frame_to = recording_length - 1;
 			final_snippet = true;
 		}
@@ -970,6 +1049,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		if(d != 0){
 			//child_stt_task['recorded_audio'].unshift([0,0,0,0,0,0,0,0]);
 		}
+		console.log("push_stt_task: checking for oddities in the recorded audio");
 		if(typeof child_stt_task['recorded_audio'] != 'undefined' && child_stt_task['recorded_audio'] != null && Array.isArray(child_stt_task['recorded_audio'])){
 			for(let ap = child_stt_task['recorded_audio'].length - 1; ap >= 0; ap--){
 				if(typeof child_stt_task['recorded_audio'][ap] != 'number'){
@@ -1033,21 +1113,6 @@ async function do_stt(task){
 	}
 	return false
 }
-
-
-
-
-
-// Once Whisper has turned speect into text there's an opportunity to recognize and route commands
-// change to a more general update_task?
-function change_task_after_stt(task){
-	//for(let v = window.task_queue.length-1; v>=0; v--){
-	//console.log("in change_task_after_stt. task: ", JSON.stringify(task,null,4));
-	
-	window.handle_task_completed(task);
-	
-}
-window.change_task_after_stt = change_task_after_stt;
 
 
 
@@ -1680,7 +1745,7 @@ async function browser_speak(task=null) {
 		window.add_script('./easy_speech/EasySpeech.iife.js')
 		.then((value) => {
 			if(EasySpeech){
-				EasySpeech.init({ maxTimeout: 5000, interval: 250 })
+				EasySpeech.init({ maxTimeout: 30000, interval: 250 })
     			.then(() => {
 					console.debug('easy_speech load complete');
 					window.easy_speech_loaded = true;

@@ -71,11 +71,12 @@ async function create_image_to_text_worker(){
 					//console.log("image_to_text worker sent download progress: ", e.data.progress);
 					
 					let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
-					if(image_to_text_progress_el == null){
+					if(image_to_text_progress_el == null && !e.data.progress == 100){
 						console.error("image_to_text (down)load progress element is missing");
 						add_chat_message('image_to_text','image_to_text','download_progress#setting---');
 					}
-					else{
+					
+					if(image_to_text_progress_el){
 						
 						if(e.data.progress == 100){
 							image_to_text_files = {};

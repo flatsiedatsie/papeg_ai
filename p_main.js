@@ -5,6 +5,7 @@ let document_tutorial_shown = false;
 let voice_tutorial_shown = false;
 let first_switch_done = false;
 window.previous_note_time = '';
+window.interval_paused = false;
 
 let time_to_keep_irrelevant_task = 120 * 1000; // TODO: 2 minutes
 
@@ -102,9 +103,12 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	
 	
 	if(assistant_id == 'any_writer'){
-		//console.log("switch_assistant: attempting to replace 'any_writer'");
+		console.log("switch_assistant: attempting to replace 'any_writer'. window.settings.last_loaded_text_ai: ", window.settings.last_loaded_text_ai);
 		
-		if(typeof window.settings.last_loaded_text_ai == 'string' && typeof window.assistants[window.settings.last_loaded_text_ai].media != 'undefined' && window.assistants[window.settings.last_loaded_text_ai].media.indexOf('text') != -1){
+		if(typeof window.settings.last_loaded_text_ai == 'string' && typeof window.settings.assistants[window.settings.last_loaded_text_ai].media != 'undefined' && window.settings.assistants[window.settings.last_loaded_text_ai].media.indexOf('text') != -1){
+			assistant_id = window.settings.last_loaded_text_ai;
+		}
+		else if(typeof window.settings.last_loaded_text_ai == 'string' && typeof window.assistants[window.settings.last_loaded_text_ai].media != 'undefined' && window.assistants[window.settings.last_loaded_text_ai].media.indexOf('text') != -1){
 			assistant_id = window.settings.last_loaded_text_ai;
 		}
 		else if(typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant].media != 'undefined' && window.assistants[window.settings.assistant].media.indexOf('text') != -1){
@@ -132,7 +136,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 			}
 		}
 	}
-	if(assistant_id == 'any_writer' || assistant_id == 'any writer'){ // sic, second one has a space
+	if(assistant_id == 'any_writer'){ // sic, second one has a space
 		assistant_id = pick_optimal_text_ai(prefered_language);
 	}
 
@@ -196,8 +200,13 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 		assistant_name = get_translation(assistant_id + "_name");
 	} 
 		
+	if(assistant_name != '?'){
+		chat_header_name_el.textContent = assistant_name;
+	}
+	else{
+		chat_header_name_el.textContent = '';
+	}
 	
-	chat_header_name_el.textContent = assistant_name;
 	
 	// Close model info if it was open
 	model_info_container_el.innerHTML = '';
@@ -274,7 +283,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 			window.settings.assistant = assistant_id;
 			save_settings();
 		}
-		window.update_interrupt_button_icon();
+		window.update_interrupt_button_icon(); // {"assistant":'ignore'}
 		
 		
 		
@@ -348,7 +357,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	
 	
 	
-	update_ai_media_class();
+	//update_ai_media_class();
 	
 	setTimeout(() => {
 		if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].second_prompt == 'string' && window.settings.assistants[assistant_id].second_prompt.length){
@@ -406,7 +415,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 			
 			let cache_info_delay = 1;
 			if(first_run){
-				cache_info_delay = 1900;
+				cache_info_delay = 900;
 			}
 			setTimeout(() => {
 				
@@ -680,7 +689,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	if(assistant_id != 'developer' && window.assistants[assistant_id] != 'undefined'){
 		setTimeout(() => {
 			window.add_chat_message_once(assistant_id,'developer','model_examples#setting---');
-		},2000);
+		},1005);
 		
 		
 		if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['model_type'] == 'string' && window.assistants[assistant_id]['model_type'] == 'base'){
@@ -690,12 +699,13 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 		}
 	}
 	
-	
+	/*
 	if(assistant_id != 'developer' && window.assistants[assistant_id] != 'undefined'){
 		setTimeout(() => {
 			window.add_chat_message_once(assistant_id,'developer','model_examples#setting---');
 		},2000);
 	}
+	*/
 	//loaded_ai_model
 	
 	
@@ -731,9 +741,9 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 }
 window.switch_assistant = switch_assistant;
 
-
+/*
 function update_ai_media_class(){
-	//console.log("in update_ai_media_class ('no-text-ai-loaded'). window.currently_loaded_assistant: ", window.currently_loaded_assistant);
+	console.log("in update_ai_media_class ('no-text-ai-loaded'). window.currently_loaded_assistant: ", window.currently_loaded_assistant);
 	if(typeof window.currently_loaded_assistant == 'string' && typeof window.assistants[window.currently_loaded_assistant] != 'undefined' && typeof window.assistants[window.currently_loaded_assistant].media != 'undefined' && Array.isArray(window.assistants[window.currently_loaded_assistant].media) && window.assistants[window.currently_loaded_assistant].media.indexOf('text') != -1){
 		if(typeof window.currently_loaded_assistant == 'string' && window.settings.last_loaded_text_ai != window.currently_loaded_assistant){
 			window.settings.last_loaded_text_ai = window.currently_loaded_assistant;
@@ -744,21 +754,9 @@ function update_ai_media_class(){
 	else{
 		document.body.classList.add('no-text-ai-loaded');
 	}
-	/*
-	if(window.currently_loaded_assistant == null){
-		document.classList.add('no-text-ai-loaded');
-	}
-	else if(typeof window.currently_loaded_assistant == 'string' && typeof window.assistants[window.currently_loaded_assistant] == 'undefined'){
-		document.classList.add('no-text-ai-loaded');
-	}
-	else 
-		document.classList.add('no-text-ai-loaded');
-	}
-	else{
-		document.classList.remove('no-text-ai-loaded');
-	}
-	*/
+
 }
+*/
 
 
 // Places a previously used prompt for the currently type of assistant back in the prompt input textarea
@@ -1154,8 +1152,8 @@ function add_to_conversation(task,response=null,prompt=null){
 
 
 
-function add_response_to_conversation(task,response=null){
-	console.log("in add_response_to_conversation.  task,response: ", task, response);
+async function add_response_to_conversation(task,response=null){
+	//console.log("in add_response_to_conversation.  task,response: ", task, response);
 	
 	let assistant_id = null;
 	let prompt = null;
@@ -1204,17 +1202,17 @@ function add_response_to_conversation(task,response=null){
 	
 	//let found_it = false;
 	if(typeof response == 'string' && typeof window.conversations[assistant_id] != 'undefined' && Array.isArray(window.conversations[assistant_id])){
-		console.log("add_response_to_conversation: looking through conversation history to find spot to add the result: ", window.conversations[assistant_id]);
+		//console.log("add_response_to_conversation: looking through conversation history to find spot to add the result: ", window.conversations[assistant_id]);
 		for(let x = 0; x < window.conversations[assistant_id].length; x++){
-			console.log("add_response_to_conversation: index match? ", window.conversations[assistant_id][x].index, " =?= ", task.index);
+			//console.log("add_response_to_conversation: index match? ", window.conversations[assistant_id][x].index, " =?= ", task.index);
 			if(typeof window.conversations[assistant_id][x].index == 'number' && window.conversations[assistant_id][x].index == task.index && typeof window.conversations[assistant_id][x].role == 'string' && window.conversations[assistant_id][x].role == 'assistant'){
 				//found_it = true;
-				console.log("add_response_to_conversation: found it: ", window.conversations[assistant_id][x]);
+				//console.log("add_response_to_conversation: found it: ", window.conversations[assistant_id][x]);
 				
 				if(window.conversations[assistant_id][x].role == 'assistant' && typeof window.conversations[assistant_id][x].content == 'string'){
 					//console.log("add_response_to_conversation: role is assistant");
 					if(typeof task.return_language == 'string' && window.conversations[assistant_id][x]['content'] != '' ){ // typeof task.quiet == 'boolean' && 
-						console.log("add_response_to_conversation: adding response to conversation post_translation dict: ", task.return_language, response);
+						//console.log("add_response_to_conversation: adding response to conversation post_translation dict: ", task.return_language, response);
 						if(typeof window.conversations[assistant_id][x]['post_translations'] == 'undefined'){
 							window.conversations[assistant_id][x]['post_translations'] = {};
 						}
@@ -1224,7 +1222,7 @@ function add_response_to_conversation(task,response=null){
 						console.log("add_response_to_conversation: setting response as content");
 						window.conversations[assistant_id][x]['content'] = response;
 					}
-					console.log("add_response_to_conversation: succesfully set assistant response content: ", window.conversations[assistant_id][x]);
+					//console.log("add_response_to_conversation: succesfully set assistant response content: ", window.conversations[assistant_id][x]);
 					
 				}
 				else if(window.conversations[assistant_id][x].role == 'assistant'){
@@ -1235,7 +1233,7 @@ function add_response_to_conversation(task,response=null){
 				}
 				
 				//delete window.conversations[assistant_id][x].index;
-				save_conversation(assistant_id);
+				await save_conversation(assistant_id);
 				return true
 			}
 		}
@@ -1357,7 +1355,7 @@ async function save_conversation(assistant_id){
 					conversation_to_keep_count = window.conversations[assistant_id].length;
 				}
 			}
-			console.log("save_conversation: conversation_to_keep_count: ", conversation_to_keep_count);
+			//console.log("save_conversation: conversation_to_keep_count: ", conversation_to_keep_count);
 			let conversation_to_store = [];
 			for (let c = (window.conversations[assistant_id].length - conversation_to_keep_count); c < window.conversations[assistant_id].length; c++){
 				let conversation_message = JSON.parse(JSON.stringify(window.conversations[assistant_id][c]));
@@ -1368,9 +1366,11 @@ async function save_conversation(assistant_id){
 			}
 			conversation_data = JSON.stringify(conversation_to_store,null,4);
 		}
-		console.log("save_conversation: saving conversation_data: ", conversation_data);
+		
 		
 		const conversation_filename = assistant_id + "_papeg_ai_conversation.json";
+		//console.log("save_conversation: saving conversation_data: ", conversation_data);
+		//console.log("save_conversation: saving to: ", conversation_filename);
 		/*
 		if(conversation_to_keep_count == 0){
 			if(typeof playground_live_backups["Papeg_ai_conversations/" + conversation_filename] == 'string'){
@@ -1406,10 +1406,12 @@ async function save_conversation(assistant_id){
 			
 				really_create_file(false,conversation_data,conversation_filename,'/Papeg_ai_conversations',true)
 				.then((value) => {
-					//console.log("created new conversation history file");
+					console.log("created new conversation history file");
+					return true
 				})
 				.catch((err) => {
 					console.error("error saving conversation history file.  err: ", err, '\n/Papeg_ai_conversations/ + ' + conversation_filename, "\nconversation_data: ", conversation_data);
+					return true
 				})
 			
 			
@@ -1422,7 +1424,7 @@ async function save_conversation(assistant_id){
 					"/Papeg_ai_conversations"
 				)
 				.then((value) => {
-					//console.log("save_conversation: saved conversation history. value: ", value);
+					console.log("save_conversation: saved conversation history. value: ", value);
 					return true
 				})
 				.catch((err) => {
@@ -1444,7 +1446,7 @@ async function save_conversation(assistant_id){
 					"/Papeg_ai_conversations"
 				)
 				.then((value) => {
-					//console.log("save_conversation: saved empty conversation history. value: ", value);
+					console.log("save_conversation: saved empty conversation history. value: ", value);
 					return true
 				})
 				.catch((err) => {
@@ -1461,7 +1463,7 @@ async function save_conversation(assistant_id){
 					"/Papeg_ai_conversations"
 				)
 				.then((value) => {
-					//console.log("save_conversation: saved empty conversation history. value: ", value);
+					console.log("save_conversation: saved empty conversation history. value: ", value);
 					return true
 				})
 				.catch((err) => {
@@ -1474,8 +1476,8 @@ async function save_conversation(assistant_id){
 		}
 		else{
 			console.error("save_conversation: conversation data was not a string? ", conversation_data);
+			return false
 		}
-		
 		
 	}
 	else{
@@ -1584,6 +1586,9 @@ function add_task(new_task=null,chat_message=null){
 	*/
 	
 	
+	
+	
+	
 	new_task['timestamp_created'] = Date.now();
 	
 	
@@ -1591,6 +1596,15 @@ function add_task(new_task=null,chat_message=null){
 	if(typeof new_task.state == 'undefined'){
 		console.error("add_task: new task has no provided state (setting it to 'added'): ", new_task);
 		new_task['state'] = 'added';
+	}
+	
+	if(new_task.state == 'should_stt'){
+		window.stt_tasks_left++;
+		window.update_audio_counters_in_ui();
+		
+	}
+	else if(new_task.state == 'should_tts'){
+		window.tts_tasks_left++;
 	}
 	
 	if(typeof new_task.handled_by == 'undefined'){
@@ -1721,8 +1735,8 @@ window.add_task = add_task;
 function update_buffer_counts(){
 	//console.log("in update_buffer_counts");
 	
-	let stt_recordings_in_buffer = 0;
-	let tts_sentences_in_buffer = 0;
+	let stt_tasks_left = 0;
+	let tts_tasks_left = 0;
 	let audio_files_in_buffer = 0;
 	let blueprint_tasks_left = 0;
 	let chat_messages_to_answer = 0;
@@ -1807,7 +1821,7 @@ function update_buffer_counts(){
 		// .recorded_audio -> stt task
 		if(typeof window.task_queue[t].recorded_audio != 'undefined' && window.task_queue[t].state != 'doing_stt'){
 			//console.log("update_buffer_counts: spotted task with recorded_audio ++");
-			stt_recordings_in_buffer++;
+			stt_tasks_left++;
 			continue
 		}
 		
@@ -1815,8 +1829,8 @@ function update_buffer_counts(){
 		
 		// .sentence -> ready for tts
 		if(window.task_queue[t].type == 'speak' && typeof window.task_queue[t].transcript != 'undefined' && window.task_queue[t].state != 'doing_tts' && typeof window.task_queue[t].audio == 'undefined'){
-			//console.log("update_buffer_counts: spotted task with sentence to do tts on ++");
-			tts_sentences_in_buffer++;
+			//console.warn("update_buffer_counts: spotted task with sentence to do tts on ++");
+			tts_tasks_left++;
 			continue
 		}
 		
@@ -1831,8 +1845,8 @@ function update_buffer_counts(){
 		
 	}
 	
-	window.stt_recordings_in_buffer = stt_recordings_in_buffer;
-	window.tts_sentences_in_buffer = tts_sentences_in_buffer;
+	window.stt_tasks_left = stt_tasks_left;
+	window.tts_tasks_left = tts_tasks_left;
 	window.audio_files_in_buffer = audio_files_in_buffer;
 	window.blueprint_tasks_left = blueprint_tasks_left;
 	window.chat_messages_to_answer = chat_messages_to_answer;
@@ -1847,9 +1861,9 @@ function update_buffer_counts(){
 	window.doing_tasks_left = doing_tasks_left;
 	
 	//console.log("________")
-	//console.log("window.stt_recordings_in_buffer: ", window.stt_recordings_in_buffer);
-	//console.log("window.chat_messages_to_answer: ", window.chat_messages_to_answer);
-	//console.log("window.tts_sentences_in_buffer: ", window.tts_sentences_in_buffer);
+	//console.log("window.stt_tasks_left: ", window.stt_tasks_left);
+	console.log("window.chat_messages_to_answer: ", window.chat_messages_to_answer);
+	//console.log("window.tts_tasks_left: ", window.tts_tasks_left);
 	//console.log("window.audio_files_in_buffer: ", window.audio_files_in_buffer);
 	//console.log("window.play_document_tasks_left: ", window.play_document_tasks_left);
 	//console.log("window.blueprint_tasks_left: ", window.blueprint_tasks_left);
@@ -1862,8 +1876,59 @@ function update_buffer_counts(){
 	//console.log("window.should_tasks_left: ", window.should_tasks_left);
 	//console.log("window.doing_tasks_left: ", window.doing_tasks_left);
 	//console.log("ˆˆˆˆˆˆˆˆ")
+	
+	
+	update_audio_counters_in_ui();
+	
+	
 }
+window.update_buffer_counts = update_buffer_counts;
 
+
+
+function update_audio_counters_in_ui(){
+	
+	// Microphone tasks counter	
+	if(window.microphone_enabled){
+		if(window.stt_tasks_left > 2){
+			microphone_tasks_counter_container_el.textContent = window.stt_tasks_left - 1;
+		}
+		else{
+			if(microphone_tasks_counter_container_el.textContent != ''){
+				microphone_tasks_counter_container_el.textContent = '';
+			}
+		}
+	
+		if(window.stt_tasks_left > 5){
+			document.body.classList.add('many-stt-tasks');
+		}
+		else{
+			if(document.body.classList.contains('many-stt-tasks')){
+				document.body.classList.remove('many-stt-tasks');
+			}
+		}
+	}
+	else{
+		if(microphone_tasks_counter_container_el.textContent != ''){
+			microphone_tasks_counter_container_el.textContent = '';
+		}
+		if(document.body.classList.contains('many-stt-tasks')){
+			document.body.classList.remove('many-stt-tasks');
+		}
+		
+	}
+	
+	// Speaker tasks counter
+	if((window.tts_tasks_left + window.audio_files_in_buffer) > 2){
+		speaker_tasks_counter_container_el.textContent = (window.stt_tasks_left + window.audio_files_in_buffer) - 1;
+	}
+	else{
+		if(speaker_tasks_counter_container_el.textContent != ''){
+			speaker_tasks_counter_container_el.textContent = '';
+		}
+	}
+}
+window.update_audio_counters_in_ui = update_audio_counters_in_ui;
 
 
 
@@ -1904,7 +1969,7 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 	//console.log("in handle_chunk. task: ", task);
 	
 	if(typeof task == 'undefined' || task == null){
-		console.error('handle_chunk: task was invalid: ', task);
+		console.error('handle_chunk: task was invalid: ', task, response_so_far, chunk);
 		return false
 	}
 	
@@ -1913,11 +1978,31 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 		return
 	}
 	
+	if(window.settings.left_sidebar_open == true && window.settings.left_sidebar == 'settings' && window.settings.left_sidebar_settings_tab == 'tasks' && typeof task.index == 'number'){
+		//console.log("handle_chunk: task, has task.index: ", task.index, chunk);
+		let task_list_chunk_el = document.querySelector('#simple-task-details-chunk' + task.index);
+		//console.log("handle_chunk: task_list_chunk_el: ", task_list_chunk_el);
+		if(task_list_chunk_el != null){
+			task_list_chunk_el.textContent = task_list_chunk_el.textContent + chunk;
+			if(task_list_chunk_el.textContent.length > 20){
+				task_list_chunk_el.textContent = "..." + task_list_chunk_el.textContent.substr( task_list_chunk_el.textContent.length - 20);
+			}
+		}
+	}
+	
+	
 	//console.log(" - chunk: ", chunk);
 	//console.log(" - snippet: ", snippet);
 	
 	if(response_so_far.startsWith('[INST] ')){
 		response_so_far = response_so_far.replace('[INST] ','');
+	}
+	if(response_so_far.startsWith('? ')){
+		response_so_far = response_so_far.replace('? ','');
+	}
+	
+	if(response_so_far.startsWith('<!') && response_so_far.indexOf('|>') != -1){
+		response_so_far = response_so_far.substr( (response_so_far.indexOf('|>') + 1) );
 	}
 	
 	
@@ -1947,7 +2032,7 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 	}
 	
 	if(removed_sure == false){
-		//console.log("Handle_chunk: 'Sure, here' snipped from response_so_far: ", response_so_far);
+		console.warn("Handle_chunk: aborting, after 'Sure, here' was somehow NOT snipped from response_so_far: ", response_so_far);
 		return;
 	}
 	
@@ -1957,6 +2042,14 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 	let total_response = response_so_far + chunk;
 	
 	
+	if(
+		total_response.startsWith('>>>>>>>>>>>>>') // Danube 3 500m
+		|| total_response.startsWith('!!!!!!!!!!!') // Whisper when using non-16000 sample rate
+	){
+		console.error("handle_chunk: stopping assistant, it's outputting a string of nonsense characters: ", total_response);
+		window.stop_assistant(task);
+		return
+	}
 	
 	if(total_response.length > 20){
 		let total_response_tail = total_response.substr(total_response.length - 10);
@@ -1965,7 +2058,8 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 			total_response_tail.indexOf('<|end') != -1 || 
 			total_response_tail.indexOf('[INST]') != -1 ||
 			total_response_tail.indexOf('[/INST]') != -1 ||
-			total_response_tail.indexOf('<human') != -1
+			total_response_tail.indexOf('<human') != -1 ||
+			total_response_tail.indexOf('<|prompt|>') != -1
 			
 		){
 			console.error("handle_chunk: stopping assistant, saw special tokens in response tail: ", total_response_tail);
@@ -1983,10 +2077,16 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 	}
 	
 	if(check_if_text_end_is_repeating(total_response)){
-		console.error("handle_chunk: warning, the AI seems to be repeating itself: ", total_response);
+		console.error("handle_chunk: warning, the AI seems to be repeating itself.  total_response, task: ", total_response, task);
 		flash_message(get_translation("The_AI_seems_to_be_repeating_itself"),5000,'warn');
-		window.stop_assistant(task);
-		return
+		if(task != null){
+			window.stop_assistant(task);
+			return
+		}
+		else{
+			console.error("handle_chunk: AI is repeating itself, but there is no task provided, so cannot stop it");
+		}
+		
 	}
 	//console.log("handle_chunk: OK, the text is not repeating itself (yet)");
 	
@@ -2256,7 +2356,7 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 						
 						
 						search_and_replace(window.task_queue[t], window.task_queue[t].text + response_so_far, window.task_queue[t].text + total_response);
-						
+						/*
 						if(typeof window.task_queue[t].file != 'undefined' && typeof window.task_queue[t].file.folder == 'string' && typeof window.task_queue[t].file.filename == 'string' && window.task_queue[t].file.folder == folder && window.task_queue[t].file.filename == current_file_name){
 							let continue_selection = get_selection_from_task(window.task_queue[t], window.task_queue[t].text + total_response);
 							//console.log("handle_chunk: continue_selection: ", continue_selection);
@@ -2274,6 +2374,7 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 						else{
 							console.error("handle_chunk: continue_selection: task had no file property?: ", window.task_queue[t]);
 						}
+						*/
 					}
 					
 				}
@@ -2338,6 +2439,9 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 				
 			}
 	
+	
+			// CHAT CHUNK
+	
 			else if(window.task_queue[t].type == 'chat'){
 		
 				window.write_on_pip_canvas(response_so_far);
@@ -2347,10 +2451,10 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 				
 				try{
 					pre_lines = split_into_sentences_and_punctuation(total_response);
-					//console.log("handle_chunk: initial split into sentences");
+					//console.log("handle_chunk: initial split into sentences: ", pre_lines);
 					
 					if(pre_lines.length && pre_lines.length % 2 == 0){
-						//console.log("handle_chunk: pre-lines length is even");
+						//console.log("handle_chunk: pre-lines length is even, clearing chat status");
 						if(chatter){
 							window.set_chat_status(window.task_queue[t],'');
 						}
@@ -2359,6 +2463,7 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 						if(typeof pre_lines[pre_lines.length-1] == 'string'){
 							//console.log("pre-lines length is uneven. Likely a sentence is progress: ", pre_lines[pre_lines.length-1]);
 							incomplete_sentence = pre_lines[pre_lines.length-1].trim();
+							//console.log("incomplete_sentence: ", incomplete_sentence);
 							window.task_queue[t]['incomplete_sentence'] = incomplete_sentence;
 							if(chatter){
 								//console.log("chunk: chat: and posting each chat as line -> updating status with single line");
@@ -2401,6 +2506,8 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 										//console.log("chunk: chat: posting each chat as line, and new sentence, so -> clearing status");
 										if(!full_sentence.startsWith('<') && !full_sentence.endsWith('>')){
 											add_chat_message(assistant,assistant,full_sentence);
+											incomplete_sentence = '';
+											window.task_queue[t]['incomplete_sentence'] = '';
 										}
 										
 										window.set_chat_status(window.task_queue[t],'');
@@ -2424,33 +2531,57 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 									
 									
 									if(typeof task.silent == 'boolean' && task.silent){
-										//console.log("handle_chunk: task is silent, it should not be spoken out loud");
-									}
-									else if(window.speaker_enabled){
-										//console.log("handle_chunk: NEW SENTENCE -> CREATING SPEAKING TASK: ", full_sentence);
-										let tts_task = {
-											'prompt':null,
-											'type':'speak',
-											'state':'should_tts',
-											'sentence': clean_up_string_for_speaking(full_sentence),
-											'destination':'audio_player'
-										}
-										if(typeof window.task_queue[t].index == 'number'){
-											tts_task['parent_index'] = window.task_queue[t].index;
-										}
-										
-										if(typeof window.task_queue[t].origin == 'string'){
-											tts_task.origin = window.task_queue[t].origin;
-										}
-										
-										window.add_task(tts_task);
+										console.log("handle_chunk: task is silent, it should not be spoken out loud");
 									}
 									
-						
+									else if(window.speaker_enabled && typeof window.task_queue[t].speech_interrupted == 'boolean' && window.task_queue[t].speech_interrupted == true){
+										console.log("handle_chunk: new sentence, but task has speech_interrupted set to true, so not creating TTS tasks for: ", full_sentence);
+									}
+									
+									else if(window.speaker_enabled && typeof window.task_queue[t].index <= window.interrupt_speaking_task_index){
+										console.log("handle_chunk: new sentence, but task index is smaller than window.interrupt_speaking_task_index: ", window.interrupt_speaking_task_index, full_sentence);
+									}
+									else if(window.speaker_enabled){
+										console.log("handle_chunk: new sentence, going to turn it into smaller TTS sentences: ", full_sentence);
+										// Split the really basic sentence further into smaller parts to speak individually
+										
+										if(typeof full_sentence == 'string' && full_sentence.trim().length){
+											let smaller_sentence_parts = split_into_sentences(full_sentence);
+											console.log("full_sentence split into smaller parts: ", smaller_sentence_parts);
+											for(let sp = 0; sp < smaller_sentence_parts.length; sp++){
+												if(smaller_sentence_parts[sp].trim().length){
+													console.log("handle_chunk: NEW SENTENCE -> CREATING SPEAKING TASK: ", smaller_sentence_parts[sp]);
+													let tts_task = {
+														'prompt':null,
+														'type':'speak',
+														'state':'should_tts',
+														'sentence': clean_up_string_for_speaking(smaller_sentence_parts[sp]),
+														'destination':'audio_player'
+													}
+													if(typeof window.task_queue[t].index == 'number'){
+														tts_task['parent_index'] = window.task_queue[t].index;
+													}
+										
+													if(typeof window.task_queue[t].origin == 'string'){
+														tts_task.origin = window.task_queue[t].origin;
+													}
+										
+													window.add_task(tts_task);
+												}
+												else{
+													console.log("handle_chunk: skipping empty smaller sentence part");
+												}
+											}
+										}
+										else{
+											console.log("handle_chunk: full sentence was empty or invalid? ", full_sentence);
+										}
+										
+										
+									}
+									
 								}
 								
-								
-			
 							}
 							catch(e){
 								console.error("handle_chunk: caught error in handling pre_lines: ", pre_lines);
@@ -2472,7 +2603,7 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 						
 						window.set_chat_status(window.task_queue[t], '<div class="markdown-status">' + window.apply_markdown(good_sentences) + appendix + '</div>');
 					}
-					else{
+					else if(chatter == false){
 						window.set_chat_status(window.task_queue[t], total_response);
 					}
 					
@@ -2551,11 +2682,11 @@ window.handle_chunk = handle_chunk;
 
 
 async function handle_completed_task(task, result=null,task_meta=null,extra=null){
-	console.log("\n\n#\n##\n###\n####\in handle_task_completed.  task: ", task, typeof result);
+	console.log("\n\n#\n##\n###\n####\nin handle_task_completed.  task: ", task, typeof result);
 	//console.log(" - TASK DONE: ", task);
 	
 	if(typeof result == 'string'){
-		//console.log(" - TASK RESULT: ", result.substr(0,20) + "...");
+		console.log(" - TASK RESULT: ", result.substr(0,40) + "...");
 	}
 	else{
 		//console.log(" - TASK RESULT: ", result);
@@ -2606,23 +2737,34 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 		if(typeof result.text == 'string'){
 			result = result.text;
 		}
-		//console.log("handle_completed_task: received a result object: ", result_object);
+		console.warn("handle_completed_task: received a result object: ", result_object);
 		
 	}
 	
 	// Remove stray end tokens from result
 	if(typeof result == 'string'){
 		
+		if(result.startsWith('? ')){
+			result = result.replace('? ','');
+		}
+		
 		if(result.length > 20){
-			let total_response_tail = result.substr(result.length - 10);
-			
-			if( total_response_tail.indexOf('<|user') != -1 || 
-				total_response_tail.indexOf('<|im_') != -1 || 
-				total_response_tail.indexOf('<|end') != -1
+			let total_response_tail = result.substr(result.length - 12);
+			/*
+			if( total_response_tail.indexOf('<|user') != -1 
+				|| total_response_tail.indexOf('<|im_') != -1 
+				|| total_response_tail.indexOf('<|end') != -1 
+				|| total_response_tail.indexOf('<|prompt') != -1 
+				|| total_response_tail.indexOf('<|user') != -1 
+				|| total_response_tail.indexOf('<|answer') != -1 
 			){
+			*/
+			if( total_response_tail.indexOf('<|') != -1){
+				
 				console.error("handle_completed_response: saw special tokens in result tail: -->" + total_response_tail + "<--");
 				result = result.substr(0,(result.lastIndexOf('<|') ));
 			}
+			
 			if( total_response_tail.indexOf('[INST]') != -1){
 				result = result.substr(0,(result.lastIndexOf('[INST]') ));
 			}
@@ -2637,20 +2779,30 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			}
 			
 		}
+		
+		
+		
 		if(result.endsWith('<|')){
 			console.error("handle_completed_response: still saw <| as the last characters of the result");
 			result = result.substr(0,result.length-2);
 		}
 		
-		if(result.indexOf('<|') != -1){
-			console.warn("handle_completed_task: there is still <| in the result");
+		if(result.indexOf('<|') > 10){
+			console.warn("handle_completed_task: there is <| in the result");
+			/*
 			result = result.replaceAll('<|endoftext|>','');
 			result = result.replaceAll('<|im_end|>','');
 			//result = result.replaceAll('<|prompt|>','');
 			result = result.replaceAll('<|end|>','');
 			result = result.replaceAll('<|user|>','');
 			result = result.replaceAll('<|assistant|>','');
+			*/
+			result = result.substr(0,result.indexOf('<|'));
 			result = result.replaceAll('</s>',''); // for good measure
+		}
+		
+		if(result.indexOf('<|') != -1){
+			console.warn("handle_completed_task: there is still <| in the result");
 		}
 		
 		if(result.startsWith('[INST] ')){
@@ -2668,13 +2820,16 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			result = result.substr( (result.indexOf('|>') + 2) );
 		}
 		
+		result.replaceAll('<|prompt|>',' ');
+		result.replaceAll('<|answer|>',' ');
+		
 	}
 	
 	
 	//let as = window.assistants[task.assistant];
 	if(typeof task.assistant == 'string' && task.assistant != window.currently_loaded_assistant){
 		if(task.assistant != 'speaker' && task.assistant != 'translator' && task.assistant != 'image_to_text_ocr' ){ // && task.assistant != 'imager'
-			console.warn("WARNING, THE TASK WAS HANDLED BY ANOTHER ASSISTANT THAN WAS INTENDED:");
+			//console.warn("WARNING, THE TASK WAS HANDLED BY ANOTHER ASSISTANT THAN WAS INTENDED:");
 			console.warn("- currently_loaded_assistant: ", window.currently_loaded_assistant);
 			console.warn("- task.assistant: ", task.assistant);
 		}
@@ -2689,7 +2844,9 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 	for(let t = 0; t < window.task_queue.length; t++){
 		//console.log(typeof window.task_queue[t].index, window.task_queue[t].index, " =?= ", typeof task.index, task.index);
 		if(window.task_queue[t].index == task.index){
-			//console.log("handle_completed_task: found task again in queue. It's index: ", task.index);
+			
+			console.error("\n\n\n\n", task.index, "\n\n\n\n");
+			console.log("handle_completed_task: found task again in queue. It's index: ", task.index, ", state: " + task.state, ", (should be the same as the real task: " + window.task_queue[t].state + ")");
 			//console.log("TASK TO UPDATE: ", JSON.stringify(window.task_queue[t],null,4));
 			
 			let chatter = false;
@@ -2698,6 +2855,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			}
 			
 			const state_before = '' + window.task_queue[t].state;
+			console.log("handle_completed_task: state_before: ", state_before);
 			
 			if(typeof window.task_queue[t].type != 'string' || typeof window.task_queue[t].state != 'string'){
 				console.error("handle_completed_task: spotted task with invalid type or state. Setting it's state to failed");
@@ -2802,8 +2960,8 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					//window.task_queue[t].splice(t,1);
 					//return;
 				}
-				if(typeof result == 'string' && result.length < 2){
-					console.error("handle_completed_task: transcript was too short: ", result);
+				if(typeof result == 'string' && result.length < 2){ //  && window.task_queue[t].assistant != 'image_to_text_ocr'
+					console.error("handle_completed_task: transcript was too short: -->" + result + "<--");
 					console.error("SETTING STT TASK STATE TO FAILED");
 					bad_stt_result = true;
 				}
@@ -2910,8 +3068,8 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								if(result.indexOf('] (') != -1 || result.indexOf(') [') != -1 || result.indexOf(') (') != -1 || result.indexOf('] [') != -1){
 									console.warn("result from STT contained multiple meta indicators: ", result);
 								}
-								else if(result.length < 20){
-									microphone_meta_hint_el.textContent = result.substr(1,result.length-2);
+								else if(result.length > 4 && result.length < 20){
+									microphone_meta_hint_el.textContent = result.substr(1,result.length-2).trim();
 									setTimeout(()=>{
 										microphone_meta_hint_el.textContent = '';
 									},4000);
@@ -3013,7 +3171,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					
 					
 					if(bad_stt_result){
-						//console.log("handle_completed_task: Doing nothing with the STT result: ", result);
+						console.error("handle_completed_task: Doing nothing with the STT result: ", result);
 						task_queue[t].state = 'failed';
 						set_state(LISTENING);
 					}
@@ -3806,7 +3964,18 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						
 						// VOICE COMMAND _ STOP
-						else if( (transcript == 'stop' || transcript == 'abort' || transcript == 'stop talking' || transcript == 'be quiet' || transcript == 'shut up' || transcript == 'hou je bek') ){ // && camera_image_to_text_details_el.open == true && window.settings.assistant == 'image_to_text_ocr'
+						else if( 
+							transcript == 'stop' 
+							|| transcript == 'abort' 
+							|| transcript == 'shush' 
+							|| transcript == 'stop talking' 
+							|| transcript == 'be quiet' 
+							|| transcript == 'shut up' 
+							|| transcript == 'stil' 
+							|| transcript == 'hou je bek' 
+							|| transcript == 'shh' 
+						){
+							
 							console.warn("HEARD VOICE COMMAND 'STOP'");
 							/*
 							if(window.llama_cpp_busy || window.web_llm_busy){
@@ -3816,6 +3985,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							*/
 							
 							//&& window.active_destination == 'chat' && (window.llama_cpp_busy || window.web_llm_busy || window.whisper_worker_busy || window.tts_worker_busy || window.audio_player_busy)
+							
 							
 							
 							flash_message('🗣️ ' + get_translation('Stop'),'1000','error');
@@ -3828,17 +3998,9 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							}
 							if(window.tts_worker_busy || (window.speaker_enabled && window.audio_player_busy)){
 								//console.log("HEARD VOICE COMMAND 'STOP' -> TTS or audio player busy -> interrupting STT, TTS and audio player tasks");
+								window.interrupt_speaker();
 								change_tasks_with_state('doing_stt','interrupted');
 								change_tasks_with_state('should_stt','interrupted');
-								change_tasks_with_state('doing_tts','interrupted');
-								change_tasks_with_state('should_tts','interrupted');
-								change_tasks_with_state('should_audio_player','interrupted'); // interrupted is the default value, so not really necessary as a parameter here
-								change_tasks_with_state('doing_audio_player','interrupted');
-								if(window.audio_player != null){
-									window.audio_player.stop();
-									window.audio_player_busy = false;
-								}
-								set_speaker_progress(100);
 							}
 							
 							if(!is_blueprint_command){
@@ -3849,6 +4011,53 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						}
 						
 						
+						// VOICE COMMAND _ RESET
+						else if( 
+							transcript == 'reset'
+							|| transcript == 'recycle'
+							|| transcript == 'clear'
+							|| transcript == 'ververs' 
+							|| transcript == 'verfris'
+							
+							|| transcript == 'forget'
+							|| transcript == 'vergeet'
+						){
+							
+							console.warn("HEARD VOICE COMMAND 'RESET'");
+							/*
+							if(window.llama_cpp_busy || window.web_llm_busy){
+								//console.log("HEARD VOICE COMMAND 'STOP' -> calling stop_assistant");
+								window.stop_assistant();
+							}
+							*/
+							
+							//&& window.active_destination == 'chat' && (window.llama_cpp_busy || window.web_llm_busy || window.whisper_worker_busy || window.tts_worker_busy || window.audio_player_busy)
+							
+							
+							
+							flash_message('🗣️ ' + get_translation('Reset'),'1000');
+							window.stop_assistant({'assistant':window.settings.assistant});
+							
+							window.clear_assistant();
+							
+							if(window.whisper_worker_busy){
+								//console.log("HEARD VOICE COMMAND 'STOP' -> whisper_worker_busy -> interrupting STT tasks");
+								change_tasks_with_state('doing_stt','interrupted');
+								change_tasks_with_state('should_stt','interrupted');
+							}
+							if(window.tts_worker_busy || (window.speaker_enabled && window.audio_player_busy)){
+								//console.log("HEARD VOICE COMMAND 'STOP' -> TTS or audio player busy -> interrupting STT, TTS and audio player tasks");
+								window.interrupt_speaker();
+								change_tasks_with_state('doing_stt','interrupted');
+								change_tasks_with_state('should_stt','interrupted');
+							}
+							
+							if(!is_blueprint_command){
+								window.task_queue[t].type = 'voice_command';
+							}
+							window.task_queue[t].state = 'completed';
+							set_state(LISTENING);
+						}
 						
 						
 						
@@ -4022,7 +4231,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						else if(is_blueprint_command && transcript.startsWith('prompt: ') ){ // && window.settings.assistant != 'scribe'
 							//console.log("changing blueprint command into prompt task : ", transcript);
 							
-							// TODO: could all this be simplified by calling do_prompt here instead, and passing in the task, so the blueprint type and task index get copied over into the new task?
+							// TODO: should be simplified by calling do_prompt here instead, and passing in the task, so the blueprint type and task index get copied over into the new task
 							//add_chat_message('current','user',result.substr(8));
 							
 							
@@ -4098,6 +4307,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								window.task_queue[t]['desired_results'] = 0;
 								window.task_queue[t]['results'] = [];
 								window.task_queue[t]['sentence'] = result.substr(8);
+								window.tts_tasks_left++;
 							
 							}
 							else if(window.settings.assistant == 'translator'){
@@ -4699,7 +4909,19 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						// VOICE COMMAND _ SWITCH TO ANOTHER ASSISTANT Switch assistant Switch_assistant
 						
-						else if( transcript.length < 80 && (transcript.startsWith('chat with ') || transcript.startsWith('switch assistant to ') || transcript.startsWith('switch ai to ') || transcript.startsWith('switch to ') || transcript.startsWith('change assistant to ') || transcript.startsWith('change ai to ') || transcript.startsWith('open assistant ') || transcript.startsWith('open assistent '))){
+						else if( 
+							transcript.length < 80 
+							&& (
+								transcript.startsWith('chat with ') 
+								|| transcript.startsWith('switch assistant to ') 
+								|| transcript.startsWith('switch ai to ') 
+								|| transcript.startsWith('switch to ') 
+								|| transcript.startsWith('change assistant to ') 
+								|| transcript.startsWith('change ai to ') 
+								|| transcript.startsWith('open assistant ') 
+								|| transcript.startsWith('open assistent ')
+							)
+						){
 							//console.log("voice command is 'switch assistant'. transcript: ", transcript);
 							let found_assistant = null;
 							let assistant_name = transcript.replace('change assistant to ','');
@@ -4709,10 +4931,17 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							assistant_name = assistant_name.replace('open assistant ','');
 							assistant_name = assistant_name.replace('open assistent ','');
 							assistant_name = assistant_name.trim();
-							//console.log("switch to other assistant command: assistant_name: ", assistant_name);
+							console.log("switch to other assistant command: assistant_name: ", assistant_name);
 							
-							if(assistant_name == 'any writer'){
-								found_assistant = 'any_writer';
+							if(
+								assistant_name == 'any writer' 
+								|| assistant_name == 'any_writer'
+								|| assistant_name == 'any small writer'
+								|| assistant_name == 'any_small_writer'
+								|| assistant_name == 'any coder'
+								|| assistant_name == 'any_coder'
+							){
+								found_assistant = assistant_name.replaceAll(' ','_');
 								window.switch_assistant('any_writer');
 							}
 							
@@ -4742,7 +4971,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 											}
 											
 											found_assistant = assistant_keys[x];
-											//console.log("handle_completed_task: switching to assistant command: found it: ", assistant_keys[x], " a.k.a. ", assistant_name);
+											console.log("handle_completed_task: switching to assistant command: found it: ", assistant_keys[x], " a.k.a. ", assistant_name);
 											window.switch_assistant(assistant_keys[x]);
 											break
 										}
@@ -5036,25 +5265,29 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								//console.log("forcing STT result to document because task assistant is Scribe");
 								task_queue[t].destination = 'document';
 							}
-							
+							/*
 							if(typeof task_queue[t].origin == 'string' && task_queue[t].origin == 'voice' && window.innerWidth < 641){
 								//console.log("handle_completed_task: got STT result on a small screen");
 								if(document.body.classList.contains('show-document')){
-									//console.log("forcing STT result to document");
+									console.log("forcing STT result to document");
 									task_queue[t].destination = 'document';
 								}
 							}
+							*/
 							
 							
 							// If low memory, stop Whisper so the prompt can be handled optimally by the LLM
 							if(typeof task_queue[t].destination == 'string' && task_queue[t].destination == 'chat' && typeof task_queue[t].assistant == 'string' && task_queue[t].assistant != 'scribe' && !task_queue[t].assistant != 'image_to_text_ocr' && !task_queue[t].assistant != 'developer' && window.ram < 4001){
-								//console.log("disposing of whisper after a voice command that will likely lead to an assistant being called next: ", task_queue[t].assistant)
+								console.log("handle_completed_task: post stt: disposing of whisper, as an assistant will likely be called next: ", task_queue[t].assistant);
 								if(window.microphone_enabled){
 									window.stopped_whisper_because_of_low_memory = true;
 									document.body.classList.add('microphone-sleeping');
+									window.disable_microphone();
 								}
-								window.disable_microphone();
-								window.dispose_whisper();
+								else if(window.whisper_worker != null){
+									window.dispose_whisper();
+								}
+								
 							}
 							
 							
@@ -5079,24 +5312,23 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								
 								if(typeof destination_folder == 'string' && typeof destination_filename == 'string' && (typeof playground_saved_files[destination_folder + '/' + destination_filename] == 'string' || typeof playground_live_backups[destination_folder + '/' + destination_filename] == 'string')){
 									if( typeof playground_live_backups[destination_folder + '/' + destination_filename] == 'string' && playground_live_backups[destination_folder + '/' + destination_filename].startsWith('_PLAYGROUND_BINARY_')){ //  || window.filename_is_binary(destination_filename)
-										console.error("handle_completed_task: STT result should be written to file, but the destination_file seems to be a binary: ", destination_filename);
 										destination_file_is_binary = true;
 									}
 									else if( typeof playground_saved_files[destination_folder + '/' + destination_filename] == 'string' && playground_saved_files[destination_folder + '/' + destination_filename].startsWith('_PLAYGROUND_BINARY_')){ //  || window.filename_is_binary(destination_filename)
-										console.error("handle_completed_task: STT result should be written to file, but the destination_file seems to be a binary: ", destination_filename);
 										destination_file_is_binary = true;
 									}
 								}
 								
 								if(task_queue[t].destination == 'document' && destination_file_is_binary){
+									console.error("handle_completed_task: STT: force-changing destination to chat.  _PLAYGROUND_BINARY_' detected. Destination file/currently open file seems to be a binary, so destination must be changed from document to chat isntead.  destination_filename:  ", destination_filename);
 									task_queue[t].destination = 'chat';
 								}
 								
 								
 								
-								if(typeof task_queue[t].destination == 'string'){
+								//if(typeof task_queue[t].destination == 'string'){
 									//console.log("handle_completed_task: STT: task_queue[t].destination: ", task_queue[t].destination);
-								}
+								//}
 								
 								
 								
@@ -5116,15 +5348,16 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 									//window.task_queue[t].state = 'completed';
 									
 									if(result.replaceAll('\n','').trim() == ''){
+										console.error("handle_completed_task: result was empty string, setting task to failed");
 										window.task_queue[t].state = 'failed';
 									}
 									else{
 										
 										
 										if(window.ram < 4001 && bad_stt_result == false && typeof result == 'string' && result.trim().length > 1){
-											if(window.microphone_enabled){
-												console.log("Got a seemingly good STT result. Low memory device, so disabling microphone before it becomes an assistant task");
-												disable_microphone();
+											if(window.microphone_enabled === true){
+												console.log("handle_completed_task: Got a seemingly good STT result. Low memory device, so disabling microphone before it becomes an assistant task");
+												window.disable_microphone();
 											}
 										}
 										
@@ -5135,7 +5368,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 										
 										
 										
-										console.log("POST STT: TASK: ", window.task_queue[t]);
+										console.log("handle_completed_task: POST STT: destination is CHAT.  TASK: ", window.task_queue[t]);
 										
 										// ADD USER PROMPT CHAT MESSAGE
 										
@@ -5164,7 +5397,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 											}
 											else{
 												console.log("creating early empty assistant chat message");
-												window.add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,'',null,null,window.task_queue[t].index);
+												window.add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,'......',null, null,window.task_queue[t].index);
 											}
 											
 											console.log("handle_completed_task: pushing task user prompt to chat conversation history: ", result);
@@ -6064,6 +6297,21 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					window.task_queue[t]['handled_by'].push(window.task_queue[t].assistant);
 				}
 				
+				
+				if(typeof window.task_queue[t].destination == 'string' && typeof window.task_queue[t].assistant == 'string' && window.task_queue[t].destination == 'chat'){
+					//console.log("post assistant: destination is chat.  window.task_queue[t].assistant =?= window.setting.assistant: ", window.task_queue[t].assistant, window.settings.assistant);
+					if(window.task_queue[t].assistant != window.settings.assistant){
+						//console.log("post assistant: destination is chat and the task.assistant is not the currently visible one: ", window.task_queue[t].assistant, window.settings.assistant);
+						if(typeof window.unread_messages[window.settings.assistant] == 'number'){
+							window.unread_messages[window.task_queue[t].assistant]++; // = window.unread_messages[pane] + 1;
+						}
+						else{
+							window.unread_messages[window.task_queue[t].assistant] = 1;
+						}
+						//console.log("window.unread_messages is now: ", window.unread_messages);
+					}
+				}
+				
 				// Add result to chat conversation
 				if(window.task_queue[t].type == 'chat'){
 					/*
@@ -6072,17 +6320,23 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					}
 					*/
 					//console.log("handle_completed_task: pushing assistant content to chat conversation history: ", result);
-					
-					if(add_response_to_conversation(window.task_queue[t],result)){
-						//console.log("succesfully filled in the conversation");
-					}else{
-						console.error("handle_completed_task: add_response_to_conversation failed.  window.task_queue[t],result: ", window.task_queue[t], result);
+					if(typeof result == 'string'){
+						const add_to_conversation_result = await add_response_to_conversation(window.task_queue[t],result);
+						//console.log("add_to_conversation_result: ", add_to_conversation_result);
+						if(add_to_conversation_result === true){
+							//console.log("handle_completed_task: succesfully filled in the conversation by adding the result: ", result);
+							//console.log("handle_completed_task: succesfully filled in the conversation");
+						}else{
+							//console.error("handle_completed_task: add_response_to_conversation failed.  window.task_queue[t],result: ", window.task_queue[t], result);
+						}
 					}
+					
 					//window.conversations[window.currently_loaded_assistant].push({'role':'assistant','content':result});
 					
-					if(window.ram < 4000 && window.speaker_enabled){
+					if(window.ram < 4001 && window.speaker_enabled){
 						// Unload the current AI as we need the memory for generating audio
-						window.do_unload([]);
+						console.warn("handle_completed_task: calling do_unload to unload everything, so that TTS has plenty of memory");
+						window.do_unload(['stt']);
 					}
 					
 				}
@@ -6158,6 +6412,22 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 									window.add_chat_message(assistant_id,assistant_id,result,null,null,window.task_queue[t].index);
 								}
 								
+								// Add insert into document buttons to chat bubble
+								if(existing_chat_message_el == null){
+									existing_chat_message_el = document.querySelector('#chat-message-' + assistant_id + '-' + assistant_id + window.task_queue[t].index);
+								}
+								if(existing_chat_message_el){
+									let existing_inner_bubble_wrap_el = existing_chat_message_el.querySelector('.chat-bubble-wrap');
+									if(existing_inner_bubble_wrap_el){
+										let insert_into_doc_buttons_el = create_insert_into_doc_buttons(result);
+										if(insert_into_doc_buttons_el){
+											existing_inner_bubble_wrap_el.appendChild(insert_into_doc_buttons_el);
+										}
+									}
+								}
+								
+								
+								
 							}
 							
 							window.set_chat_status(window.task_queue[t],'');
@@ -6171,7 +6441,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							if(window.speaker_enabled){
 								
 								if(typeof result == 'string' && result == window.task_queue[t].incomplete_sentence){
-									//console.log("handle_completed_task: chat task: RESULT IS SAME AS INCOMPLETE SENTENCE: ", result);
+									console.warn("handle_completed_task: chat task: RESULT IS SAME AS INCOMPLETE SENTENCE: ", result);
 									
 									//console.log("speaker is enabled, so turning the chat task which had an incomplete sentence into a speak command, with state 'should_tts'. result: ", result);
 									window.task_queue[t]['type'] = 'speak';
@@ -6518,7 +6788,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_research'){
-				//console.log("handle_completed_task: state was doing_research");
+				console.log("handle_completed_task: state was doing_research");
 				
 				window.task_queue[t]['results'].push(result);
 				
@@ -6551,7 +6821,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			
 			//else if(window.task_queue[t].state == 'doing_tts' || window.task_queue[t].state == 'doing_audio_player'){
 			else if(window.task_queue[t].state == 'doing_translation'){
-				//console.log("handle_completed_task: it's a translation task: ", window.task_queue[t]);
+				console.log("handle_completed_task: it's a translation task: ", window.task_queue[t]);
 				//window.task_queue[t]['handled_by'].push( window.task_queue[t].state.replace('doing_','') );
 				
 				if(typeof window.task_queue[t]['handled_by'] == 'undefined'){
@@ -6740,30 +7010,38 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			
 			//else if(window.task_queue[t].state == 'doing_tts' || window.task_queue[t].state == 'doing_audio_player'){
 			else if(window.task_queue[t].state == 'doing_tts'){
-				//console.log("handle_completed_task: was doing_tts: state: ", window.task_queue[t].state);
+				console.log("handle_completed_task: was doing_tts: state: " + window.task_queue[t].state);
 				//window.task_queue[t]['handled_by'].push( window.task_queue[t].state.replace('doing_','') );
 				
 				let found_sentence = false;
 				//let found_played_audio = false;
-				
+				window.task_queue[t]['handled_by'].push('tts');
 				
 				// Simple task can immediately be set to completed
 				if(window.task_queue[t].type == 'speak' && typeof task.sentence == 'string' && task.sentence.length){
 					//console.log("handle_task_completed: simple: probably just TTS'ed this sentence: ", task.sentence);
-					if(result == null){
-						window.task_queue[t].state = 'failed';
+					
+					
+					if(typeof window.task_queue[t].speech_interrupted == 'boolean' && window.task_queue[t].speech_interrupted == true){
+						window.task_queue[t].state = 'interrupted';
+						console.warn("handle_completed_task: post tts_routing:  window.task_queue[t].speech_interrupted was true, so not going to play the audio that was just received");
 					}
-					else if(typeof result.big_audio_array != 'undefined'){
+					else if(result != null && typeof result.big_audio_array != 'undefined'){
+						console.error("handle_completed_task: OK, tts result had audio");
 						window.task_queue[t].audio = result.big_audio_array;
 						window.task_queue[t].wav_blob = result.wav_blob;
 						window.task_queue[t].state = 'should_audio_player';
-						window.task_queue[t]['handled_by'].push('tts');
+						
 						found_sentence = true;
 					}
 					else{
+						console.error("handle_completed_task: tts result was invalid: ", window.task_queue[t]);
 						window.task_queue[t].state = 'failed';
 					}
 					
+				}
+				else{
+					console.error("doing_tts task was not of type 'speak': ", window.task_queue[t].type);
 				}
 				
 			}
@@ -6941,7 +7219,6 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							})
 							
 							
-							
 						}
 						catch(e){
 							console.error("Caught error appending MP3 player to chat message: ", e);
@@ -6969,7 +7246,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_imager' || window.task_queue[t].state == 'doing_text_to_image'){
-				//console.log("handle_completed_task: image. ", window.task_queue[t]);
+				console.log("handle_completed_task: image generation done. ", window.task_queue[t]);
 				//window.task_queue[t]['handled_by'].push('audio_player');
 				if(window.task_queue[t].type == 'image'){
 					
@@ -7072,7 +7349,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_ocr'){
-				//console.log("handle_completed_task: doing_ocr done");
+				console.log("handle_completed_task: doing_ocr done");
 				
 				if(typeof result != 'string'){
 					console.error("handle_task_completed:  OCR result was not a string: ", result);
@@ -7087,6 +7364,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						if(typeof window.task_queue[t].selection == 'undefined'){
 							window.task_queue[t].selection = {'position':'end'};
 						}
+						
 						if(window.task_queue[t].destination == 'document' && typeof window.task_queue[t].file != 'undefined'){
 							insert_into_document(window.task_queue[t],'\n\n' + result);
 						}
@@ -7098,8 +7376,46 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							//console.log("handle_task_completed:  OCR result: creating new document");
 							create_new_document(result,get_translation('Text_from_photo') + ' ' + date_string + '.txt' );
 						}
+						else if(window.task_queue[t].destination == 'chat'){
+							console.log("handle_task_completed:  OCR result to place in chat bubble: ", result);
+							
+							const target_output_el = document.querySelector('#image-to-text-result-output' + window.task_queue[t].index);
+							if(target_output_el){
+								target_output_el.innerHTML = '';
+								//target_output_el.textContent = result;
+								
+								let bubble_wrapper_el = document.createElement('div');
+								bubble_wrapper_el.classList.add('chat-bubble-wrap');
+								
+								let bubble_el = document.createElement('div');
+								bubble_el.textContent = result;
+								bubble_wrapper_el.appendChild(bubble_el);
+								
+								let insert_into_doc_buttons_el = create_insert_into_doc_buttons(result);
+								if(insert_into_doc_buttons_el){
+									bubble_wrapper_el.appendChild(insert_into_doc_buttons_el);
+								}
+								
+								target_output_el.appendChild(bubble_wrapper_el);
+								
+								
+								if(window.settings.assistant != 'image_to_text_ocr'){
+									if(typeof window.unread_messages['image_to_text_ocr'] == 'number'){
+										window.unread_messages['image_to_text_ocr']++; // = window.unread_messages[pane] + 1;
+									}
+									else{
+										window.unread_messages['image_to_text_ocr'] = 1;
+									}
+								}
+								
+							}
+							else{
+								console.error("could not find image-to-text-result-output element to place OCR result into.  window.task_queue[t].image_to_text_index: ", window.task_queue[t].image_to_text_index);
+							}
+							
+						}
 						else{
-							//console.log("handle_task_completed: OCR result fell through");
+							console.log("handle_task_completed: OCR result fell through");
 						}
 					}
 					else if(typeof window.task_queue[t].origin == 'string'){
@@ -7122,11 +7438,6 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								bubble_el.textContent = result;
 								bubble_wrapper_el.appendChild(bubble_el);
 								
-								let insert_into_doc_buttons_el = create_insert_into_doc_buttons(result);
-								if(insert_into_doc_buttons_el){
-									bubble_wrapper_el.appendChild(insert_into_doc_buttons_el);
-								}
-								
 								target_output_el.appendChild(bubble_wrapper_el);
 								
 								if(window.settings.assistant != 'image_to_text_ocr'){
@@ -7140,7 +7451,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								
 							}
 							else{
-								console.error("could not find image-to-text-result-output element to place OCR result into.");
+								console.error("could not find image-to-text-result-output element to place OCR result into.  window.task_queue[t].image_to_text_index: ", window.task_queue[t].image_to_text_index);
 							}
 							
 							
@@ -7180,10 +7491,10 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			
 			//
 			//    POST IMAGE TO TEXT
-			//
+			//    post image_to_text
 			
 			else if(window.task_queue[t].state == 'doing_image_to_text'){
-				//console.log("handle_completed_task: doing_image_to_text done");
+				console.log("handle_completed_task: doing_image_to_text done");
 				
 				camera_image_to_text_scan_progress_el.value = 0;
 				if(window.image_to_text_start_time != 0){
@@ -7195,14 +7506,20 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					window.task_queue[t].state = 'failed';
 				}
 				else{
-					//console.log("handle_completed_task: got a image_to_text result:\n\n", result, "\n\n");
+					console.log("handle_completed_task: got a image_to_text result:\n\n", result, "\n\n");
 					
 					window.task_queue[t].results.push(result);
 					
-					if(typeof window.task_queue[t].file != 'undefined' && typeof window.task_queue[t].prompt == 'string' && window.task_queue[t].prompt == 'Write a detailed description of this image'){ //get_translation('Write_a_detailed_description_of_this_image')){
-						//console.log("the image_to_text result seems to be a detailed description of a saved image, and the task has a file: ", window.task_queue[t].file);
+					if(
+						typeof window.task_queue[t].file != 'undefined' 
+						&& window.task_queue[t].file != null 
+						&& typeof window.task_queue[t].prompt == 'string' 
+						&& window.task_queue[t].prompt == 'Write a detailed description of this image' //get_translation('Write_a_detailed_description_of_this_image')
+					){ 
+						
+						console.log("handle_completed_task: the image_to_text result seems to be a detailed description of a saved image, and the task has a file: ", window.task_queue[t].file);
 						if(typeof window.task_queue[t].file.filename == 'string' && typeof window.task_queue[t].file.folder == 'string' && typeof files[window.task_queue[t].file.filename] != 'undefined'){
-							//console.log("saving image_to_text_description to file meta");
+							console.log("handle_completed_task: saving image_to_text_description to file meta");
 							save_file_meta('image_to_text_description',result,window.task_queue[t].file.folder,window.task_queue[t].file.filename);
 						}
 					}
@@ -7446,13 +7763,30 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].type == 'preload'){ // && window.task_queue[t].state == 'doing_preload'
+				/*
 				if(result){
 					window.task_queue[t].state == 'completed';
 				}
 				else{
 					window.task_queue[t].state == 'failed';
 				}
-				//console.log("Assistant was done with a preload task (downloading a model). Updating cache list");
+				*/
+				console.log("Assistant was done with a preload task (downloading a model). Updating cache list. result was: ", result);
+				window.task_queue[t].state = 'completed';
+				
+				let model_that_was_downloaded = null;
+				if(typeof window.task_queue[t].assistant == 'string'){
+					model_that_was_downloaded = window.task_queue[t].assistant;
+					console.log("model_that_was_downloaded: ", model_that_was_downloaded);
+				}
+				let runner = null;
+				if(typeof window.task_queue[t].runner == 'string' && window.task_queue[t].runner.length){
+					runner = window.task_queue[t].runner;
+				}
+				
+				
+				
+				
 				
 				if(typeof window.task_queue[t].assistant == 'string'){
 					let download_message_el = document.querySelector('.message.pane-' + window.task_queue[t].assistant + '.download-progress-chat-message');
@@ -7466,6 +7800,25 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 				window.update_cached_files_list(); // updates Wllama cached files
 				setTimeout(() => {
 					window.update_cached_files_list();
+					if(typeof model_that_was_downloaded == 'string'){
+						if(runner == 'llama_cpp' && model_that_was_downloaded == window.llama_cpp_model_being_loaded){
+							//if(typeof window.llama_cpp_model_being_loaded == 'string' && window.llama_cpp_model_being_loaded == window.model_being_loaded){
+							//	window.model_being_loaded = null;
+							//}
+							console.error("post preload: delayed: setting window.llama_cpp_model_being_loaded to null from: " + window.llama_cpp_model_being_loaded);
+							window.llama_cpp_model_being_loaded = null;
+						}
+						/*
+						else if(runner == 'web_llm' && model_that_was_downloaded == window.web_llm_model_being_loaded){
+							//if(typeof window.web_llm_model_being_loaded == 'string' && window.web_llm_model_being_loaded == window.model_being_loaded){
+							//	window.model_being_loaded = null;
+							//}
+							console.log("post preload: setting window.web_llm_model_being_loaded to null from: " + window.web_llm_model_being_loaded);
+							window.web_llm_model_being_loaded = null;
+						}*/
+					}
+					
+					
 				},10000)
 			}
 			
@@ -7625,6 +7978,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						//console.log("parent task completed, removing 'in-progress' class from rewrite_result element. task: ", window.task_queue[t]);
 						parent_rewrite_result_el.classList.remove("in-progress");
 						parent_rewrite_result_el.classList.add("completed");
+						parent_rewrite_result_el.open = true;
 						
 						
 						if(typeof window.task_queue[t].feeling_lucky == 'boolean' && window.task_queue[t].feeling_lucky == true){
@@ -7660,7 +8014,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						// Play-document is complete
 						if(window.task_queue[t].origin == 'play-document'){
-							//console.log("play_document task parent is full")
+							console.log("play_document task parent is full")
 							window.playing_document = false;
 							document.body.classList.remove('playing-document');
 							document.body.classList.remove('fairytale');
@@ -7671,8 +8025,13 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						else if(window.task_queue[t].origin == 'blueprint'){
 							console.warn("\n\nBLUEPRINT PARENT DONE\n\nblueprint task parent is full\n\n");
 							window.blueprint_origin_file = null;
-							document.body.classList.remove('playing-document');
-							document.body.classList.remove('fairytale');
+							if(window.playing_document && window.tts_tasks_left > 1 && document.body.classList.contains('fairytale')){
+								console.log("allowing fairytale to continue playing");
+							}
+							else{
+								document.body.classList.remove('playing-document');
+								document.body.classList.remove('fairytale');
+							}
 							
 							flash_message(get_translation('Blueprint_done'),1000);
 						}
@@ -7722,7 +8081,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							
 							//window.whisper_snippets_to_text(window.task_queue[t]);
 							setTimeout(() => {
-								if(window.whisper_worker != null && window.whisper_worker_busy == false && window.stt_recordings_in_buffer == 0 && window.microphone_enabled == false){
+								if(window.whisper_worker != null && window.whisper_worker_busy == false && window.stt_tasks_left == 0 && window.microphone_enabled == false){
 									if(window.settings.settings_complexity == 'developer' && window.is_mobile == false){
 										flash_message("not attempting dispose of Whisper because developer mode is active",2000,'info');
 									}
@@ -7765,7 +8124,11 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 				
 				
 			}
-			
+			else{
+				if(window.settings.settings_complexity == 'developer'){
+					console.error("dev: handle_completed_task: task fell through, odd state?   state_before, window.task_queue[t].state: ", state_before, window.task_queue[t].state, window.task_queue[t]);
+				}
+			}
 			
 			
 			
@@ -7775,7 +8138,10 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			// Task Evolution Queue
 			
 			if(state_before != window.task_queue[t].state){
-				//console.log("handle_task_completed: task state changed: ", state_before, " --> ", window.task_queue[t].state);
+				if(window.settings.settings_complexity == 'developer'){
+					console.log("dev: handle_task_completed: task state changed: ", state_before, " --> ", window.task_queue[t].state);
+				}
+				
 				
 				if(window.task_queue[t].state == 'completed'){
 					
@@ -7877,7 +8243,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 	
 	update_buffer_counts();
 	
-	if(window.stt_recordings_in_buffer == 0){
+	if(window.stt_tasks_left == 0){
 		//console.log("handle_completed_task: there are no more relevant tasks with recorded_audio. Removing doing-stt class from document.")
 		document.body.classList.remove('doing-stt');
 	}
@@ -7888,7 +8254,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 		document.body.classList.remove('waiting-for-response');
 	}
 	
-	if(window.tts_sentences_in_buffer == 0){
+	if(window.tts_tasks_left == 0){
 		//console.log("handle_completed_task: there are no more sentences to turn into audio.");
 		document.body.classList.remove('doing-stt');
 	}
@@ -7927,8 +8293,9 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 		document.body.classList.remove('doing-rag');
 	}
 	
-	if(window.blueprint_tasks_left == 0 && window.chat_messages_to_answer == 0 && window.tts_sentences_in_buffer == 0 && window.audio_files_in_buffer == 0 && window.mp3_to_encode == 0 && window.images_to_generate == 0 && window.music_to_generate == 0 && window.play_document_tasks_left == 0 && window.rag_tasks_left == 0 && window.assistant_tasks_left == 0 && doing_tasks_left == 0 && should_tasks_left == 0){
+	if(window.blueprint_tasks_left == 0 && window.chat_messages_to_answer == 0 && window.tts_tasks_left == 0 && window.audio_files_in_buffer == 0 && window.mp3_to_encode == 0 && window.images_to_generate == 0 && window.music_to_generate == 0 && window.play_document_tasks_left == 0 && window.rag_tasks_left == 0 && window.assistant_tasks_left == 0 && doing_tasks_left == 0 && should_tasks_left == 0){
 		console.warn("\n\nAND ALL WAS QUIET IN THE LAND\n\n");
+		
 		window.set_state(LISTENING);
 		window.set_chat_status({},null,'');
 		window.set_idle(true);
@@ -7943,6 +8310,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 		window.set_idle(false);
 	}
 	
+	console.log(" -x- window.llama_cpp_busy: ", window.llama_cpp_busy);
 	
 	if(typeof task.meta != 'undefined' && task.meta != null && typeof task_meta.state == 'string'){
 		if(task_meta.state == 'interrupted' || task_meta.state == 'failed'){
@@ -8264,11 +8632,20 @@ let interval_blocked_counter = 0;
 let previous_used_memory = 0;
 
 
+function pause_interval(){
+	window.interval_paused = !window.interval_paused;
+	console.log("window.interval_paused: ", window.interval_paused);
+}
 
 
 // This interval starts tasks from the task queue
 window.main_interval = setInterval( () => {
 	//console.log("in interval ",main_interval_counter);
+	
+	if(window.interval_paused){
+		return
+	}
+	
 	if(window.ram < 4001 && previous_interval_done == false){
 		console.log("interval: previous interval isn't done yet, and this is a low memory device, so patiently waiting for it to complete");
 	}
@@ -8383,6 +8760,10 @@ async function do_interval(){
 		window.only_allow_voice_commands = false;
 	}
 	
+	
+	
+	// RUNNING TASKS
+	
 	// Clean up tasks in the current_tasks list that have been completed, interrupted, etc
 	for (const [task_type,details] of Object.entries(window.current_tasks)){
 		//console.log("interval: current_tasks: checking:  task_type,details: ", task_type, details);
@@ -8441,6 +8822,9 @@ async function do_interval(){
 					window.available_memory = window.ram - window.used_memory;
 					//console.log("interval: window.available_memory: ", window.available_memory);
 				}
+				else{
+					window.available_memory = 0;
+				}
 			}
 		}
 		
@@ -8449,7 +8833,7 @@ async function do_interval(){
 	
 		
 		
-		if(window.blueprint_tasks_left > 0 && window.chat_messages_to_answer == 0 && window.tts_sentences_in_buffer == 0 && window.audio_files_in_buffer == 0 && window.mp3_to_encode == 0 && window.images_to_generate == 0 && window.play_document_tasks_left == 0){
+		if(window.blueprint_tasks_left > 0 && window.chat_messages_to_answer == 0 && window.tts_tasks_left == 0 && window.audio_files_in_buffer == 0 && window.mp3_to_encode == 0 && window.images_to_generate == 0 && window.play_document_tasks_left == 0){
 			//console.warn("\ninterval: ALMOST QUIET IN THE LAND - BLUEPRINTS LEFT: ", window.blueprint_tasks_left);
 			console.warn("\ninterval: ALMOST QUIET IN THE LAND - BLUEPRINTS BUSY, TASKS LEFT: ", window.busy_doing_blueprint_task, window.blueprint_tasks_left);
 			//window.busy_doing_blueprint_task = false;
@@ -8470,6 +8854,16 @@ async function do_interval(){
 			}
 			if(window.scribe_clock_time_elapsed_el != null){
 				update_scribe_clock();
+			}
+			
+			/*
+			if(window.stt_tasks_left > 0){
+				console.log("interval: window.stt_tasks_left: ", window.stt_tasks_left);
+			}
+			*/
+			if(window.tts_tasks_left > 0 || window.audio_output_tasks_left > 0){
+				console.log("interval: window.tts_tasks_left: ", window.tts_tasks_left);
+				console.log("window.audio_output_tasks_left: ", window.audio_output_tasks_left);
 			}
 			
 			
@@ -8603,7 +8997,7 @@ async function do_interval(){
 						//console.log("--- cached: ", cached);
 						
 						
-						if( window.task_queue[t].type != 'preload' && window.task_queue[t].type != 'save_image' && typeof runner == 'string' && (runner == 'web_llm' || runner == 'llama_cpp') && cached == false){
+						if( window.task_queue[t].type != 'preload' && window.task_queue[t].type != 'undetermined' && window.task_queue[t].type != 'save_image' && typeof runner == 'string' && (runner == 'web_llm' || runner == 'llama_cpp') && cached == false){
 							
 							let model_file_name = null;
 							if(typeof window.settings.assistants[window.task_queue[t].assistant] != 'undefined' && typeof window.settings.assistants[window.task_queue[t].assistant].model_file_name == 'string' && window.settings.assistants[window.task_queue[t].assistant].model_file_name.length > 4){
@@ -8672,7 +9066,7 @@ async function do_interval(){
 						continue
 					}
 				}
-				else{
+				else if(window.settings.settings_complexity != 'developer'){
 					// this task is already in an irrelevant state
 					
 					if(window.settings.left_sidebar_open && window.settings.left_sidebar == 'settings' && window.settings.left_sidebar_settings_tab == 'tasks'){
@@ -8730,19 +9124,44 @@ async function do_interval(){
 					&& window.task_queue[t].runner == 'llama_cpp' 
 					&& typeof window.task_queue[t].assistant == 'string'
 				){
-					//console.log("interval: starting preload task for llama.cpp model: ", window.task_queue[t].assistant);
+					console.log("interval: starting preload task for llama.cpp model: ", window.task_queue[t].assistant);
 					if(window.llama_cpp_app == null){
-						//console.log("interval: starting preload task delayed, have to create llama_cpp_app first");
+						console.error("interval: starting preload: have to create llama_cpp_app first");
+						window.create_wllama_object();
+					}
+					
+					console.log("interval: starting Wllama preload task");
+					window.llama_cpp_model_being_loaded = window.task_queue[t].assistant;
+					console.log("window.llama_cpp_model_being_loaded is now: ", window.llama_cpp_model_being_loaded);
+					window.task_queue[t].state = 'doing_preload';
+					add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,"download_progress#setting---");
+					window.do_preload(window.task_queue[t]);
+					
+					task_started = true;
+				}
+				/*
+				if(
+					window.web_llm_model_being_loaded == null 
+					&& window.task_queue[t].type == 'preload' 
+					&& window.task_queue[t].state == 'should_preload' 
+					&& typeof window.task_queue[t].runner == 'string' 
+					&& window.task_queue[t].runner == 'web_llm' 
+					&& typeof window.task_queue[t].assistant == 'string'
+				){
+					console.log("interval: starting preload task for web_llm model: ", window.task_queue[t].assistant);
+					if(window.web_llm_engine == null){
+						console.log("interval: starting preload task delayed, have to create llama_cpp_app first");
 						window.create_wllama_object();
 					}
 					else{
-						//console.log("interval: starting preload task");
+						console.log("interval: starting preload task");
 						window.llama_cpp_model_being_loaded = window.task_queue[t].assistant;
 						window.task_queue[t].state = 'doing_preload';
 						add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,"download_progress#setting---");
 						window.do_preload(window.task_queue[t]);
 					}
 				}
+				*/
 				
 			
 				/*
@@ -8826,7 +9245,7 @@ async function do_interval(){
 				if(window.ocr_worker_busy == false && window.busy_starting_camera == false){
 			
 					//console.log("__OK ocr_worker is not busy. next: state: ", window.task_queue[t].state)
-					if(window.task_queue[t].type == 'image_processing' && window.task_queue[t].state == 'should_ocr'){ // || is_task_relevant(window.task_queue[t], 'mp3') == true){
+					if(window.task_queue[t].state == 'should_ocr'){ // || is_task_relevant(window.task_queue[t], 'mp3') == true){   // window.task_queue[t].type == 'image_processing' && 
 						
 						//console.log("interval: STARTING OCR TASK");
 						window.ocr_worker_busy = true;
@@ -8900,14 +9319,14 @@ async function do_interval(){
 							else{
 								console.error("interval: calling do_sst failed");
 								//window.task_queue[t].state = 'failed';
-								window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+								await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
 								document.body.classList.remove('doing-stt');
 								window.whisper_worker_busy = false;
 							}
 						}
 						catch(err){
 							console.error("interval: do_stt caused an error: ", err);
-							window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+							await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
 							document.body.classList.remove('doing-stt');
 							window.whisper_worker_busy = false;
 						}
@@ -8925,7 +9344,7 @@ async function do_interval(){
 				let tts_possible = false
 		
 				//console.log("interval: tts check");
-				if(window.tts_worker_busy == false){
+				if(window.tts_worker_busy == false && window.busy_loading_tts == false){
 					
 					if(window.task_queue[t].state == 'should_tts' ){ // || is_task_relevant(window.task_queue[t], 'tts') == true
 						//console.log("interval: task seems to be relevant for tts: ", JSON.stringify(window.task_queue[t],null,4));
@@ -8938,8 +9357,10 @@ async function do_interval(){
 						//console.log("interval: tts_check: switching to 'doing_tts' and feeding task to do_tts (T5)");
 						window.task_queue[t].state = 'doing_tts';
 						try{
-							if(await window.do_tts(window.task_queue[t])){
-								//console.log("interval: successfully passed task to T5 tts: ", window.task_queue[t]);
+							const do_tts_result = await window.do_tts(window.task_queue[t]);
+							console.log("do_tts_result: ", do_tts_result);
+							if(do_tts_result === true){
+								console.log("interval: successfully passed task to T5 tts: ", window.task_queue[t]);
 								//window.task_queue[t].state = 'doing_assistant';
 								if(window.task_queue[t] != null && typeof window.task_queue[t].type == 'string'){
 									window.current_tasks[window.task_queue[t].type] = window.task_queue[t];
@@ -8947,7 +9368,7 @@ async function do_interval(){
 							}
 							else{
 								console.warn("interval: FAILED TO CALL DO_TTS.  task: ", window.task_queue[t]);
-								window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+								await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
 								window.tts_worker_busy = false;
 								//window.task_queue[t].state = 'failed'; // TODO: a bit harsh, could/should just be delayed until later?
 							}
@@ -8956,7 +9377,7 @@ async function do_interval(){
 						}
 						catch(err){
 							console.error("interval: do_tts caused an error: ", err);
-							window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+							await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
 							window.tts_worker_busy = false;
 						}
 						
@@ -9039,76 +9460,67 @@ async function do_interval(){
 						const my_task = window.task_queue[t];
 					
 						document.body.classList.add('doing-translation');
-						window.do_translation(window.task_queue[t])
-						.then((value) => {
-							//console.log("main: interval: do_translation was resolved.  value: ", value);
 						
-							try{
-								if(value && typeof value.task != 'undefined' && typeof value.translation != 'undefined'){
-									//console.log("main: interval: do_translation resolved a task and translation");
-									let full_translation = '';
-								
-									if(value && Array.isArray(value.translation)){
-								
-										// TODO: recreate newlines in translation output based on translation input
-										for(let f = 0; f < value.translation.length; f++){
-											if(typeof value.translation[f].translation_text == 'string'){
-												full_translation += value.translation[f].translation_text + ' ';
-											}
+						
+						try{
+							let value = await window.do_translation(window.task_queue[t]);
+							console.log("main: interval: do_translation was resolved.  value: ", value);
+					
+							if(value && typeof value.task != 'undefined' && typeof value.translation != 'undefined'){
+								//console.log("main: interval: do_translation resolved a task and translation");
+								let full_translation = '';
+							
+								if(value && Array.isArray(value.translation)){
+							
+									// TODO: recreate newlines in translation output based on translation input
+									for(let f = 0; f < value.translation.length; f++){
+										if(typeof value.translation[f].translation_text == 'string'){
+											full_translation += value.translation[f].translation_text + ' ';
 										}
-										//console.log("main: interval: resolved translation: full_translation: ", full_translation);
-									
-										let completed_meta = {};
-										if(typeof value.translated_property == 'string'){
-											completed_meta[value.translated_property] = full_translation;
-											//console.log("main: interval: completed_meta: ", completed_meta);
-											if(value.translated_property == 'prompt' && typeof window.task_queue[t].prompt == 'string'){
-												//console.log("main: interval: taking a shortcut to placing the translated prompt into the task");
-												window.task_queue[t]['original_prompt'] = window.task_queue[t].prompt;
-												window.task_queue[t]['prompt'] = full_translation;
-											}
-										}
-										else{
-											console.warn("resolved translation had no translated_property value? ", value);
-										}
-										
-										document.body.classList.remove('doing-translation');
-										window.handle_completed_task(value.task, full_translation, completed_meta);
-										
 									}
-									else if(value && typeof value.translation == 'string'){
-										//console.log("main: interval: do_translation .then: value.translation: ", value.translation);
-										document.body.classList.remove('doing-translation');
-										window.handle_completed_task(value.task, value.translation);
+									//console.log("main: interval: resolved translation: full_translation: ", full_translation);
+								
+									let completed_meta = {};
+									if(typeof value.translated_property == 'string'){
+										completed_meta[value.translated_property] = full_translation;
+										//console.log("main: interval: completed_meta: ", completed_meta);
+										if(value.translated_property == 'prompt' && typeof window.task_queue[t].prompt == 'string'){
+											//console.log("main: interval: taking a shortcut to placing the translated prompt into the task");
+											window.task_queue[t]['original_prompt'] = window.task_queue[t].prompt;
+											window.task_queue[t]['prompt'] = full_translation;
+										}
 									}
 									else{
-										console.error("main: interval: resolved translation was not an array? ", value.translation);
+										console.warn("resolved translation had no translated_property value? ", value);
 									}
-							
+									
+									document.body.classList.remove('doing-translation');
+									await window.handle_completed_task(value.task, full_translation, completed_meta);
+									
 								}
-							}
-							catch(e){
-								console.error("main: interval: caught error after do_translation .then: ", err);
-								document.body.classList.remove('doing-translation');
-								update_task_overview();
-							}							
-							window.translation_worker_busy = false;
-							document.body.classList.remove('doing-translation');
+								else if(value && typeof value.translation == 'string'){
+									//console.log("main: interval: do_translation .then: value.translation: ", value.translation);
+									document.body.classList.remove('doing-translation');
+									await window.handle_completed_task(value.task, value.translation);
+								}
+								else{
+									console.error("main: interval: resolved translation was not an array? ", value.translation);
+								}
 						
-						
-						})
-						.catch((err) => {
-							console.error("main: do_translation was rejected. err: ", err);
-							if(my_task){
-								my_task.state = 'failed';
 							}
-							
-							window.translation_worker_busy = false;
+						}
+						catch(e){
+							console.error("main: interval: caught error after do_translation .then: ", err);
 							document.body.classList.remove('doing-translation');
-							flash_message(get_translation('Translation_failed'),3000,'fail');
-							
 							update_task_overview();
-						})
+							flash_message(get_translation('Translation_failed'),3000,'fail');
+						}							
+						window.translation_worker_busy = false;
+						document.body.classList.remove('doing-translation');
+					
+						
+							
+						
 						
 						task_started = true;
 						
@@ -9140,7 +9552,9 @@ async function do_interval(){
 				if(
 					only_small_models == false &&
 					window.llama_cpp_busy == false && 
+					window.llama_cpp_model_being_loaded == null && 
 					window.web_llm_busy == false && 
+					window.web_llm_model_being_loaded == null &&
 					window.ollama_busy == false && 
 					window[runner + '_busy'] == false && 
 					window['doing_' + runner + '_refresh'] == false
@@ -9201,7 +9615,7 @@ async function do_interval(){
 						window.task_queue[t].state = 'doing_assistant';
 						//let assistant_started = await ;
 						let assistant_started = null;
-						assistant_started = start_assistant(window.task_queue[t]);
+						assistant_started = await start_assistant(window.task_queue[t]);
 						
 						if(assistant_started === true){
 							//console.log("interval: successfully passed task to assistant: ", window.task_queue[t]);
@@ -9274,7 +9688,7 @@ async function do_interval(){
 							}
 							
 							set_idle(false);
-							window.update_interrupt_button_icon();
+							window.update_interrupt_button_icon(window.task_queue[t]);
 							
 							task_started = true;
 							break;
@@ -9310,9 +9724,8 @@ async function do_interval(){
 						
 						window.busy_doing_research = true;
 						
-						
-						window.add_script('./researcher_module.js',true) // add it as a module
-						.then(() => {
+						try{
+							await window.add_script('./researcher_module.js',true); // add it as a module
 							//console.log("researcher_module.js is now loaded");
 	
 							//ensure_text_ai();
@@ -9324,13 +9737,13 @@ async function do_interval(){
 							
 							window.do_research(window.task_queue[t]);
 							
-						})
-						.catch((err) => {
+						}
+						catch (err) {
 							console.error("failed to load researcher_module.js: ", err);
 							window.task_queue[t].state = 'failed';
 							window.busy_doing_research = false;
 							flash_message(get_translation("An_error_occured"),2000,'fail');
-						})
+						}
 						//return
 						
 						task_started = true;
@@ -9416,8 +9829,9 @@ async function do_interval(){
 						}
 						task_started = true;
 						
-						window.add_script('./image_to_text_module.js',true) // add it as a module
-						.then(() => {
+						try{
+							await window.add_script('./image_to_text_module.js',true) // add it as a module
+						
 							
 							do_unload(['image_to_text']);
 							
@@ -9438,8 +9852,10 @@ async function do_interval(){
 							
 							
 							
-							window.do_image_to_text(window.task_queue[t])
-							.then((response) => {
+							
+							try{
+								
+								let response = await window.do_image_to_text(window.task_queue[t]);
 								//console.log("interval: do_image_to_text: response: ", response);
 							
 								if(typeof window.task_queue[t] != 'undefined' && typeof window.task_queue[t]['image_blob'] != 'undefined'){
@@ -9448,7 +9864,7 @@ async function do_interval(){
 								}
 							
 								if(typeof response != 'undefined' && response != null && typeof response.result != 'undefined' && typeof response.task != 'undefined' && response.task != null && typeof response.task.origin == 'string' && typeof response.task.prompt == 'string'){ // && typeof response.task.image_to_text_index == 'number'
-									//console.log("interval: do_image_to_text: GOOD RESPONSE: ", response.result);
+									console.log("interval: do_image_to_text: GOOD RESPONSE: ", response.result);
 									
 									if(Array.isArray(response.result) && response.result.length){
 										//console.log("flattening response.result array");
@@ -9469,77 +9885,81 @@ async function do_interval(){
 										response.result = response.result.replaceAll('<|endoftext|>','');
 									
 										response.result = response.result.trim();
-										//console.log("interval: do_image_to_text: even more cut-down image_to_text response.result: ", response.result);
+										console.log("interval: do_image_to_text: even more cut-down image_to_text response.result: ", response.result);
 									
 										// this should be handled in handle_completed_task
-										if(response.task.origin == 'chat'){
+										if(typeof response.task != 'undefined' && response.task != null && typeof response.task.origin == 'string' && response.task.origin == 'chat'){
 											if(typeof response.task.image_to_text_index == 'number'){
 												const image_to_text_output_el = document.getElementById('image-to-text-result-output' + response.task.image_to_text_index);
 												if(image_to_text_output_el){
 													image_to_text_output_el.textContent = response.result;
 												
 													if(window.settings.language != 'en' && typeof window.task_queue[t] != 'undefined'){
+														
+														// TODO use the q system for this instead?
 														window.task_queue[t].state = 'should_translation';
 														window.task_queue[t].text = response.result;
 														window.task_queue[t]['input_language'] = 'en';
 														window.task_queue[t]['output_language'] = window.settings.language;
 														window.task_queue[t]['translation_details'] = get_translation_model_details_from_languages('en',window.settings.language);
-														//console.log("should translate the image_to_text task result. Updated task:", window.task_queue[t]);
+														console.log("should translate the image_to_text task result. Updated task:", window.task_queue[t]);
 													}
 													else{
-														window.handle_completed_task(response.task,response.result);
+														console.log("interval: do_image_to_text: promise done, calling handle_completed_task with: ", response.result);
+														await window.handle_completed_task(response.task,response.result);
 													}
 												
 												}
 												else{
 													console.error("interval: do_image_to_text: origin is chat, but could not find element to place output into");
-													window.handle_completed_task(response.task,response.result);
+													await window.handle_completed_task(response.task,response.result);
 												}
 											}
 											
 										}
 										else if(response.task.origin == 'camera'){
 											live_image_to_text_output_el.value = response.result;
-											window.handle_completed_task(response.task,response.result);
+											await window.handle_completed_task(response.task,response.result);
 										}
 										else{ // blueprint
-											window.handle_completed_task(response.task,response.result);
+											await window.handle_completed_task(response.task,response.result);
 										}
 									
 									
 									}
 									else{
 										console.error("interval: do_image_to_text: response is missing prompt?  response: ", response);
-										window.handle_completed_task(response.task,response.result);
+										await window.handle_completed_task(response.task,response.result);
 									}
 									
 								}
 								else{
 									console.error("interval: do_image_to_text: response is missing required parts (result & task.prompt,task.image_to_text_index,task.origin).  response: ", response);
-									window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+									await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+									window.clean_up_dead_task(window.task_queue[t]);
 								}
 								
 								//window.handle_completed_task(window.task_queue[t],value.);
 								window.image_to_text_worker_busy = false;
-							})
-							.catch((err) => {
+							}
+							catch (err) {
 								console.error("interval: do_image_to_text: caught error: ", err);
 							
 								console.warn("interval: IMAGE TO TEXT TASK FAILED: ", JSON.stringify(window.task_queue[t],null,4));
 								//window.task_queue[t].state = 'failed'; // TODO: a bit harsh, could/should just be delayed until later?
 							
-								window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+								await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
 								window.clean_up_dead_task(window.task_queue[t]);
 								window.image_to_text_worker_busy = false;
 								
-								return
+								return null
 							
-							})
+							}
 							
-						})
-						.catch((err) => {
+						}
+						catch (err) {
 							console.error("caught error loading image_to_text module script: ", err);
-						});	
+						}
 							
 						
 						task_started = true;
@@ -9577,7 +9997,7 @@ async function do_interval(){
 									if(value && Array.isArray(value.hits)){
 										
 										
-										window.handle_completed_task(value.task, true);
+										await window.handle_completed_task(value.task, true);
 										//return
 									}
 									else{
@@ -9649,22 +10069,23 @@ async function do_interval(){
 							const musicgen_task = window.task_queue[t];
 							
 							// Why use promise worker for musicgen? It runs for such a long time
-							window.do_musicgen(window.task_queue[t])
-							.then((value) => {
+							try{
+								const value = await window.do_musicgen(window.task_queue[t])
+							
 								//console.log("main: interval: do_musicgen was resolved.  value: ", value);
 								if(typeof value.task != 'undefined' && typeof value.big_audio_array != 'undefined'){
 									//console.log("main: interval: do_musicgen resolved a task and musicgen");
-									window.handle_completed_task(musicgen_task,true);
+									await window.handle_completed_task(musicgen_task,true);
 								}
 								window.musicgen_worker_busy = false;
-							})
-							.catch((err) => {
+							}
+							catch (err) {
 								console.error("main: do_musicgen was rejected. err: ", err);
 								window.task_queue[t].state = 'failed';
 								window.musicgen_worker_busy = false;
-								window.handle_completed_task(musicgen_task,false,{'state':'failed'});
+								await window.handle_completed_task(musicgen_task,false,{'state':'failed'});
 								window.clean_up_dead_task(musicgen_task);
-							})
+							}
 						}
 						else{
 							console.error("interval: window.do_musicgen is missing. Module didn't load?");
@@ -9706,6 +10127,7 @@ async function do_interval(){
 				if(window.task_queue[t] != null && typeof window.task_queue[t].type == 'string'){
 					window.current_tasks[window.task_queue[t].type] = window.task_queue[t];
 					generate_running_tasks_overview();
+					update_interrupt_button_icon(window.task_queue[t]);
 				}
 				
 				if(typeof window.task_queue[t].assistant == 'string'){
@@ -9717,7 +10139,7 @@ async function do_interval(){
 					window.currently_running_llm = null; // starting a task without an assistant? Does that happen?
 				}
 				set_idle(false);
-				window.update_interrupt_button_icon();
+				//window.update_interrupt_button_icon(window.task_queue[t]);
 				
 				
 			}
@@ -9790,7 +10212,8 @@ function get_task_runner(task){
 
 
 
-
+// disposes of the big AI's - translation worker, tts worker, OCR, and even whisper are unaffected
+// TODO also stop whisper if there are no stt tasks remaining?
 window.do_unload = function (runners_to_keep){
 	//console.log("\n\nDO_UNLOAD\n\n");
 	//console.log("in do_unload. runners_to_keep: ", runners_to_keep);
@@ -9923,7 +10346,7 @@ window.do_unload = function (runners_to_keep){
 	}
 	
 	
-	// TODO: translation
+	// TODO: translation? whisper? They can get quite big
 	
 	
 	
@@ -9935,7 +10358,7 @@ window.do_unload = function (runners_to_keep){
 
 
 	
-window.start_assistant = function (task=null){  // async 
+window.start_assistant = async function (task=null){  // async 
 	//console.log("in start_assistant. Task: ", task);
 	
 	//const runners_to_unload = ['musicgen','imager','web_llm','llama_cpp'];
@@ -10021,8 +10444,14 @@ window.start_assistant = function (task=null){  // async
 	}
 	
 	
-	// TODO: HACK: Bitnet models need a little '<s>' before their prompt
-	if(typeof task.assistant == 'string' && task.assistant.startsWith('bitnet') && typeof task.prompt == 'string' &&  !task.prompt.startsWith('<s>')){
+	// TODO: HACK: some Bitnet models need a little '<s>' before their prompt
+	if(
+		typeof task.assistant == 'string' 
+		&& (task.assistant == 'bitnet1' ||  task.assistant == 'bitnet2')
+		&& typeof task.prompt == 'string' 
+		&& !task.prompt.startsWith('<s>')
+	){
+		console.warn("hacky: had to add <s> before the bitnet prompt");
 		task.prompt = '<s>' + task.prompt;
 	}
 	
@@ -10048,13 +10477,21 @@ window.start_assistant = function (task=null){  // async
 	}
 	*/
 	
-	if(runner == 'web_llm' && (window.currently_loaded_web_llm_assistant == null || (typeof window.currently_loaded_web_llm_assistant == 'string' && typeof task.assistant == 'string' && window.currently_loaded_web_llm_assistant != task.assistant))){
-		console.warn("web_llm assistant not loaded yet, or wrong model loaded.  window.currently_loaded_web_llm_assistant,task.assistant: ", window.currently_loaded_web_llm_assistant, task.assistant);
-		//console.error("UNLOADING EVERYTHING");
+	if(runner == 'web_llm' && typeof window.web_llm_model_being_loaded == 'string'){
+		if(task.assistant != window.web_llm_model_being_loaded){
+			console.error("web_llm is loading a model, but it's not the model that this start_assistant call wants to load.  window.web_llm_model_being_loaded, task.assistant: ", window.web_llm_model_being_loaded, task.assistant);
+		}
+		do_unload([runner]);
+	}
+	else if(runner == 'web_llm' && (window.currently_loaded_web_llm_assistant == null || (typeof window.currently_loaded_web_llm_assistant == 'string' && typeof task.assistant == 'string' && window.currently_loaded_web_llm_assistant != task.assistant))){
+		console.warn("start_assistant: web_llm assistant not loaded yet, or wrong model loaded.  window.currently_loaded_web_llm_assistant,task.assistant: ", window.currently_loaded_web_llm_assistant, task.assistant);
+		console.error("start_assistant: UNLOADING EVERYTHING");
 		//window.unload_web_llm();
 		do_unload([]); // unloads all the big runners
 	}
+	
 	else{
+		console.warn("start_assistant: unloading everything except: " + runner);
 		do_unload([runner]);
 	}
 	/*
@@ -10141,7 +10578,7 @@ window.start_assistant = function (task=null){  // async
 			}
 			else{
 				console.error('start_assistant: ERROR, Failed to start assistant. Runner: ', runner);
-				window.handle_completed_task(task,false,{'state':'failed'});
+				await window.handle_completed_task(task,false,{'state':'failed'});
 			}
 		}
 		*/
@@ -10236,20 +10673,20 @@ window.start_assistant = function (task=null){  // async
 		}
 		else{
 			console.error('start_assistant: ERROR, Failed to start assistant. Runner: ', runner);
-			window.handle_completed_task(task,false,{'state':'failed'});
+			await window.handle_completed_task(task,false,{'state':'failed'});
 		}
 		*/
 	}
 	catch(e){
 		console.error("start_assistant: caught error trying to start assistant.  runner,error: ", runner, e);
-		window.handle_completed_task(task,false,{'state':'failed'});
+		await window.handle_completed_task(task,false,{'state':'failed'});
 		window.clean_up_dead_task(task);
 		window.current_task = null;
 	}
 	
 	console.error("start_assistant fell through. task: \n", JSON.stringify(task.null,4));
 	
-	window.handle_completed_task(task,false,{'state':'failed'});
+	await window.handle_completed_task(task,false,{'state':'failed'});
 	window.clean_up_dead_task(task);
 	window.current_task = null;
 	
@@ -10260,9 +10697,11 @@ window.start_assistant = function (task=null){  // async
 // This should really be called "interrupt assistant" instead
 window.stop_assistant = async function (task=null){ 
 	console.log("in stop_assistant.   window.currently_running_llm, task, window.current_task: ", window.currently_running_llm, task, window.current_task);
-	//console.log("- stop_assistant. window.current_tasks: ", window.current_tasks);
-	//console.log("- window.currently_loaded_assistant: ", window.currently_loaded_assistant);
-	//console.log("- window.currently_running_llm: ", window.currently_running_llm);
+	console.log("- stop_assistant. window.current_tasks: ", window.current_tasks);
+	console.log("- window.currently_loaded_assistant: ", window.currently_loaded_assistant);
+	console.log("- window.currently_running_llm: ", window.currently_running_llm);
+	
+	let assistant_id = null;
 	
 	if(task == null){
 		if(window.current_task != null){
@@ -10274,14 +10713,23 @@ window.stop_assistant = async function (task=null){
 		}
 	}
 	
-	if(task != null && typeof task.rag_index == 'number'){
-		let rag_answer_el = document.getElementById('rag-search-result-answer' + task.rag_index);
-		if(rag_answer_el){
-			rag_answer_el.innerHTML = '😵‍💫';
+	if(task != null){
+		if(typeof task.rag_index == 'number'){
+			let rag_answer_el = document.getElementById('rag-search-result-answer' + task.rag_index);
+			if(rag_answer_el){
+				rag_answer_el.innerHTML = '😵‍💫';
+			}
 		}
+		if(typeof task.assistant == 'string'){
+			assistant_id = task.assistant;
+		}
+		
 	}
 	
-	
+	if(assistant_id == null && typeof window.currently_loaded_assistant == 'string'){
+		console.warn("stop_assistant: assistant_id was still null, falling back to window.currently_loaded_assistant: ", window.currently_loaded_assistant);
+		assistant_id = window.currently_loaded_assistant;
+	}
 
 	
 	if(window.currently_running_llm == 'translator'){
@@ -10293,7 +10741,7 @@ window.stop_assistant = async function (task=null){
 		}
 	}
 	
-	if(window.currently_loaded_assistant == 'imager' || (window.current_task != null && typeof window.current_task.assistant == 'string' && window.current_task.assistant == 'imager')){
+	if(assistant_id == 'imager'){
 		//console.log("stop_assistant: stopping imager.  window.diffusion_worker: ", window.diffusion_worker);
 		if(window.diffusion_worker){
 			
@@ -10313,7 +10761,7 @@ window.stop_assistant = async function (task=null){
 	}
 	
 	
-	if(window.currently_loaded_assistant == 'text_to_image' || (window.current_task != null && typeof window.current_task.assistant == 'string' && window.current_task.assistant == 'text_to_image')){
+	if(assistant_id == 'text_to_image'){
 		//console.log("stop_assistant: stopping text_to_image.  window.real_text_to_image_worker: ", window.real_text_to_image_worker);
 		if(window.real_text_to_image_worker){
 			
@@ -10333,7 +10781,7 @@ window.stop_assistant = async function (task=null){
 	document.body.classList.remove('doing-text-to-image');
 	
 	
-	if(window.currently_loaded_assistant == 'musicgen' || (window.current_task != null && typeof window.current_task.assistant == 'string' && window.current_task.assistant == 'musicgen')){
+	if(assistant_id == 'musicgen'){
 		//console.log("stop_assistant: stopping musicgen");
 		if(typeof window.interrupt_musicgen != 'undefined'){
 			window.interrupt_musicgen();
@@ -10355,7 +10803,8 @@ window.stop_assistant = async function (task=null){
 		window.set_chat_status(task,'');
 		//return
 	}
-	if(window.currently_loaded_assistant == 'image_to_text' || (window.current_task != null && typeof window.current_task.assistant == 'string' && window.current_task.assistant == 'image_to_text')){
+	
+	if(assistant_id == 'image_to_text'){
 		//console.log("stop_assistant: stopping image_to_text");
 		if(typeof window.interrupt_image_to_text != 'undefined'){
 			camera_image_to_text_auto_scan_input_el.checked = false;
@@ -10386,11 +10835,17 @@ window.stop_assistant = async function (task=null){
 	let runner_to_stop = 'llama_cpp';
 	
 	if(window.llama_cpp_app == null){
+		console.warn("stop_assistant: window.llama_cpp_app was null, so must be web_llm");
 		runner_to_stop = 'web_llm';
 	}
 	
-	if(task != null && typeof task.assistant == 'string' && window.web_llm_assistants.indexOf(task.assistant) != -1){
-		runner_to_stop = 'web_llm';
+	if(typeof assistant_id == 'string'){
+		if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].runner == 'string'){
+			runner_to_stop = window.settings.assistants[assistant_id].runner;
+		}
+		else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].runner == 'string'){
+			runner_to_stop = window.assistants[assistant_id].runner;
+		}
 	}
 	
 	console.warn("stop_assistant: runner to stop: ", runner_to_stop);
@@ -10413,21 +10868,21 @@ window.stop_assistant = async function (task=null){
 	else if(runner_to_stop == 'transformers_js'){
 		//console.log("runner to abort is transformers.js"); //  Aborting these is handled on a per-assistant basis above
 	}
-	else{
-		console.warn("stop_assistant: stopping web_llm");
-		window.stop_web_llm();
+	else if(runner_to_stop == 'web_llm'){
+		console.warn("stop_assistant: interrupting web_llm");
+		window.interrupt_web_llm();
 	}
 	
 	
 	//window.stop_llama_cpp();
 	//window.stop_web_llm();
 	if(typeof task != 'undefined' && task != null){
-		
+		console.warn("\n\nSTOP\n\nstop_assistant: stoppping a single task");
 		if(typeof task.parent_index == 'number'){
-			//console.log("stop_assistant: task had a parent_index. setting all tasks with the same parent index, and the parent itself, to interrupted");
+			console.log("stop_assistant: task had a parent_index. setting all tasks with the same parent index, and the parent itself, to interrupted");
 		
 			if(typeof task.state == 'string' && window.irrelevant_task_states.indexOf(task.state) == -1){
-				window.handle_completed_task(task,false,{'state':'interrupted'});
+				await window.handle_completed_task(task,false,{'state':'interrupted'});
 			}
 			change_tasks_with_parent_index(task.parent_index);
 			// TODO: shouldn't handle_completed_task be called? It resets a lot of things this solution doesn't. It could handle killing the entire task cluster.
@@ -10436,11 +10891,11 @@ window.stop_assistant = async function (task=null){
 		
 		if(typeof task.origin == 'string'){
 			if(task.origin == 'blueprint'){
+				console.log("stop_assistant: task had blueprint origin, stopping all blueprint tasks");
 				change_tasks_with_origin('blueprint');
 				window.busy_doing_blueprint_task = false;
 			}
 		}
-		
 		
 		if(typeof task.type == 'string'){
 			
@@ -10449,7 +10904,10 @@ window.stop_assistant = async function (task=null){
 				camera_ocr_auto_scan_input_el.checked = false;
 			}
 			
-			change_tasks_with_type(task.type);
+			if(task.type == 'speak'){
+				change_tasks_with_type(task.type);
+			}
+			
 		}
 		
 	
@@ -10458,18 +10916,19 @@ window.stop_assistant = async function (task=null){
 		
 	}
 	else{
-		console.warn("stop_assistant: window.current_task was null");
+		console.warn("\n\nSTOP\n\nstop_assistant: doing nuclear, stopping everything");
+		console.warn("stop_assistant: window.current_task was null, going to stop everything in window.current_tasks: ", window.current_tasks);
 		for (let [task_type, cur_task] of Object.entries(window.current_tasks)) {
 	
 			
 			if(typeof cur_task.parent_index == 'number'){
 				//console.log("stop_assistant: cur_task had a parent_index. setting all tasks with the same parent index, and the parent itself, to interrupted. parent_index: ", cur_task.parent_index);
 				
-				window.handle_completed_task({'index':cur_task.parent_index},null,{'state':'interrupted'});
+				await window.handle_completed_task({'index':cur_task.parent_index},null,{'state':'interrupted'});
 				/*
 				if(typeof cur_task.state == 'string' && window.irrelevant_task_states.indexOf(cur_task.state) == -1){
 					//console.log("stop_assistant: calling handle_completed_task to set interrupted state for task with index: ", cur_task.index, cur_task);
-					window.handle_completed_task(cur_task,false,{'state':'interrupted'});
+					await window.handle_completed_task(cur_task,false,{'state':'interrupted'});
 				}
 				else{
 					console.warn("state of current task is already irrelevant");
@@ -10498,20 +10957,20 @@ window.stop_assistant = async function (task=null){
 				change_tasks_with_type(cur_task.type);
 			}
 	
-			let doomed_task_state = '' + cur_task.state.replace('doing','should');
+			let doomed_task_state = '' + cur_task.state.replace('doing_','should_');
 			change_tasks_with_state(doomed_task_state);
 			//console.log("killing task with state: ", doomed_task_state);
 			//window.current_tasks[window.task_queue[t].type] = window.task_queue[t];
 			//change_tasks_with_state('doing_musicgen','interrupted');
 			
-			window.handle_completed_task(cur_task,false,{'state':'interrupted'});
+			await window.handle_completed_task(cur_task,false,{'state':'interrupted'});
 			window.clean_up_dead_task(cur_task,'interrupted');
 		}
 	}
 	
 	/*
 	if(window.current_task != null){
-		window.handle_completed_task(window.current_task,false,{'state':'interrupted'})
+		await window.handle_completed_task(window.current_task,false,{'state':'interrupted'})
 	}
 	else{
 		change_tasks_with_state('doing_assistant','interrupted');
@@ -10527,6 +10986,7 @@ window.stop_assistant = async function (task=null){
 	document.body.classList.remove('working-on-doc');
 	remove_highlight_selection();
 	window.current_task = null;
+	generate_ui();
 }
 
 
@@ -10762,6 +11222,8 @@ function pick_optimal_text_ai(target_language=null,ram_limit=null){
 			return 'fietje3';
 		}
 		else{
+			return 'fietje2';
+			/*
 			if(window.web_gpu_supported){
 				return 'fast_zephyr';
 			}
@@ -10771,6 +11233,7 @@ function pick_optimal_text_ai(target_language=null,ram_limit=null){
 			else{
 				return 'zephyr';
 			}
+			*/
 		}
 	}
 	else if(target_language == 'de'){
@@ -11872,12 +12335,12 @@ window.preload_shard = async function (task,shard){
 					window.update_preload(task,'downloaded',shard.url);
 					if(task.download_count == task.total_shards){
 						//console.log("all shards have loaded");
-						window.handle_completed_task(task,true,{'state':'completed'});
+						await window.handle_completed_task(task,true,{'state':'completed'});
 						localStorage.removeItem('preload_recovery_' + task.assistant);
 					}
 					else if(task.download_count + task.download_failures == task.total_shards){
 						//console.log("some shards failed to load: ", task.download_failures);
-						window.handle_completed_task(task,false,{'state':'failed'});
+						await window.handle_completed_task(task,false,{'state':'failed'});
 					}
 				}
 				
@@ -12200,9 +12663,9 @@ window.preload_model = async function (task){
 }
 
 
-// Only used to pre-download Wllama models in a fire-and-forget manner
+// Only used to pre-download Wllama models in a promise-based fire-and-forget manner
 window.do_preload = async function (task){ 
-	//console.log("in do_preload.  task: ", task);
+	console.log("in do_preload.  task: ", task);
 	
 	if(typeof task == 'undefined' || task == null){
 		console.error("do_preload: invalid task provided");
@@ -12212,7 +12675,7 @@ window.do_preload = async function (task){
 		
 		try{
 			//console.log("calling window.llama_cpp_app.downloadModel");
-			let model_settings = {'allow_offline':true};
+			let model_settings = {'allow_offline':false};
 			model_settings['progressCallback'] = ({ loaded, total }) => {
 
 				//console.log(`do_preload: Wllama: pre-downloading... ${Math.round(loaded/total*100)}%`);
@@ -12220,18 +12683,18 @@ window.do_preload = async function (task){
 
 				if(total != 0 && loaded > 1000000){
 					//console.log("loaded, total: ", loaded, total);
-					window.wllama_update_model_download_progress(loaded / total);
+					window.wllama_update_model_download_progress(loaded / total, task.assistant);
 				}
 			}
 		
 			await window.llama_cpp_app.downloadModel(task.download_url,model_settings);
-			console.error("do_preload: Wllama window.llama_cpp_app.downloadModel preload complete: ", task.download_url);
-			window.handle_completed_task(task,true,{'state':'completed'});
+			console.error("do_preload: Wllama window.llama_cpp_app.downloadModel preload complete: ", task.download_url, task);
+			await window.handle_completed_task(task,true,{'state':'completed'});
 			window.llama_cpp_model_being_loaded = null;
 		}
 		catch(err){
 			console.error("caught error in do_preload: ", err);
-			window.handle_completed_task(task,false,{'state':'failed'});
+			await window.handle_completed_task(task,false,{'state':'failed'});
 			window.llama_cpp_model_being_loaded = null;
 		}
 		
@@ -12243,8 +12706,8 @@ window.do_preload = async function (task){
 
 
 if(window.first_run && window.innerWidth > 1500){
-	switch_assistant('danube_3_500m');
+	//switch_assistant(window.first_assistant);
 	document.body.classList.remove('chat-shrink');
-	document.body.classList.add('chat-message-form-minimum-height');
+	//document.body.classList.add('chat-message-form-minimum-height');
 }
 

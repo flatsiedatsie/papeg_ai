@@ -1,4 +1,30 @@
-import { pipeline, env, AutoProcessor, AutoModel, AutoModelForAudioFrameClassification, TextStreamer} from './tjs/transformers.min.js';
+import { 
+	pipeline, 
+	env, 
+	AutoTokenizer,
+	AutoProcessor, 
+	AutoModel, 
+	AutoModelForAudioFrameClassification,
+	//TextStreamer,
+	WhisperTextStreamer,
+    WhisperForConditionalGeneration,
+    full,
+} from './tjs/transformers.min.js';
+
+//console.log("WHISPER WEB WORKER EXISTS");
+
+
+
+
+
+
+
+const MAX_NEW_TOKENS = 64;
+// 
+
+// https://github.com/xenova/whisper-web/blob/experimental-webgpu/src/worker.js
+// uses:
+// WhisperTextStreamer
 
 //console.log("WHISPER WEB WORKER EXISTS");
 
@@ -20,13 +46,15 @@ let processing = false;
 self.busy_transcribing = false;
 self.busy_loading = false;
 
+self.busy_disposing_models = false;
 self.was_disposed = false;
-self.current_model_name = null;
 self.segmentation_loaded = null;
 self.quantized = null;
 self.current_model_preferences = null;
+self.current_asr_model_id = null;
 
 self.is_mobile = false;
+self.segmentation_preferences = {};
 
 self.speaker_translation = 'Speaker';
 
@@ -46,12 +74,13 @@ self.similarity_threshold = 0.965;
 self.perfect_simillarity_threshold = 0.975;
 self.minimal_verification_duration = 2000;
 
-
-self.transcriber = null;
+/*
+self.transcribot = null;
 self.segmentation_processor = null;
 self.segmentation_model = null;
 self.verification_processor = null;
 self.verification_model = null;
+*/
 
 //self.chunks_to_verify = [];
 let segment_index = 0;
@@ -65,7 +94,7 @@ let PER_DEVICE_CONFIG = {
     webgpu: {
         dtype: {
             encoder_model: 'fp32',
-            decoder_model_merged: 'fp32', //'q4',
+            decoder_model_merged: 'q4', // 'fp32', //
         },
         device: 'webgpu',
     },
@@ -91,7 +120,6 @@ export default {
     DEFAULT_QUANTIZED: isMobileOrTablet,
     DEFAULT_MULTILINGUAL: false,
 };
-	
 */
 
 
@@ -106,14 +134,183 @@ function delay(millisec) {
 
 
 
-class PipelineSingleton {
+
+
+// Define model factories
+// Ensures only one model is created of each type
+class PipelineFactory {
+//class AutomaticSpeechRecognitionPipelineFactory {
+	//static task = null;
+	static task = null; //"automatic-speech-recognition";
+    static model = null; //'onnx-community/whisper-small.en_timestamped';
+	static instance = null;
+	
+	//static model_id = 'onnx-community/whisper-tiny.en_timestamped';
+    static quantized = null;
+    
+	
+	
+    constructor(tokenizer, model, quantized) {
+		//console.log("in pipelineFactory constructor.  tokenizer, model, quantized: ", tokenizer, model, quantized);
+		//console.log("pipelineFactory: in constructor");
+        this.tokenizer = tokenizer;
+        this.model = model;
+        //this.quantized = quantized;
+    }
+	
+	
+	
+	static instance_exists(){
+		console.log("returning if instance exists");
+		return this.instance != null;
+	}
+	
+	static set_to_null(var_to_null=null) {
+		if(typeof var_to_null == 'string' && typeof this[var_to_null] != 'undefined'){
+			this[var_to_null] = null;
+			console.log("ASR PipelineFactory: set_to_null: ", var_to_null);
+		}
+	}
+	
+	
+	
+    static async getInstance(progress_callback=null, model_id=null, quantized=null, preferences={}) {
+		console.log("ASR: getInstance: model_id,quantized,preferences: ", model_id, quantized, preferences);
+		
+		if(typeof model_id == 'string'){
+			console.log("using provided model_id string: ", model_id);
+			this.model = model_id;
+		}
+		else if(typeof this.model != 'string'){
+			this.model = 'onnx-community/whisper-tiny.en_timestamped';
+		}
+		
+		this.quantized = quantized;
+		
+		
+		// TODO DEBUG
+		this.quantized = true;
+		
+		//this.model = model_id;
+		
+		//this.quantized = quantized;
+		
+		console.log("\n\npipelineFactory: getInstance");
+		console.log("- this.task: ", this.task);
+		//console.log("- this.model_id: ", this.model_id);
+		console.log("- this.model: ", this.model);
+		console.log("- this.quantized: ", this.quantized);
+		console.log("- self.device: ", self.device);
+		
+		
+		
+		
+		//let MY_PER_DEVICE_CONFIG = {...PER_DEVICE_CONFIG[self.device], ...preferences};
+		
+		/*
+		MY_PER_DEVICE_CONFIG['progress_callback'] = (x) => {
+			console.log("got progress callback: ", x);
+		}
+		*/
+		
+		//console.log("- MY_PER_DEVICE_CONFIG: ", JSON.stringify(MY_PER_DEVICE_CONFIG,null,4));
+		
+		/*
+			{
+                dtype: {
+                    encoder_model:
+                        this.model_id === "onnx-community/whisper-large-v3-turbo"
+                            ? "fp16"
+                            : "fp32",
+                    decoder_model_merged: "fp32", //"q4", // or 'fp32' ('fp16' is broken)
+                },
+                device: "webgpu",
+                progress_callback,
+            }
+			
+			
+		*/
+		//const device = '' + self.device;
+		//const dtype = JSON.parse(JSON.stringify(MY_PER_DEVICE_CONFIG.dtype));
+		//console.log("dtype: ", dtype);
+		
+		//this.model = 'onnx-community/whisper-large-v3-turbo';
+        if (this.instance === null) {
+			console.log("PipelineFactory: this.instance was null, creating pipeline promise.  this.task, this.model_id: ", this.task, this.model);
+			
+			/*
+            this.instance = pipeline(this.task, this.model_id, {
+            	dtype:PER_DEVICE_CONFIG[self.device].dtype,
+				device:device,
+				progress_callback:progress_callback,
+            });
+			*/
+			
+			if(self.device == 'webgpu'){
+	            this.instance = pipeline(this.task, this.model, {
+				    "dtype": {
+				        "encoder_model": "fp32",
+				        "decoder_model_merged": "q4" // "fp32" //
+				    },
+				    "device": "webgpu",
+					"quantized":true,
+					progress_callback
+				});
+			}
+			else{
+	            this.instance = pipeline(this.task, this.model, {
+				    "dtype": "q8",
+				    "device": "wasm",
+					progress_callback
+				});
+			}
+			
+        }
+		else{
+			//console.log("ASR pipeline getInstance: this.instance already existed: ", this.instance);
+		}
+
+		//console.log("PipelineFactory: returning this.instance: ", this.instance);
+        return this.instance;
+    }
+}
+
+/*
+self.addEventListener("message", async (event) => {
+    const message = event.data;
+
+    // Do some work...
+    // TODO use message data
+    let transcript = await transcribo(message);
+    if (transcript === null) return;
+
+    // Send the result back to the main thread
+    self.postMessage({
+        status: "complete",
+        data: transcript,
+    });
+});
+*/
+
+
+
+class AutomaticSpeechRecognitionPipelineFactory extends PipelineFactory {
+    static task = "automatic-speech-recognition";
+	static model = null;
+    static quantized = null;
+}
+
+
+
+
+
+class SegmentationSingleton {
     
     static instance = null;
 	
-	
-	static asr_model_id = 'onnx-community/whisper-base_timestamped';
-    static asr_instance = null;
-	static asr_preferences = null;
+	//static asr_model_id = 'onnx-community/whisper-base_timestamped';
+    //static asr_instance = null;
+	//static asr_preferences = null;
 
     static segmentation_model_id = 'onnx-community/pyannote-segmentation-3.0';
     static segmentation_instance = null;
@@ -125,119 +322,145 @@ class PipelineSingleton {
     static verification_instance = null;
     static verification_processor = null;
 	
-	
-	
-	static async unload_segmentation() {
-		//console.log("whisper worker: singleton: in unload_segmentation");
-		
-		if(self.last_used_segmentation === true && self.last_used_preferences != null){
-			const [transcriber,segmentation_processor,segmentation_model,verification_processor,verification_model] = await PipelineSingleton.getInstance(x => {
-		        // We also add a progress callback to the pipeline so that we can
-		        // track model loading.
-		       	//self.postMessage(x);
-		    }, model_name,preferences,load_segmentation);
-			
-		}
-		
+
+	//static asr_exists(){
+	//	return this.asr_instance != null;
+	//}
+	/*
+	static get_asr_model_id(){
+		return this.asr_model_id;
+	}
+	*/
+	static instance_exists(){
+		return this.segmentation_instance != null;
 	}
 	
-	
+	static set_to_null(var_to_null=null){
+		if(typeof var_to_null == 'string' && typeof this[var_to_null] != 'undefined'){
+			this[var_to_null] = null;
+			console.log("SegmentationSingleton: set_to_null: ", var_to_null);
+		}
+	}
 
-    static async getInstance(progress_callback=null,model_name='onnx-community/whisper-base_timestamped',preferences={},load_segmentation=false) {
-		//console.log("Whisper_worker: Pipeline: getInstance:  model_name, preferences, load_segmentation: ", model_name, preferences, load_segmentation);
-		
+
+    //static async getInstance(progress_callback=null,model_name='onnx-community/whisper-base_timestamped',preferences={},load_segmentation=true) {
+	static async getInstance(progress_callback=null,preferences={}) {
+		console.log("Whisper_worker: SegmentationSingleton: getInstance");
+		/*
 		let should_update_asr = false;
 		if(this.asr_instance == null || this.asr_model_id != model_name || this.asr_preferences == null || (typeof this.asr_preferences == 'string' && JSON.stringify(preferences) != this.asr_preferences) ){    // || load_segmentation != this.loaded_segmentation){
 			should_update_asr = true;
-			self.current_model_name = model_name;
+			self.current_asr_model_id = model_name;
 			
 			if(this.asr_instance != null){
 				console.warn("OLD WHISPER ASR MODEL HAS TO BE DISPOSED FIRST!  this.asr_instance: ", this.asr_instance);
 				console.warn("this.asr_model_id != model_name?: ", this.asr_model_id, " -> ", model_name);
 				console.warn("this.asr_preferences != preferences?: ", this.asr_preferences, " -> ", JSON.stringify(preferences));
-				if(typeof this.asr_instance.dispose == 'function'){
-					//console.log("WHISPER WORKER: getInstance: this.asr_instance.dispose is function, calling this.asr_instance.dispose first");
-					await this.asr_instance.dispose();
-				}
+				await this.dispose('all');
 				
-				this.asr_instance = null;
+				
+				//this.asr_instance = null;
 			}
 			this.asr_preferences = JSON.stringify(preferences);
 		}
+		*/
 		
-		this.asr_model_id = model_name;
-		this.loaded_segmentation = load_segmentation;
+		//this.asr_model_id = model_name;
+		this.loaded_segmentation = true
 
-		const MY_PER_DEVICE_CONFIG = {...PER_DEVICE_CONFIG[self.device],preferences}
+		console.error("singleton: creating segmentation instances");
+		
+        this.segmentation_processor ??= AutoProcessor.from_pretrained(this.segmentation_model_id, {
+			...preferences,
+            progress_callback,
+        });
+        this.segmentation_instance ??= AutoModelForAudioFrameClassification.from_pretrained(this.segmentation_model_id, {
+            // NOTE: WebGPU is not currently supported for this model
+            // See https://github.com/microsoft/onnxruntime/issues/21386
+            device: 'wasm',
+            //dtype: 'fp32',
+			dtype: 'q8',
+			...preferences,
+            progress_callback,
+        });
+	
+		if(this.verification_model_id.endsWith('wespeaker-voxceleb-resnet34-LM')){
+			self.similarity_threshold = 0.5;
+			self.perfect_simillarity_threshold = 0.7;
+		}
+		else{
+			self.similarity_threshold = 0.95;
+			self.perfect_simillarity_threshold = 0.98;
+		}
+	
+        this.verification_processor ??= AutoProcessor.from_pretrained(this.verification_model_id, {
+            device: 'wasm',
+            dtype: 'fp32',
+			//device: 'webgpu',
+			//dtype: 'q8',
+			...preferences,
+            progress_callback,
+        });
+	
+        this.verification_instance ??= AutoModel.from_pretrained(this.verification_model_id, {
+            device: 'wasm',
+            dtype: 'fp32',
+			//device: 'webgpu',
+			//dtype: 'q8',
+			...preferences,
+            progress_callback,
+        });
+
+        return Promise.all([this.asr_instance, this.segmentation_processor, this.segmentation_instance, this.verification_processor, this.verification_instance]);
+
+
+		/*
+		let MY_PER_DEVICE_CONFIG = {...PER_DEVICE_CONFIG[self.device], ...preferences};
+		console.log("SegmentationSingleton: MY_PER_DEVICE_CONFIG: ", JSON.stringify(MY_PER_DEVICE_CONFIG,null,4));
+		console.log("this.asr_model_id: ", this.asr_model_id);
 		
         this.asr_instance ??= pipeline('automatic-speech-recognition', this.asr_model_id, {
             ...MY_PER_DEVICE_CONFIG,
             progress_callback,
         });
+		console.log("this.asr_instance created from pipeline");
+		*/
+		
+		
+		/*
+		this.asr_instance ??= WhisperForConditionalGeneration.from_pretrained(this.asr_model_id, {
+            dtype: {
+                encoder_model: 'fp32', // 'fp16' works too
+                decoder_model_merged: 'q4', // or 'fp32' ('fp16' is broken)
+            },
+            device: 'webgpu',
+            progress_callback,
+        });
+		*/
+		
+		/*
+		this.asr_instance ??= AutomaticSpeechRecognitionPipelineFactory.getInstance(x => {
+			self.postMessage(x);
+		}, this.asr_model_id, MY_PER_DEVICE_CONFIG);
+		*/
+		
 		
 
 
 		//console.log("WHISPER:  this.asr_instance: ", this.asr_instance); // at this point it's a promise
 
 		// This part can take some time, which is a bit dodgy
-		if(load_segmentation == false){
-			console.error("singleton: unloading segmentation instances");
-			this.unload_segmentation();
-		}
-		
+		/*
 		if(load_segmentation == true){
 			
-			console.error("singleton: creating segmentation instances");
 			
-	        this.segmentation_processor ??= AutoProcessor.from_pretrained(this.segmentation_model_id, {
-				...preferences,
-	            progress_callback,
-	        });
-	        this.segmentation_instance ??= AutoModelForAudioFrameClassification.from_pretrained(this.segmentation_model_id, {
-	            // NOTE: WebGPU is not currently supported for this model
-	            // See https://github.com/microsoft/onnxruntime/issues/21386
-	            device: 'wasm',
-	            //dtype: 'fp32',
-				dtype: 'q8',
-				...preferences,
-	            progress_callback,
-	        });
-		
-			if(this.verification_model_id.endsWith('wespeaker-voxceleb-resnet34-LM')){
-				self.similarity_threshold = 0.5;
-				self.perfect_simillarity_threshold = 0.7;
-			}
-			else{
-				self.similarity_threshold = 0.95;
-				self.perfect_simillarity_threshold = 0.98;
-			}
-		
-	        this.verification_processor ??= AutoProcessor.from_pretrained(this.verification_model_id, {
-	            device: 'wasm',
-	            dtype: 'fp32',
-				//device: 'webgpu',
-				//dtype: 'q8',
-				...preferences,
-	            progress_callback,
-	        });
-		
-	        this.verification_instance ??= AutoModel.from_pretrained(this.verification_model_id, {
-	            device: 'wasm',
-	            dtype: 'fp32',
-				//device: 'webgpu',
-				//dtype: 'q8',
-				...preferences,
-	            progress_callback,
-	        });
-
-	        return Promise.all([this.asr_instance, this.segmentation_processor, this.segmentation_instance, this.verification_processor, this.verification_instance]);
 		}
 		else{
 			
-			console.error("singleton: NOT creating segmentation instances");
-			
+			console.log("SegmentationSingleton: gerInstance: returning this.asr_instance");
 			return Promise.all([this.asr_instance]);
 		}
+		*/
         
     }
 }
@@ -260,15 +483,617 @@ class PipelineSingleton {
 
 
 
+
+
+
+
+
+
+const transcribo = async (message,preload=false) => {
+	console.log("whisper_worker: in new transcribo function.  message,preload: ", message, preload);
+	
+    // Storage for chunks to be processed. Initialise with an empty chunk.
+    const chunks = [];
+	let output = null;
+	let tps;
+	
+	try{
+		
+	
+		if(typeof message.model != 'string'){
+			console.error("transcribe: message.model was not a string!");
+			return null;
+		}
+		console.log("transcribo: message.model: ", message.model);
+		self.current_asr_model_id = message.model;
+	
+	
+		if(typeof message.options == 'undefined'){
+			console.error("transcribe: message.options was undefined!");
+			return null;
+		}
+	
+		let asr_options = JSON.parse(JSON.stringify(message.options));
+	
+		console.log("transcribe: initial asr_options: ", asr_options);
+	
+	
+	
+		/*
+		let asr_options = {
+	        // Greedy
+	        top_k: 0,
+	        do_sample: false,
+
+	        // Sliding window
+	        chunk_length_s:20,
+	        stride_length_s:3,
+		
+	        // Language and task
+	        //language:'en',
+			//language:'english',
+	        //task: "transcribe",
+		
+	        // Return timestamps
+	        return_timestamps: 'word',
+	        force_full_sequences: false,
+
+	        // Callback functions
+	        //streamer, // after each generation step
+	    }
+		*/
+		
+		
+
+	    const p = AutomaticSpeechRecognitionPipelineFactory;
+    	
+	
+
+		if (p.model !== message.model){
+			
+			// Invalidate model if different
+			console.warn("whisper_worker: need to load a new ASR model: ", message.model);
+			p.model = message.model;
+			
+	        if (p.instance !== null) {
+				console.log("whisper_worker: disposing of old ASR instance first");
+	            (await p.getInstance()).dispose();
+	            p.instance = null;
+	        }
+	    }
+		
+	    // Load transcribot model
+	    const transcribot = await p.getInstance((data) => {
+			//console.log("whisper_worker: transcribot: got data: ", data);
+	        self.postMessage(data);
+	    }, message.model);
+		
+		console.warn("\n\nHURRAY, GOT BEYOND TRANSCRIBOT CREATION\n\n");
+		
+		//console.log("transcribot loaded?: ", transcribot);
+		//console.log("transcribot model: ", transcribot.tokenizer);
+		//console.log("transcribot model: ", transcribot.model);
+		//console.log("transcribot processor: ", transcribot.processor);
+
+
+		if(preload){
+			/*
+			if(self.device == 'webgpu' && typeof transcribot.model == 'object' && transcribot.model != null && typeof transcribot.model.generate === 'function'){
+				console.log("transcribot: preloading: attempting to warm-up the transcribot model (transcribot.model.generate is a function)");
+			    self.postMessage({
+			        status: 'asr_warming_up',
+			        data: 'Compiling shaders and warming up model...'
+			    });
+
+			    // Run model with dummy input to compile shaders. Only needed if running via WebGPU
+			    await transcribot.model.generate({
+			        input_features: full([1, 80, 3000], 0.0),
+			        max_new_tokens: 1,
+			    });
+			}
+			*/
+			console.warn("transcribe: ending early because this was a preload run");
+			return true
+		}
+
+
+		if(typeof message.task == 'undefined' || message.task == null || typeof message.task.recorded_audio == 'undefined'){
+			console.error("transcribo: NO AUDIO!");
+			return null;
+		}
+		
+
+	    const time_precision =
+	        transcribot.processor.feature_extractor.config.chunk_length /
+	        transcribot.model.config.max_source_positions;
+
+		console.log("transcribo: time_precision: ", time_precision);
+
+	    
+
+	    // TODO: Storage for fully-processed and merged chunks
+	    // let decoded_chunks = [];
+
+	    let chunk_count = 0;
+	    let start_time;
+	    let num_tokens = 0;
+	    
+		
+	
+		console.log("creating streamer next. transcribot.tokenizer: ", transcribot.tokenizer);
+		
+		if(typeof transcribot.tokenizer !== 'function'){
+		    console.error("transcribot.tokenizer was invalid: ", transcribot.tokenizer);
+			//asr_options['streamer'] = streamer;
+		}
+		
+	    const streamer = new WhisperTextStreamer(transcribot.tokenizer, {
+	        time_precision,
+	        on_chunk_start: (x) => {
+	            const offset = (asr_options['chunk_length_s'] - asr_options['stride_length_s']) * chunk_count;
+	            chunks.push({
+	                text: "",
+	                timestamp: [offset + x, null],
+	                finalised: false,
+	                offset,
+	            });
+	        },
+	        token_callback_function: (x) => {
+	            start_time ??= performance.now();
+	            if (num_tokens++ > 0) {
+	                tps = (num_tokens / (performance.now() - start_time)) * 1000;
+	            }
+	        },
+	        callback_function: (x) => {
+	            if (chunks.length === 0) return;
+				console.log("WHISPER_WORKER: STREAM: + chunk: ", x);
+	            // Append text to the last chunk
+	            chunks.at(-1).text += x;
+				
+				if(self.task != null && typeof self.task.index == 'number' && typeof self.task.assistant == 'string'){
+				    self.postMessage({
+						task_index: task.index,
+						task_parent_index: task.parent_index,
+						task_assistant: task.assistant,
+						task_destination: task.destination,
+				        status: "stream",
+						content: x,
+				    });
+				}
+			   
+
+
+				/*
+	            self.postMessage({
+					task:self.task,
+	                status: "stream",
+	                data: {
+	                    text: "", // No need to send full text yet
+	                    chunks,
+	                    tps,
+	                },
+	            });
+				*/
+	        },
+	        on_chunk_end: (x) => {
+	            const current = chunks.at(-1);
+	            current.timestamp[1] = x + current.offset;
+	            current.finalised = true;
+	        },
+	        on_finalize: () => {
+	            start_time = null;
+	            num_tokens = 0;
+	            ++chunk_count;
+	        },
+	    });
+		
+		
+	    
+		console.log("asr_options: ", JSON.stringify(asr_options,null,4));
+
+		self.postMessage({ status: 'pipeline_ready' });
+		
+	
+		console.error("\n\n\nOK\n\n\n\nWHISPER: AUDIO LENGTH: ", message.task.recorded_audio.length);
+		//console.error("WHISPER AUDIO: ", message.task.recorded_audio);
+		console.log("message.task.recorded_audio: ", typeof message.task.recorded_audio, message.task.recorded_audio )
+
+	    // Actually run transcription
+	    output = await transcribot(message.task.recorded_audio, {
+	    	...asr_options,
+			streamer,
+	    }).catch((error) => {
+	        console.error("caught error in transcribot: ", error);
+	        self.postMessage({
+	            status: "error",
+	            data: error,
+	        });
+	        return null;
+	    });
+	
+		console.log("whisper_worker: RAW ASR output: ", output);
+		
+		
+		// SANITY CHECKS for Dutch language
+		if(typeof output.text == 'string' && output.text.length < 24 && output.text.indexOf('TV GELDERLAND') != -1){
+			output = null;
+		}
+		else if(typeof output.text == 'string' && output.text == ' MUZIEK.'){
+			output = null;
+		}
+		else if(typeof output.text == 'string' && output.text.startsWith('!!!!!!!!!!!!!!!!!')){
+	        self.postMessage({
+	            status: "exclamation_marks",
+	        });
+			output = null;
+		}
+		
+		// Check if the words are sensible. In very rare occasions Whisper freaks out
+		if(output != null && typeof output.chunks != 'undefined' && output.chunks.length > 40){
+			let words_spotted = [];
+			for(let w = 0; w < output.chunks.length; w++){
+				if(typeof output.chunks[w].text == 'string' && words_spotted.indexOf(output.chunks[w].text) == -1){
+					words_spotted.push(output.chunks[w].text);
+				}
+			}
+			if(words_spotted.length < output.chunks.length/10){
+				console.error("Whisper went haywire, creating looping output");
+				
+				let unlooped_text = '';
+				let found_the_loop = false;
+				let maximum_trim = output.text.length;
+				let best_loop = null;
+
+				let max_test_length = Math.round(output.text.length / 3);
+				if(max_test_length > 100){
+					max_test_length = 100;	
+				}
+				for(let q = output.text.length; q > max_test_length; --q){
+					//console.log("q:",q);
+					let loop_text = '';
+					let test_text = output.text.substr(0,q);
+					//console.log("test_text:", test_text);
+	
+					for(let e = test_text.length - 1; e > Math.round(test_text.length / 3); --e){
+						//console.log(e,test_text.charAt(e));
+						//break
+		
+						loop_text = test_text.charAt(e) + loop_text;
+						if(loop_text.length > 7){
+							const tester = test_text.substr(e - loop_text.length,loop_text.length);
+							//console.log("tester: ", tester, loop_text);
+							if(tester == loop_text){
+								//console.log("BINGO: ", loop_text);
+								if(output.text.indexOf(loop_text) < maximum_trim){
+									//console.log("Found an even better loop: ", loop_text);
+									best_loop = loop_text;
+								}
+								//found_the_loop = true;
+								break
+							}
+						}
+		
+					}
+	
+				}
+				if(best_loop != null){
+					output.text = output.text.substr(0,(output.text.indexOf(best_loop) + best_loop.length));
+					//console.log("Fixed un-looped output.text: ", output.text);
+					let remake = '';
+					if(typeof output.chunks != 'undefined'){
+						for(let w = 0; w < output.chunks.length; w++){
+							remake += output.chunks[w] + ' ';
+							//console.log("remake: ", remake);
+							if(remake.length > output.text.length){
+								//console.log("remake: ", remake);
+								output.chunks.splice(w+1,output.chunks.length);
+								console.error("Fixed un-looped output.chunks: ", output.chunks);
+								break
+							}
+						}
+					}
+				}
+				else{
+					console.error("COULD NOT FIX WHISPER GONE HAYWIRE");
+					output = null;
+				}
+				
+			}
+		}
+		
+		
+		if(self.interrupted){
+		    self.postMessage({
+				task: task,
+		        status: "interrupted",
+		    });
+			return null
+		}
+		
+		
+		return output
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	}
+	catch(err){
+		console.error("caught general error in transcribo: ", err);
+        self.postMessage({
+            status: "error",
+            data: err,
+        });
+        return null;
+	}
+
+    return {
+        tps,
+        ...output,
+		chunks,
+    };
+};
+
+
+
+
+
+
+
+
+
+
+/*
+class AutomaticSpeechRecognitionPipeline {
+    static model_id = null;
+    static tokenizer = null;
+    static processor = null;
+    static model = null;
+	
+	
+	static asr_config = {
+    	dtype: {
+        	encoder_model: 'fp32', // 'fp16' works too
+        	decoder_model_merged: 'q4', // or 'fp32' ('fp16' is broken)
+    	},
+    	device: 'webgpu'
+	};
+
+
+	constructor(tokenizer, model) {
+		this.tokenizer = tokenizer;
+		this.model = model;
+	}
+
+	static get_asr_model_id(){
+		return this.model_id;
+	}
+
+	static set_to_null(var_to_null=null) {
+		if(typeof var_to_null == 'string' && typeof this[var_to_null] != 'undefined'){
+			this[var_to_null] = null;
+			console.log("AutomaticSpeechRecognitionPipelineFactory: set_to_null: ", var_to_null);
+		}
+	};
+
+
+    static async getInstance(progress_callback=null,asr_model_id=null,my_config=null) {
+        this.model_id = 'onnx-community/whisper-base';
+		if(typeof asr_model_id == 'string' && asr_model_id.length){
+			this.model_id = asr_model_id;
+		}
+		
+		if(my_config != null){
+			this.asr_config = my_config;
+			console.log("this.asr_config has been set to: ", JSON.stringify(this.asr_config, null, 4));
+		}
+
+
+        this.tokenizer ??= AutoTokenizer.from_pretrained(this.model_id, {
+            progress_callback,
+        });
+        this.processor ??= AutoProcessor.from_pretrained(this.model_id, {
+            progress_callback,
+        });
+		
+		
+        this.model ??= WhisperForConditionalGeneration.from_pretrained(this.model_id, my_config);
+
+        return Promise.all([this.tokenizer, this.processor, this.model]);
+    }
+}
+*/
+
+
+
+
+
+
+
+
+
+async function dispose(dispose_type='all') {
+	console.log("whisper_worker: in dispose.  dispose_type: ", dispose_type);
+	/*
+	if(SegmentationSingleton.asr_exists() === false){
+		console.log("whisper worker: dispose: asr hasn't been created yet");
+		return true;
+	}
+	*/
+	
+	if(typeof dispose_type != 'string'){
+		console.eror("whisper_worker: invalid dispose_type: ", dispose_type);
+		return false
+	}
+	
+	self.busy_disposing_models = true;
+	
+	if( (dispose_type == 'segmentation' || dispose_type == 'all') && SegmentationSingleton.instance_exists() === true){
+		console.log("whisper dispose: should indeed dispose segmentation");
+		
+		const [segmentation_processor,segmentation_model,verification_processor,verification_model] = await SegmentationSingleton.getInstance(x => {
+			//
+			//}, asr_model_id, JSON.parse(asr_preferences),loaded_segmentation);
+		},self.segmentation_preferences);
+		
+		
+		if(segmentation_processor != null && typeof segmentation_processor.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of segmentation_processor");
+			await segmentation_processor.dispose();
+			segmentation_processor = null;
+			SegmentationSingleton.set_to_null('segmentation_processor');
+		}
+		if(segmentation_model != null && typeof segmentation_model.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of segmentation_model");
+			await segmentation_model.dispose();
+			SegmentationSingleton.set_to_null('segmentation_model');
+		}
+		if(verification_processor != null && typeof verification_processor.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of verification_processor");
+			await verification_processor.dispose();
+			SegmentationSingleton.set_to_null('verification_processor');
+		}
+		if(verification_model != null && typeof verification_model.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of verification_model");
+			await verification_model.dispose();
+			SegmentationSingleton.set_to_null('verification_model');
+		}
+	}
+	
+	
+	if( (dispose_type == 'asr' || dispose_type == 'all') && AutomaticSpeechRecognitionPipelineFactory.instance_exists() === true){
+		console.log("whisper_worker: disposing the transcribot");
+		
+		const p = AutomaticSpeechRecognitionPipelineFactory;
+		
+		const transcribot = await p.getInstance();
+		
+		if(transcribot.tokenizer != null && typeof transcribot.tokenizer.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of transcribot -> tokenizer");
+			await asr.tokenizer.dispose();
+			AutomaticSpeechRecognitionPipelineFactory.set_to_null('tokenizer');
+		}
+		if(transcribot.processor != null && typeof transcribot.processor.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of transcribot -> processor");
+			await transcribot.processor.dispose();
+			AutomaticSpeechRecognitionPipelineFactory.set_to_null('processor');
+		}
+		if(transcribot.model != null && typeof transcribot.model.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of transcribot -> model");
+			await transcribot.model.dispose();
+			AutomaticSpeechRecognitionPipelineFactory.set_to_null('model');
+			self.current_asr_model_id = null;
+		}
+		
+		/*
+		const [tokenizer,processor,model] = await AutomaticSpeechRecognitionPipelineFactory.getInstance();
+		
+		if(tokenizer != null && typeof tokenizer.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of transcribot -> tokenizer");
+			await tokenizer.dispose();
+			AutomaticSpeechRecognitionPipelineFactory.set_to_null('tokenizer');
+		}
+		if(processor != null && typeof processor.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of transcribot -> processor");
+			await processor.dispose();
+			AutomaticSpeechRecognitionPipelineFactory.set_to_null('processor');
+		}
+		if(model != null && typeof model.dispose == 'function'){
+			console.log("whisper_worker: dispose: disposing of transcribot -> model");
+			await model.dispose();
+			AutomaticSpeechRecognitionPipelineFactory.set_to_null('model');
+			self.current_asr_model_id = null;
+		}
+		*/
+	}
+	
+	self.busy_disposing_models = false;
+	
+	console.log("whisper_worker: dispose done: ", dispose_type);
+	
+	return true
+}
+
+
+async function unload_segmentation() {
+	console.log("whisper worker: in unload_segmentation (dispose segmentation)");
+	
+	if(SegmentationSingleton.segmentation_exists() === false){
+		console.log("whisper worker: unload_segmentation: segmentation hasn't been created yet");
+		return true;
+	}
+	
+	await dispose('segmentation');
+	/*
+	if(self.last_used_segmentation === true && self.last_used_preferences != null){
+		console.log("whisper worker: actually calling dispose");
+		
+	}
+	else{
+		console.log("whisper worker: unload_segmentation (dispose): nothing to do");
+	}
+	*/
+	console.log("unload_segmentation: done");
+	return null;
+}
+
+
+
+
+
+
+
+
+
+
 // MESSAGE LISTENER
 
 addEventListener('message', async (event) => {
 	//console.log("WHISPER WEB WORKER: RECEIVED MESSAGE");
-	//console.log("WHISPER WEB WORKER: event.data: ", event.data);
+	console.log("WHISPER WEB WORKER: RECEIVED MESSAGE. event.data: ", event.data);
 	
 	
-	if(typeof event.data.action == 'string' && (event.data.action == 'delete_speakers' || event.data.action == 'delete_speaker' || event.data.action == 'set_speaker_name')){
-		if(event.data.action == 'delete_speakers'){
+	if(typeof event.data.action == 'string' && (event.data.action == 'delete_speakers' || event.data.action == 'delete_speaker' || event.data.action == 'set_speaker_name' || event.data.action == 'dispose' || event.data.action == 'interrupt')){
+		
+		
+		if(event.data.action == 'dispose'){
+			console.log("whisper worker: action: dispose");
+			//await dispose_models();
+			if(self.busy_disposing_models == false){
+				
+				if(self.busy_transcribing){
+					console.warn("whisper_worker: dispose was called while the worker was busy");
+					self.interrupted = true;
+				}
+				
+				await dispose('all');
+			    self.postMessage({
+			        status: "disposed"
+			    });
+				self.task = null;
+			}
+			else{
+				console.error("whisper_worker: already busy disposing");
+			}
+			
+		}
+		
+		else if(event.data.action == 'interrupt'){
+			console.log("whisper worker: action: interrupt");
+			self.interrupted = true;
+		}
+		
+		else if(event.data.action == 'delete_speakers'){
 			//console.log("whisper worker: action: delete_speakers");
 			reset_fingerprints();
 		}
@@ -334,80 +1159,83 @@ addEventListener('message', async (event) => {
 			}
 		}
 		
-		return
+		return null
 	}
 	
 	//console.log("WHISPER WEB WORKER: device: ", self.device);
 	
 	if(self.busy_disposing_models){
-		console.error("ignoring incoming command, busy disposing of models");
+		console.error("whisper worker: ignoring incoming message, busy disposing of models");
 	    self.postMessage({
 			task: task,
 	        status: "error",
 	        error: "whisper was busy disposing of models",
 	    });
-		return
+		return null
 	}
 	
 	if(self.busy_loading){
-		console.error("whisper worker: still busy loading, aborting transcribe");
+		console.error("whisper worker: incoming message, but busy loading. aborting");
 	    self.postMessage({
 			task: task,
-	        status: "error",
-	        error: "still busy loading",
+	        status: "warning",
+	        error: "already busy loading",
 	    });
-		return
+		return null
 	}
 	
 	if(self.busy_transcribing){
-		console.error("whisper worker: transcribe: already busy transcribing");
+		console.error("whisper worker: incoming message, but already busy transcribing");
 	    self.postMessage({
 			task: task,
 	        status: "error",
 	        error: "already busy transcribing",
 	    });
-		return false
+		return null
 	}
 	
 	//const message = event.data;
 	//let transcript = null;
 	
 	if(gpu_checked == false){
+		console.log("whisper_worker: calling check_gpu");
 		gpu_checked = true;
 		await check_gpu();
 	}
 	
-	
-	if(typeof event.data.is_mobile == 'boolean'){
-		self.is_mobile = event.data.is_mobile;
+	self.segmentation_preferences = {};
+	if(typeof event.data.mobile == 'boolean'){
+		self.is_mobile = event.data.mobile;
 	}
-	
-	
-	
+	console.log("whisper_worker: self.is_mobile is now: ", self.is_mobile);
+	if(self.is_mobile){
+		self.segmentation_preferences['quantized'] = true;
+	}
 	
 	if(typeof event.data.action == 'string'){
+
 		
-		
-		if(event.data.action == 'dispose'){
-			//console.log("whisper worker: action: dispose");
-			await dispose_models();
+		if(event.data.action == 'preload'){
+			console.log("whisper worker: action: preload");
+			if(typeof event.data.preload_segmentation == 'boolean'){
+				console.log("whisper worker: action: preload:  event.data.preload_segmentation: ", event.data.preload_segmentation);
+			}
+			
+			self.busy_loading = true;
 		    self.postMessage({
-				task:self.task,
-		        status: "disposed"
+		        status: "preloading"
 		    });
+			await preload(event.data);
+			self.busy_loading = false;
+			console.log("whisper_worker: preload done")
+		    self.postMessage({
+		        status: "preload_complete"
+		    });
+			
 		}
 		
-		else if(event.data.action == 'interrupt'){
-			//console.log("whisper worker: action: interrupt");
-			self.interrupted = true;
-		}
-		
-		
-		
-		return
+		return null
 	}
-	
-	
 	
 	
 	else if(typeof event.data.task != 'undefined'){
@@ -415,12 +1243,9 @@ addEventListener('message', async (event) => {
 		
 		self.task = event.data.task;
 		
-		
 		self.interrupted = false;
-
 		
 		let output = boss(event.data);
-		
 		
 	}
 	else{
@@ -428,7 +1253,7 @@ addEventListener('message', async (event) => {
 			//task: event.data,
 	        status: "error",
 	        //task: "automatic-speech-recognition",
-	        error: "no data in incoming message",
+	        error: "no (task) data in incoming message",
 	    });
 	}
 
@@ -438,11 +1263,14 @@ addEventListener('message', async (event) => {
 
 const boss = async (message) => {
 	
+	console.warn("whisper_worker: BOSS GOT THE MESSAGE: ", message);
+	
+	
 	let merged_snippets = null;
 	let transcript = null;
 	try{
 		
-	
+		// This has already been checked
 		if(typeof message.task == 'undefined' || message.task == null){
 			console.error("WHISPER WORKER: no valid task in message? message: ", message);
 		    self.postMessage({
@@ -453,31 +1281,36 @@ const boss = async (message) => {
 			self.busy_transcribing = false;
 			return null
 		}
-	
-		if(typeof message.task.recorded_audio == 'undefined' || message.task.recorded_audio == null || (message.task.recorded_audio.length == 0 )){
 		
+		if(typeof message.task.recorded_audio == 'undefined' || message.task.recorded_audio == null || (message.task.recorded_audio.length == 0 )){
+			/*
 			if(typeof message.task.preload == 'boolean' && message.task.preload == true){
 				//message.task.recorded_audio = new Float32Array(16_000);
-				message.task.recorded_audio = new Float32Array(10);
+				message.task.recorded_audio = new Float32Array(1000);
 			}
 			else{
-			    self.postMessage({
-					task: message.task,
-			        status: "error",
-			        error: "task had no recorded_audio",
-			    });
-				self.busy_transcribing = false;
-				return null
-			}
+				
+			}*/
+			console.error("whisper_worker: aborting, task had NO AUDIO");
+		    self.postMessage({
+				task: message.task,
+		        status: "error",
+		        error: "task had no recorded_audio",
+		    });
+			self.busy_transcribing = false;
+			return null
+			
 		}
 
-	
+		
 	
 
-    // Do some work...
-    // TODO use message data
+    	// Do some work...
+    	// TODO use message data
 	
 		//console.log("WHISPER WEB WORKER: received message -> CALLING TRANSCRIBE FUNCTION");
+		
+		self.busy_transcribing = true;
 		
 		self.task = message.task;
 		
@@ -487,21 +1320,21 @@ const boss = async (message) => {
 			//message.task.recorded_audio.unshift([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
 		//}
 		
-	
+		
 		recorded_audio_length = message.task.recorded_audio.length;
 		
 		
 		if(typeof message.task.recording_start_time == 'undefined' && typeof message.task.recording_end_time == 'undefined'){
-			
+			console.error("whisper_worker: task has neither an absolute start or end time");
 		}
 		
 
 		if(typeof message.task.recording_start_time != 'number' && typeof message.task.recording_end_time == 'number'){
-			console.error("WHISPER WORKER: task had no recording_start_time, but it can be calculated from recording_end_time: ", message.task);
+			console.log("WHISPER WORKER: task had no recording_start_time, but it can be calculated from recording_end_time: ", message.task.recording_end_time);
 			message.task.recording_start_time = message.task.recording_end_time - (recorded_audio_length / 16);
 		}
 		else if(typeof message.task.recording_end_time != 'number' && typeof message.task.recording_start_time == 'number'){
-			console.error("WHISPER WORKER: task had no recording_end_time, but it can be calculated from recording_start_time: ", message.task);
+			console.log("WHISPER WORKER: task had no recording_end_time, but it can be calculated from recording_start_time: ", message.task.recording_start_time);
 			message.task.recording_end_time = message.task.recording_start_time + (recorded_audio_length / 16);
 		}
 		
@@ -520,12 +1353,14 @@ const boss = async (message) => {
 				message.task.recording_end_time = Date.now();
 				message.task.recording_start_time = message.task.recording_end_time - (recorded_audio_length / 16);
 			}
+			//console.error("WHISPER WORKER: generated recording_start_time and recording_end_time: ", message.task.recording_start_time, message.task.recording_end_time);
 			
 		}
 		
 		total_duration_time = (recorded_audio_length / 16);
+		//console.log("whisper worker: total_duration_time: ", total_duration_time);
 		
-		self.minimal_verification_duration = 2000;
+		self.minimal_verification_duration = 2000; // resets the value to 2 seconds
 		
 		
 		if(self.interrupted){
@@ -537,7 +1372,7 @@ const boss = async (message) => {
 		}
 		
 		if(typeof message.task.origin == 'string' && message.task.origin.endsWith('file') && typeof message.task.parent_index == 'number' && typeof message.task.progress_index == 'number' && message.task.progress_index == 0){
-			//console.log("WHISPER WORKER: first task of many to transcribe a file. Resetting fingerprints. message.task.parent_index: ", message.task.parent_index);
+			console.log("WHISPER WORKER: first task of many to transcribe a file. Resetting fingerprints.  message.task.parent_index: ", message.task.parent_index);
 			reset_fingerprints();
 		}
 		
@@ -548,7 +1383,7 @@ const boss = async (message) => {
 		
 		
 		
-		
+		/*
 		let preload = false
 		if(typeof task.preload == 'boolean' && task.preload == true){
 			self.busy_loading = true;
@@ -557,24 +1392,10 @@ const boss = async (message) => {
 		else{
 			self.busy_transcribing = true;
 		}
+		*/
 		
 		
-		let model_name = message.model;
-		if(model_name.startsWith('Xenova/')){
-			model_name = model_name.replace('Xenova/','onnx-community/');
-		}
-	
-		const isDistilWhisper = model_name.startsWith("distil-whisper/");
 		
-	
-	    if (!isDistilWhisper && !message.multilingual && typeof message.language == 'string' && message.language=='en') {
-	        model_name += ".en";
-	    }
-		
-		
-		if(!model_name.endsWith('_timestamped')){
-			model_name += "_timestamped";
-		}
 		
 		//modelName = 'onnx-community/whisper-base';
 
@@ -584,12 +1405,26 @@ const boss = async (message) => {
 			load_segmentation = true;
 		}
 		
-
-		let preferences = {};
-		if(message.mobile === true || message.quantized === true){
-			//console.log("using quantized whisper");
-			preferences['quantized'] = true;
+		if(self.loaded_segmentation === true && load_segmentation == false){
+			console.error("boss: unloading segmentation instances");
+			await unload_segmentation();
+			self.loaded_segmentation = false;
 		}
+		
+		if(typeof message.task.preload == 'boolean'){
+			console.error("task still has a preload boolean: ", message.task.preload);
+		}
+		
+		
+		
+		/*
+		if(typeof self.current_asr_model_id == 'string' && model_name != self.current_asr_model_id){
+			await dispose('asr');
+		}
+		*/
+		
+		
+		
 		
 		//console.log("WHISPER WORKER: QUANTIZED: ", preferences['quantized']);
 		
@@ -608,22 +1443,49 @@ const boss = async (message) => {
 		)
 		*/
 		
-		self.last_used_preferences = preferences;
+		//self.last_used_preferences = preferences;
 		self.last_used_segmentation = load_segmentation;
 		
+		let segmentation_processor,segmentation_model,verification_processor,verification_model;
+		
+		if(load_segmentation){
+			console.log("whisper_worker: boss: MUST LOAD SEGMENTATION");
+			[segmentation_processor,segmentation_model,verification_processor,verification_model] = await SegmentationSingleton.getInstance(x => {
+		        // We also add a progress callback to the pipeline so that we can
+		        // track model loading.
+		        self.postMessage(x);
+				//console.log("whisper_worker: loading pipeline: ", x);
+			//}, model_name,preferences,load_segmentation);
+			},self.segmentation_preferences);
+			
+			console.log("whisper_worker: segmentation models loaded");
+			self.postMessage({ 'status':'segmentation_loaded', 'task':message.task});
+			//self.busy_loading = false;
+			
+		}
+		else{
+			
+		}
 		//console.log("WHISPER WORKER: +LOAD IS DONE. It took: ", (Date.now() - self.start_time) / 1000 + " seconds");
-		const [transcriber,segmentation_processor,segmentation_model,verification_processor,verification_model] = await PipelineSingleton.getInstance(x => {
+		
+		
+		//console.log("transcribot: ", transcribot);
+		
+		/*
+		const [transcribot,segmentation_processor,segmentation_model,verification_processor,verification_model] = await SegmentationSingleton.getInstance(x => {
 	        // We also add a progress callback to the pipeline so that we can
 	        // track model loading.
 	        self.postMessage(x);
+			//console.log("whisper_worker: loading pipeline: ", x);
 	    }, model_name,preferences,load_segmentation);
-		/*
-		//console.log("transcriber: ", transcriber);
+		*/
+		//console.log("WHISPER WORKER: +LOAD IS DONE. It took: ", (Date.now() - self.start_time) / 1000 + " seconds");
+		//console.log("whisper_worker: transcribot: ", transcribot);
 		//console.log("segmentation_processor: ", segmentation_processor);
 		//console.log("segmentation_model: ", segmentation_model);
 		//console.log("verification_processor: ", verification_processor);
 		//console.log("verification_model: ", verification_model);
-		*/
+		
 		/*
 		if(typeof segmentation_model != 'undefined'){
 			//console.log("typeof segmentation_model.dispose: ", typeof segmentation_model.dispose);
@@ -633,23 +1495,31 @@ const boss = async (message) => {
 		}
 		*/
 		
-		
+		/*
 		if(typeof message.task.preload == 'boolean' && message.task.preload == true){
-		
+			console.log("whisper_worker: preloading complete");
+			
+			self.busy_transcribing = false;
+			self.busy_loading = false;
+			self.task = null;
+			
+			self.postMessage({ task:message.task, status: 'preload_complete' });
+			
+			return null;
 		}
 		else{
-			self.postMessage({ status: 'pipeline_ready' });
-			self.busy_loading = false;
+			
 		}
+		*/
 		
 		
-		//console.log("this.asr_instance: ", transcriber);
-		//console.log("this.asr_instance.tokenizer: ", transcriber.tokenizer);
+		//console.log("this.asr_instance: ", transcribot);
+		//console.log("this.asr_instance.tokenizer: ", transcribot.tokenizer);
 		
 		
-		
-	    let output = await transcribe(
-			transcriber,
+		/*
+	    let output = await transcribo(
+			transcribot,
 			segmentation_processor,
 			segmentation_model,
 	        message.task,
@@ -659,9 +1529,12 @@ const boss = async (message) => {
 	        message.subtask,
 	        message.language,
 			message.mobile,
-	    );
+	    );*/
+		console.log("boss: calling transcribe");
+	    let output = await transcribo(message);
+		console.log("boss: output: ", output);
 		
-		
+		/*
 	    if (typeof output == 'undefined' || output == null){
 	    	console.error("WHISPER WEB WORKER: transcription was invalid or null");
 		
@@ -675,82 +1548,90 @@ const boss = async (message) => {
 			return null
 		
 	    }
+		*/
+		
 		if(output != null && typeof output.text == 'string'){
+			console.log("boss: output.text: ", output.text);
 			//transcript = output.text;
 			//transcript = transcript.trim();
 			message.task['transcript'] = output.text.trim(); // not really used?
-		}
+			
+			
+			console.log("WHISPER WEB WORKER: TRANSCRIPTION RESULT: ", output);
 		
-		//console.log("WHISPER WEB WORKER: TRANSCRIPTION RESULT: ", output);
+			//if(output != null && typeof output.chunks != 'undefined'){
+			//	task['transcript_chunks'] = output.chunks;
+			//}
 		
-		//if(output != null && typeof output.chunks != 'undefined'){
-		//	task['transcript_chunks'] = output.chunks;
-		//}
-		
-		if(typeof message.task.recording_start_time == 'number' && output != null && typeof output.chunks != 'undefined' && Array.isArray(output.chunks) ){
-			for(let ch = 0; ch < output.chunks.length; ch++){
-				output.chunks[ch].absolute_start_time = Math.floor(message.task.recording_start_time + (output.chunks[ch].timestamp[0] * 1000));
-				output.chunks[ch].absolute_end_time = Math.floor(message.task.recording_start_time + (output.chunks[ch].timestamp[1] * 1000));
-			}
-		}
-		
-		
-		if(output != null && typeof output.chunks != 'undefined' && typeof task.progress_index == 'number'){
-			for(let c = 0; c < output.chunks.length; c++){
-				output.chunks[c]['progress_index'] = task.progress_index;
-				if(typeof task.progress_total == 'number'){
-					output.chunks[c]['progress_total'] = task.progress_total;
+			if(typeof message.task.recording_start_time == 'number' && output != null && typeof output.chunks != 'undefined' && Array.isArray(output.chunks) ){
+				console.log("boss: output.chunks exists: ", output.chunks);
+				for(let ch = 0; ch < output.chunks.length; ch++){
+					output.chunks[ch].absolute_start_time = Math.floor(message.task.recording_start_time + (output.chunks[ch].timestamp[0] * 1000));
+					output.chunks[ch].absolute_end_time = Math.floor(message.task.recording_start_time + (output.chunks[ch].timestamp[1] * 1000));
 				}
 			}
-		}
 		
 		
-	    //const end = performance.now();
-		if(output != null && typeof output.chunks != 'undefined' && message.task != null && typeof message.task.assistant == 'string' && message.task.assistant == 'scribe' && typeof verification_processor != 'undefined' && verification_processor != null && typeof verification_model != 'undefined' && verification_model != null){
-			
-			if(typeof message.task.preload == 'boolean' && message.task.preload == true){
-				//console.warn("PRELOAD, so only doing a quick fingerprint test");
-				//const fake_audio = new Float32Array(16_000);
-				
-				
-				
-				const fresh_fingerprint = await verify(verification_processor, verification_model, new Float32Array(16_000));
-				self.task = null;
-				
-			}
-			else if(typeof output.segments != 'undefined'){
-				
-				self.original_segments = JSON.parse(JSON.stringify(output.segments));
-				//console.log("BOSS: calling deepen_segments");
-				output.segments = await deepen_segments(segmentation_processor, segmentation_model, task.recorded_audio, output.segments);
-				
-				
-				const verification_result = await verify_segments(output.segments, output.chunks, task.recorded_audio, verification_processor, verification_model);
-				output = {...output, ...verification_result}
-				//console.warn("FINAL VERIFIED SEGMENTS: ", output['segments']);
-				
-				if(output != null && typeof output['segments'] != 'undefined'){
-					for(let seg = 0; seg < output['segments'].length; seg++){
-						if(typeof output['segments'][seg].audio != 'undefined'){
-							console.warn("WHISPER WORKER: DELETING STRAY AUDIO FROM SEGMENT");
-							delete output['segments'][seg].audio;
-						}
-						if(typeof output['segments'][seg].fingerprint != 'undefined'){
-							console.warn("WHISPER WORKER: DELETING FINGERPRINT FROM SEGMENT");
-							delete output['segments'][seg].fingerprint;
-						}
+			if(output != null && typeof output.chunks != 'undefined' && typeof task.progress_index == 'number'){
+				for(let c = 0; c < output.chunks.length; c++){
+					output.chunks[c]['progress_index'] = task.progress_index;
+					if(typeof task.progress_total == 'number'){
+						output.chunks[c]['progress_total'] = task.progress_total;
 					}
 				}
 			}
-			else{
-				console.error("whisper worker: fell through, could not call verify_segments: no segments");
-			}
+		
+		
+		    //const end = performance.now();
+			if(output != null && typeof output.chunks != 'undefined' && message.task != null && typeof message.task.assistant == 'string' && message.task.assistant == 'scribe' && typeof verification_processor != 'undefined' && verification_processor != null && typeof verification_model != 'undefined' && verification_model != null){
 			
-			//console.log("WHISPER WORKER: +VERIFY_SEGMENTS IS DONE. It took: ", (Date.now() - self.start_time) / 1000 + " seconds");
+				if(typeof message.task.preload == 'boolean' && message.task.preload == true){
+					console.warn("whisper_worker: PRELOAD, so only doing a quick fingerprint test");
+					//const fake_audio = new Float32Array(16_000);
+				
+					const fresh_fingerprint = await verify(verification_processor, verification_model, new Float32Array(16_000));
+					self.task = null;
+				
+				}
+				else if(typeof output.segments != 'undefined'){
+					console.log("output has segments");
+					self.original_segments = JSON.parse(JSON.stringify(output.segments));
+					//console.log("BOSS: calling deepen_segments");
+					output.segments = await deepen_segments(segmentation_processor, segmentation_model, task.recorded_audio, output.segments);
+				
+				
+					const verification_result = await verify_segments(output.segments, output.chunks, task.recorded_audio, verification_processor, verification_model);
+					output = {...output, ...verification_result}
+					//console.warn("FINAL VERIFIED SEGMENTS: ", output['segments']);
+				
+					if(output != null && typeof output['segments'] != 'undefined'){
+						for(let seg = 0; seg < output['segments'].length; seg++){
+							if(typeof output['segments'][seg].audio != 'undefined'){
+								console.warn("WHISPER WORKER: DELETING STRAY AUDIO FROM SEGMENT");
+								delete output['segments'][seg].audio;
+							}
+							if(typeof output['segments'][seg].fingerprint != 'undefined'){
+								console.warn("WHISPER WORKER: DELETING FINGERPRINT FROM SEGMENT");
+								delete output['segments'][seg].fingerprint;
+							}
+						}
+					}
+				}
+				else{
+					console.error("whisper worker: fell through, could not call verify_segments: no segments");
+				}
+			
+				//console.log("WHISPER WORKER: +VERIFY_SEGMENTS IS DONE. It took: ", (Date.now() - self.start_time) / 1000 + " seconds");
+			}
+			else if(load_segmentation){
+				console.error("was supposed to use segmentation, but could not");
+			}
+			else{
+				//console.log("could not call verify_segments, some parameters are invalid, or verification is simply not needed for the current task");
+			}
 		}
-		else{
-			//console.log("could not call verify_segments, some parameters are invalid, or verification is simply not needed for the current task");
-		}
+		
+		
 		
 		
 		
@@ -759,26 +1640,29 @@ const boss = async (message) => {
 			delete message.task.recorded_audio;
 		}
 		if(typeof self.task != 'undefined' && self.task != null && typeof self.task.recorded_audio != 'undefined'){
+			console.error("whisper_worker: also deleting audio from self.task, which means that data is duplicated in memory");
 			delete self.task.recorded_audio;
 		}
 		
+		/*
 		if(typeof message.task.preload == 'boolean' && message.task.preload == true){
-			//console.log("WHISPER WORKER: task.preload was true, this is a preload task. Sending preload_complete message.  task: ", message.task);
-			self.postMessage({ status: 'preload_complete' });
+			console.log("WHISPER WORKER: task.preload was true, this is a preload task. Sending preload_complete message.  task: ", message.task);
+			self.postMessage({ task:message.task, status: 'preload_complete' });
 		}
 		else{
-			post_speakers_list();
 			
-			
-		    // Send the result back to the main thread
-		    self.postMessage({
-				task: self.task,
-		        status: "complete",
-		        //task: "automatic-speech-recognition",
-		        transcript: output,
-				//speakers: clean_speakers_list,
-		    });
 		}
+		*/
+		post_speakers_list();
+		
+	    // Send the result back to the main thread
+	    self.postMessage({
+			task: self.task,
+	        status: "complete",
+	        //task: "automatic-speech-recognition",
+	        transcript: output,
+			//speakers: clean_speakers_list,
+	    });
 		
 	
 	}catch(err){
@@ -793,6 +1677,7 @@ const boss = async (message) => {
 	self.busy_transcribing = false;
 	self.busy_loading = false;
 	self.task = null;
+	console.log("whisper worker: done");
 }
 
 
@@ -802,9 +1687,196 @@ const boss = async (message) => {
 
 
 
+/*
+let generating = false;
+//async function transcribot({ audio, language }) {
+async function transcribot(audio, options) {
+	console.log("in transcribot. typeof audio, options: ", typeof audio, options);
+    if (generating){
+    	console.error("whisper_worker: already generating");
+		return
+    }
+    generating = true;
+
+    // Tell the main thread we are starting
+    self.postMessage({ status: 'asr_generating_start' });
+
+    // Retrieve the text-generation pipeline.
+    const [tokenizer, processor, model] = await AutomaticSpeechRecognitionPipelineFactory.getInstance();
+
+	
+	
+	function streamCallback(value){
+		//console.error("GOT WHISPER STREAM CALLBACK: ", typeof value, value);
+		//previous_stream_stamp = stream_stamp;
+	    self.postMessage({
+			task_index: task.index,
+			task_parent_index: task.parent_index,
+			task_assistant: task.assistant,
+	        status: "stream",
+			content: value,
+	    });
+	}
+	
+	
+	
+
+    const streamer = new TextStreamer(tokenizer, {
+        skip_prompt: true,
+        skip_special_tokens: true,
+        callback_function:streamCallback,
+    });
+
+    const inputs = await processor(audio);
+
+    const outputs = await model.generate({
+        ...inputs,
+        max_new_tokens: MAX_NEW_TOKENS,
+        language:options.language,
+        streamer,
+    });
+
+    const outputText = tokenizer.batch_decode(outputs, { skip_special_tokens: true });
+
+    // Send the output back to the main thread
+    self.postMessage({
+        status: 'asr_generating_complete',
+        output: outputText,
+    });
+    generating = false;
+}
+*/
+
+
+
+
+async function preload(message=null) {
+	console.log("whisper_worker: in preload. message: ", message);
+	if(message == null){
+		console.error("whisper_worker: preload: no valid message provided: ", message);
+		return false;
+	}
+    self.postMessage({
+        status: 'asr_loading',
+        data: 'Loading model...'
+    });
+
+    // Load the pipeline and save it for future use.
+	/*
+    const [tokenizer, processor, model] = await AutomaticSpeechRecognitionPipelineFactory.getInstance(x => {
+        self.postMessage(x);
+    });
+	*/
+	
+	
+	const output = await transcribo(message,true); // set preload flag to true so it stops early
+	console.log("PRELOAD: transcribe preload run is done. preload output: ", output);
+	/*
+	if(typeof message_data.model == 'string'){
+		self.current_asr_model_id = message_data.model;
+	}
+	
+	let asr_options = JSON.parse(JSON.stringify(message.options));
+	
+    const p = AutomaticSpeechRecognitionPipelineFactory;
+	
+		
+	
+	
+	//p.subtask = "transcribe";
+
+	if (
+		p.model !== message.model 
+		|| 
+		(
+			(p.quantized == null && typeof asr_options.quantized == 'boolean' && asr_options.quantized === true) 
+			|| 
+			(p.quantized === true && typeof asr_options.quantized != 'boolean' && asr_options.quantized === null)
+		)
+	){
+		// Invalidate model if different
+		p.model = model_name;
+		if(typeof asr_options.quantized == 'boolean' && asr_options.quantized == 'true'){
+			p.quantized = true;
+		}
+		else{
+			p.quantized = null;
+		}
+		
+
+		console.warn("whisper_worker: preload: need to load a new ASR model: ", model_name);
+	
+        if (p.instance !== null) {
+			console.log("whisper_worker: preload: disposing of old ASR instance first");
+            (await p.getInstance()).dispose();
+            p.instance = null;
+        }
+    }
+	console.log("P exists. next: create transcribot.  asr_options: ", asr_options);
+	console.log("p.model: ", p.model);
+	//console.log("p.task: ", p.task); // should always be "automatic-speech-recognition"
+	console.log("p.quantized: ", p.quantized);
+
+    // Load transcribot model
+    const transcribot = await p.getInstance((data) => {
+		console.log("whisper_worker: preload: transcribot: got data: ", data);
+        self.postMessage(data);
+    });
+	console.warn("\n\nPRELOAD: GOT BEYOND TRANSCRIBER\n\n");
+	*/
+	
+	
+	/*
+	if(self.device == 'webgpu' && typeof asr_instance.model == 'object' && asr_instance.model != null && typeof asr_instance.model.generate === 'function'){
+	    self.postMessage({
+	        status: 'asr_warming_up',
+	        data: 'Compiling shaders and warming up model...'
+	    });
+
+	    // Run model with dummy input to compile shaders. Only needed if running via WebGPU
+	    await asr_instance.model.generate({
+	        input_features: full([1, 80, 3000], 0.0),
+	        max_new_tokens: 1,
+	    });
+	}
+    */
+	
+	
+	if(typeof message.preload_segmentation == 'boolean' && message.preload_segmentation === true){
+		console.log("whisper_worker: preload: also preloading segmentation and verification AI");
+	    
+		self.postMessage({
+	        status: 'segmentation_loading',
+	        data: 'Loading model...'
+	    });
+		
+		const [segmentation_processor,segmentation_model,verification_processor,verification_model] = await SegmentationSingleton.getInstance(x => {
+	        self.postMessage(x);
+		});
+		console.log("whisper_worker: segmentation preload complete");
+	}
+	else{
+		console.log("whisper_worker: preload: not preloading segmentation models");
+	}
+	
+	console.log("whisper_worker: preload: done");
+
+	return true
+}
+
+
+
+
+
+
+
+
+
+
 // TRANSCRIBE FUNCTION
-const transcribe = async (
-	transcriber,
+/*
+const transcribe_old = async (
+	//transcribot,
 	segmentation_processor,
 	segmentation_model,
     task,
@@ -818,17 +1890,17 @@ const transcribe = async (
 	
 	try{
 		
+		//console.log("whisper_worker: in transcribe.  transcribot: ", typeof transcribot, transcribot);
 		
 		
-		
-		if(transcriber == null){
-			console.error("whisper worker: transcriber was still null somehow");
+		if(typeof transcribot == 'undefined' || transcribot == null){
+			console.error("whisper worker: transcribot was still null somehow");
 			self.busy_transcribing = false;
 			self.busy_loading = false;
 		    self.postMessage({
 				task: task,
 		        status: "error",
-		        error: "transcriber was null",
+		        error: "transcribot was null",
 		    });
 			return null
 		}
@@ -849,21 +1921,21 @@ const transcribe = async (
 	        chunk_length_s: 30,
 	    }
 		
-		if(typeof self.current_model_name != 'string'){
-			console.error("whisper worker: current_model_name is not a string");
+		if(typeof model_name != 'string'){
+			console.error("whisper worker: model_name is not a string");
 			self.busy_transcribing = false;
 		    self.postMessage({
 				task: task,
 		        status: "error",
-		        error: "current_model_name is not a string",
+		        error: "model_name is not a string",
 		    });
 			return null
 		}
 		
-		//console.log("current_model_name: ", current_model_name);
+		console.log("model_name: ", model_name);
 		
-		if(current_model_name.endsWith('.en') || current_model_name.endsWith('.en_timestamped')){
-		    
+		if(model_name.endsWith('.en') || model_name.endsWith('.en_timestamped') || (typeof language == 'string' && language == 'en')){
+		    console.log("whisper_worker: language is english");
 		}
 		else{
 			if(typeof subtask == 'string'){
@@ -887,7 +1959,6 @@ const transcribe = async (
 		let stream_text = '';
 		function streamCallback(value){
 			//console.error("GOT WHISPER STREAM CALLBACK: ", typeof value, value);
-			
 			//previous_stream_stamp = stream_stamp;
 		    self.postMessage({
 				task_index: task.index,
@@ -896,19 +1967,6 @@ const transcribe = async (
 		        status: "stream",
 				content: value,
 		    });
-			
-		    
-		}
-		
-		
-		let streamer = null;
-		if(mobile == false && typeof transcriber != 'undefined' && transcriber != null &&typeof transcriber.tokenizer != 'undefined'){
-			//console.log("whisper worker: creating textStreamer");
-			options['streamer'] = new TextStreamer(transcriber.tokenizer, {
-				skip_prompt: true,
-				skip_special_tokens: true,
-				callback_function: streamCallback
-			});
 		}
 		
 		
@@ -916,21 +1974,33 @@ const transcribe = async (
 		let output = null;
 		let segments = null;
 		if(typeof self.task.assistant == 'string' && self.task.assistant == 'scribe'){
-			if(typeof transcriber != 'undefined' && typeof segmentation_processor != 'undefined' && typeof segmentation_model != 'undefined'){
-			    [output, segments] = await Promise.all([
-			        transcriber(task.recorded_audio, options),
-			        really_segment(segmentation_processor, segmentation_model, task.recorded_audio, task.preload)
-			    ]);
+			if(typeof transcribot != 'undefined' && typeof segmentation_processor != 'undefined' && typeof segmentation_model != 'undefined'){
+			    
+				if(self.is_mobile){
+					output = await transcribot({'audio':task.recorded_audio, 'options':options});
+					segments = await really_segment(segmentation_processor, segmentation_model, task.recorded_audio, task.preload);
+				}
+				else{
+					[output, segments] = await Promise.all([
+						transcribot({'audio':task.recorded_audio, 'options':options}),
+						really_segment(segmentation_processor, segmentation_model, task.recorded_audio, task.preload)
+					]);
+				}
+				
+				
+			       
+			        
+			    
 				//console.log("WHISPER WORKER: +TRANSCRIBER & SEGMENTATION IS DONE. It took: ", (Date.now() - self.start_time) / 1000 + " seconds");
 				output['segments'] = segments;
 			}
 			else{
-				console.error("WHISPER WORKER transcriber, segmentation_processor and/or segmentation_model is undefined");
+				console.error("WHISPER WORKER transcribot, segmentation_processor and/or segmentation_model is undefined");
 			}
 		    
 		}
 		else{
-			output = await transcriber(task.recorded_audio, options);
+			output = await transcribot(task.recorded_audio, options);
 			//console.log("WHISPER WORKER: +TRANSCRIBER ONLY IS DONE. It took: ", (Date.now() - self.start_time) / 1000 + " seconds");
 		}
 	    
@@ -1040,17 +2110,30 @@ const transcribe = async (
 		console.error("Whisper worker: caught error in transcribe function: ", err);
 		self.busy_transcribing = false;
 		self.processing = false;
-	    self.postMessage({
-			task: task,
-	        status: "error",
-	        error: "caught error in transcribe function",
-	    });
+		
+		if( ('' + err).indexOf('revious buffer is not registered') != -1){
+			console.error("whisper worker: the error in the transcribe function was caused by ONNX issues");
+		    self.postMessage({
+				task: task,
+		        status: "reset_me",
+		        error: "ONNX issue",
+		    });
+		}
+		else{
+		    self.postMessage({
+				task: task,
+		        status: "error",
+		        error: "caught error in transcribo function",
+		    });
+		}
+		
+	    
 		return null;
 	}
     
 };
 
-
+*/
 
 
 
@@ -1440,7 +2523,7 @@ async function segment(processor, model, audio, warmup=false) {
 		}
 	}
 	//console.log("found_speakers.length: ", found_speakers.length);
-	console.warn("segments.length BEFORE: ", segments.length);
+	//console.warn("segments.length BEFORE: ", segments.length);
 	
 	if(found_speakers.length > 1){
 		minimum_confidence = 0.7;
@@ -3519,6 +4602,7 @@ async function verify_segments(segments, chunks, audio=null, verification_proces
 	catch(err){
 		console.error("whisper_worker: caught error in verify_segments: ", err);
 	}
+	
     if(self.task){
     	return {'segments':segments,'sentences':raw_sentences,'words':chunks,'progress_index':self.task.progress_index,'progress_total':self.task.progress_total}
     }
@@ -3736,50 +4820,9 @@ function cosinesim(A,B){
 
 
 
-async function dispose_models(){
-	//console.log("whisper_worker: in dispose_models. current_model_name: ", current_model_name);
-	return
-	self.busy_disposing_models = true;
-	try{
-		if(self.transcriber != null  && typeof self.transcriber.dispose == 'function'){
-			await self.transcriber.dispose();
-		}
-		if(self.segmentation_model != null && typeof self.segmentation_model.dispose == 'function'){
-			await self.segmentation_model.dispose();
-		}
-		if(self.segmentation_processor != null && typeof self.segmentation_processor.dispose == 'function'){
-			//console.log("self.segmentation_processor.dispose was a function");
-			await self.segmentation_processor.dispose();
-		}
-		if(self.verification_model != null && typeof self.verification_model.dispose == 'function'){
-			await self.verification_model.dispose();
-		}
-		if(self.verification_processor != null && typeof self.verification_processor.dispose == 'function'){
-			//console.log("self.verification_processor.dispose was a function");
-			await self.verification_processor.dispose();
-		}
-		self.transcriber = null;
-		self.segmentation_processor = null;
-		self.segmentation_model = null;
-		self.verification_processor = null;
-		self.verification_model = null;
-		//console.log("whisper_worker: disposing models is done");
-		self.busy_disposing_models = false;
-		self.was_disposed = true;
-	}
-	catch(err){
-		console.error("whisper_worker: caught error while disposing of old models: ", err);
-		self.busy_disposing_models = false;
-	}
-}
-
-
-
-
-
 
 function reset_fingerprints(){
-	//console.log("whisper_worker: in reset_fingerprints");
+	console.log("whisper_worker: in reset_fingerprints");
 	self.fingerprints = [];
 	self.fingerprints.length = 0;
 	next_fingerprints_id = 1;
@@ -3815,6 +4858,7 @@ function post_speakers_list(){
 
 async function check_gpu(){
 	// CHECK WEB GPU SUPPORT
+	console.log("whisper_worker: in check_gpu")
 	
     if (!navigator.gpu) {
 		console.error("WHISPER WORKER: WebGPU not supported.");
@@ -3863,3 +4907,6 @@ function remove_brackets_from_string(input) {
 }
 
 
+self.postMessage({
+    status: "exists"
+});

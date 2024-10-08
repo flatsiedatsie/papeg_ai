@@ -32,9 +32,10 @@ function doc_reset(){
 
 
 async function doc_settled(){
-	//console.log("in doc_settled");
+	console.log("in doc_settled");
 	return new Promise((resolve, reject) => {
 		
+		//window.update_current_doc_stats();
 		
 		if(typeof window.doc_selected_text == 'string' && window.doc_selected_text.length > 1){
 			window.check_if_paragraph_selected();
@@ -136,6 +137,53 @@ async function doc_settled(){
 }
 
 
+function update_current_doc_stats(){
+	console.log("in update_current_doc_stats");
+	let document_word_count = 0;
+	let selection_word_count = 0;
+	
+	let model_info_document_words_el = document.querySelector('#model-info-words-in-current-document');
+	if(model_info_document_words_el){
+		let model_info_selection_words_el = document.querySelector('#model-info-words-in-current-selection');
+		
+		
+		if(document.body.classList.contains('show-document')){
+			
+			if(typeof window.doc_selected_text == 'string' && window.doc_selected_text.length > 5 && window.doc_selected_text.indexOf(' ') != -1){
+				selection_word_count = window.doc_selected_text.trim().split(' ').length;
+			}
+			
+			if(typeof window.doc_text == 'string' && window.doc_text.length > 5 && window.doc_text.indexOf(' ') != -1){
+				document_word_count = window.doc_text.trim().split(' ').length;
+			}
+			else if(typeof files[current_file_name] != 'undefined' && typeof files[current_file_name]['image_to_text_description'] == 'string' && files[current_file_name]['image_to_text_description'].length > 10){
+				document_word_count = files[current_file_name]['image_to_text_description'].split(' ').length;
+				selection_word_count = 0;
+			}
+			else if(typeof files[current_file_name] != 'undefined' && typeof files[current_file_name]['subtitle'] == 'string' && files[current_file_name]['subtitle'].length > 10){
+				document_word_count = files[current_file_name]['subtitle'].split(' ').length;
+				selection_word_count = 0;
+			}
+			
+		}
+	
+		if(document_word_count == 0){
+			document_word_count = '-';
+		}
+		if(selection_word_count == 0){
+			selection_word_count = '-';
+		}
+		
+		model_info_document_words_el.textContent = document_word_count;
+		if(model_info_selection_words_el){
+			model_info_selection_words_el.textContent = selection_word_count;
+		}
+		
+	}
+	
+}
+window.update_current_doc_stats = update_current_doc_stats;
+
 
 
 let doc_updated_rate_limiter_timeout = null;
@@ -148,6 +196,8 @@ function doc_updated(){
 		clearTimeout(doc_updated_rate_limiter_timeout);
 	}
 	doc_updated_rate_limiter_timeout = setTimeout(() => {
+		
+		window.update_current_doc_stats();
 		
 		if(typeof window.doc_text == 'string'){
 			window.doc_length = window.doc_text.length;
@@ -265,14 +315,14 @@ function update_tools_from_selection(){
 		console.warn("update_tools_from_selection:   window.doc_selected_text was not a string: ",  window.doc_selected_text);
 	}
 	
-	if(window.settings.auto_detect_input_language && typeof window.doc_selected_text == 'string'){
+	if(window.settings.auto_detect_input_language && typeof window.doc_selected_text == 'string' && window.doc_selected_text.length > 5){
 		const detected_language = detect_language(window.doc_selected_text);
 		if(typeof detected_language == 'string'){
 			update_translation_input_select(detected_language);
 		}
 	}
 	
-	
+	//window.update_current_doc_stats();
 	// proofread_auto_detected_language_el.textContent = get_translation(detected_language);
 	
 }
@@ -612,6 +662,12 @@ function prepare_summarize(){
 	
 	//generate_summarize_tags();
 	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
+		}
+	}
+	
 	proofread_details_el.removeAttribute('open');
 	rewrite_details_el.removeAttribute('open');
 	translation_details_el.removeAttribute('open');
@@ -650,6 +706,12 @@ function prepare_summarize_document(){
 		window.summarize_prompt_el.value = get_translation('Summarize_the_following_meeting');
 	}
 	
+	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
+		}
+	}
 	
 	document.body.classList.add('show-rewrite');
 	document.body.classList.add('prepare-summarize-document');
@@ -723,10 +785,17 @@ function prepare_translation(){
 	rewrite_details_el.removeAttribute('open');
 	translation_details_el.setAttribute('open',true);
 	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
+		}
+	}
 	
 	document.body.classList.add('show-rewrite');
 	document.body.classList.remove('chat-shrink');
 	//rewrite_dialog_el.showModal();
+	
+	
 	
 	if(typeof window.doc_selected_text == 'string' && window.doc_selected_text.length > 2 && typeof window.doc_selection != 'undefined' && window.doc_selection != null){
 		highlight_selection(window.doc_selection);
@@ -751,6 +820,13 @@ function prepare_translate_document(){
 	summarize_details_el.removeAttribute('open');
 	rewrite_details_el.removeAttribute('open');
 	translation_details_el.setAttribute('open',true);
+	
+	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
+		}
+	}
 	
 	document.body.classList.add('show-rewrite');
 	document.body.classList.add('prepare-translate-document');
@@ -882,39 +958,43 @@ window.pick_optimal_ai_from_text_language = pick_optimal_ai_from_text_language;
 
 
 
-function detect_language_of_text(source_text){
+async function detect_language_of_text(source_text){
 	//console.log("in detect_language_of_text. source_text: ", source_text);
 	
-	return new Promise((resolve, reject) => {
-		
-		if(typeof source_text == 'string' && source_text.length > 20){
-			add_script('./js/eld.M60.min.js')
-			.then((value) => {
-
-				//console.log("loaded language detection script? value: ", value);
-				//console.log("language detection script: eld.info: ", eld.info() );
-				
+	if(typeof source_text == 'string' && source_text.length > 20){
+	
+		try{
+			let value = await add_script('./js/eld.M60.min.js');
+	
+			//console.log("loaded language detection script? value: ", value);
+			//console.log("language detection script: eld.info: ", eld.info() );
+			if(typeof eld == 'undefined'){
+				console.error("detect_language_of_text:  delaying in the hopes that eld will become available");
+				await delay(500);
+			}
+			if(typeof eld == 'undefined'){
 				language_detection_result = eld.detect(source_text);
 				//console.log("detect_language_of_text: language_detection_result: ", language_detection_result, source_text);
 
 				if(typeof language_detection_result.language == 'string' && language_detection_result.isReliable()){
 					detected_language = language_detection_result.language;
-					resolve(language_detection_result.language);
+					return language_detection_result.language;
 				}
 				else{
-					resolve(window.settings.language);
+					console.warn("detect_language_of_text: result was unreliable, returning window.settings.language instead");
+					return window.settings.language;
 				}
-
-			})
-			.catch((err) => {
-				console.error("detect_language_of_text: Caught general error in detecting language: ", err);
-				resolve(window.settings.language);
-			})
+			}
+			else{
+				console.error("detect_language_of_text: eld was still undefined, even after a delay");
+				return window.settings.language;
+			}
 		}
-		else{
-			resolve(window.settings.language);
+		catch (err) {
+			console.error("detect_language_of_text: Caught general error in detecting language, returning window.settings.language.  Error was: ", err);
+			return window.settings.language;
 		}
-	})
+	}
 }
 
 
@@ -1017,6 +1097,12 @@ async function prepare_proofread(source_text=null){
 	proofread_details_el.setAttribute('open','true');
 	
 	tools_submit_form_container_el.scrollIntoView();
+	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
+		}
+	}
 	
 	document.body.classList.add('show-rewrite');
 	document.body.classList.remove('sidebar');
@@ -1884,6 +1970,12 @@ function prepare_rewrite(){
 	
 	model_info_container_el.innerHTML = '';
 	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
+		}
+	}
+	
 	document.body.classList.add('show-rewrite');
 	document.body.classList.remove('chat-shrink');
 	document.body.classList.remove('fairytale');
@@ -2260,7 +2352,7 @@ async function rewrite_selection(type=null,source_text,desired_results=1,parent_
 // Prepare question dialog
 function prepare_question(text=null){
 	console.log("in prepare_question. window.doc_selected_text: ", window.doc_selected_text);
-	//console.log("in prepare_translation. window.doc_selected_text: ",  window.doc_selected_text);
+	//console.log("in prepare_question. window.doc_selected_text: ",  window.doc_selected_text);
 	/*
 	rewrite_prompt_el.value = '';
 	rewrite_dialog_selected_text_el.textContent = window.doc_selected_text;
@@ -2358,6 +2450,12 @@ function prepare_question(text=null){
 		}
 		else{
 			prompt_el.value = get_translation('What_is_this_document_about');
+		}
+	}
+	
+	if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+		if(typeof close_sidebar == 'function'){
+			close_sidebar();
 		}
 	}
 	
@@ -4177,9 +4275,9 @@ function do_blueprint(text){
 
 
 function stop_play_document(){
-	//console.log("in stop_play_document");
+	console.log("in stop_play_document");
 	
-	console.warn("clearing audio queues");
+	//console.warn("clearing audio queues");
 	window.playing_document = false;
 	change_tasks_with_origin('play_document'); // default new state for affected tasks is interrupted
 	change_tasks_with_origin('blueprint');
@@ -4340,16 +4438,31 @@ function start_play_document(task=null){
 		if(lowercased.startsWith('once upon a time') || lowercased.startsWith('a fairy tale by ') || lowercased.startsWith('long, long ago, in a land') || lowercased.startsWith('er was eens') || lowercased.startsWith('lang, lang geleden ') || lowercased.startsWith('lang lang geleden ')){
 			console.log("Detected a fairytale");
 			document_style = 'fairytale';
+			
 			document.body.classList.add('fairytale');
+			setTimeout(() => {
+				if(window.playing_document){
+					document.body.classList.add('fairytale');
+				}
+				
+			},1000);
+			if(window.innerWidth > 800){
+				document.body.classList.remove('chat-shrink');
+			}
+			
+			
+			setTimeout(() => {
+				if(window.playing_document){
+					playground_overlay_el.innerHTML = '<img src="images/fairytale_book.svg" alt="Fairytale" class="fade-in-slow"/>'; 
+				}
+			},2000);
+			
 			
 			// enough (english) text to try and also generate an image
 			if(lowercased.startsWith('once upon a time') && window.settings.assistant == 'text_to_image' && text.length > 500){
 				if(typeof sentences[d+1] == 'string'){
 					imager_prompt = 'happy, friendly, line drawing, lush, Breughel. ' +  sentences[d] + ' ' + sentences[d+1]; // get the first two sentences and use it to generate an image
 					console.log("play_document: created a text_to_image prompt from the first two sentences of the fairy tale: ", imager_prompt);
-					
-					playground_overlay_el.innerHTML = '<img src="images/fairytale_book.svg" alt="Fairytale" class="fade-in-slow"/>'; 
-					
 					
 				}
 				if(typeof sentences[d+2] == 'string'){
@@ -4725,7 +4838,9 @@ function get_next_sentence_from_document(task){
 function split_into_sentences(text){
 	//console.log("in split_into_sentences");
 	//return text.replace(/([.?!\"])[\s\n]*(?=[A-Z])/g, "$1|!0|0!|").split("|!0|0!|"); // splits into sentences without removing the punctuation
-	return text.replace(/([?!\n]|[a-zA-Z]\n\n(?=[a-zA-Z])|:\n|\.\n|\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
+	//return text.replace(/([?!\n]|[a-zA-Z]\n\n(?=[a-zA-Z])|\:\n|\:\*\*|\.\n|\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
+	return text.replace(/([?!\n]|[a-zA-Z]\n\n(?=[a-zA-Z])|[a-zA-Z]\n\n?(?=[\*\-0-9])|\:\n|\:\*\*|\*\*\: |\*\*\:\n|\.\n|\!\n|\?\n|[^0-9]\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
+	
 }
 
 
@@ -4743,7 +4858,9 @@ function split_into_sentences_and_punctuation(text){
 	//let pre_lines = text.split(/([?!.:\n])/g);
 	let pre_lines = text.split(/([?!.\n])/g); // removed :
 	//console.log("pre_lines: ", pre_lines);
-	if(pre_lines[0] == ''){pre_lines.splice(0, 1);}
+	if(pre_lines[0] == ''){
+		pre_lines.splice(0, 1);
+	}
 	if(pre_lines[pre_lines.length - 1] == ''){pre_lines.splice(pre_lines.length - 1, 1);}
 
 	for(let x=pre_lines.length-1;x>=0;x--){
@@ -5160,10 +5277,13 @@ function set_latest_document_text_from_task(task=null,content=null){
 
 function create_insert_into_doc_buttons(message){
 	//console.log("in create_insert_into_doc_buttons. message: ", message);
+	
 	let doc_buttons_container_el = document.createElement('div');
 	doc_buttons_container_el.classList.add('bubble-buttons-container');
 	
-	
+	if(typeof message != 'string'){
+		return doc_buttons_container_el;
+	}
 	
 	// Copy to clipboard
 	
@@ -5188,51 +5308,54 @@ function create_insert_into_doc_buttons(message){
 	
 	// Insert into document
 	
-	let insert_into_doc_button_el = document.createElement('div');
-	insert_into_doc_button_el.classList.add('bubble-insert-into-doc-button');
-	insert_into_doc_button_el.classList.add('bubble-doc-button');
-	insert_into_doc_button_el.setAttribute('title',get_translation('Insert'));
-	insert_into_doc_button_el.textContent = '📄';
-	insert_into_doc_button_el.addEventListener('click',(event) => {
-		//console.log("add_chat_message: clicked on insert into doc button");
-		insert_into_doc_button_el.classList.add('opacity0');
-		insert_into_doc_button_el.classList.add('no-click-events');
-		setTimeout(() => {
-			insert_into_doc_button_el.classList.remove('opacity0');
-			insert_into_doc_button_el.classList.remove('no-click-events');
-		},4000);
-		if(window.doc_selection){
-			insert_into_document({'file':window.settings.docs.open,'selection':window.doc_selection},'\n' + message + '\n');
-		}
-		else{
-			console.error("insert_into_document_button -> cannot insert, no valid window.doc_selection: ", window.doc_selection)
-		}
+	if(message.length > 150 || message.split('\n').length > 3){
+		let insert_into_doc_button_el = document.createElement('div');
+		insert_into_doc_button_el.classList.add('bubble-insert-into-doc-button');
+		insert_into_doc_button_el.classList.add('bubble-doc-button');
+		insert_into_doc_button_el.setAttribute('title',get_translation('Insert'));
+		insert_into_doc_button_el.textContent = '📄';
+		insert_into_doc_button_el.addEventListener('click',(event) => {
+			//console.log("add_chat_message: clicked on insert into doc button");
+			insert_into_doc_button_el.classList.add('opacity0');
+			insert_into_doc_button_el.classList.add('no-click-events');
+			setTimeout(() => {
+				insert_into_doc_button_el.classList.remove('opacity0');
+				insert_into_doc_button_el.classList.remove('no-click-events');
+			},4000);
+			if(window.doc_selection){
+				insert_into_document({'file':window.settings.docs.open,'selection':window.doc_selection},'\n' + message + '\n');
+			}
+			else{
+				console.error("insert_into_document_button -> cannot insert, no valid window.doc_selection: ", window.doc_selection)
+			}
 		
-	});
-	doc_buttons_container_el.appendChild(insert_into_doc_button_el);
+		});
+		doc_buttons_container_el.appendChild(insert_into_doc_button_el);
 	
 	
-	// Create new document
+		// Create new document
 	
-	let create_new_doc_button_el = document.createElement('div');
-	create_new_doc_button_el.classList.add('bubble-new-doc-button');
-	create_new_doc_button_el.classList.add('bubble-doc-button');
-	create_new_doc_button_el.classList.add('add-icon');
-	create_new_doc_button_el.setAttribute('title',get_translation('New_document'));
-	create_new_doc_button_el.textContent = '📄';
+		let create_new_doc_button_el = document.createElement('div');
+		create_new_doc_button_el.classList.add('bubble-new-doc-button');
+		create_new_doc_button_el.classList.add('bubble-doc-button');
+		create_new_doc_button_el.classList.add('add-icon');
+		create_new_doc_button_el.setAttribute('title',get_translation('New_document'));
+		create_new_doc_button_el.textContent = '📄';
 	
-	create_new_doc_button_el.addEventListener('click',(event) => {
-		//console.log("add_chat_message: clicked on create new doc button");
-		create_new_doc_button_el.classList.add('opacity0');
-		create_new_doc_button_el.classList.add('no-click-events');
-		setTimeout(() => {
-			create_new_doc_button_el.classList.remove('opacity0');
-			create_new_doc_button_el.classList.remove('no-click-events');
-		},4000);
-		window.show_files_tab(); // only shows it if the sidebar is already open
-		create_new_document(message);
-	});
-	doc_buttons_container_el.appendChild(create_new_doc_button_el);
+		create_new_doc_button_el.addEventListener('click',(event) => {
+			//console.log("add_chat_message: clicked on create new doc button");
+			create_new_doc_button_el.classList.add('opacity0');
+			create_new_doc_button_el.classList.add('no-click-events');
+			setTimeout(() => {
+				create_new_doc_button_el.classList.remove('opacity0');
+				create_new_doc_button_el.classList.remove('no-click-events');
+			},4000);
+			window.show_files_tab(); // only shows it if the sidebar is already open
+			create_new_document(message);
+		});
+		doc_buttons_container_el.appendChild(create_new_doc_button_el);
+	}
+	
 	
 	return doc_buttons_container_el;
 }
