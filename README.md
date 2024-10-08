@@ -15,6 +15,7 @@ This code is currently not available under an open source licence. You may not d
 - A. You may use this code for individual non-profit personal use, or within a non-profit organisation. You may deploy it on the localhost on your own device, or make it available on a local network only. You may not place it online anywhere.
 - B. In any other case you may copy, deploy or use this code if given explicit permission to do so by Tijmen Schep.
 
+Use at your own risk.
 
 ## COMMERCIAL USE
 
