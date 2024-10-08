@@ -568,6 +568,11 @@ let editor = new EditorView({
 });
 //console.log("codeMirror editor object: ", editor);
 
+if(window.active_destination = 'document'){
+	editor.focus();
+}
+
+
 // keyboard shortcuts
 document.body.addEventListener('keydown', function (e) {
 	
@@ -1070,16 +1075,39 @@ async function editor_set_value(value){
 		playground_overlay_el.innerHTML = '';
 		
 		if(typeof value == 'string'){
+			
+			
+			
+			if(value.startsWith('_PLAYGROUND_BINARY_') && typeof files[current_file_name] != 'undefined' && typeof files[current_file_name].compression == 'string' && files[current_file_name].compression == 'gzip'){
+				try{
+					value = await decompress( string_to_buffer(value.substr(19)),'gzip');
+				}
+				catch(err){
+					console.error("editor_set_value: decompression of file failed: ", err);
+				}
+			
+			}
+			
+			
 			//console.log("value.startsWith('_PLAYGROUND_BINARY_'): ", value.startsWith('_PLAYGROUND_BINARY_'));
 			if(value.startsWith('_PLAYGROUND_BINARY_')){ //  || window.filename_is_binary(current_file_name)
 				//console.log("editor_set_value: switching editor to read-only mode as the file starts with _PLAYGROUND_BINARY_");
+
 				set_editor_read_only(true);
 				document.body.classList.add('binary-file');
+				document_summarize_button_el.removeAttribute('title');
 			}
 			else{
 				//console.log("editor_set_value: no need for read-only mode as the file is a normal text file");
 				set_editor_read_only(false);
 				document.body.classList.remove('binary-file');
+				if(value.indexOf(' ') != -1){
+					document_summarize_button_el.setAttribute('title', value.length + ' chars, ' + value.split(' ').length + ' words, '  + value.split('\n').length + ' lines');
+				}
+				else{
+					document_summarize_button_el.removeAttribute('title');
+				}
+				
 			}
 			
 			if(value.length == 0){
@@ -1092,13 +1120,47 @@ async function editor_set_value(value){
 		}
 		
 		
+		if(typeof current_file_name == 'string' && (current_file_name.endsWith('.js') || current_file_name.endsWith('.ts') || current_file_name.endsWith('.css') || current_file_name.endsWith('.py') || current_file_name.endsWith('.php') || current_file_name.endsWith('.html') || current_file_name.endsWith('.json'))){
+		
+					
+					if(current_file_name.endsWith('.js')){
+						document.body.classList.add('javascript-document');
+					}
+					if(current_file_name.endsWith('.js') || current_file_name.endsWith('.py')){
+				
+					}
+					document.body.classList.add('coder');
+		
+				}
+				else{
+					document.body.classList.remove('coder');
+					
+				}
+		
+		
 		// Coding document?
 		if(current_file_name.toLowerCase().endsWith('.js') || current_file_name.toLowerCase().endsWith('.json') || current_file_name.toLowerCase().endsWith('.ts') || current_file_name.toLowerCase().endsWith('.py') || current_file_name.toLowerCase().endsWith('.php') || current_file_name.toLowerCase().endsWith('.html') || current_file_name.toLowerCase().endsWith('.css')){
 			document.body.classList.add('coder');
+			
+			if(window.coder_script_loaded == false){
+				//console.log("adding p_coder.js to the page because of this file: ", current_file_name);
+				if(window.add_script){
+					window.add_script('./p_coder.js'); 
+				}
+			}
 		}
 		else{
 			document.body.classList.remove('coder');
 		}
+		
+		// Javascript document?
+		if(current_file_name.toLowerCase().endsWith('.js')){
+			document.body.classList.add('javascript-document');
+		}
+		else{
+			document.body.classList.remove('javascript-document');
+		}
+		
 		
 		if(current_file_name.toLowerCase().endsWith('.srt') || current_file_name.toLowerCase().endsWith('.vtt')){
 			document.body.classList.add('subtitle-document');
@@ -1122,13 +1184,7 @@ async function editor_set_value(value){
 			document.body.classList.remove('subtitle-document-has-origin-file');
 		}
 		
-		// Javascript document?
-		if(current_file_name.toLowerCase().endsWith('.js')){
-			document.body.classList.add('javascript-document');
-		}
-		else{
-			document.body.classList.remove('javascript-document');
-		}
+		
 		
 		// Special settings backup file?
 		if(folder == '' && (current_file_name == 'papeg_ai_settings.json' || current_file_name.endsWith('papeg_ai_conversation.json') )){
@@ -1509,18 +1565,24 @@ async function editor_set_value(value){
 	
 		else if(typeof value == 'string'){
 			
-		    const update = editor.state.update({changes: {from: 0, to: editor.state.doc.length, insert: value}});
-			//update.addToHistory.of(false);
-			update['addToHistory'] = false; // ,Transaction.addToHistory.of(false)
-			//transaction['addToHistory'] = true;
-		    editor.update([update]);
+			if(typeof editor.state != 'undefined' && typeof editor.state.doc != 'undefined'){
+			    const update = editor.state.update({changes: {from: 0, to: editor.state.doc.length, insert: value}});
+				//update.addToHistory.of(false);
+				update['addToHistory'] = false; // ,Transaction.addToHistory.of(false)
+				//transaction['addToHistory'] = true;
+			    editor.update([update]);
 			
-			a_file_is_open = true;
-			text_length = value.length;
+				a_file_is_open = true;
+				text_length = value.length;
 			
-			setTimeout(() => {
-				resetUndoRedo();
-			},1)
+				setTimeout(() => {
+					resetUndoRedo();
+				},1)
+			}
+			else{
+				console.error("editor.state.doc undefined");
+			}
+		    
 			//
 			//  SCROLL TO LINE
 			//
@@ -1687,6 +1749,7 @@ async function editor_set_value(value){
 	catch(err){
 		console.error("caught error in editor_set_value: ", err);
 		document.body.classList.remove('loading-file');
+		flash_message(get_translation('An_error_occured'), 3000, 'fail');
 	}
 	
 }
@@ -2000,7 +2063,7 @@ function highlight_selection(cursor=null,split_on='\n'){
 	if(typeof cursor.from == 'number' && typeof cursor.to == 'number' && cursor.from < cursor.to){
 		console.log("highlight_selection: will highlight. cursor.from, cursor.to: ", cursor.from, cursor.to);
 		
-		if(cursor.to > cursor.from + split_threshold){
+		if(cursor.to > cursor.from + split_threshold && (cursor.to - cursor.from < 2000)){
 			console.log("highlight_selection: very long text, will be prettier to split this up into smaller selections");
 			// very long span. It's nice to break it up
 			
@@ -2021,24 +2084,24 @@ function highlight_selection(cursor=null,split_on='\n'){
 				for(c = cursor.from; c <= cursor.to; c++){
 					const char = source_text.charAt(c);
 					if(char == split_on || c == source_text.length){
-						if(text_chunk.length){
-							console.log("highlight_selection: adding selection for text_chunk: ", text_chunk);
+						if(text_chunk.length > 200 || c == source_text.length){
+							//console.log("highlight_selection: adding selection for text_chunk: ", text_chunk);
 							//cursor_list.push({'from':(c - text_chunk.length),'to':c});
 							
 							if(typeof already_highlighed_elements[text_chunks.length-1] != 'undefined'){
-								console.log("highlight_selection: there was a higlighted element. let's compare: ", already_highlighed_elements[text_chunks.length-1].textContent, text_chunk);
+								//console.log("highlight_selection: there was a higlighted element. let's compare: ", already_highlighed_elements[text_chunks.length-1].textContent, text_chunk);
 								if(already_highlighed_elements[text_chunks.length-1].textContent == text_chunk){
-									console.log("highlight_selection: MATCH! this text already has a highlight, no need to set it again");
+									//console.log("highlight_selection: MATCH! this text already has a highlight, no need to set it again");
 								}
 								else{
-									console.log("highlight_selection: no match with textContent of already_highlighted_element, so higlighting: ", c - text_chunk.length, c);
+									//console.log("highlight_selection: no match with textContent of already_highlighted_element, so higlighting: ", c - text_chunk.length, c);
 									editor.dispatch({
 										effects: highlight_effect.of([highlight_decoration.range(c - text_chunk.length, c)])
 									});
 								}
 							}
 							else{
-								console.log("highlight_selection: no match with already_highlighed_elements, so higlighting: ", c - text_chunk.length, c);
+								//console.log("highlight_selection: no match with already_highlighed_elements, so higlighting: ", c - text_chunk.length, c);
 								editor.dispatch({
 									effects: highlight_effect.of([highlight_decoration.range(c - text_chunk.length, c)])
 								});
@@ -2053,7 +2116,7 @@ function highlight_selection(cursor=null,split_on='\n'){
 					
 				}
 				if(text_chunk.length){
-					console.log("highlight_selection: adding final selection for text_chunk: ", text_chunk);
+					//console.log("highlight_selection: adding final selection for text_chunk: ", text_chunk);
 					//cursor_list.push({'from':(c - text_chunk.length),'to':c});
 					editor.dispatch({
 						effects: highlight_effect.of([highlight_decoration.range(c - text_chunk.length, c)])
@@ -2071,7 +2134,7 @@ function highlight_selection(cursor=null,split_on='\n'){
 			}
 		}
 		else{
-			console.log("highlight_selection: short selection, so no need to split it up: ", cursor.from, cursor.to);
+			//console.log("highlight_selection: short selection, so no need to split it up: ", cursor.from, cursor.to);
 			editor.dispatch({
 				effects: highlight_effect.of([highlight_decoration.range(cursor.from, cursor.to)])
 			});
@@ -2091,7 +2154,7 @@ window.highlight_selection = highlight_selection;
 
 
 function remove_highlight_selection(cursor=null){
-	console.log("in remove_highlight_selection. cursor: ", cursor);
+	//console.log("in remove_highlight_selection. cursor: ", cursor);
 	let a = 0;
 	let b = 0;
 	if(cursor==null){

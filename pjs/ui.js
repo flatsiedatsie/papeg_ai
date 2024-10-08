@@ -136,14 +136,16 @@ const tabsClickHandler = e => {
 	return false;
 }
 
-
+/*
+// TODO disabled for AI Chat project
 const file_tabs_context_menu = new ContextMenu(file_tabs_container_el, [
-    /*{text: 'Back', hotkey: 'Alt+Left arrow', disabled: true, onclick: clickHandler},
+    {text: 'Back', hotkey: 'Alt+Left arrow', disabled: true, onclick: clickHandler},
     {text: 'Forward', hotkey: 'Alt+Right arrow', disabled: true, onclick: clickHandler},
     {text: 'Translate to English', onclick: clickHandler},
-    null,*/
+    null,
     {text: 'Save all', onclick: tabsClickHandler},
-	//{text: 'Save all to production', onclick: tabsClickHandler}, // TODO disabled for AI Chat
+	
+	//{text: 'Save all to production', onclick: tabsClickHandler}, 
 	{text: 'Cancel', onclick: tabsClickHandler},
 ]);
 
@@ -153,7 +155,7 @@ file_tabs_container_el.addEventListener('contextmenu', (e) => {
 	//console.log("detected context menu (and prevented default)");
 	e.preventDefault();
 });
-
+*/
 
 
 
@@ -741,6 +743,10 @@ function update_ui_file_menu(file_list=null) {
 	let unloaded_file_count = 0;
 	let beta_file_count = 0;
 	
+	let new_folder_view_els = [];
+	let new_file_list_els = [];
+	let new_folder_list_els = [];
+	
 	// remove old context menu listeners
 	for(var c = 0; c < window.context_menus.length; c++) {
 		window.context_menus[c].uninstall();
@@ -755,7 +761,7 @@ function update_ui_file_menu(file_list=null) {
 	
 	//console.log("update_ui_file_menu: file_list.length: ", file_list.length, file_list);
 	
-	if(file_list.length <= 1){
+	if(file_list.length == 0){
 		document.body.classList.add('no-files-in-folder');
 	}
 	else{
@@ -765,25 +771,28 @@ function update_ui_file_menu(file_list=null) {
 	
 	
 	// Generate folder tree
-	folder_select_container_el.innerHTML = '';
+	//folder_select_container_el.innerHTML = '';
 	let folder_tree_el = document.createElement('div');
 	folder_tree_el.classList.add('folder-tree');
 	
 	
+	/*
 	if(folder_parts.length < 2){
 		folder_back_button_el.classList.add('no-further-up');
 	}
 	else{
 		folder_back_button_el.classList.remove('no-further-up');
 	}
+	*/
 	
 	let indent = '';
 	let partial_folder_path = '';
 	if(folder_parts.length == 0){
 		folder_parts = [''];
+		folder_select_container_el.innerHTML = '';
 	}
 	
-	else if(folder_select_container_el){
+	else{
 		let folder_path_so_far = '';
 		for(let fp=0; fp<folder_parts.length; fp++){
 			let folder_part_name = folder_parts[fp];
@@ -842,6 +851,7 @@ function update_ui_file_menu(file_list=null) {
 			//folder_select_el.appendChild(new_folder_option_el);
 		}
 		
+		folder_select_container_el.innerHTML = '';
 		folder_select_container_el.appendChild(folder_tree_el);
 	}
 	
@@ -1085,13 +1095,6 @@ function update_ui_file_menu(file_list=null) {
 			if(typeof window.selected_rag_documents[folder + '/' + file] != 'undefined'){
 				fileItem.classList.add('selected');
 			}
-			/*
-			for(let r = 0; r < window.selected_rag_documents.length; r++){
-				if(window.selected_rag_documents[r].folder == 'string' && window.selected_rag_documents[r].folder == folder && window.selected_rag_documents[r].filename == file){
-					fileItem.classList.add('rag-selected');
-				}
-			}
-			*/
 			
 			
 			
@@ -1144,17 +1147,6 @@ function update_ui_file_menu(file_list=null) {
 				fileItem.classList.add('compression-none');
 			}
 			
-			/*
-			if(localStorage.getItem(folder + file) == null){
-				fileItem.classList.add('unloaded');
-				unloaded_file_count++;
-			}
-			
-			let delete_handler = (e) => {
-							    	//console.log("delete. on click handler directly. e: ", e);
-									let context_file_name = fileItem.getAttribute('data-file');
-									//console.log("delete. context_file_name: ", context_file_name);
-			}*/
 			
 			
 			
@@ -1229,16 +1221,6 @@ function update_ui_file_menu(file_list=null) {
 			
 			window.context_menus.push(fileContextMenu);
 			
-			/*
-			const deleteBtn = document.createElement('span');
-	        deleteBtn.className = 'delete';
-	        deleteBtn.textContent = '✕';
-	        fileItem.appendChild(deleteBtn);
-		
-	        deleteBtn.addEventListener('click', ()=>{
-	            
-	        });
-			*/
 			
 		}
         
@@ -1265,11 +1247,6 @@ function update_ui_file_menu(file_list=null) {
 			},1)
 			
         }
-		//if(typeof playground_modified_files[file] == 'undefined'){
-		//	playground_modified_files[file] = false;
-		//}
-		
-		
 		
 		
 		
@@ -1283,12 +1260,6 @@ function update_ui_file_menu(file_list=null) {
 		});
 		
         
-        
-		/*
-		fileItem.addEventListener('click', (e) => {
-
-		});
-		*/
 		
 		fileItem.onmouseup = (e) => {
   			clearTimeout(pressTimer);
@@ -1385,8 +1356,8 @@ function update_ui_file_menu(file_list=null) {
 		};
 		
 		
-		
-		file_menu_el.appendChild(fileItem);
+		new_file_list_els.push(fileItem);
+		//file_menu_el.appendChild(fileItem);
     }
 	
     //if(files = localStorage.getItem(folder + '_playground_files')) {
@@ -1599,6 +1570,8 @@ function update_ui_file_menu(file_list=null) {
 		        });
 		
 			}
+			
+			// Disabled for AI chat project
 			/*
 			else if(e.label.textContent == 'Delete from production'){
 				//console.log("clicked Delete folder from production");
@@ -1676,47 +1649,40 @@ function update_ui_file_menu(file_list=null) {
 		
 		folderContextMenu.install();
 		
-		file_menu_el.appendChild(folder_item);
+		new_file_list_els.push(folder_item);
+		//file_menu_el.appendChild(folder_item);
 		
 		window.context_menus.push(folderContextMenu);
 		
+	}
+	
+	for(let d = 0; d < new_file_list_els.length; d++){
+		file_menu_el.appendChild(new_file_list_els[d]);
 	}
 	
 	
 	
 	//update_ui();
 	
-	update_ui_folder();
+	update_ui_folder(); // updates the folder name above the document
 	update_ui_file();
-	update_ui_folder_dropdown();
+	//update_ui_folder_dropdown();
 	update_ui_file_tabs();
-	debug2();
+	//debug2();
 	
-    editor.focus();
+    //editor.focus();
     
 }
 
 
 // Not used anymore as for the AI chat project the dropdown has been replaced with a visual folder structure
+/*
 function update_ui_folder_dropdownX(){
 	//console.log("in update_ui_folder_dropdown.  sub_folders: ", sub_folders);
 	//console.log("folder_parts: ", folder_parts);
 	
 	folder_select_el.innerHTML = '';
-	/*
-	if(folders == null){
-		folders = localStorage.getItem(folder + 'playground_sub_folders');
-		if(folders == null){
-			folders = [];
-		}
-		else{
-			folders = JSON.parse(folders);
-		}
-	}
-	if(folders != null){
-		sub_folders = folders;
-	}
-	*/
+	
 	let set_default = false;
 	let folder_last_part = '';
 	if(folder_parts.length){
@@ -1734,17 +1700,7 @@ function update_ui_folder_dropdownX(){
 	//let folder_last_part = folder_path('last');
 	//console.log("update_folder_dropdown: folder_last_part: ", folder_last_part);
 	// Add browser local storage option
-	/*
-	let new_folder_option_el = document.createElement('option');
-	new_folder_option_el.value = unsaved_folder_name.replace('/','');
-	new_folder_option_el.id = 'folder-select-null-option';
-	new_folder_option_el.textContent = 'Browser storage';
-	if( folder_last_part == unsaved_folder_name ){ // typeof merged_locales[date_default_locale] == 'undefined' ){
-	    console.log("setting unsaved_folder_name as selected folder select option");
-	    new_folder_option_el.defaultSelected = true;//.setAttribute('selected','selected'); //.selected = true; //'selected';
-	}
-	folder_select_el.appendChild(new_folder_option_el);
-	*/
+	
 	
 	//console.log("update_ui_folder_dropdown: folder_parts: ", folder_parts);
 	
@@ -1777,14 +1733,7 @@ function update_ui_folder_dropdownX(){
 			set_default = true;
 			new_folder_option_el.defaultSelected = true;
 		}
-		/*
-		if(fp == folder_parts.length-1){
-			if(set_default == false){
-				set_default = true;
-				new_folder_option_el.defaultSelected = true;
-			}
-		}
-		*/
+		
 		
 		new_folder_option_el.textContent = indent + '/' + folder_parts[fp]; // + '/';
 		
@@ -1824,7 +1773,7 @@ function update_ui_folder_dropdownX(){
 	}
 	
 }
-
+*/
 
 
 
@@ -1944,7 +1893,7 @@ function update_ui_folder(){
 
 
 
-
+/*
 folder_back_button_el.onclick = (event) => {
 	//console.log("folder back button clicked");
 	//folder = folder_path('back');
@@ -1977,20 +1926,7 @@ function update_ui_folder_dropdown(){
 	//console.log("folder_parts: ", folder_parts);
 	
 	folder_select_el.innerHTML = '';
-	/*
-	if(folders == null){
-		folders = localStorage.getItem(folder + 'playground_sub_folders');
-		if(folders == null){
-			folders = [];
-		}
-		else{
-			folders = JSON.parse(folders);
-		}
-	}
-	if(folders != null){
-		sub_folders = folders;
-	}
-	*/
+	
 	let set_default = false;
 	let folder_last_part = '';
 	if(folder_parts.length){
@@ -2005,22 +1941,6 @@ function update_ui_folder_dropdown(){
 		document.body.classList.remove('in-folder');
 	}
 	
-	//let folder_last_part = folder_path('last');
-	//console.log("update_folder_dropdown: folder_last_part: ", folder_last_part);
-	// Add browser local storage option
-	/*
-	let new_folder_option_el = document.createElement('option');
-	new_folder_option_el.value = unsaved_folder_name.replace('/','');
-	new_folder_option_el.id = 'folder-select-null-option';
-	new_folder_option_el.textContent = 'Browser storage';
-	if( folder_last_part == unsaved_folder_name ){ // typeof merged_locales[date_default_locale] == 'undefined' ){
-	    console.log("setting unsaved_folder_name as selected folder select option");
-	    new_folder_option_el.defaultSelected = true;//.setAttribute('selected','selected'); //.selected = true; //'selected';
-	}
-	folder_select_el.appendChild(new_folder_option_el);
-	*/
-	
-	//console.log("update_ui_folder_dropdown: folder_parts: ", folder_parts);
 	
 	let indent = '';
 	let partial_folder_path = '';
@@ -2051,14 +1971,6 @@ function update_ui_folder_dropdown(){
 			set_default = true;
 			new_folder_option_el.defaultSelected = true;
 		}
-		/*
-		if(fp == folder_parts.length-1){
-			if(set_default == false){
-				set_default = true;
-				new_folder_option_el.defaultSelected = true;
-			}
-		}
-		*/
 		
 		new_folder_option_el.textContent = indent + '/' + folder_parts[fp]; // + '/';
 		
@@ -2098,7 +2010,7 @@ function update_ui_folder_dropdown(){
 	}
 	
 }
-
+*/
 
 
 

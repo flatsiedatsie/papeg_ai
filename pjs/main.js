@@ -20,9 +20,9 @@ window.addEventListener("focus", function(event)
 
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-		console.log("window is no longer (partially) visible");
+		//console.log("window is no longer (partially) visible");
     } else {
-		console.log("window has become (partially) visible");
+		//console.log("window has become (partially) visible");
 		reload_vars();
     }
 });
@@ -658,12 +658,16 @@ function open_folder(target_folder=null, intensity='production'){
 	//console.log("\n\n-\n--\n--- OPEN FOLDER: ", target_folder, "  \n--\n-\n");
 	//console.log("in open_folder.  target_folder, intensity: ", target_folder, intensity);
 	
+	const before_time = Date.now();
+	
 	if(typeof intensity == 'string' && intensity == 'production' && serverless){
 		intensity = 'browser';
 	}
 	
 	clear_output();
 	hide_all_context_menus();
+	
+	console.log("open_folder clear and hide took this long: ", Date.now() - before_time);
 	
 	if(target_folder == null){
 		folder = folder_path('get');
@@ -687,6 +691,8 @@ function open_folder(target_folder=null, intensity='production'){
 	// is there a snapshot for this folder?
 	reload_snapshots_meta();
 	
+	console.log("open_folder: + reload folder dict and reload snapshots_meta took this long: ", Date.now() - before_time);
+	
 	// What was the last opened file in this folder?
 	current_file_name = localStorage.getItem(folder + '_last_opened');
 	if(current_file_name == null){
@@ -708,7 +714,10 @@ function open_folder(target_folder=null, intensity='production'){
 	
 	
 	if(serverless && typeof files[current_file_name] == 'undefined'){
-		console.error("open_folder: have to fix issue where current_file_name was not in files dict for this folder:\n- folder:", folder, "\n- (missing) current_file_name: ", current_file_name, "\n- files:",files);
+		if(current_file_name != unsaved_file_name){
+			console.error("open_folder: have to fix issue where current_file_name was not in files dict for this folder:\n- folder:", folder, "\n- (missing) current_file_name: ", current_file_name, "\n- files:",files);
+		}
+		function_index_el.innerHTML = '';
 		if(keyz(files).length==0){
 			current_file_name = unsaved_file_name;
 		}
@@ -756,7 +765,7 @@ function open_folder(target_folder=null, intensity='production'){
 		//console.log("open_folder: not calling ajax for latest files list of real folders.  calling open_file(). folder,current_file_name: ", folder, current_file_name);
 		open_file()
 		.then(function(value) {
-			//console.log("\n\n\n\n\nopen_folder: in  open_file().then, HURRAY.  current_file_name: ", current_file_name); //  value: ", value
+			console.log("\n\n\n\n\nopen_folder: in  open_file().then, HURRAY.  current_file_name: ", current_file_name); //  value: ", value
 			update_ui();
 		})
 		.catch(function(err) {
@@ -1084,6 +1093,8 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 	},200);
 	*/
 	
+	const before_time = Date.now();
+	
 	
  	return new Promise(function(resolve,reject) { // , reject
 		//console.log("open_file: inside promise. load_type: ", load_type);
@@ -1091,7 +1102,13 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 		//console.log("open_file: clearing code output");
 		codeOutput.innerHTML = '';
 		playground_overlay_el.innerHTML = '';
-		update_function_list(); // clears function list
+		
+		//update_function_list(); // clears function list
+		function_index_el.innerHTML = '';
+		
+		
+		
+		
 		if(diff_el != null){
 			diff_el.remove();
 			diff_el = null;
@@ -1110,6 +1127,9 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 			//console.log("open_file: folder should now be target_folder: ", folder, target_folder);
 		}
 		reload_files_dict();
+		
+		console.log("open_file: + yet another reload files dict took this long: ", Date.now() - before_time);
+		
 		//console.log("open_file: reloaded files dict: ", files);
 		//console.log("open_file:  folder,target_folder: ",folder,target_folder);
 		//typeof files[current_file_name].modified !== 'undefined' && files[current_file_name].modified == true
@@ -1188,22 +1208,28 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 			
 				// attempt switching current file to the first available one instead
 				if(keyz(files).length == 0){
+					console.error("open_file: could not find file in files! In fact, files list is empty!");
 					console.error("open_folder: having to set unsaved_file_name as the _last_opened filename for this empty target_folder: ", target_folder, unsaved_file_name);
 					current_file_name = unsaved_file_name; // was already this..
 					target_filename = unsaved_file_name; 
 					//localStorage.setItem(target_folder + '_last_opened', unsaved_file_name);
 					localStorage.setItem(target_folder + '_last_opened', null);
+					document.body.classList.remove('show-document');
+					console.log("open_file: + not opening unsaved_file_name.  took this long: ", Date.now() - before_time);
 					
 					reject(null);
 					return
 				}
 				else{
+					console.error("open_file: could not find file in files! have to switch to another file");
+					console.log("open_file: + discovering missing file took this long: ", Date.now() - before_time);
 					//current_file_name = files[ keyz(files)[0] ];
 					//target_filename = files[ keyz(files)[0] ];
 					open_file(keyz(files)[0])
 					.then((value) => {
 						console.error("open_folder: setting the first file as the new _last_opened file: ", current_file_name);
 						//localStorage.setItem(target_folder + '_last_opened', keyz(files)[0]);
+						console.log("open_file: discovering missing file and opening a new one took this long: ", Date.now() - before_time);
 						resolve(value);
 					})
 					.catch((err) => {
@@ -1218,6 +1244,7 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 				
 			}
 			else{
+				console.error("open_file: fell through");
 				reject(null);
 				return
 			}
@@ -1225,34 +1252,14 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 			
 		}
 	
+		/*
 		if(typeof current_file_name != 'string'){
 			console.error("open_file: ERROR, current_file_name was not a string?: ", current_file_name);
 			reject(null);
 			return
 		}
 	
-		// This is a bit double, as editor.js also handles this.
-		else if(typeof current_file_name == 'string' && (current_file_name.endsWith('.js') || current_file_name.endsWith('.ts') || current_file_name.endsWith('.css') || current_file_name.endsWith('.py') || current_file_name.endsWith('.php') || current_file_name.endsWith('.html') || current_file_name.endsWith('.json'))){
-		
-			if(window.coder_script_loaded == false){
-				//console.log("adding chatty_coder.js to the page because of this file: ", current_file_name);
-				if(window.add_script){
-					window.add_script('./chatty_coder.js'); 
-				}
-			}
-			if(current_file_name.endsWith('.js')){
-				document.body.classList.add('javascript-document');
-			}
-			if(current_file_name.endsWith('.js') || current_file_name.endsWith('.py')){
-				
-			}
-			document.body.classList.add('coder');
-		
-		}
-		else{
-			document.body.classList.remove('coder');
-			document.body.classList.remove('javascript-document');
-		}
+		*/
 	
 	
 
@@ -1302,7 +1309,23 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 		
 		
 		// TODO: maybe also skip directly to loading the saved version of binary files if the load_type is backup? Then again, users could edit images, in which case a backup might be useful? Or are those saved directly anyway?
-		if(load_type == 'latest' && typeof current_file_name == 'string' && typeof playground_live_backups[current_file_path] == 'string' && playground_live_backups[current_file_path] == '_PLAYGROUND_BINARY_'){ // window.filename_is_binary(current_file_name) &&
+		if(load_type == 'latest' && typeof current_file_name == 'string' && typeof playground_live_backups[current_file_path] == 'string' && !playground_live_backups[current_file_path].startsWith('_PLAYGROUND_BINARY_') ){ // window.filename_is_binary(current_file_name) &&
+			//console.log("open_file: seems to be loading a binary file. Should skip directly to the saved version.  current_file_name: ", current_file_name, current_file_path);
+			
+			editor_set_value(playground_live_backups[current_file_path]);
+			resolve(playground_live_backups[current_file_path]);
+			return playground_live_backups[current_file_path];
+			
+		}
+		else if(load_type == 'latest' && typeof current_file_name == 'string' && typeof playground_saved_files[current_file_path] == 'string' && !playground_saved_files[current_file_path].startsWith('_PLAYGROUND_BINARY_') ){ // window.filename_is_binary(current_file_name) &&
+			//console.log("open_file: seems to be loading a binary file. Should skip directly to the saved version.  current_file_name: ", current_file_name, current_file_path);
+			
+			editor_set_value(playground_saved_files[current_file_path]);
+			resolve(playground_saved_files[current_file_path]);
+			return playground_saved_files[current_file_path];
+			
+		}
+		else if(load_type == 'latest' && typeof current_file_name == 'string' && typeof playground_live_backups[current_file_path] == 'string' && playground_live_backups[current_file_path] == '_PLAYGROUND_BINARY_'){ // window.filename_is_binary(current_file_name) &&
 			//console.log("open_file: seems to be loading a binary file. Should skip directly to the saved version.  current_file_name: ", current_file_name, current_file_path);
 			
 			if(typeof playground_saved_files[current_file_path] == 'string' && playground_saved_files[current_file_path].startsWith('_PLAYGROUND_BINARY_') && !playground_saved_files[current_file_path].endsWith('_PLAYGROUND_BINARY_')){ // if it starts with '_PLAYGROUND_BINARY_' but does not end with it, that means there is actual loaded binary data in playground_saved_files.
@@ -1316,6 +1339,17 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 				_load_saved();
 			}
 			
+		}
+		else if(load_type == 'latest' && typeof current_file_name == 'string' && typeof playground_saved_files[current_file_path] == 'string' && playground_saved_files[current_file_path].startsWith('_PLAYGROUND_BINARY_') && !playground_saved_files[current_file_path].endsWith('_PLAYGROUND_BINARY_') ){ // window.filename_is_binary(current_file_name) &&
+			//console.log("open_file: seems to be loading a binary file. Should skip directly to the saved version.  current_file_name: ", current_file_name, current_file_path);
+			editor_set_value(playground_saved_files[current_file_path]);
+			resolve(playground_saved_files[current_file_path]);
+			return playground_saved_files[current_file_path];
+			
+		}
+		else if(load_type == 'latest' && typeof current_file_name == 'string' && typeof playground_saved_files[current_file_path] == 'string' && playground_saved_files[current_file_path] == '_PLAYGROUND_BINARY_'){ // window.filename_is_binary(current_file_name) &&
+			//console.log("open_file: seems to be loading a binary file. Should skip directly to the saved version.  current_file_name: ", current_file_name, current_file_path);
+			_load_saved();
 			
 		}
 		else if(load_type == 'backup' || load_type == 'latest'){
@@ -1655,7 +1689,7 @@ function save_file(new_file_name=null,new_data=null,intensity=null,target_folder
 			}
 		
 			if(typeof new_data != 'string'){
-				console.error("main.js: save_file: aborting: new data was not a string, it was: ", typeof new_data);
+				console.error("main.js: save_file: aborting: new data was not a string, it was: ", typeof new_data, new_data);
 				reject(null);
 				return
 			}
@@ -1736,7 +1770,7 @@ function save_file(new_file_name=null,new_data=null,intensity=null,target_folder
 				}
 				
 				playground_saved_files[target_folder + '/' + new_file_name] = new_data;
-				playground_live_backups[target_folder + '/' + new_file_name] = new_data;
+				//playground_live_backups[target_folder + '/' + new_file_name] = new_data;
 				
 				
 				
@@ -1766,6 +1800,10 @@ function save_file(new_file_name=null,new_data=null,intensity=null,target_folder
 			
 						console.error("save_file: zipping is done");
 						console.error('save_file: zipped: ', typeof zipped, zipped);
+						
+						if(typeof zipped != 'string'){
+							zipped = '_PLAYGROUND_BINARY_' + buffer_to_string(zipped);
+						}
 						
 						//console.log("save_file: calling savr with COMPRESSED DATA for file: ", new_file_name);
 						savr(target_folder + '/' + new_file_name,zipped)
@@ -4681,11 +4719,16 @@ window.indexdb_worker.addEventListener('error', (error) => {
 
 window.indexdb_worker.onmessage = (e) => {
 	//console.log("Message received from indexdb worker: ", e.data);
-	
-	if(e.data.action == 'get_playground_live_backups'){
-		playground_live_backups = e.data.result['playground_live_backups'];
-		playground_saved_files = e.data.result['playground_saved_files'];
-		initial_db_keys = e.data.result['initial_db_keys'];
+	handle_indexdb_worker_response(e.data);	
+};
+
+
+async function handle_indexdb_worker_response(e_data){
+	//console.log("in handle_indexdb_worker_response. e_data: ", e_data);
+	if(e_data.action == 'get_playground_live_backups'){
+		playground_live_backups = e_data.result['playground_live_backups'];
+		playground_saved_files = e_data.result['playground_saved_files'];
+		initial_db_keys = e_data.result['initial_db_keys'];
 		//console.log("Message received from indexdb worker: initial_db_keys: ", initial_db_keys);
 		document.body.classList.remove('busy-restoring-files');
 		
@@ -4709,7 +4752,9 @@ window.indexdb_worker.onmessage = (e) => {
 		else{
 			//console.log("\n\n\n\n\ncannot use ajax (serverless). Calling initial open_folder\n\n\n\n\n");
 			if(window.settings.docs.open != null){
+				const before_time = Date.now();
 				open_folder();
+				console.log("open_folder took this long: ", Date.now() - before_time);
 			}
 			else{
 				//console.log("playground: loading file data only, not opening file");
@@ -4734,14 +4779,11 @@ window.indexdb_worker.onmessage = (e) => {
 		
 		// For Chat AI project
 		window.file_data_loaded();
+		window.indexdb_worker.terminate();
 	}
-	
-	
-	entries = null;
+}
 
-	
-	
-};
+
 
 window.indexdb_worker.postMessage({'action':'get_playground_live_backups'});
 //console.log("get_playground_live_backups message posted to indexdb worker");
