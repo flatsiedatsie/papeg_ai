@@ -3666,7 +3666,7 @@ function update_task_overview(){
 window.update_task_overview = update_task_overview;
 
 function do_overviews(){
-	console.log("in do_overviews");
+	//console.log("in do_overviews");
 	if(window.settings.left_sidebar_open == true && window.settings.left_sidebar == 'settings' && window.settings.left_sidebar_settings_tab == 'tasks'){
 		generate_task_overview();
 		if(window.settings.settings_complexity == 'developer'){
@@ -3680,7 +3680,7 @@ function do_overviews(){
 
 
 function generate_running_tasks_overview(){
-	console.log("in generate_running_tasks_overview. window.current_tasks: ", window.current_tasks);
+	//console.log("in generate_running_tasks_overview. window.current_tasks: ", window.current_tasks);
 	if(window.settings.settings_complexity != 'developer'){
 		return;
 	}
@@ -6312,7 +6312,7 @@ function load_live_image_to_text_example(){
 		close_sidebar();
 	}
 	
-	window.switch_assistant('scribe'); // When this assistant is active timestamps will also be added
+	//window.switch_assistant('scribe'); // When this assistant is active timestamps will also be added
 	//if(window.settings.assistants['scribe'].add_timestamps == 'None'){}
 	//window.settings.assistants['scribe'].add_timestamps = 'Minutes'
 	

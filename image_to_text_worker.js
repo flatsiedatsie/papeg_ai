@@ -659,156 +659,151 @@ async function image_to_text(task=null){
 		return false
 	}
 	
-	await check_gpu();
 	
-	//const MAX_NEW_TOKENS = 256;
-	//console.log("env.backends.onnx.wasm.proxy before: ", env.backends.onnx.wasm.proxy);
-	env.backends.onnx.wasm.proxy = self.device !== 'webgpu';
-	//console.log("env.backends.onnx.wasm.proxy after: ", env.backends.onnx.wasm.proxy);
+	
+	try{
+		
+		await check_gpu();
+	
+		//const MAX_NEW_TOKENS = 256;
+		//console.log("env.backends.onnx.wasm.proxy before: ", env.backends.onnx.wasm.proxy);
+		env.backends.onnx.wasm.proxy = self.device !== 'webgpu';
+		//console.log("env.backends.onnx.wasm.proxy after: ", env.backends.onnx.wasm.proxy);
 
 	
 	
-	await preload_image_to_text(task);
+		await preload_image_to_text(task);
 	
-	const image = await RawImage.fromBlob(task.image_blob);
+		const image = await RawImage.fromBlob(task.image_blob);
 	
-	const vision_inputs = await self.processor(image);
+		const vision_inputs = await self.processor(image);
 	
-	const streamer = new CallbackTextStreamer(tokenizer, cb);
+		const streamer = new CallbackTextStreamer(tokenizer, cb);
 	
-	self.output_so_far = '';
-	
-	return new Promise((resolve, reject) => {
-		try{
+		self.output_so_far = '';
+		
+		
+		let prompt = 'Describe this image.';
+		if(typeof task.prompt == 'string'){
+			prompt = task.prompt;
+		}
+		
+		// Prepare prompt text inputs
+		let text = 'Describe with a paragraph what is shown in the image.';
+		
+		//let text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
+		
+		if(self.current_huggingface_id.indexOf('nanoLLaVA') != -1){	
+			//console.log("IMAGE TO TEXT WORKER: Applying nanoLlava template");		
+			const messages = [
+			    { role: 'system', content: 'Answer the question.' },
+			    { role: 'user', content: `<image>\n${prompt}` }
+			]
+			text = self.tokenizer.apply_chat_template(messages, { tokenize: false, add_generation_prompt: true });
+		}
+		else if(self.current_huggingface_id.indexOf('moondream') != -1){	
+			//console.log("IMAGE TO TEXT WORKER: Using Moondream template");		
+			text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
+		}
+		else{
+			//console.log("IMAGE TO TEXT WORKER: Using Florence template");		
+			// Florence
+			text = prompt;
+		}
+		console.log("IMAGE TO TEXT WORKER: input prompt text: ", text);
+		
+		
+		const text_inputs = self.tokenizer(text);
+		
+		// Prepare vision inputs
+		//const url = 'https://huggingface.co/vikhyatk/moondream1/resolve/main/assets/demo-1.jpg';
+		
+		/*
+		const streamer = new CallbackStreamer((value) => {
+			//console.log("IMAGE TO TEXT WORKER: in callback streamer. value: ", value);
 			
-			
-			let prompt = 'Describe this image.';
-			if(typeof task.prompt == 'string'){
-				prompt = task.prompt;
-			}
-			
-			// Prepare prompt text inputs
-			let text = 'Describe with a paragraph what is shown in the image.';
-			
-			//let text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
-			
-			if(self.current_huggingface_id.indexOf('nanoLLaVA') != -1){	
-				//console.log("IMAGE TO TEXT WORKER: Applying nanoLlava template");		
-				const messages = [
-				    { role: 'system', content: 'Answer the question.' },
-				    { role: 'user', content: `<image>\n${prompt}` }
-				]
-				text = self.tokenizer.apply_chat_template(messages, { tokenize: false, add_generation_prompt: true });
-			}
-			else if(self.current_huggingface_id.indexOf('moondream') != -1){	
-				//console.log("IMAGE TO TEXT WORKER: Using Moondream template");		
-				text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
-			}
-			else{
-				//console.log("IMAGE TO TEXT WORKER: Using Florence template");		
-				// Florence
-				text = prompt;
-			}
-			//console.log("IMAGE TO TEXT WORKER: input prompt text: ", text);
-			
-			
-			const text_inputs = self.tokenizer(text);
-			
-			// Prepare vision inputs
-			//const url = 'https://huggingface.co/vikhyatk/moondream1/resolve/main/assets/demo-1.jpg';
-			
-			/*
-			const streamer = new CallbackStreamer((value) => {
-				//console.log("IMAGE TO TEXT WORKER: in callback streamer. value: ", value);
-				
-				//const percent = value === undefined ? 1 : value[0].length / max_length;
-				//console.log("MUSICGEN WORKER: streamer: percent: ", percent);
-				self.postMessage({
-					'task':message.task,
-					'status':'musicgen_progress',
-					'progress':percent
-				});
-				
-				//setStatusText(`Generating (${(percent * 100).toFixed()}%)...`);
-				//setProgress(percent * 100);
+			//const percent = value === undefined ? 1 : value[0].length / max_length;
+			//console.log("MUSICGEN WORKER: streamer: percent: ", percent);
+			self.postMessage({
+				'task':message.task,
+				'status':'musicgen_progress',
+				'progress':percent
 			});
 			
+			//setStatusText(`Generating (${(percent * 100).toFixed()}%)...`);
+			//setProgress(percent * 100);
+		});
+		
+		
+		function progressCallback(x){
+			//console.log("image_to_text worker: progressCallback: ", x);
+		    self.postMessage(x);
+		}
+		*/
+		
+		
+		let generate_this = {
+		    ...text_inputs,
+		    ...vision_inputs, 
+		    //do_sample: false,
+		    max_new_tokens: 1000,
+    		streamer,
+    		stopping_criteria,
 			
-			function progressCallback(x){
-				//console.log("image_to_text worker: progressCallback: ", x);
-			    self.postMessage(x);
-			}
-			*/
-			
-			let generate_this = {
-			    ...text_inputs,
-			    ...vision_inputs, 
-			    //do_sample: false,
-			    max_new_tokens: 1000,
-        		streamer,
-        		stopping_criteria,
-				
-		        progress_callback: (progress_data) => {
-					//console.log("IMAGE TO TEXT WORKER: model generate progress_callback: progress_data: ", progress_data);
-		          	
-					//if (progress_data.status !== 'progress') return;
-					//setLoadProgress(prev => ({ ...prev, [data.file]: data }))
-					///setLoadProgress(data);
-					self.postMessage(progress_data);
-		        },
-				
-				
-			}
-			
-			if(self.current_huggingface_id.indexOf('lorence') == -1){
-				generate_this['do_sample'] = false;
-				//generate_this['streamer'] = streamer;
-				//generate_this['stopping_criteria'] = stopping_criteria;
-				//generate_this['max_new_tokens'] = 1000;
-				
-				
-			}
-			
-			
-			// Generate response
-			self.model.generate(generate_this)
-			.then((output) => {
-				
-				let decoded = null;
-				
-				// NanoLlava
-				if(self.current_huggingface_id.indexOf('nanoLLaVA') != -1){
-					decoded = self.tokenizer.decode(
-						output.slice(0, [text_inputs.input_ids.dims[1], null]),
-						{ skip_special_tokens: true },
-					);
-				}
-				// Moondream 2 and Florence 2
-				else{
-					decoded = self.tokenizer.batch_decode(output, { skip_special_tokens: true });
-					
-				}
-				
-				//console.log("IMAGE TO TEXT WORKER:  self.current_huggingface_id,decoded: ", self.current_huggingface_id, decoded);
-				if(typeof task.image_blob != 'undefined'){
-					delete task.image_blob; // no need to send all that data back to the main thread
-				}
-				
-				resolve({'task':task,'result':decoded});
-				
-			})
-			.catch((err) => {
-				console.error("IMAGE TO TEXT WORKER: caught error calling model.generate: ", err);
-				reject(null);
-			})
+	        progress_callback: (progress_data) => {
+				//console.log("IMAGE TO TEXT WORKER: model generate progress_callback: progress_data: ", progress_data);
+	          	
+				//if (progress_data.status !== 'progress') return;
+				//setLoadProgress(prev => ({ ...prev, [data.file]: data }))
+				///setLoadProgress(data);
+				self.postMessage(progress_data);
+	        },
 			
 		}
-		catch (err){
-			console.error("IMAGE TO TEXT WORKER: caught general error in image_to_text: ", err);
-			reject(null);
+		
+		if(self.current_huggingface_id.indexOf('lorence') == -1){
+			generate_this['do_sample'] = false;
+			//generate_this['streamer'] = streamer;
+			//generate_this['stopping_criteria'] = stopping_criteria;
+			//generate_this['max_new_tokens'] = 1000;
+			
+			
 		}
+		
+		console.log("image_to_text worker: calling self.model.generate with: ", generate_this);
+		
+		// Generate response
+		const output = await self.model.generate(generate_this);
+		
+		console.log("image_to_text worker: OK, got output from the model");
+		let decoded = null;
+		
+		// NanoLlava
+		if(self.current_huggingface_id.indexOf('nanoLLaVA') != -1){
+			decoded = self.tokenizer.decode(
+				output.slice(0, [text_inputs.input_ids.dims[1], null]),
+				{ skip_special_tokens: true },
+			);
+		}
+		// Moondream 2 and Florence 2
+		else{
+			console.log("decoding output for moondream or florence");
+			decoded = self.tokenizer.batch_decode(output, { skip_special_tokens: true });
+		}
+		
+		//console.log("IMAGE TO TEXT WORKER:  self.current_huggingface_id,decoded: ", self.current_huggingface_id, decoded);
+		if(typeof task.image_blob != 'undefined'){
+			delete task.image_blob; // no need to send all that data back to the main thread
+		}
+		
+		return {'task':task,'result':decoded};
+		
+	}
+	catch (err){
+		console.error("IMAGE TO TEXT WORKER: caught general error in image_to_text: ", err);
+		return null
+	}
 	
-	});
 	
 }
 

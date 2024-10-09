@@ -74,26 +74,26 @@ const apply_chat_template = async (task, messages) => {
 		
 		
 		
-		console.log("jinja: template: ", template);
+		//console.log("jinja: template: ", template);
 		
 		const pre_bos_token = window.llama_cpp_app.getBOS();
 		const pre_eos_token = window.llama_cpp_app.getEOS();
-		console.log("jinja: pre_bos_token: ", pre_bos_token);
-		console.log("jinja: pre_eos_token: ", pre_eos_token);
+		//console.log("jinja: pre_bos_token: ", pre_bos_token);
+		//console.log("jinja: pre_eos_token: ", pre_eos_token);
 		
 		let bos_token = await window.llama_cpp_app.detokenize([window.llama_cpp_app.getBOS()])
 		let eos_token = await window.llama_cpp_app.detokenize([window.llama_cpp_app.getEOS()])
 		bos_token = new TextDecoder().decode(bos_token);
 		eos_token = new TextDecoder().decode(eos_token);
-		console.log("jinja: bos_token: ", bos_token);
-		console.log("jinja: eos_token: ", eos_token);
+		//console.log("jinja: bos_token: ", bos_token);
+		//console.log("jinja: eos_token: ", eos_token);
 		let rendered = template.render({
 	    	messages,
 	    	bos_token: bos_token,
 			eos_token: eos_token,
 	    	add_generation_prompt: true,
 		});
-		console.log("jinja: rendered: ", rendered);
+		//console.log("jinja: rendered: ", rendered);
 		
 		return rendered.replaceAll('[object Map]','');
 		
@@ -113,7 +113,7 @@ const apply_chat_template = async (task, messages) => {
 	console.error("apply_chat_template: task fell through. Setting task as failed");
 
 	window.handle_completed_task(task,false,{'state':'failed'});
-	window.clean_up_dead_task(task);
+	//window.clean_up_dead_task(task);
 
 	return null
 	

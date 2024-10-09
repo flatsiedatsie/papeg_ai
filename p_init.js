@@ -1237,7 +1237,7 @@ function touchStart(element) {
 				if(typeof element.textContent != 'undefined' && typeof last_clicked_cm_line.textContent != 'undefined'){
 					let first_cm_line_text = last_clicked_cm_line.textContent;
 					//console.log("first_cm_line_text ", first_cm_line_text);
-
+					
 					// End in the `world` node
 					let second_cm_line_text = element.textContent;
 					//console.log(" cm_line_text: ",  second_cm_line_text);
@@ -1267,6 +1267,7 @@ function touchStart(element) {
 	}
     catch(err){
     	console.error("touchStart: caught error checking for double click: ", err);
+		last_clicked_cm_line = null;
     }
 }
 

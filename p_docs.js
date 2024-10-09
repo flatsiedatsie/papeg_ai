@@ -263,7 +263,7 @@ function doc_updated(){
 						    'scroll', show_doc_selection_hint, { passive: true }
 						);
 					}
-		
+		  
 					show_doc_selection_hint();
 				}
 				else{
@@ -278,7 +278,7 @@ function doc_updated(){
 				return;
 			}
 		}
-		console.warn("reached end of doc_updated (window.doc_text was not a string)");
+		//console.warn("reached end of doc_updated (window.doc_text was not a string)");
 		document.body.classList.remove('doc-has-text');
 		//document.body.classList.remove('doc-empty');
 		document.body.classList.remove('doc-has-little-text');
@@ -3036,10 +3036,16 @@ function summarize_document(source_text=null,use_selection=false,desired_results
 	
 	if(typeof model_size == 'number' && typeof initial_context == 'number' && initial_context <= 4000 && window.is_mobile == false && window.ram > 7000 && model_size < 2 && typeof max_context_size == 'number'){
 		console.warn("expanding context to summarize a document: ", initial_context, " -> ", initial_context + 2000);
+		initial_context += 2000;
+		if(initial_context > max_context_size){
+			initial_context = max_context_size;
+		}
+		/*
 		summary_task['context'] = initial_context + 2000;
 		if(summary_task['context'] > max_context_size){
 			summary_task['context'] = max_context_size
 		}
+		*/
 	}
 	else{
 		//console.log("not expanding context for document summarization.  initial_context,model_size,window.is_mobile,window.ram: ", initial_context,model_size,window.is_mobile,window.ram)
@@ -5364,9 +5370,12 @@ window.create_insert_into_doc_buttons = create_insert_into_doc_buttons;
 
 
 function insert_into_document(task=null,content=null,cursor=null){
-	//console.log("in insert_into_document.  task,content,cursor: ", task,content,cursor);
+	if(window.settings.settings_complexity == 'developer' && typeof content == 'string'){
+		console.log("in insert_into_document.  task,content,cursor: ", task,content.substr(0,50) + '... ',cursor);
+	}
+	
 	if(typeof window.doc_text == 'string'){
-		console.log("insert_into_document: window.doc_text:\n" + window.doc_text.substr(0,60) + "...");
+		//console.log("insert_into_document: window.doc_text:\n" + window.doc_text.substr(0,60) + "...");
 	}
 	else{
 		console.warn("insert_into_document: window.doc_text is not a string: ", window.doc_text);
@@ -5635,7 +5644,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 		}
 		else if(cursor.position == 'overwrite'){
 			cursor = {'from':0,'to':0};
-			console.log("insert_into_document: overwrite requested.  current_file_name: ", current_file_name);
+			//console.log("insert_into_document: overwrite requested.  current_file_name: ", current_file_name);
 			if(typeof playground_live_backups[task.file.folder + '/' + task.file.filename] == 'string' && playground_live_backups[task.file.folder + '/' + task.file.filename].startsWith('_PLAYGROUND_BINARY_')){
 				console.error("insert_into_document: live_backups: almost overwrote a binary file: ", task.file.filename);
 			}
@@ -5688,7 +5697,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 						return true
 					}
 					else{
-						console.error("nsert_into_document: almost inserted text into binary file: ", task.file.filename);
+						console.error("insert_into_document: almost inserted text into binary file: ", task.file.filename);
 						return
 					}
 				

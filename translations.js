@@ -2699,6 +2699,10 @@ window.translations = {
 	
 	
 	
+	"Try_updating_or_changing_your_browser":{
+		"en":"Try updating your browser, or switch to a different one",
+		"nl":"Probeer je browser te updaten, of probeer een andere browser",
+	},
 	
 	
 	// Ollama

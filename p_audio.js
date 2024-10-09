@@ -633,12 +633,12 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		
 		if(typeof window.measured_microphone_sample_rate == 'number' && window.measured_microphone_sample_rate >= 16000){
 			if(window.measured_microphone_sample_rate == 16000){
-				console.log("OK, detected real_sample_rate, and it was the optimal sample rate: ", window.measured_microphone_sample_rate);
+				//console.log("OK, detected real_sample_rate, and it was the optimal sample rate: ", window.measured_microphone_sample_rate);
 				skip_factor = 1;
 			}
 			else{
 				skip_factor = window.measured_microphone_sample_rate / 16000;
-				console.log("detected real_sample_rate, and it was a non-optimal sample rate. Skip_factor is now: ", skip_factor, window.measured_microphone_sample_rate);
+				//console.log("detected real_sample_rate, and it was a non-optimal sample rate. Skip_factor is now: ", skip_factor, window.measured_microphone_sample_rate);
 			}
 			
 		}
@@ -847,10 +847,11 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	let created_new_file = false;
 	let document_filename = null;
-	
+	let origin_file = null;
 	
 	if(window.settings.docs.open != null && typeof window.settings.docs.open.filename == 'string'){
 		document_filename = window.settings.docs.open.filename;
+		origin_file = JSON.parse(JSON.stringify(window.settings.docs.open));
 	}
 	
 	if(typeof prefered_extension == 'string' && prefered_extension.length){
@@ -860,6 +861,10 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 			created_new_file = true;
 			if(typeof current_file_name == 'string'){
 				document_filename = current_file_name;
+				if(window.settings.docs.open != null && typeof window.settings.docs.open.filename == 'string'){
+					stt_task['file'] = JSON.parse(JSON.stringify(window.settings.docs.open));
+				}
+				
 			}
 		}
 	}
@@ -867,7 +872,9 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	
 	
-	
+	if(typeof window.doc_text == 'string'){
+		console.log("push_stt_task:  window.doc_text: ", window.doc_text.substr(0, 50));
+	}
 	
 	
 	
@@ -878,6 +885,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 			|| (typeof window.doc_text == 'string' && window.doc_text.startsWith('_PLAYGROUND_BINARY_')) 
 			|| (typeof code == 'string' && code.startsWith('_PLAYGROUND_BINARY_')) 
 			|| (typeof document_filename == 'string' && window.filename_is_binary(document_filename))
+			|| (origin_file != null && typeof origin_file.filename == 'string' && document_filename != null && origin_file.filename != document_filename)
 		) 
 	){
 		stt_task['destination'] = 'document';
@@ -895,9 +903,13 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 		
 		if(origin.endsWith('file')){
+			console.log("push_to_stt: origin ends with 'file'");
+			console.log("- window.settings.docs.open: ", JSON.stringify((window.settings.docs.open,null,2)));
+			console.log("- document_filename: ", document_filename);
+			
 			// also remember the soruce media file that is being transcribed, which will be useful later to set as a meta property of the subtitle file
-			if(window.settings.docs.open != null && typeof window.settings.docs.open.filename == 'string'){
-				stt_task['origin_file'] = JSON.parse(JSON.stringify(window.settings.docs.open));
+			if(origin_file != null && typeof origin_file.filename == 'string'){
+				stt_task['origin_file'] = origin_file;
 				console.log("set STT task's origin_file to: ", stt_task['origin_file']);
 			}
 		}
@@ -930,16 +942,16 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	}
 	
 	if(created_new_file && typeof stt_task['origin_file'] != 'undefined' && stt_task['origin_file'] != null && typeof stt_task['origin_file'].filename == 'string'){
-		save_file_meta('origin_file',stt_task['origin_file']);
+		save_file_meta('origin_file',stt_task['origin_file']); // cross-link between the media file and the subtitle file
 		console.log("push_stt_task: just created a new file.  current_file_name, window.settings.docs.open: " + current_file_name + JSON.stringify(window.settings.docs.open,null,2));
 		
 		if(typeof files[stt_task['origin_file'].filename] != 'undefined' && window.settings.docs.open != null && typeof window.settings.docs.open.filename == 'string'){
-			console.log("push_stt_task: setting file locations in origin_file meta")
+			console.log("push_stt_task: setting file locations in origin_file meta");
 			if(origin.endsWith('file') ){
-				save_file_meta('subtitle_file',JSON.parse(JSON.stringify(window.settings.docs.open.filename)), stt_task['origin_file'].folder, stt_task['origin_file'].filename);
+				save_file_meta('subtitle_file',JSON.parse(JSON.stringify(window.settings.docs.open)), stt_task['origin_file'].folder, stt_task['origin_file'].filename);
 			}
 			else{
-				save_file_meta('transcription_file',JSON.parse(JSON.stringify(window.settings.docs.open.filename)), stt_task['origin_file'].folder, stt_task['origin_file'].filename);
+				save_file_meta('transcription_file',JSON.parse(JSON.stringify(window.settings.docs.open)), stt_task['origin_file'].folder, stt_task['origin_file'].filename);
 			}
 		}
 	}
@@ -1049,7 +1061,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		if(d != 0){
 			//child_stt_task['recorded_audio'].unshift([0,0,0,0,0,0,0,0]);
 		}
-		console.log("push_stt_task: checking for oddities in the recorded audio");
+		//console.log("push_stt_task: checking for oddities in the recorded audio");
 		if(typeof child_stt_task['recorded_audio'] != 'undefined' && child_stt_task['recorded_audio'] != null && Array.isArray(child_stt_task['recorded_audio'])){
 			for(let ap = child_stt_task['recorded_audio'].length - 1; ap >= 0; ap--){
 				if(typeof child_stt_task['recorded_audio'][ap] != 'number'){
@@ -1094,7 +1106,7 @@ window.push_stt_task = push_stt_task;
 
 // grabs STT task from task list and sends it to whisper (but could distribute to other STT in the future)
 async function do_stt(task){
-	console.log("in do_stt. task: ", task);
+	//console.log("in do_stt. task: ", task);
 	
 	if(typeof task == 'undefined' || task == null){
 		console.error("do_stt: task was undefined or null");
@@ -1102,7 +1114,7 @@ async function do_stt(task){
 	}
 	
 	if(typeof task.recorded_audio != 'undefined'){
-		console.log("do_stt: calling do_whisper_web with recorded audio. task.recorded_audio.length: ", task.recorded_audio.length);
+		//console.log("do_stt: calling do_whisper_web with recorded audio. task.recorded_audio.length: ", task.recorded_audio.length);
 		task.state = 'doing_stt'; // superfluous, already set to this by main interval
 		return do_whisper_web(task);
 		//console.log("do_stt: data should be passed to whisper worker now.");  // removing recorded_audio from task
@@ -1118,7 +1130,7 @@ async function do_stt(task){
 
 
 async function create_scribe_parent_task(origin='voice'){
-	console.log("in create_scribe_parent_task. origin: ", origin);
+	//console.log("in create_scribe_parent_task. origin: ", origin);
 	
 	let scribe_parent_task = {
 		'prompt':null,
@@ -1649,7 +1661,7 @@ function get_browser_tts_languages() {
 
 
 if (speechSynthesis.onvoiceschanged !== undefined) {
-	console.log("speechSynthesis.onvoiceschanged");
+	//console.log("speechSynthesis.onvoiceschanged");
 	speechSynthesis.onvoiceschanged = get_browser_tts_languages;
 }
 
@@ -1747,7 +1759,7 @@ async function browser_speak(task=null) {
 			if(EasySpeech){
 				EasySpeech.init({ maxTimeout: 30000, interval: 250 })
     			.then(() => {
-					console.debug('easy_speech load complete');
+					//console.debug('easy_speech load complete');
 					window.easy_speech_loaded = true;
 				})
     			.catch(e => {

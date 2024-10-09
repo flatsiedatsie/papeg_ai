@@ -2685,15 +2685,18 @@ window.handle_chunk = handle_chunk;
 
 
 async function handle_completed_task(task, result=null,task_meta=null,extra=null){
-	console.log("\n\n#\n##\n###\n####\nin handle_task_completed.  task: ", task, typeof result);
-	//console.log(" - TASK DONE: ", task);
+	if(window.settings.settings_complexity == 'developer'){
+		console.log("\n\n#\n##\n###\n####\nin handle_task_completed.  task: ", task, typeof result);
+		//console.log(" - TASK DONE: ", task);
 	
-	if(typeof result == 'string'){
-		console.log(" - TASK RESULT: ", result.substr(0,40) + "...");
+		if(typeof result == 'string'){
+			console.log(" - TASK RESULT: ", result.substr(0,40) + "...");
+		}
+		else{
+			//console.log(" - TASK RESULT: ", result);
+		}
 	}
-	else{
-		//console.log(" - TASK RESULT: ", result);
-	}
+	
 	
 	if(task_meta != null){
 		//console.log("handle_task_complete: - TASK META: ", task_meta);
@@ -2848,8 +2851,8 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 		//console.log(typeof window.task_queue[t].index, window.task_queue[t].index, " =?= ", typeof task.index, task.index);
 		if(window.task_queue[t].index == task.index){
 			
-			console.error("\n\n\n\n", task.index, "\n\n\n\n");
-			console.log("handle_completed_task: found task again in queue. It's index: ", task.index, ", state: " + task.state, ", (should be the same as the real task: " + window.task_queue[t].state + ")");
+			//console.error("\n\n\n\n", task.index, "\n\n\n\n");
+			//console.log("handle_completed_task: found task again in queue. It's index: ", task.index, ", state: " + task.state, ", (should be the same as the real task: " + window.task_queue[t].state + ")");
 			//console.log("TASK TO UPDATE: ", JSON.stringify(window.task_queue[t],null,4));
 			
 			let chatter = false;
@@ -2858,7 +2861,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			}
 			
 			const state_before = '' + window.task_queue[t].state;
-			console.log("handle_completed_task: state_before: ", state_before);
+			//console.log("handle_completed_task: state_before: ", state_before);
 			
 			if(typeof window.task_queue[t].type != 'string' || typeof window.task_queue[t].state != 'string'){
 				console.error("handle_completed_task: spotted task with invalid type or state. Setting it's state to failed");
@@ -2871,13 +2874,13 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			}
 			
 			if(typeof window.task_queue[t]['handled_by'] == 'undefined'){
-				console.warn("handle_completed_task: adding missing handled_by array to task.");
+				//console.warn("handle_completed_task: adding missing handled_by array to task.");
 				window.task_queue[t]['handled_by'] = [];
 			}
 			
 			
 			if(typeof window.task_queue[t].in_progress == 'boolean'){
-				console.log("handle_completed_task: setting in_progress to false");
+				//console.log("handle_completed_task: setting in_progress to false");
 				window.task_queue[t].in_progress = false;
 			}
 			
@@ -2888,7 +2891,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 				//console.log("removing 'Sure, here' etc from beginning of result: ", result);
 				
 				if(result.indexOf('.') != -1 && result.indexOf(':\n') > result.indexOf('.')){
-					console.warn("spotted a . before the :, so not removing 'Sure, here' etc");
+					console.warn("spotted a . before the :, so not removing 'Sure, here' etc"); // for Gemma
 				}else{
 					result = result.substr(result.indexOf(':\n') + 1);
 					//console.log("'Sure, here' snipped from result: ", result);
@@ -2963,7 +2966,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					//window.task_queue[t].splice(t,1);
 					//return;
 				}
-				if(typeof result == 'string' && result.length < 2){ //  && window.task_queue[t].assistant != 'image_to_text_ocr'
+				if(typeof result == 'string' && result.trim().length < 2){ //  && window.task_queue[t].assistant != 'image_to_text_ocr'
 					console.error("handle_completed_task: transcript was too short: -->" + result + "<--");
 					console.error("SETTING STT TASK STATE TO FAILED");
 					bad_stt_result = true;
@@ -2984,6 +2987,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						|| (result.length < 30 && result.trim().startsWith('*') && result.trim().endsWith('*'))
 					)
 				){
+					console.warn("heard a single word which often indicates a whisper issue ('you','silence','paragraph','move','okay'). setting bad_stt_result to true.");
 					bad_stt_result = true;
 				}
 				
@@ -2994,7 +2998,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 				
 				// Remove original audio from the task if it still exists
 				if(typeof task_queue[t].recorded_audio != 'undefined'){
-					console.error("handle_task_complete: post-stt: task still has it's originally recorded audio. Deleting the recording now: ", task_queue[t]);
+					//console.error("handle_task_complete: post-stt: task still has it's originally recorded audio. Deleting the recording now: ", task_queue[t]);
 					delete task_queue[t].recorded_audio;
 					
 					//task_queue[t].prompt = transcript;
@@ -3076,7 +3080,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						
 						result = window.remove_brackets_from_string(result);
-						console.log("brackets removed from result (in theory...): ", result);
+						//console.log("brackets removed from result (in theory...): ", result);
 						task_queue[t].transcript = '' + result.trim();
 						//task_queue[t].transcript = task_queue[t].transcript.trim();
 						
@@ -3146,7 +3150,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						//console.log("heard -> transcript:  -->" + transcript + "<--  , transcript.length: " , transcript.length);
 					}
 					else{
-						console.warn("heard -> transcript: assistant is scribe, so transcript has been set to empty to avoid voice commands");
+						//console.warn("heard -> transcript: assistant is scribe, so transcript has been set to empty to avoid voice commands");
 					}
 					
 					
@@ -3156,7 +3160,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						set_state(LISTENING);
 					}
 					else{
-					
+						
 						let input_dialog_open = false;
 						let vex_input_el = null;
 						let vex_cancel_el = null;
@@ -7860,15 +7864,15 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 				
 				if(typeof window.task_queue[t].origin == 'string'){
 					if(window.task_queue[t].origin == 'blueprint'){
-						console.warn("handle_completed_task: a blueprint task was completed and updated the parent blueprint task");
+						//console.warn("handle_completed_task: a blueprint task was completed and updated the parent blueprint task");
 						window.busy_doing_blueprint_task = false;
 					}
 					else if(window.task_queue[t].origin.endsWith('file')){
-						console.warn("\n\nFILE TRANSCRIPTION DONE\n\nFile transcription added to parent results list. calling whisper_snippets_to_text\n\n");
+						//console.warn("\n\nFILE TRANSCRIPTION DONE\n\nFile transcription added to parent results list. calling whisper_snippets_to_text\n\n");
 						window.whisper_snippets_to_text(window.task_queue[t]);
 					}
 					else if(window.task_queue[t].origin == 'voice'){
-						console.warn("\n\nVOICE TRANSCRIPTION ADDED TO PARENT -> calling whisper_snippets_to_text");
+						//console.warn("\n\nVOICE TRANSCRIPTION ADDED TO PARENT -> calling whisper_snippets_to_text");
 						//console.log("task should have an array of extras: ", window.task_queue[t], "\n", window.task_queue[t].extras);
 						
 						window.whisper_snippets_to_text(window.task_queue[t]);
@@ -8305,7 +8309,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 		window.set_idle(false);
 	}
 	
-	console.log(" -x- window.llama_cpp_busy: ", window.llama_cpp_busy);
+	//console.log(" -x- window.llama_cpp_busy: ", window.llama_cpp_busy);
 	
 	if(typeof task.meta != 'undefined' && task.meta != null && typeof task_meta.state == 'string'){
 		if(task_meta.state == 'interrupted' || task_meta.state == 'failed'){
@@ -9300,7 +9304,7 @@ async function do_interval(){
 						window.task_queue[t].state = 'doing_stt';
 						try{
 							if(await window.do_stt(window.task_queue[t]) === true){
-								console.log("interval: succesfully called do_sst");
+								//console.log("interval: succesfully called do_sst");
 								window.whisper_worker_busy = true;
 								if(window.task_queue[t] != null && typeof window.task_queue[t].type == 'string'){
 									window.current_tasks[window.task_queue[t].type] = window.task_queue[t];
@@ -11834,7 +11838,10 @@ window.get_total_prompt = get_total_prompt;
 
 function set_idle(idle){
 	//console.log("in set_idle: ", idle);
-	console.log("- set_idle:  idle, window.stopped_whisper_because_of_low_memory: ", idle, window.stopped_whisper_because_of_low_memory);
+	if(window.settings.settings_complexity == 'developer'){
+		console.log("dev: - set_idle:  idle, window.stopped_whisper_because_of_low_memory: ", idle, window.stopped_whisper_because_of_low_memory);
+	}
+	
 	window.idle = idle;
 	if(window.idle){
 		document.body.classList.add('idle');

@@ -145,7 +145,7 @@ window.stop_vad = stop_vad;
 
 
 function pauseSimpleVAD() {
-	console.log("in pauseSimpleVAD");
+	//console.log("in pauseSimpleVAD");
 	//simple_vad_audio?.pause();
 	//window.main_audio_context?.suspend();
 	if(window.simple_vad != null && typeof window.simple_vad.port != 'undefined'){
@@ -156,7 +156,7 @@ window.pauseSimpleVAD = pauseSimpleVAD;
 
 
 function unpauseSimpleVAD() {
-	console.log("in unpauseSimpleVAD");
+	//console.log("in unpauseSimpleVAD");
 	//simple_vad_audio?.pause();
 	//window.main_audio_context?.resume();
 	
@@ -181,7 +181,10 @@ window.stopSimpleVAD = stopSimpleVAD;
 
 
 function continuous_vad(desired_state=null, minimal_silence_threshold=30) {
-	console.log("in continuous_vad.  desired_state,minimal_silence_threshold: ", desired_state, minimal_silence_threshold);
+	if(window.settings.settings_complexity == 'developer'){
+		console.log("dev: in continuous_vad.  desired_state,minimal_silence_threshold: ", desired_state, minimal_silence_threshold);
+	}
+	
 	//simple_vad_audio?.pause();
 	//window.main_audio_context?.suspend();
 	
@@ -348,8 +351,10 @@ async function startSimpleVAD(stream, fftSize=128, sampleRate = 16000) { // 4800
 				
 				busy_recording_simple_vad = false;
 				if(typeof event.data["data"] != 'undefined' && typeof event.data["data"]["audio_data"] != 'undefined' && typeof event.data["data"]["details"] != 'undefined'){
+					if(window.settings.settings_complexity == 'developer'){
+						console.log("Received VAD recording. duration: ", event.data["data"]["audio_data"].length / 16000 + 's');
+					}
 					
-					console.log("Received VAD recording. duration: ", event.data["data"]["audio_data"].length / 16000 + 's');
 					
 					
 					if(typeof event.data["data"]["details"].real_sample_rate == 'number' && event.data["data"]["details"].real_sample_rate > 1000){
@@ -486,10 +491,11 @@ function calculate_recording_to_listening_ratio(){
 
 
 function possibly_interrupt_speaking_early(){
-	console.log("in possibly_interrupt_speaking_early.  vad_state_history.length: ", vad_state_history.length);
+	//console.log("in possibly_interrupt_speaking_early.  vad_state_history.length: ", vad_state_history.length);
 	
 	if(
-		window.speaker_enabled 
+		window.speaker_enabled
+		&& window.settings.assistant != 'scribe'
 		&& typeof window.settings.interrupt_speaking == 'string' 
 		&& (
 			window.settings.interrupt_speaking == 'Yes' 
@@ -513,9 +519,9 @@ function possibly_interrupt_speaking_early(){
 			silence_threshold = 0.5;
 		}
 		
-		console.log("possibly_interrupt_speaking_early:  recording_to_listening_ratio: ", window.recording_to_listening_ratio);
+		//console.log("possibly_interrupt_speaking_early:  recording_to_listening_ratio: ", window.recording_to_listening_ratio);
 		if(window.recording_to_listening_ratio > silence_threshold){
-			console.log("VAD has spent more time in listening mode than recording mode");
+			//console.log("VAD has spent more time in listening mode than recording mode");
 			window.interrupt_speaking_task_index = window.task_counter;
 			console.log("window.interrupt_speaking_task_index is now: ", window.interrupt_speaking_task_index);
 			
@@ -524,7 +530,7 @@ function possibly_interrupt_speaking_early(){
 			return true
 		}
 	}
-	console.log("possibly_interrupt_speaking_early?: NO");
+	//console.log("possibly_interrupt_speaking_early?: NO");
 	return false
 }
 window.possibly_interrupt_speaking_early = possibly_interrupt_speaking_early;
@@ -837,7 +843,7 @@ async function create_whisper_worker(){
 					
 						let whisper_progress_el = document.getElementById('download-progress-whisper');
 						if(whisper_progress_el == null){
-							console.warn("whisper (down)load progress element is missing, creating it now");
+							//console.warn("whisper (down)load progress element is missing, creating it now");
 							add_chat_message('current','whisper','download_progress#setting---'); // TODO this one is a bit different at the moment. Maybe use 'scribe' instead of 'whisper'?
 						}
 						else{
@@ -927,7 +933,7 @@ async function create_whisper_worker(){
 					}
 				}
 				else{
-					console.error("whisper became ready, but cannot find loading progress indicator element");
+					//console.error("whisper became ready, but cannot find loading progress indicator element");
 				}
 				if(window.settings.assistant == 'scribe'){
 					window.currently_loaded_assistant = 'scribe'; // TODO: is this wise?
@@ -1141,7 +1147,7 @@ async function create_whisper_worker(){
 				window.skip_a_beat = true;
 				
 				set_chat_status(e.data.task,'',2);
-				console.log('\n\n\n\n\nGOT WHISPER COMPLETE FROM WORKER\n\n\n\ne.data: \n\n', e.data);
+				//console.log('\n\n\n\n\nGOT WHISPER COMPLETE FROM WORKER\n\n\n\ne.data: \n\n', e.data);
 				//console.log('GOT WHISPER COMPLETE.  e.data.transcript: ', e.data.transcript);
 				//console.log('GOT WHISPER COMPLETE.  e.data.task: ', e.data.task);
 				
@@ -1227,13 +1233,21 @@ async function create_whisper_worker(){
 			
 			
 			else if(e.data.status == 'error' || e.data.status == 'interrupted' || e.data.status == 'reset_me'){
-				console.error("WHISPER SENT ERROR/INTERRUPTED/RESET_ME");
+				console.error("WHISPER SENT ERROR/INTERRUPTED/RESET_ME: ", e.data.status);
 				if(typeof e.data.error != 'undefined' && ('' + e.data.error).indexOf(' memory') != -1){
 					flash_message(get_translation("Not_enough_memory"),2000,'fail');
 				}
 				
+				
+				
+				
 				if(typeof e.data.task != 'undefined' && e.data.task != null){
 					console.error("transcription error occured: calling handle_completed_task.  e.data: ", e.data);
+					if(typeof e.data.error != 'undefined' && ('' + e.data.error).indexOf(' Aborted()') != -1){
+						flash_message(get_translation("An_error_occured"),2000,'fail');
+						add_chat_message_once('current','developer',window.get_translation('Upgrade_or_change_browser'),'Try_updating_or_changing_your_browser');
+					}
+					
 					
 					if(e.data.status == 'reset_me'){
 						console.warn("RECEIVED RESET_ME COMMAND FROM WHISPER WORKER");
@@ -1525,8 +1539,9 @@ async function update_transcription_info(e_data){
 							
 						}
 						else{
-							transcription_icon_el.src = './images/document_icon.svg';
+							//transcription_source_icon_el.src = './images/document_icon.svg';
 						}
+						
 						
 						
 					}
@@ -2223,7 +2238,7 @@ async function update_transcription_info(e_data){
 									console.log("summarize transcription: document has to be opened first");
 									if(task.file.folder == folder && task.file.filename == current_file_name){
 										window.prepare_summarize_document();
-										window.summarize_prompt_el.value = get_translation('Summarize_the_following_meeting');
+										window.summarize_prompt_el.value = window.get_translation('Summarize_the_following_meeting');
 										if(typeof target_text == 'string'){
 											window.rewrite_dialog_selected_text_el.textContent = target_text;
 										}
@@ -2239,7 +2254,7 @@ async function update_transcription_info(e_data){
 							else if(task.file.folder == folder && task.file.filename == current_file_name){
 								//console.log("summarize transcription: document is already open");
 								window.prepare_summarize_document();
-								window.summarize_prompt_el.value = get_translation('Summarize_the_following_meeting');
+								window.summarize_prompt_el.value = window.get_translation('Summarize_the_following_meeting');
 								if(typeof target_text == 'string'){
 									window.rewrite_dialog_selected_text_el.textContent = target_text;
 								}
@@ -2578,7 +2593,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 			}
 			
 			if(a == 0 && typeof task.results[a] != 'undefined' && task.results[a] != null && typeof task.results[a].progress_index == 'number'){
-				console.warn("whisper_snippets_to_text:task claims to be part of a progression of connected audio snippets. It's progress index: ", task.results[a].progress_index);
+				//console.warn("whisper_snippets_to_text: task claims to be part of a progression of connected audio snippets. It's progress index: ", task.results[a].progress_index);
 				if(typeof task.results[a].progress_total != 'number'){
 					console.warn("whisper_snippets_to_text: - no progress total");
 				}
@@ -2931,7 +2946,10 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 			}
 			*/
 			
-			
+			let spotted_consent = false;
+			if(typeof all_words[x].verification != 'undefined' && all_words[x].verification != null && typeof all_words[x].verification.consent == 'boolean'){
+				spotted_consent = all_words[x].verification.consent;
+			}
 			
 			
 			if(typeof all_words[x].verification != 'undefined' && all_words[x].verification != null && typeof all_words[x].verification.speaker_id == 'number'){
@@ -2987,8 +3005,11 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 				sentence_duration += (all_words[x].timestamp[1] - all_words[x].timestamp[0]);
 			}
 			else{
-				console.error("sentence duration issue.  start and end of word: ", all_words[x].text, all_words[x].timestamp[0], all_words[x].timestamp[1],", that last number (word end) should be smaller than full_duration: ", full_duration);
+				//console.error("sentence duration issue.  start and end of word: ", all_words[x].text, all_words[x].timestamp[0], all_words[x].timestamp[1],", that last number (word end) should be smaller than full_duration: ", full_duration);
 				//sentence_duration += ((full_duration * 0.95) / all_words.length);
+			}
+			if(all_words[x].timestamp[1] > full_duration){
+				console.error("word end was beyond full duration");
 			}
 			//console.log("sentence_duration: ", sentence_duration);
 			
@@ -3116,7 +3137,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 				if(all_words[x].absolute_start_time == all_words[x].absolute_end_time){
 					if(all_words[x].text.trim().length > 1){
 						if(sentence_has_wonky_timestamps == false){
-							console.error("END OF THE SENTENCE HAS A WONKY TIMESTAMP");
+							//console.error("END OF THE SENTENCE HAS A WONKY TIMESTAMP: ", all_words[x].text);
 							sentence_has_wonky_timestamps = true;
 						}
 						else{
@@ -3124,7 +3145,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 						}
 					}
 					else{
-						console.error("wonky timestamp, but word is only a single letter, so letting it slide");
+						//console.error("wonky timestamp, but word is only a single letter, so letting it slide");
 					}
 					
 				}
@@ -3135,7 +3156,16 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 				
 				
 				
-				let new_sentence = {'text':sentence,'absolute_start_time':sentence_words[0].absolute_start_time, 'absolute_end_time':sentence_words[sentence_words.length-1].absolute_end_time,'duration': (sentence_words[sentence_words.length-1].absolute_end_time - sentence_words[0].absolute_start_time),'words':sentence_words,'sentence_has_wonky_timestamps':sentence_has_wonky_timestamps, 'type':sentence_type};
+				let new_sentence = {
+					'text':sentence,
+					'absolute_start_time':sentence_words[0].absolute_start_time, 
+					'absolute_end_time':sentence_words[sentence_words.length-1].absolute_end_time, 
+					'duration': (sentence_words[sentence_words.length-1].absolute_end_time - sentence_words[0].absolute_start_time), 
+					'words':sentence_words, 
+					'sentence_has_wonky_timestamps':sentence_has_wonky_timestamps, 
+					'type':sentence_type, 
+					'consent':spotted_consent
+				};
 				
 				if(typeof most_seen_speaker_id == 'number'){
 					new_sentence['most_seen_speaker_id'] = most_seen_speaker_id;
@@ -3146,7 +3176,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 					}
 					else{
 						console.error("\n\nmost_seen_speaker_id was not in speaker_ids_to_names dictionary: ", most_seen_speaker_id, speaker_ids_to_names);
-						new_sentence['speaker_name'] = get_translation('speaker_name') + ' ' + most_seen_speaker_id;
+						new_sentence['speaker_name'] = window.get_translation('speaker_name') + ' ' + most_seen_speaker_id;
 					}
 					
 				}
@@ -3283,7 +3313,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		
 		in_meta = false;
 		
-		
+		//console.log("going to turn sentences into subtitle: ", raw_sentences);
 		
 		for(let l = 0; l < raw_sentences.length; l++){
 			
@@ -3322,7 +3352,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 					raw_text = raw_text.substr(1);
 				}
 				
-				if(raw_text.trim().toUpperCase() != '[BLANK_AUDIO]' && raw_text.trim() != '[ Pause ]'){
+				if(raw_text.trim().toUpperCase() != '[BLANK_AUDIO]' && raw_text.trim().toUpperCase() != '[ PAUSE ]' && raw_text.trim().toUpperCase() != '[ SILENCE ]'){
 					if(raw_sentences[l].text.length < 25){
 						//console.log("Nice, subtitle sentence is less than 25 characters: ", raw_sentences[l].text.length);
 						//full_subtitle_text += add_subtitle_substring(raw_sentences[l], raw_sentences[l].text, relative_sentence_start_stamp, relative_sentence_end_stamp);
@@ -3588,7 +3618,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 						
 						let stats_label_el = document.createElement('span');
 						stats_label_el.classList.add('transcription-stats-label');
-						stats_label_el.textContent = get_translation(key);
+						stats_label_el.textContent = window.get_translation(key);
 						
 						let stats_value_el = document.createElement('span');
 						stats_value_el.classList.add('transcription-stats-value');
@@ -3627,32 +3657,37 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		//console.log("full_subtitle_text: ", full_subtitle_text);
 		// save subtitle in meta
 		
-		// Save subtitle to video file meta
-		if(typeof full_subtitle_text == 'string' && full_subtitle_text.trim() != ''){
-			//console.log("saving merged_subtitle to file meta");
-			
-			if(typeof task.origin == 'string' && task.origin.endsWith('file')){
-				if(typeof task.origin_file != 'undefined' && task.origin_file != null && typeof task.origin_file.folder == 'string' && typeof task.origin_file.filename == 'string'){
-					console.log("saving generated subtitle in file meta")
-					save_file_meta('subtitle', full_subtitle_text, task.origin_file.folder, task.origin_file.filename);
-				
-					if(task.origin_file.folder == folder && task.origin_file.filename == current_file_name && document.getElementById('media-player') != null){
-						console.log("should update the video description/subtitle, as it's currently visible");
-						add_overlay_description(full_subtitle_text,'subtitle');
-					}
-				}
-			}
-		}
+		
 		
 		
 		// TODO: save a generic text to generic file transcription meta
 		
 		
-		console.log("subtiel: document_filename: ", document_filename);
-		console.log("subtiel: full_subtitle_text: ", full_subtitle_text);
+		//console.log("subtiel: document_filename: ", document_filename);
+		//console.log("subtiel: full_subtitle_text: ", full_subtitle_text);
 		if( document_filename.toLowerCase().endsWith('.vtt') || document_filename.toLowerCase().endsWith('.srt') ){
 			
-			//console.log("subtiel: working on a VTT or SRT file");
+			console.log("subtiel: working on a VTT or SRT file.  document_filename,task: ", document_filename, task);
+			
+			/*
+			// Save subtitle to video file meta
+			if(typeof full_subtitle_text == 'string' && full_subtitle_text.trim() != ''){
+				console.log("saving full_subtitle_text to file meta?: ", full_subtitle_text, task);
+			
+				if(typeof task.origin == 'string' && task.origin.endsWith('file')){
+					if(typeof task.origin_file != 'undefined' && task.origin_file != null && typeof task.origin_file.folder == 'string' && typeof task.origin_file.filename == 'string'){
+						console.log("saving generated subtitle in file meta")
+						save_file_meta('subtitle', full_subtitle_text, task.origin_file.folder, task.origin_file.filename);
+				
+						if(task.origin_file.folder == folder && task.origin_file.filename == current_file_name && document.getElementById('media-player') != null){
+							console.log("should update the video description/subtitle, as it's currently visible");
+							add_overlay_description(full_subtitle_text,'subtitle');
+						}
+					}
+				}
+			}
+			*/
+			
 			/*
 			if(typeof task.origin == 'string' && task.origin.endsWith('file')){
 				if(typeof task.origin_file != 'undefined' && task.origin_file != null && typeof task.origin_file.folder == 'string' && typeof task.origin_file.filename == 'string'){
@@ -3665,21 +3700,21 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 				}
 			
 				if(document_filename.toLowerCase().endsWith('.vtt')){
-					insert_into_document(task, full_subtitle_text, {'position':'overwrite'});
+					window.insert_into_document(task, full_subtitle_text, {'position':'overwrite'});
 				}
 				else if(document_filename.toLowerCase().endsWith('.srt')){
-					insert_into_document(task, window.vtt_to_srt(full_subtitle_text), {'position':'overwrite'});
+					window.insert_into_document(task, window.vtt_to_srt(full_subtitle_text), {'position':'overwrite'});
 				}
 				
 			}
 			else{
 				if(document_filename.toLowerCase().endsWith('.vtt')){
-					insert_into_document(task, full_subtitle_text, {'position':'end','fix_overlap':true}); // could just do this automatically in insert_into_document if the document is .srt or .vtt
+					window.insert_into_document(task, full_subtitle_text, {'position':'end','fix_overlap':true}); // could just do this automatically in insert_into_document if the document is .srt or .vtt
 				}
 				else if(document_filename.toLowerCase().endsWith('.srt')){
 					
 					// TODO: must figure out a way to make the SRT index continuous. Maybe just go over the entire document and redo it?
-					insert_into_document(task, window.vtt_to_srt(full_subtitle_text), {'position':'end','fix_overlap':true});
+					window.insert_into_document(task, window.vtt_to_srt(full_subtitle_text), {'position':'end','fix_overlap':true});
 					
 					// TODO Fix SRT indexes now
 					
@@ -3687,19 +3722,27 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 			}
 			*/
 			if(typeof task.origin_file != 'undefined' && task.origin_file != null && typeof task.origin_file.folder == 'string' && typeof task.origin_file.filename == 'string'){
+				console.log("saving subtitle to file meta of origin file: ", task.origin_file);
 				save_file_meta('subtitle',full_subtitle_text,task.origin_file.folder,task.origin_file.filename);
-		
+				if(typeof task.file != 'undefined' && task.file != null){
+					save_file_meta('subtitle_file',task.file,task.origin_file.folder,task.origin_file.filename);
+				}
 				if(task.origin_file.folder == folder && task.origin_file.filename == current_file_name && document.getElementById('media-player') != null){
-				//console.log("should update the video description/subtitle");
+					console.log("should also update the video description/subtitle, since the origin file is currently open");
 					add_overlay_description(full_subtitle_text);
 				}
 			}
 		
 			if(document_filename.toLowerCase().endsWith('.vtt')){
-				insert_into_document(task, full_subtitle_text, {'position':'overwrite'});
+				console.log("inserting full_subtitle into .vtt document");
+				window.insert_into_document(task, full_subtitle_text, {'position':'overwrite'});
 			}
 			else if(document_filename.toLowerCase().endsWith('.srt')){
-				insert_into_document(task, window.vtt_to_srt(full_subtitle_text), {'position':'overwrite'});
+				console.log("inserting full_subtitle into .srt document");
+				window.insert_into_document(task, window.vtt_to_srt(full_subtitle_text), {'position':'overwrite'});
+			}
+			else{
+				console.error("impossible? document_filenam changed to non-subtitle: ", document_filename);
 			}
 			window.last_subtitle_end_time = 0;
 			return
@@ -3716,7 +3759,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 				save_file_meta('subtitle',full_subtitle_text,task.origin_file.folder,task.origin_file.filename);
 			}
 			
-			insert_into_document(task, JSON.stringify(raw_sentences,null,4), {'position':'overwrite'});
+			window.insert_into_document(task, JSON.stringify(raw_sentences,null,4), {'position':'overwrite'});
 			
 			window.last_subtitle_end_time = 0;
 			return
@@ -3725,6 +3768,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		else{
 			
 			//console.log("NOW FOR THE HARD PART");
+			//console.log("raw_sentences: ", raw_sentences)
 			
 			// THE HARD PART
 			//console.log("add_timestamps: ", add_timestamps);
@@ -3852,7 +3896,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 					if(typeof raw_sentences[l].absolute_start_time == 'number' && typeof raw_sentences[l].absolute_end_time == 'number' && typeof time_scribe_started == 'number'){
 						//console.log("creating subtitle time, with start: ", raw_sentences[l].absolute_start);
 						if(typeof raw_sentences[l].type == 'string' && raw_sentences[l].type == 'sound' && (raw_sentences[l].text.toLowerCase().indexOf('laugh') == -1 && raw_sentences[l].text.toLowerCase().indexOf('applause') == -1 && raw_sentences[l].text.toLowerCase().indexOf('music') == -1)){
-							console.warn("whisper_snippets_to_text: subtitles: skipping meta sound that is not laughter, music or applause: ", raw_sentences[l].text);
+							//console.warn("whisper_snippets_to_text: subtitles: skipping meta sound that is not laughter, music or applause: ", raw_sentences[l].text);
 							continue
 						}
 						
@@ -4075,7 +4119,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		/*
 		if(window.settings.settings_complexity == 'developer'){
 			//console.log("inserting with ---SNIP ---");
-			insert_into_document(task, merged_transcript + "\n\n---------- SNIP -----------\n\n", {'position':'end'});
+			window.insert_into_document(task, merged_transcript + "\n\n---------- SNIP -----------\n\n", {'position':'end'});
 			
 			if(
 				typeof task.origin_file != 'undefined' && 
@@ -4097,11 +4141,11 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		/*
 		if(task.origin == 'voice'){
 			//console.log("at the end, and trancscribed a voice task. Inserting at the end: ", task, merged_transcript.substr(0,100));
-			insert_into_document(task, merged_transcript, {'position':'end'});
+			window.insert_into_document(task, merged_transcript, {'position':'end'});
 		}
 		else{
 			//console.log("at the end, overwriting: ", task, merged_transcript.substr(0,100));
-			insert_into_document(task, merged_transcript, {'position':'overwrite'});
+			window.insert_into_document(task, merged_transcript, {'position':'overwrite'});
 			
 			if(
 				typeof task.origin_file != 'undefined' && 
@@ -4153,7 +4197,7 @@ async function whisper_snippets_to_text(task,visible_speaker_list=[]){
 		
 		
 		//console.log("at the end, overwriting: ", task, merged_transcript.substr(0,100));
-		insert_into_document(task, merged_transcript, {'position':'overwrite'});
+		window.insert_into_document(task, merged_transcript, {'position':'overwrite'});
 		
 		if(
 			typeof task.origin_file != 'undefined' && 
@@ -4256,11 +4300,11 @@ function create_whisper_options(task=null,language=null,target_language=null){
 	
 
 	if(window.is_mobile){
-		console.warn("create_whisper_options: setting model to whisper_tiny because is_mobile is true");
+		//console.warn("create_whisper_options: setting model to whisper_tiny because is_mobile is true");
 		model = "onnx-community/whisper-tiny";
 	}
 	else{
-		console.log("not mobile, so not forcing whisper_tiny");
+		//console.log("not mobile, so not forcing whisper_tiny");
 	}
 	//window.is_mobile = true;
 	
@@ -4298,7 +4342,7 @@ function create_whisper_options(task=null,language=null,target_language=null){
 
 	if(!model.endsWith('_timestamped')){
 		model += "_timestamped";
-		console.log("added _timestamped to model name: ", model);
+		//console.log("added _timestamped to model name: ", model);
 	}
 
 
@@ -4325,7 +4369,7 @@ function create_whisper_options(task=null,language=null,target_language=null){
 
 	// e.g. onnx-community/whisper-base.en_timestamped
 
-	console.log("create_whisper_options:  model, options: ", model, options);
+	//console.log("create_whisper_options:  model, options: ", model, options);
 	return {'model':model, 'quantized':quantized, 'options':options}
 }
 
@@ -4339,7 +4383,8 @@ function create_whisper_options(task=null,language=null,target_language=null){
 //
 
 function do_whisper_web(task=null,language=null, target_language=null, preload=false){
-	console.log("in do_whisper_web.  task,language,target_languag,preload: ", task, language, target_language, preload);
+	//console.log("in do_whisper_web.  task,language,target_languag,preload: ", task, language, target_language, preload);
+	
 	//console.error("TEMPORARY BLOCK OF DO_WHISPER_WEB");
 	//return false
 	/*
@@ -4425,7 +4470,7 @@ function do_whisper_web(task=null,language=null, target_language=null, preload=f
 	
 	let {model,quantized,options} = create_whisper_options(task,language,target_language);
 
-	console.log("do_whisper_web: model,quantized,options: ", model, quantized, options);
+	//console.log("do_whisper_web: model,quantized,options: ", model, quantized, options);
 
 	if( 
 		(
@@ -4461,40 +4506,13 @@ function do_whisper_web(task=null,language=null, target_language=null, preload=f
 		}
 	}
 	
-	/*
-	if(typeof window.settings.language == 'string'){
-		if(window.settings.language != 'en' || (typeof language == 'string' && language != 'en') ){
-			console.log("do_whisper_web: going multi-lingual.  window.settings.language,language: ", window.settings.language, language);
-			multilingual = true;
-			if(typeof language != 'string'){
-				language = window.settings.language;
-			}
-			if(task.destination == 'chat' && typeof task.assistant == 'string' && task.assistant != 'translator'){
-				if(typeof window.assistants[task.assistant] != 'undefined' && typeof window.assistants[task.assistant].languages != 'undefined'){
-					if( window.assistants[task.assistant].languages.indexOf(window.settings.language) != -1){
-						//console.log("The task's assistant supports this the user's (UI) language, so no need to translate to english");
-					}
-					else{
-						//console.log("The task's assistant does not support the user's (UI) language, so let's translate voice input to english too");
-						//subtask = 'translate';
-					}
-				}
-				else{
-					//console.log("WHISPER WORKER: SWITCHING TO TRANSLATION"); // since it will likely then move onto an assistant handling it, which will likely speak english
-					//subtask = 'translate';
-				}
-			}
-		}
-	}
-	*/
-	
 	//console.log("do_whisper_web: multilingual: ", multilingual);
 	//console.log("do_whisper_web: subtask: ", subtask);
 	//console.log("do_whisper_web: language: ", language);
-	console.log("do_whisper_web: model: ", model);
-	console.log("do_whisper_web: is_mobile: ", window.is_mobile);
-	console.log("do_whisper_web: quantized: ", quantized);
-	console.log("do_whisper_web: options: ", JSON.stringify(options,null,4));
+	//console.log("do_whisper_web: model: ", model);
+	//console.log("do_whisper_web: is_mobile: ", window.is_mobile);
+	//console.log("do_whisper_web: quantized: ", quantized);
+	//console.log("do_whisper_web: options: ", JSON.stringify(options,null,4));
 	
 	//console.log("do_whisper_web: sending audio to whisper worker: ", task.recorded_audio);
 	
@@ -4522,7 +4540,7 @@ function do_whisper_web(task=null,language=null, target_language=null, preload=f
 	*/
 	setTimeout(()=>{
 		window.whisper_worker.postMessage(whisper_message);
-		console.log("do_whisper_web: posted message to whisper_worker: ", whisper_message);
+		//console.log("do_whisper_web: posted message to whisper_worker: ", whisper_message);
 	},100);
 	
 	
@@ -4536,7 +4554,7 @@ window.do_whisper_web = do_whisper_web;
 // clear Whisper's models from memory
 let dispose_whisper_timeout = null;
 function dispose_whisper(task=null,language=null){
-	console.log('in dispose_whisper.  task,language: ', task, language);
+	//console.log('in dispose_whisper.  task,language: ', task, language);
 	
 	if(window.whisper_worker != null){
 	    window.whisper_worker.postMessage({
@@ -4567,7 +4585,7 @@ window.dispose_whisper = dispose_whisper;
 
 
 function preload_whisper(task=null,language=null,target_language=null){
-	console.log("in preload_whisper.  task,language: ", task,language,target_language);
+	//console.log("in preload_whisper.  task,language: ", task,language,target_language);
 	
 	//console.error("PRELOAD WHISPER IS BLOCKED");
 	//return
@@ -4580,7 +4598,7 @@ function preload_whisper(task=null,language=null,target_language=null){
 	*/
 	
 	if(window.whisper_worker != null && (window.whisper_worker_busy == true || window.busy_loading_whisper)){
-		console.error("preload_whisper:  aborting, whisper_worker exists, and seems busy or is already loading");
+		console.error("preload_whisper:  aborting, whisper_worker exists, and seems busy or is already loading.   window.whisper_worker, window.whisper_worker_busy,window.busy_loading_whisper: ", window.whisper_worker, window.whisper_worker_busy, window.busy_loading_whisper);
 		return false
 	}
 	
@@ -4598,10 +4616,13 @@ function preload_whisper(task=null,language=null,target_language=null){
 	*/
 	
 	const {model,quantized,options} = create_whisper_options(task,language,target_language);
-	console.log("preload_whisper: model,quantized,options: ", model,quantized,options);
+	if(window.settings.settings_complexity == 'developer'){
+		console.log("preload_whisper: model,quantized,options: ", model,quantized,options);
+	}
+	
 	
 	if(window.whisper_worker == null){
-		console.log("preload_whisper: creating Whisper worker first");
+		//console.log("preload_whisper: creating Whisper worker first");
 		create_whisper_worker();
 	}
 	if(window.whisper_worker != null){
