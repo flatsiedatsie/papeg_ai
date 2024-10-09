@@ -887,11 +887,11 @@ window.reset_web_llm = async function (){
 
 
 window.unload_web_llm = async function (){
-	console.log("in unload_web_llm");
+	//console.log("in unload_web_llm");
 	if(window.currently_loaded_assistant == window.currently_loaded_web_llm_assistant){
 		window.currently_loaded_assistant = null;
 	}
-	if(window.web_llm_engine){
+	if(window.currently_loaded_web_llm_assistant != null && window.web_llm_engine){
 		window.web_llm_busy = true;
 		await window.web_llm_engine.unload();
 		window.web_llm_busy = false;

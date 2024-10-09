@@ -248,11 +248,12 @@ body.light .ͼ2 .cm-selectionBackground{
 	background-color: #bbb;
 }
 
-/*
+
 body.light #papegai-logo{
-	filter: brightness(20%);
+	/*filter: invert(.8);*/
+	filter: drop-shadow(1px 1px 6px rgba(0,0,0,.15))
 }
-*/
+
 
 
 
@@ -1912,7 +1913,9 @@ body.simple-task-list-paused #simple-task-list-play-button-container:hover{
 	padding-top:2rem;
 }
 
-
+#simple-tasks-list-container:empty + #clear-tasks-button-container{
+	display:none;
+}
 
 
 
@@ -1931,6 +1934,9 @@ body.blueprint #editor,
 }
 
 
+#clear-tasks-button-container{
+	margin-bottom:2rem;
+}
 
 /*
 #show-advanced-settings-button{

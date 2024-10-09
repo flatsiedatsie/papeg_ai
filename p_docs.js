@@ -32,7 +32,7 @@ function doc_reset(){
 
 
 async function doc_settled(){
-	console.log("in doc_settled");
+	//console.log("in doc_settled");
 	return new Promise((resolve, reject) => {
 		
 		//window.update_current_doc_stats();
@@ -138,7 +138,7 @@ async function doc_settled(){
 
 
 function update_current_doc_stats(){
-	console.log("in update_current_doc_stats");
+	//console.log("in update_current_doc_stats");
 	let document_word_count = 0;
 	let selection_word_count = 0;
 	
@@ -5364,7 +5364,7 @@ window.create_insert_into_doc_buttons = create_insert_into_doc_buttons;
 
 
 function insert_into_document(task=null,content=null,cursor=null){
-	console.log("in insert_into_document.  task,content,cursor: ", task,content,cursor);
+	//console.log("in insert_into_document.  task,content,cursor: ", task,content,cursor);
 	if(typeof window.doc_text == 'string'){
 		console.log("insert_into_document: window.doc_text:\n" + window.doc_text.substr(0,60) + "...");
 	}
@@ -5645,7 +5645,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 			else{
 				
 				if( typeof current_file_name == 'string' && typeof task.file.folder == 'string' && task.file.folder == folder && task.file.filename == current_file_name){ // window.settings.docs.open != null && task.file.filename == window.settings.docs.open.filename && task.file.folder == window.settings.docs.open.folder
-					console.log("insert_into_document: the content should overwrite the currently open document. window.doc_text. replacing: " + window.doc_text.substr(0,20) + "...");
+					//console.log("insert_into_document: the content should overwrite the currently open document. window.doc_text. replacing: " + window.doc_text.substr(0,20) + "...");
 				
 					//let doc_length = editor.state.doc.toString().length;
 					
@@ -5659,7 +5659,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 				
 				}
 				else if(typeof playground_live_backups[task.file.folder + '/' + task.file.filename] == 'string'){
-					console.log("insert_into_document: position: start: the content to overwrite is for a document that is not currently open: ", task.file, " =?= ",window.settings.docs.open);
+					//console.log("insert_into_document: position: start: the content to overwrite is for a document that is not currently open: ", task.file, " =?= ",window.settings.docs.open);
 				
 					if(
 						(typeof playground_live_backups[task.file.folder + '/' + task.file.filename] != 'string' && !filename_is_binary(task.file.filename))
@@ -5677,7 +5677,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 				
 				}
 				else if(typeof playground_saved_files[task.file.folder + '/' + task.file.filename] == 'string'){
-					console.log("insert_into_document: position: start: the content is for a document that is not currently open: ", task.file, " =?= ",window.settings.docs.open);
+					//console.log("insert_into_document: position: start: the content is for a document that is not currently open: ", task.file, " =?= ",window.settings.docs.open);
 				
 					if(
 						(typeof playground_saved_files[task.file.folder + '/' + task.file.filename] != 'string' && !filename_is_binary(task.file.filename))

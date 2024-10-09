@@ -1865,7 +1865,7 @@ function update_buffer_counts(){
 	
 	//console.log("________")
 	//console.log("window.stt_tasks_left: ", window.stt_tasks_left);
-	console.log("window.chat_messages_to_answer: ", window.chat_messages_to_answer);
+	//console.log("window.chat_messages_to_answer: ", window.chat_messages_to_answer);
 	//console.log("window.tts_tasks_left: ", window.tts_tasks_left);
 	//console.log("window.audio_files_in_buffer: ", window.audio_files_in_buffer);
 	//console.log("window.play_document_tasks_left: ", window.play_document_tasks_left);
@@ -2987,30 +2987,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					bad_stt_result = true;
 				}
 				
-				// Store file_to_text result
 				
-				if(typeof window.task_queue[t].file != 'undefined' && typeof window.task_queue[t].origin == 'string' && window.task_queue[t].origin.endsWith('file') && typeof result == 'string' && result != ''){ //get_translation('Write_a_detailed_description_of_this_image')){
-					//console.log("the stt result seems to be a transcription of a saved file, and the task has a file: ", window.task_queue[t].file);
-					if(typeof window.task_queue[t].origin_file != 'undefined' && window.task_queue[t].origin_file != null && typeof window.task_queue[t].origin_file.filename == 'string' && typeof window.task_queue[t].origin_file.folder == 'string'){ // && typeof files[window.task_queue[t].file.filename] != 'undefined'
-						//console.log("saving audio_to_text_description to file meta");
-						if(typeof window.task_queue[t].parent_index == 'undefined'){
-							if(window.filename_is_audio(window.task_queue[t].origin_file.filename)){
-								save_file_meta('audio_to_text_description',result,window.task_queue[t].origin_file.folder,window.task_queue[t].origin_file.filename);
-							
-								// TODO: a bit of code doubling, Could create a function to add description to playground overlay instead
-								add_overlay_description(result,'audio_to_text_description');
-							}
-							else if(window.filename_is_video(window.task_queue[t].origin_file.filename)){
-								save_file_meta('subtitle',result,window.task_queue[t].origin_file.folder,window.task_queue[t].origin_file.filename);
-							
-								// TODO: a bit of code doubling, Could create a function to add description to playground overlay instead
-								add_overlay_description(result,'subtitle');
-							}
-							
-						}
-						
-					}
-				}
 				
 				
 				
@@ -3169,7 +3146,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						//console.log("heard -> transcript:  -->" + transcript + "<--  , transcript.length: " , transcript.length);
 					}
 					else{
-						console.warn("heard -> transcript: assistant is scribe, so transcript has been set to empty");
+						console.warn("heard -> transcript: assistant is scribe, so transcript has been set to empty to avoid voice commands");
 					}
 					
 					
@@ -7887,11 +7864,11 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						window.busy_doing_blueprint_task = false;
 					}
 					else if(window.task_queue[t].origin.endsWith('file')){
-						console.warn("\n\nFILE TRANSCRIPTION DONE\n\nFile transcription task parent has been added to\n\n");
+						console.warn("\n\nFILE TRANSCRIPTION DONE\n\nFile transcription added to parent results list. calling whisper_snippets_to_text\n\n");
 						window.whisper_snippets_to_text(window.task_queue[t]);
 					}
 					else if(window.task_queue[t].origin == 'voice'){
-						console.warn("\n\nVOICE TRANSCRIPTION ADDED TO PARENT");
+						console.warn("\n\nVOICE TRANSCRIPTION ADDED TO PARENT -> calling whisper_snippets_to_text");
 						//console.log("task should have an array of extras: ", window.task_queue[t], "\n", window.task_queue[t].extras);
 						
 						window.whisper_snippets_to_text(window.task_queue[t]);
@@ -8058,7 +8035,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						// Transcription parent
 						else if(window.task_queue[t].origin.endsWith('file')){
-							console.warn("\n\nFILE TRANSCRIPTION PARENT DONE\n\nFile transcription task parent is full\n\n");
+							console.log("\n\nFILE TRANSCRIPTION PARENT DONE\n\nFile transcription task parent is full\n\n");
 							//console.log("task should have an array of extras: ", window.task_queue[t], "\n", window.task_queue[t].extras);
 							
 							let scribe_progress_el = document.querySelector('#scribe-progress' + window.task_queue[t].index);
@@ -8066,7 +8043,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								scribe_progress_el.value = 1;
 								setTimeout(() => {
 									scribe_progress_el.remove();
-								},5000);
+								},1000);
 							}
 							
 							let scribe_transcription_info_bubble_el = document.querySelector('#scribe-transcription-info-container-bubble' + window.task_queue[t].index);
@@ -8098,6 +8075,21 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							window.last_verified_speaker = null;
 							window.scribe_precise_sentences_count = 0;
 							window.last_time_scribe_started = null;
+							/*
+							if(
+								typeof window.task_queue[t].origin_file != 'undefined' 
+								&& window.task_queue[t].origin_file != null 
+								&& typeof window.task_queue[t].origin_file.filename == 'string' 
+								&& typeof files[window.task_queue[t].origin_file.filename] != 'undefined'
+								
+								&& typeof window.task_queue[t].file != 'undefined' 
+								&& window.task_queue[t].file != null 
+								&& typeof window.task_queue[t].file.filename == 'string' 
+								&& typeof files[window.task_queue[t].file.filename] != 'undefined'
+							){
+								
+							}
+							*/
 							
 							
 							flash_message(get_translation('Transcription_done'),2000);

@@ -155,19 +155,22 @@ function wikipediaCallback(result){
 */
 
 async function preload_some_scripts(){
+	/*
 	if(window.coder_script_loaded == false){
 		await window.add_script('./p_coder.js'); 
 	}
+	*/
 	if(window.language_detector_loaded == false){
 		await add_script('./js/eld.M60.min.js')
 	}	
 }
 
+
 // Probably better to let the service worker handle this? Then it can call that same function before telling the user an update is available, to preload the update
 // Maybe also check if a service worker is even running?
 if(window.first_run == false && window.add_script){
 	setTimeout(() => {
-		console.log("last.js: a minute has passed: maybe pre-load some JS?");
+		//console.log("last.js: a minute has passed: maybe pre-load some JS?");
 		preload_some_scripts();
 		//if(window.settings.settings_complexity != 'normal'){}
 		

@@ -952,7 +952,7 @@ window.translations = {
 	},
 	"Clear":{ 
 		"en":"Clear",
-		"nl":"Vergeet",
+		"nl":"Wis",
 	},
 	"clear_cache":{ 
 		"en":"Delete AI",
@@ -1668,13 +1668,13 @@ window.translations = {
 		"nl":"🎤 🧑‍⚖️👩‍⚕️🧑‍🚀 Spreker stemherkenning is gestart",
 	},
 	"Voice_recognition_has_loaded":{
-		"en":"⌛ 🎤 👂 👍 Voice recognition has loaded",
-		"nl":"⌛ 🎤 👂 👍 Stemherkenning is gestart",
+		"en":"🎤 👂 👍 Voice recognition has loaded",
+		"nl":"🎤 👂 👍 Stemherkenning is gestart",
 	},
 	
 	"Cannot_keep_up_with_voice_input":{
-		"en":"🤯 Cannot keep up with voice input",
-		"nl":"🤯 Kan de steminvoer niet bijhouden",
+		"en":"🎤 🤯 Cannot keep up with voice input",
+		"nl":"🎤 🤯 Kan de steminvoer niet bijhouden",
 	},
 	
 	"idle":{

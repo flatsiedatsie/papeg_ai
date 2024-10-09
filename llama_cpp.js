@@ -1375,13 +1375,17 @@ window.stop_llama_cpp = stop_llama_cpp;
 async function unload_llama_cpp(){
 	if(window.llama_cpp_app != null && typeof window.llama_cpp_app.isModelLoaded != 'undefined'){
 		let a_model_is_loaded = await window.llama_cpp_app.isModelLoaded();
-		console.warn("WLLAMA: unload_llama_cpp: a_model_is_loaded?: ", a_model_is_loaded, window.llama_cpp_app);
+		//console.warn("WLLAMA: unload_llama_cpp: a_model_is_loaded?: ", a_model_is_loaded, window.llama_cpp_app);
 		
 		if(a_model_is_loaded){
+			console.log("unload_llama_cpp: a model seems to be loaded, attempting unload")
 			try{
 				if(typeof window.llama_cpp_app.unloadModel === 'function'){
 					await window.llama_cpp_app.unloadModel();
 					console.log("\n\nWLLAMA\nUNLOAD MODEL SUCCESS\n\n");
+				}
+				else{
+					console.error("window.llama_cpp_app has no unloadModel function");
 				}
 			}
 			catch(err){

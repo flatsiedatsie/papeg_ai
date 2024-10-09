@@ -426,14 +426,15 @@ let first_ui_generation_done = false;
 					continuous_mic_setting_select_el.classList.add('model-info-toggle');
 					continuous_mic_setting_select_el.setAttribute('id','scribe-continuous-mic-setting');
 					if(typeof window.settings.assistants['scribe'] == 'undefined'){
-						window.settings.assistants['scribe'] = {'selected':true,'continous_mic':window.continuous_mic_options[0]};
+						window.settings.assistants['scribe'] = {'selected':true,'continuous_mic':window.continuous_mic_options[2]};
 					}
 					for(let o = 0; o < window.continuous_mic_options.length; o++){
 						let option_el = document.createElement('option');
 						option_el.setAttribute('value',window.continuous_mic_options[o]);
 						option_el.setAttribute('data-i18n',window.continuous_mic_options[o]);
 						option_el.textContent = window.get_translation(window.continuous_mic_options[o]);
-						if(typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe'].continous_mic == 'string'){
+						if(typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe'].continuous_mic == 'string'){
+							//console.log("window.settings.assistants['scribe'].continuous_mic: ", window.settings.assistants['scribe'].continuous_mic);
 							if(window.continuous_mic_options[o] == window.settings.assistants['scribe'].continuous_mic){
 								option_el.setAttribute('selected','selected');
 							}
@@ -2503,7 +2504,7 @@ let first_ui_generation_done = false;
 		// and that is updated when window.settings.assistants is updated/saved.
 		for (const [assistant_id, details] of Object.entries(window.settings.assistants)) {
 			if(assistant_id.startsWith('custom_saved_') && typeof window.assistants[assistant_id] == 'undefined'){
-				console.warn("really_generate_ui: adding custom assistant to window.assistants: ", details);
+				//console.log("really_generate_ui: adding empty custom assistant to window.assistants: ", assistant_id, details);
 				//window.assistants[assistant_id] = details;
 				window.assistants[assistant_id] = {};
 			}
@@ -6503,7 +6504,7 @@ window.clean_up_dead_task = clean_up_dead_task;
 
 
 function update_interrupt_button_icon(task=null){
-	console.log("in update_interrupt_button_icon. window.currently_running_llm, task: ", window.currently_running_llm, task);
+	//console.log("in update_interrupt_button_icon. window.currently_running_llm, task: ", window.currently_running_llm, task);
 	if(typeof window.currently_running_llm == 'string' || window.idle){
 		
 		let icon_name = 'developer';
@@ -6530,7 +6531,7 @@ function update_interrupt_button_icon(task=null){
 		}
 		
 		if(icon_name != 'ignore'){
-			console.log("update_interrupt_button_icon: final icon_name: ", icon_name);
+			//console.log("update_interrupt_button_icon: final icon_name: ", icon_name);
 			stop_assistant_button_assistant_icon_el.src = 'images/' + icon_name + '_thumb.png';
 		}
 		
