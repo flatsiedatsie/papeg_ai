@@ -238,10 +238,11 @@ body.web-gpu .show-if-web-gpu{
 	font-size:1.2rem;*/
 	margin-left:.1rem;
 }
+
 .runner-web_llm.champion .nice-name:after{
 	/*content:'🏆';*/
 	content:' ';
-	background-image:url('../images/ribbon12.svg');
+	background-image:url('../images/ribbon.svg');
 	background-repeat:no-repeat;
 	width:16px;
 	height:16px;
@@ -250,7 +251,6 @@ body.web-gpu .show-if-web-gpu{
 	margin-left:.2rem;
 	position:relative;
 	top:1px;
-	
 }
 
 
@@ -702,6 +702,9 @@ body:not(.developer) .chat .content .message-header .user-info .user .time{
 	border-radius:25px;
 	overflow: hidden;
 	z-index:1;
+}
+.chat .content .message-content .chat-bubble-assistant-icon-container > img{
+	width:100%;
 }
 #pane-content-developer-chats .message-content .chat-bubble-assistant-icon-container{
 	display:none;

@@ -1,6 +1,9 @@
 // Additional functionality for editing code
 
-//console.log("Hello from chatty_coder.js");
+// add coder-specfic CSS
+document.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="css/coder.css" />');
+
+
 
 let files_to_load = [
 	'./pjs/dayjs-with-plugins.min.js',
