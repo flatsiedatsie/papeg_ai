@@ -74,7 +74,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	
 	if(assistant_id == 'any_coder'){
 		assistant_id = pick_optimal_coder_ai();
-		console.log("switch_assistant: any_coder -> pick_optimal_coder_ai -> ", assistant_id);
+		//console.log("switch_assistant: any_coder -> pick_optimal_coder_ai -> ", assistant_id);
 	}
 	
 	
@@ -103,7 +103,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	
 	
 	if(assistant_id == 'any_writer'){
-		console.log("switch_assistant: attempting to replace 'any_writer'. window.settings.last_loaded_text_ai: ", window.settings.last_loaded_text_ai);
+		//console.log("switch_assistant: attempting to replace 'any_writer'. window.settings.last_loaded_text_ai: ", window.settings.last_loaded_text_ai);
 		
 		if(typeof window.settings.last_loaded_text_ai == 'string' && typeof window.settings.assistants[window.settings.last_loaded_text_ai].media != 'undefined' && window.settings.assistants[window.settings.last_loaded_text_ai].media.indexOf('text') != -1){
 			assistant_id = window.settings.last_loaded_text_ai;
@@ -746,7 +746,7 @@ window.switch_assistant = switch_assistant;
 
 /*
 function update_ai_media_class(){
-	console.log("in update_ai_media_class ('no-text-ai-loaded'). window.currently_loaded_assistant: ", window.currently_loaded_assistant);
+	//console.log("in update_ai_media_class ('no-text-ai-loaded'). window.currently_loaded_assistant: ", window.currently_loaded_assistant);
 	if(typeof window.currently_loaded_assistant == 'string' && typeof window.assistants[window.currently_loaded_assistant] != 'undefined' && typeof window.assistants[window.currently_loaded_assistant].media != 'undefined' && Array.isArray(window.assistants[window.currently_loaded_assistant].media) && window.assistants[window.currently_loaded_assistant].media.indexOf('text') != -1){
 		if(typeof window.currently_loaded_assistant == 'string' && window.settings.last_loaded_text_ai != window.currently_loaded_assistant){
 			window.settings.last_loaded_text_ai = window.currently_loaded_assistant;
@@ -877,7 +877,7 @@ function load_model_from_focus(){
 	if(typeof window.busy_loading_assistant == 'string'){
 		
 		if(window.busy_loading_assistant == window.settings.assistant){
-			console.log("load_model_from_focus: this model is already being (down)loaded, aborting");
+			//console.log("load_model_from_focus: this model is already being (down)loaded, aborting");
 			return
 			
 		}else{
@@ -1086,7 +1086,7 @@ function handle_example(example){
 
 // Add user message and an empty assistant message
 function add_to_conversation(task,response=null,prompt=null){
-	console.log("in add_to_conversation.  task,response,prompt:", task,response,prompt);
+	//console.log("in add_to_conversation.  task,response,prompt:", task,response,prompt);
 	
 	let assistant_id = null;
 	
@@ -1222,7 +1222,7 @@ async function add_response_to_conversation(task,response=null){
 						window.conversations[assistant_id][x]['post_translations'][task.return_language] = response;
 					}
 					else{
-						console.log("add_response_to_conversation: setting response as content");
+						//console.log("add_response_to_conversation: setting response as content");
 						window.conversations[assistant_id][x]['content'] = response;
 					}
 					//console.log("add_response_to_conversation: succesfully set assistant response content: ", window.conversations[assistant_id][x]);
@@ -1409,7 +1409,7 @@ async function save_conversation(assistant_id){
 			
 				really_create_file(false,conversation_data,conversation_filename,'/Papeg_ai_conversations',true)
 				.then((value) => {
-					console.log("created new conversation history file");
+					//console.log("created new conversation history file");
 					return true
 				})
 				.catch((err) => {
@@ -1427,7 +1427,7 @@ async function save_conversation(assistant_id){
 					"/Papeg_ai_conversations"
 				)
 				.then((value) => {
-					console.log("save_conversation: saved conversation history. value: ", value);
+					//console.log("save_conversation: saved conversation history. value: ", value);
 					return true
 				})
 				.catch((err) => {
@@ -1449,7 +1449,7 @@ async function save_conversation(assistant_id){
 					"/Papeg_ai_conversations"
 				)
 				.then((value) => {
-					console.log("save_conversation: saved empty conversation history. value: ", value);
+					//console.log("save_conversation: saved empty conversation history. value: ", value);
 					return true
 				})
 				.catch((err) => {
@@ -1466,7 +1466,7 @@ async function save_conversation(assistant_id){
 					"/Papeg_ai_conversations"
 				)
 				.then((value) => {
-					console.log("save_conversation: saved empty conversation history. value: ", value);
+					//console.log("save_conversation: saved empty conversation history. value: ", value);
 					return true
 				})
 				.catch((err) => {
@@ -2534,26 +2534,26 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 									
 									
 									if(typeof task.silent == 'boolean' && task.silent){
-										console.log("handle_chunk: task is silent, it should not be spoken out loud");
+										//console.log("handle_chunk: task is silent, it should not be spoken out loud");
 									}
 									
 									else if(window.speaker_enabled && typeof window.task_queue[t].speech_interrupted == 'boolean' && window.task_queue[t].speech_interrupted == true){
-										console.log("handle_chunk: new sentence, but task has speech_interrupted set to true, so not creating TTS tasks for: ", full_sentence);
+										//console.log("handle_chunk: new sentence, but task has speech_interrupted set to true, so not creating TTS tasks for: ", full_sentence);
 									}
 									
 									else if(window.speaker_enabled && typeof window.task_queue[t].index <= window.interrupt_speaking_task_index){
-										console.log("handle_chunk: new sentence, but task index is smaller than window.interrupt_speaking_task_index: ", window.interrupt_speaking_task_index, full_sentence);
+										//console.log("handle_chunk: new sentence, but task index is smaller than window.interrupt_speaking_task_index: ", window.interrupt_speaking_task_index, full_sentence);
 									}
 									else if(window.speaker_enabled){
-										console.log("handle_chunk: new sentence, going to turn it into smaller TTS sentences: ", full_sentence);
+										//console.log("handle_chunk: new sentence, going to turn it into smaller TTS sentences: ", full_sentence);
 										// Split the really basic sentence further into smaller parts to speak individually
 										
 										if(typeof full_sentence == 'string' && full_sentence.trim().length){
 											let smaller_sentence_parts = split_into_sentences(full_sentence);
-											console.log("full_sentence split into smaller parts: ", smaller_sentence_parts);
+											//console.log("full_sentence split into smaller parts: ", smaller_sentence_parts);
 											for(let sp = 0; sp < smaller_sentence_parts.length; sp++){
 												if(smaller_sentence_parts[sp].trim().length){
-													console.log("handle_chunk: NEW SENTENCE -> CREATING SPEAKING TASK: ", smaller_sentence_parts[sp]);
+													//console.log("handle_chunk: NEW SENTENCE -> CREATING SPEAKING TASK: ", smaller_sentence_parts[sp]);
 													let tts_task = {
 														'prompt':null,
 														'type':'speak',
@@ -2572,12 +2572,12 @@ function handle_chunk(task, response_so_far, chunk, snippet=null,result_object){
 													window.add_task(tts_task);
 												}
 												else{
-													console.log("handle_chunk: skipping empty smaller sentence part");
+													//console.log("handle_chunk: skipping empty smaller sentence part");
 												}
 											}
 										}
 										else{
-											console.log("handle_chunk: full sentence was empty or invalid? ", full_sentence);
+											//console.log("handle_chunk: full sentence was empty or invalid? ", full_sentence);
 										}
 										
 										
@@ -2686,11 +2686,11 @@ window.handle_chunk = handle_chunk;
 
 async function handle_completed_task(task, result=null,task_meta=null,extra=null){
 	if(window.settings.settings_complexity == 'developer'){
-		console.log("\n\n#\n##\n###\n####\nin handle_task_completed.  task: ", task, typeof result);
+		//console.log("\n\n#\n##\n###\n####\nin handle_task_completed.  task: ", task, typeof result);
 		//console.log(" - TASK DONE: ", task);
 	
 		if(typeof result == 'string'){
-			console.log(" - TASK RESULT: ", result.substr(0,40) + "...");
+			//console.log(" - TASK RESULT: ", result.substr(0,40) + "...");
 		}
 		else{
 			//console.log(" - TASK RESULT: ", result);
@@ -3559,13 +3559,13 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							|| transcript == 'ga omlaag' 
 							|| transcript == 'ga omhoog' 
 						){
-							console.log("detected previous/next voice command");
+							//console.log("detected previous/next voice command");
 							let next = true;
 							if(transcript == 'previous' || transcript == 'up' || transcript.endsWith(' up') || transcript == 'vorige' || transcript.endsWith('omhoog')){
 								next = false;
 							}
 							if(window.active_section == 'sidebar' && document.body.classList.contains('sidebar') && window.settings.left_sidebar == 'docs' && transcript.indexOf('paragraph') == -1 && transcript.indexOf('paragraaf') == -1){
-								console.log("routing previous/next to file manager");
+								//console.log("routing previous/next to file manager");
 								if(next){
 									navigate_file_manager_by_keyboard(40); // down
 								}
@@ -3584,10 +3584,10 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								// Scroll to next paragraph?
 								//console.log("voice command for going to previous or next paragraph or word?");
 								if(typeof current_file_name == 'string' && filename_is_binary(current_file_name)){
-									console.log("previous/next voice command: skipping binary file");
+									//console.log("previous/next voice command: skipping binary file");
 								}
 								else if(typeof current_file_name == 'string'){
-									console.log("previous/next voice command: will attempt to select paragraph");
+									//console.log("previous/next voice command: will attempt to select paragraph");
 									let selected_paragraph = null;
 									if(next){
 										if(transcript == 'down' || transcript == 'omlaag'){ 
@@ -3706,13 +3706,13 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								
 							)
 						){
-							console.log("detected first or last (paragraph) voice command");
+							//console.log("detected first or last (paragraph) voice command");
 							let next = true;
 							if(transcript.indexOf('eerste') != -1 || transcript.indexOf('bovenste') != -1 || transcript.indexOf('first') != -1 || transcript.indexOf(' top') != -1){
 								next = false;
 							}
 							if(window.active_section == 'sidebar' && document.body.classList.contains('sidebar') && window.settings.left_sidebar == 'docs' && transcript.indexOf('paragraph') == -1 && transcript.indexOf('paragraaf') == -1){
-								console.log("first/last voice command: routing to open file manager");
+								//console.log("first/last voice command: routing to open file manager");
 								if(next){
 									navigate_file_manager_by_keyboard('last'); // first
 								}
@@ -3726,15 +3726,15 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 								window.active_section = 'chat';
 							}
 							else if(document.body.classList.contains('show-document')){
-								console.log("first/last voice command: routing to open document");
+								//console.log("first/last voice command: routing to open document");
 								window.active_destination = 'document';
 								window.active_section = 'document';
 								
 								if(typeof current_file_name == 'string' && window.filename_is_binary(current_file_name)){
-									console.log("first/last voice command: skipping binary file");
+									//console.log("first/last voice command: skipping binary file");
 								}
 								else if(typeof current_file_name == 'string'){
-									console.log("first/last voice command: calling select_paragraph");
+									//console.log("first/last voice command: calling select_paragraph");
 									if(next){
 										select_paragraph('last');
 									}else{
@@ -4425,7 +4425,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							)
 						
 						){
-							console.log("got a longer rewrite voice command");
+							//console.log("got a longer rewrite voice command");
 							window.rewrite_prompt_el.value = result;
 							window.active_destination = 'document';
 							
@@ -4915,7 +4915,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							assistant_name = assistant_name.replace('open assistant ','');
 							assistant_name = assistant_name.replace('open assistent ','');
 							assistant_name = assistant_name.trim();
-							console.log("switch to other assistant command: assistant_name: ", assistant_name);
+							//console.log("switch to other assistant command: assistant_name: ", assistant_name);
 							
 							if(
 								assistant_name == 'any writer' 
@@ -4955,7 +4955,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 											}
 											
 											found_assistant = assistant_keys[x];
-											console.log("handle_completed_task: switching to assistant command: found it: ", assistant_keys[x], " a.k.a. ", assistant_name);
+											//console.log("handle_completed_task: switching to assistant command: found it: ", assistant_keys[x], " a.k.a. ", assistant_name);
 											window.switch_assistant(assistant_keys[x]);
 											break
 										}
@@ -5253,7 +5253,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							if(typeof task_queue[t].origin == 'string' && task_queue[t].origin == 'voice' && window.innerWidth < 641){
 								//console.log("handle_completed_task: got STT result on a small screen");
 								if(document.body.classList.contains('show-document')){
-									console.log("forcing STT result to document");
+									//console.log("forcing STT result to document");
 									task_queue[t].destination = 'document';
 								}
 							}
@@ -5262,7 +5262,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							
 							// If low memory, stop Whisper so the prompt can be handled optimally by the LLM
 							if(typeof task_queue[t].destination == 'string' && task_queue[t].destination == 'chat' && typeof task_queue[t].assistant == 'string' && task_queue[t].assistant != 'scribe' && !task_queue[t].assistant != 'image_to_text_ocr' && !task_queue[t].assistant != 'developer' && window.ram < 4001){
-								console.log("handle_completed_task: post stt: disposing of whisper, as an assistant will likely be called next: ", task_queue[t].assistant);
+								//console.log("handle_completed_task: post stt: disposing of whisper, as an assistant will likely be called next: ", task_queue[t].assistant);
 								if(window.microphone_enabled){
 									window.stopped_whisper_because_of_low_memory = true;
 									document.body.classList.add('microphone-sleeping');
@@ -5340,7 +5340,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 										
 										if(window.ram < 4001 && bad_stt_result == false && typeof result == 'string' && result.trim().length > 1){
 											if(window.microphone_enabled === true){
-												console.log("handle_completed_task: Got a seemingly good STT result. Low memory device, so disabling microphone before it becomes an assistant task");
+												//console.log("handle_completed_task: Got a seemingly good STT result. Low memory device, so disabling microphone before it becomes an assistant task");
 												window.disable_microphone();
 											}
 										}
@@ -5352,7 +5352,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 										
 										
 										
-										console.log("handle_completed_task: POST STT: destination is CHAT.  TASK: ", window.task_queue[t]);
+										//console.log("handle_completed_task: POST STT: destination is CHAT.  TASK: ", window.task_queue[t]);
 										
 										// ADD USER PROMPT CHAT MESSAGE
 										
@@ -5376,15 +5376,15 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 											window.add_chat_message(window.task_queue[t].assistant,'user',result,null,null,window.task_queue[t].index);
 											
 											if(typeof window.task_queue[t].chatter == 'boolean' && window.task_queue[t].chatter == true){
-												console.log("chatter is enabled for this assistant, so not creating early assistant response chat message");
+												//console.log("chatter is enabled for this assistant, so not creating early assistant response chat message");
 												// For a more organic feel, don't add the response message until it's ready
 											}
 											else{
-												console.log("creating early empty assistant chat message");
+												//console.log("creating early empty assistant chat message");
 												window.add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,'......',null, null,window.task_queue[t].index);
 											}
 											
-											console.log("handle_completed_task: pushing task user prompt to chat conversation history: ", result);
+											//console.log("handle_completed_task: pushing task user prompt to chat conversation history: ", result);
 											add_to_conversation(window.task_queue[t],null,result);
 											//window.conversations[window.task_queue[t].assistant].push({'role':'user','content':window.task_queue[t].prompt});
 										}
@@ -6772,7 +6772,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_research'){
-				console.log("handle_completed_task: state was doing_research");
+				//console.log("handle_completed_task: state was doing_research");
 				
 				window.task_queue[t]['results'].push(result);
 				
@@ -6805,7 +6805,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			
 			//else if(window.task_queue[t].state == 'doing_tts' || window.task_queue[t].state == 'doing_audio_player'){
 			else if(window.task_queue[t].state == 'doing_translation'){
-				console.log("handle_completed_task: it's a translation task: ", window.task_queue[t]);
+				//console.log("handle_completed_task: it's a translation task: ", window.task_queue[t]);
 				//window.task_queue[t]['handled_by'].push( window.task_queue[t].state.replace('doing_','') );
 				
 				if(typeof window.task_queue[t]['handled_by'] == 'undefined'){
@@ -6994,7 +6994,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			
 			//else if(window.task_queue[t].state == 'doing_tts' || window.task_queue[t].state == 'doing_audio_player'){
 			else if(window.task_queue[t].state == 'doing_tts'){
-				console.log("handle_completed_task: was doing_tts: state: " + window.task_queue[t].state);
+				//console.log("handle_completed_task: was doing_tts: state: " + window.task_queue[t].state);
 				//window.task_queue[t]['handled_by'].push( window.task_queue[t].state.replace('doing_','') );
 				
 				let found_sentence = false;
@@ -7230,7 +7230,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_imager' || window.task_queue[t].state == 'doing_text_to_image'){
-				console.log("handle_completed_task: image generation done. ", window.task_queue[t]);
+				//console.log("handle_completed_task: image generation done. ", window.task_queue[t]);
 				//window.task_queue[t]['handled_by'].push('audio_player');
 				if(window.task_queue[t].type == 'image'){
 					
@@ -7292,7 +7292,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_musicgen'){
-				console.log("handle_completed_task:  musicgen task: ", window.task_queue[t]);
+				//console.log("handle_completed_task:  musicgen task: ", window.task_queue[t]);
 				//window.task_queue[t]['handled_by'].push('audio_player');
 				window.task_queue[t].state = 'completed';
 				document.body.classList.remove('doing-musicgen');
@@ -7333,7 +7333,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//
 			
 			else if(window.task_queue[t].state == 'doing_ocr'){
-				console.log("handle_completed_task: doing_ocr done");
+				//console.log("handle_completed_task: doing_ocr done");
 				
 				if(typeof result != 'string'){
 					console.error("handle_task_completed:  OCR result was not a string: ", result);
@@ -7361,7 +7361,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							create_new_document(result,get_translation('Text_from_photo') + ' ' + date_string + '.txt' );
 						}
 						else if(window.task_queue[t].destination == 'chat'){
-							console.log("handle_task_completed:  OCR result to place in chat bubble: ", result);
+							//console.log("handle_task_completed:  OCR result to place in chat bubble: ", result);
 							
 							const target_output_el = document.querySelector('#image-to-text-result-output' + window.task_queue[t].index);
 							if(target_output_el){
@@ -7399,7 +7399,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							
 						}
 						else{
-							console.log("handle_task_completed: OCR result fell through");
+							//console.log("handle_task_completed: OCR result fell through");
 						}
 					}
 					else if(typeof window.task_queue[t].origin == 'string'){
@@ -7478,7 +7478,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			//    post image_to_text
 			
 			else if(window.task_queue[t].state == 'doing_image_to_text'){
-				console.log("handle_completed_task: doing_image_to_text done");
+				//console.log("handle_completed_task: doing_image_to_text done");
 				
 				camera_image_to_text_scan_progress_el.value = 0;
 				if(window.image_to_text_start_time != 0){
@@ -7490,7 +7490,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					window.task_queue[t].state = 'failed';
 				}
 				else{
-					console.log("handle_completed_task: got a image_to_text result:\n\n", result, "\n\n");
+					//console.log("handle_completed_task: got a image_to_text result:\n\n", result, "\n\n");
 					
 					window.task_queue[t].results.push(result);
 					
@@ -7501,9 +7501,9 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						&& window.task_queue[t].prompt == 'Write a detailed description of this image' //get_translation('Write_a_detailed_description_of_this_image')
 					){ 
 						
-						console.log("handle_completed_task: the image_to_text result seems to be a detailed description of a saved image, and the task has a file: ", window.task_queue[t].file);
+						//console.log("handle_completed_task: the image_to_text result seems to be a detailed description of a saved image, and the task has a file: ", window.task_queue[t].file);
 						if(typeof window.task_queue[t].file.filename == 'string' && typeof window.task_queue[t].file.folder == 'string' && typeof files[window.task_queue[t].file.filename] != 'undefined'){
-							console.log("handle_completed_task: saving image_to_text_description to file meta");
+							//console.log("handle_completed_task: saving image_to_text_description to file meta");
 							save_file_meta('image_to_text_description',result,window.task_queue[t].file.folder,window.task_queue[t].file.filename);
 						}
 					}
@@ -7755,13 +7755,13 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 					window.task_queue[t].state == 'failed';
 				}
 				*/
-				console.log("Assistant was done with a preload task (downloading a model). Updating cache list. result was: ", result);
+				//console.log("Assistant was done with a preload task (downloading a model). Updating cache list. result was: ", result);
 				window.task_queue[t].state = 'completed';
 				
 				let model_that_was_downloaded = null;
 				if(typeof window.task_queue[t].assistant == 'string'){
 					model_that_was_downloaded = window.task_queue[t].assistant;
-					console.log("model_that_was_downloaded: ", model_that_was_downloaded);
+					//console.log("model_that_was_downloaded: ", model_that_was_downloaded);
 				}
 				let runner = null;
 				if(typeof window.task_queue[t].runner == 'string' && window.task_queue[t].runner.length){
@@ -7797,7 +7797,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							//if(typeof window.web_llm_model_being_loaded == 'string' && window.web_llm_model_being_loaded == window.model_being_loaded){
 							//	window.model_being_loaded = null;
 							//}
-							console.log("post preload: setting window.web_llm_model_being_loaded to null from: " + window.web_llm_model_being_loaded);
+							//console.log("post preload: setting window.web_llm_model_being_loaded to null from: " + window.web_llm_model_being_loaded);
 							window.web_llm_model_being_loaded = null;
 						}*/
 					}
@@ -7998,7 +7998,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						// Play-document is complete
 						if(window.task_queue[t].origin == 'play-document'){
-							console.log("play_document task parent is full")
+							//console.log("play_document task parent is full")
 							window.playing_document = false;
 							document.body.classList.remove('playing-document');
 							document.body.classList.remove('fairytale');
@@ -8010,7 +8010,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 							console.warn("\n\nBLUEPRINT PARENT DONE\n\nblueprint task parent is full\n\n");
 							window.blueprint_origin_file = null;
 							if(window.playing_document && window.tts_tasks_left > 1 && document.body.classList.contains('fairytale')){
-								console.log("allowing fairytale to continue playing");
+								//console.log("allowing fairytale to continue playing");
 							}
 							else{
 								document.body.classList.remove('playing-document');
@@ -8039,7 +8039,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 						
 						// Transcription parent
 						else if(window.task_queue[t].origin.endsWith('file')){
-							console.log("\n\nFILE TRANSCRIPTION PARENT DONE\n\nFile transcription task parent is full\n\n");
+							//console.log("\n\nFILE TRANSCRIPTION PARENT DONE\n\nFile transcription task parent is full\n\n");
 							//console.log("task should have an array of extras: ", window.task_queue[t], "\n", window.task_queue[t].extras);
 							
 							let scribe_progress_el = document.querySelector('#scribe-progress' + window.task_queue[t].index);
@@ -8138,7 +8138,7 @@ async function handle_completed_task(task, result=null,task_meta=null,extra=null
 			
 			if(state_before != window.task_queue[t].state){
 				if(window.settings.settings_complexity == 'developer'){
-					console.log("dev: handle_task_completed: task state changed: ", state_before, " --> ", window.task_queue[t].state);
+					//console.log("dev: handle_task_completed: task state changed: ", state_before, " --> ", window.task_queue[t].state);
 				}
 				
 				
@@ -8633,7 +8633,7 @@ let previous_used_memory = 0;
 
 function pause_interval(){
 	window.interval_paused = !window.interval_paused;
-	console.log("window.interval_paused: ", window.interval_paused);
+	//console.log("window.interval_paused: ", window.interval_paused);
 }
 
 
@@ -8646,7 +8646,7 @@ window.main_interval = setInterval( () => {
 	}
 	
 	if(window.ram < 4001 && previous_interval_done == false){
-		console.log("interval: previous interval isn't done yet, and this is a low memory device, so patiently waiting for it to complete");
+		//console.log("interval: previous interval isn't done yet, and this is a low memory device, so patiently waiting for it to complete");
 	}
 	else{
 		do_interval();
@@ -8682,13 +8682,13 @@ async function do_interval(){
 	
 	if (document.pictureInPictureElement) {
 		if(window.pip_started == false){
-			console.log("Picture in Picture window has been opened");
+			//console.log("Picture in Picture window has been opened");
 		}
 		window.pip_started = true;
 	}
 	else{
 		if(window.pip_started){
-			console.log("Picture in Picture window has been closed");
+			//console.log("Picture in Picture window has been closed");
 		}
 		window.pip_started = false;
 	}
@@ -8857,12 +8857,12 @@ async function do_interval(){
 			
 			/*
 			if(window.stt_tasks_left > 0){
-				console.log("interval: window.stt_tasks_left: ", window.stt_tasks_left);
+				//console.log("interval: window.stt_tasks_left: ", window.stt_tasks_left);
 			}
 			*/
 			if(window.tts_tasks_left > 0 || window.audio_output_tasks_left > 0){
-				console.log("interval: window.tts_tasks_left: ", window.tts_tasks_left);
-				console.log("window.audio_output_tasks_left: ", window.audio_output_tasks_left);
+				//console.log("interval: window.tts_tasks_left: ", window.tts_tasks_left);
+				//console.log("window.audio_output_tasks_left: ", window.audio_output_tasks_left);
 			}
 			
 			
@@ -9123,15 +9123,15 @@ async function do_interval(){
 					&& window.task_queue[t].runner == 'llama_cpp' 
 					&& typeof window.task_queue[t].assistant == 'string'
 				){
-					console.log("interval: starting preload task for llama.cpp model: ", window.task_queue[t].assistant);
+					//console.log("interval: starting preload task for llama.cpp model: ", window.task_queue[t].assistant);
 					if(window.llama_cpp_app == null){
 						console.error("interval: starting preload: have to create llama_cpp_app first");
 						window.create_wllama_object();
 					}
 					
-					console.log("interval: starting Wllama preload task");
+					//console.log("interval: starting Wllama preload task");
 					window.llama_cpp_model_being_loaded = window.task_queue[t].assistant;
-					console.log("window.llama_cpp_model_being_loaded is now: ", window.llama_cpp_model_being_loaded);
+					//console.log("window.llama_cpp_model_being_loaded is now: ", window.llama_cpp_model_being_loaded);
 					window.task_queue[t].state = 'doing_preload';
 					add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,"download_progress#setting---");
 					window.do_preload(window.task_queue[t]);
@@ -9147,13 +9147,13 @@ async function do_interval(){
 					&& window.task_queue[t].runner == 'web_llm' 
 					&& typeof window.task_queue[t].assistant == 'string'
 				){
-					console.log("interval: starting preload task for web_llm model: ", window.task_queue[t].assistant);
+					//console.log("interval: starting preload task for web_llm model: ", window.task_queue[t].assistant);
 					if(window.web_llm_engine == null){
-						console.log("interval: starting preload task delayed, have to create llama_cpp_app first");
+						//console.log("interval: starting preload task delayed, have to create llama_cpp_app first");
 						window.create_wllama_object();
 					}
 					else{
-						console.log("interval: starting preload task");
+						//console.log("interval: starting preload task");
 						window.llama_cpp_model_being_loaded = window.task_queue[t].assistant;
 						window.task_queue[t].state = 'doing_preload';
 						add_chat_message(window.task_queue[t].assistant,window.task_queue[t].assistant,"download_progress#setting---");
@@ -9357,9 +9357,9 @@ async function do_interval(){
 						window.task_queue[t].state = 'doing_tts';
 						try{
 							const do_tts_result = await window.do_tts(window.task_queue[t]);
-							console.log("do_tts_result: ", do_tts_result);
+							//console.log("do_tts_result: ", do_tts_result);
 							if(do_tts_result === true){
-								console.log("interval: successfully passed task to T5 tts: ", window.task_queue[t]);
+								//console.log("interval: successfully passed task to T5 tts: ", window.task_queue[t]);
 								//window.task_queue[t].state = 'doing_assistant';
 								if(window.task_queue[t] != null && typeof window.task_queue[t].type == 'string'){
 									window.current_tasks[window.task_queue[t].type] = window.task_queue[t];
@@ -9463,7 +9463,7 @@ async function do_interval(){
 						
 						try{
 							let value = await window.do_translation(window.task_queue[t]);
-							console.log("main: interval: do_translation was resolved.  value: ", value);
+							//console.log("main: interval: do_translation was resolved.  value: ", value);
 					
 							if(value && typeof value.task != 'undefined' && typeof value.translation != 'undefined'){
 								//console.log("main: interval: do_translation resolved a task and translation");
@@ -9818,7 +9818,7 @@ async function do_interval(){
 					//console.log("Interval: __OK typeof window.task_queue[t].image_blob: ", typeof window.task_queue[t].image_blob);
 					if(window.task_queue[t].type == 'image_to_text' && window.task_queue[t].state == 'should_image_to_text' && typeof window.task_queue[t].image_blob != 'undefined'){ // || is_task_relevant(window.task_queue[t], 'mp3') == true){
 						//console.log("There is an added image_to_text task");
-						console.log('INTERVAL: STARTING IMAGE TO TEXT TASK');
+						//console.log('INTERVAL: STARTING IMAGE TO TEXT TASK');
 						
 						window.image_to_text_worker_busy = true;
 						window.task_queue[t].state = 'doing_image_to_text';
@@ -9863,7 +9863,7 @@ async function do_interval(){
 								}
 							
 								if(typeof response != 'undefined' && response != null && typeof response.result != 'undefined' && typeof response.task != 'undefined' && response.task != null && typeof response.task.origin == 'string' && typeof response.task.prompt == 'string'){ // && typeof response.task.image_to_text_index == 'number'
-									console.log("interval: do_image_to_text: GOOD RESPONSE: ", response.result);
+									//console.log("interval: do_image_to_text: GOOD RESPONSE: ", response.result);
 									
 									if(Array.isArray(response.result) && response.result.length){
 										//console.log("flattening response.result array");
@@ -9884,7 +9884,7 @@ async function do_interval(){
 										response.result = response.result.replaceAll('<|endoftext|>','');
 									
 										response.result = response.result.trim();
-										console.log("interval: do_image_to_text: even more cut-down image_to_text response.result: ", response.result);
+										//console.log("interval: do_image_to_text: even more cut-down image_to_text response.result: ", response.result);
 									
 										// this should be handled in handle_completed_task
 										if(typeof response.task != 'undefined' && response.task != null && typeof response.task.origin == 'string' && response.task.origin == 'chat'){
@@ -9901,10 +9901,10 @@ async function do_interval(){
 														window.task_queue[t]['input_language'] = 'en';
 														window.task_queue[t]['output_language'] = window.settings.language;
 														window.task_queue[t]['translation_details'] = get_translation_model_details_from_languages('en',window.settings.language);
-														console.log("should translate the image_to_text task result. Updated task:", window.task_queue[t]);
+														//console.log("should translate the image_to_text task result. Updated task:", window.task_queue[t]);
 													}
 													else{
-														console.log("interval: do_image_to_text: promise done, calling handle_completed_task with: ", response.result);
+														//console.log("interval: do_image_to_text: promise done, calling handle_completed_task with: ", response.result);
 														await window.handle_completed_task(response.task,response.result);
 													}
 												
@@ -10695,10 +10695,10 @@ window.start_assistant = async function (task=null){  // async
 
 // This should really be called "interrupt assistant" instead
 window.stop_assistant = async function (task=null){ 
-	console.log("in stop_assistant.   window.currently_running_llm, task, window.current_task: ", window.currently_running_llm, task, window.current_task);
-	console.log("- stop_assistant. window.current_tasks: ", window.current_tasks);
-	console.log("- window.currently_loaded_assistant: ", window.currently_loaded_assistant);
-	console.log("- window.currently_running_llm: ", window.currently_running_llm);
+	//console.log("in stop_assistant.   window.currently_running_llm, task, window.current_task: ", window.currently_running_llm, task, window.current_task);
+	//console.log("- stop_assistant. window.current_tasks: ", window.current_tasks);
+	//console.log("- window.currently_loaded_assistant: ", window.currently_loaded_assistant);
+	//console.log("- window.currently_running_llm: ", window.currently_running_llm);
 	
 	let assistant_id = null;
 	
@@ -10878,7 +10878,7 @@ window.stop_assistant = async function (task=null){
 	if(typeof task != 'undefined' && task != null){
 		console.warn("\n\nSTOP\n\nstop_assistant: stoppping a single task");
 		if(typeof task.parent_index == 'number'){
-			console.log("stop_assistant: task had a parent_index. setting all tasks with the same parent index, and the parent itself, to interrupted");
+			//console.log("stop_assistant: task had a parent_index. setting all tasks with the same parent index, and the parent itself, to interrupted");
 		
 			if(typeof task.state == 'string' && window.irrelevant_task_states.indexOf(task.state) == -1){
 				await window.handle_completed_task(task,false,{'state':'interrupted'});
@@ -10890,7 +10890,7 @@ window.stop_assistant = async function (task=null){
 		
 		if(typeof task.origin == 'string'){
 			if(task.origin == 'blueprint'){
-				console.log("stop_assistant: task had blueprint origin, stopping all blueprint tasks");
+				//console.log("stop_assistant: task had blueprint origin, stopping all blueprint tasks");
 				change_tasks_with_origin('blueprint');
 				window.busy_doing_blueprint_task = false;
 			}
@@ -11165,7 +11165,7 @@ function change_tasks_with_origin(origin, new_state='interrupted'){
 
 
 function pick_optimal_coder_ai(ram_limit=null){
-	console.log("in pick_optimal_coder_ai. ram_limit: ", ram_limit);
+	//console.log("in pick_optimal_coder_ai. ram_limit: ", ram_limit);
 	if(ram_limit == null){
 		ram_limit = window.ram
 	}
@@ -11199,7 +11199,7 @@ function pick_optimal_coder_ai(ram_limit=null){
 
 
 function pick_optimal_text_ai(target_language=null,ram_limit=null){
-	console.log("in pick_optimal_text_ai.  target_language, ram_limt: ", target_language, ram_limit);
+	//console.log("in pick_optimal_text_ai.  target_language, ram_limt: ", target_language, ram_limit);
 	
 	let optimal_assistant = null;
 	let optimal_assistants = [];
@@ -11839,18 +11839,18 @@ window.get_total_prompt = get_total_prompt;
 function set_idle(idle){
 	//console.log("in set_idle: ", idle);
 	if(window.settings.settings_complexity == 'developer'){
-		console.log("dev: - set_idle:  idle, window.stopped_whisper_because_of_low_memory: ", idle, window.stopped_whisper_because_of_low_memory);
+		//console.log("dev: - set_idle:  idle, window.stopped_whisper_because_of_low_memory: ", idle, window.stopped_whisper_because_of_low_memory);
 	}
 	
 	window.idle = idle;
 	if(window.idle){
 		document.body.classList.add('idle');
 		if(window.stopped_whisper_because_of_low_memory){			
-			console.log("set_idle: whisper was stopped because of low memmory. Restarting it.");
+			//console.log("set_idle: whisper was stopped because of low memmory. Restarting it.");
 			window.do_unload([]);
 			/*
 			if(window.pip_started){
-				console.log("set_idle: restarting microphone after it was disabled because of low memory");
+				//console.log("set_idle: restarting microphone after it was disabled because of low memory");
 				window.enable_microphone();
 			}
 			*/
@@ -12054,7 +12054,7 @@ const create_image_to_text_task = function (task=null){
 		window.image_to_text_counter++;
 		
 		if(typeof task != 'undefined' && typeof task == 'object' && task != null && typeof task.image_blob != 'undefined' && task.image_blob != null){
-			console.log("create_image_to_text_task: a blob has been provided");
+			//console.log("create_image_to_text_task: a blob has been provided");
 			
 			
 		}
@@ -12667,7 +12667,7 @@ window.preload_model = async function (task){
 
 // Only used to pre-download Wllama models in a promise-based fire-and-forget manner
 window.do_preload = async function (task){ 
-	console.log("in do_preload.  task: ", task);
+	//console.log("in do_preload.  task: ", task);
 	
 	if(typeof task == 'undefined' || task == null){
 		console.error("do_preload: invalid task provided");

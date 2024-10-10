@@ -454,7 +454,7 @@ function get_translation(i18n_code, target_language=null, return_empty_string=fa
 		target_language = window.settings.language;
 	}
 	if(target_language != window.settings.language){
-		console.log("get_translation: target_language provided, and different from UI language: ", target_language);
+		//console.log("get_translation: target_language provided, and different from UI language: ", target_language);
 	}
 	if(target_language == ''){
 		console.error("get_translation: target_language was empty string. i18n_code: ", i18n_code);
@@ -941,7 +941,7 @@ function generate_functionalities_list(){
 
 let functionality_hint_given = false;
 function do_functionality(functionality_name){
-	console.log("in do_functionality.  functionality_name: ", functionality_name);
+	//console.log("in do_functionality.  functionality_name: ", functionality_name);
 	window.only_allow_voice_commands = false;
 	
 	if(typeof functionality_name == 'string' && functionality_name.length > 1){
@@ -951,7 +951,7 @@ function do_functionality(functionality_name){
 			if(functionality_hint_given == false && window.settings.settings_complexity != 'normal'){
 				functionality_hint_given = true;
 				const functionality_shortcut = get_translation('Here_is_a_shortcut_link_to_this_functionality') + ':\n\nhttps://www.papeg.ai/' + functionality_name + "\n\n";
-				console.log("do_functionality: giving functinality hint: ", functionality_shortcut);
+				//console.log("do_functionality: giving functinality hint: ", functionality_shortcut);
 				setTimeout(() => {
 					add_chat_message('current','developer', functionality_shortcut);
 				},10000);
@@ -1223,7 +1223,7 @@ function generate_characters_list(){
 				window.only_allow_voice_commands = false;
 				
 				if(typeof details.function == 'string'){
-					console.log("clicked on special character button -> running function: ", details.function);
+					//console.log("clicked on special character button -> running function: ", details.function);
 					window[details.function]();
 				}
 				else{

@@ -36,7 +36,7 @@ window.service_worker_registered = async function (registration){
 			//console.log("service_worker_registered: service worker responded: ", response);
 			
 			if(typeof response != 'undefined' && response != null && typeof response.version_number == 'number'){
-				console.log("service_worker_registered: returned version_number: ", response.version_number, " ,  =?= window.settings.version: ", window.settings.version);
+				//console.log("service_worker_registered: returned version_number: ", response.version_number, " ,  =?= window.settings.version: ", window.settings.version);
 				
 				window.cache_name = 'v' + response.version_number;
 				
@@ -46,7 +46,7 @@ window.service_worker_registered = async function (registration){
 				}
 				
 				else if(typeof window.settings.version == 'number' && window.settings.version < response.version_number){
-					console.log("A new version! Saving to settings: ", response.version_number);
+					//console.log("A new version! Saving to settings: ", response.version_number);
 					window.settings.version = response.version_number;
 					save_settings();
 					
@@ -71,7 +71,7 @@ window.service_worker_registered = async function (registration){
 }
 
 window.service_worker_ready = async function (registration){
-	console.log("updater.js: in service_worker_ready. registration: ", registration);
+	//console.log("updater.js: in service_worker_ready. registration: ", registration);
 	
 	try{
 		registration.addEventListener("message", (event) => {
@@ -97,7 +97,7 @@ window.service_worker_ready = async function (registration){
 				}
 				
 				else if(typeof window.settings.version == 'number' && window.settings.version < response.data.version_number){
-					console.log("A new version!  Saving to settings: response.data.version_number: ", response.data.version_number);
+					//console.log("A new version!  Saving to settings: response.data.version_number: ", response.data.version_number);
 					window.settings.version = response.data.version_number;
 					save_settings();
 					
@@ -136,7 +136,7 @@ navigator.serviceWorker.addEventListener("message", (message) => {
 */
 
 window.update_site = async function (){
-	console.log("updater.js: in update_site");
+	//console.log("updater.js: in update_site");
 	//window.settings.version = null;
 	save_settings();
 	
@@ -144,11 +144,11 @@ window.update_site = async function (){
 	
 	// n.serviceWorker.controller.postMessage({ type: "deregister" });
     const n = navigator;
-	console.log("updater.js: update_site: does a service worker exist?  n.serviceWorker:", n.serviceWorker);
+	//console.log("updater.js: update_site: does a service worker exist?  n.serviceWorker:", n.serviceWorker);
     const controlling = n.serviceWorker && n.serviceWorker.controller;
-	console.log("updater.js: update_site: is a service worker controlling? ", controlling);
+	//console.log("updater.js: update_site: is a service worker controlling? ", controlling);
 	if(controlling){
-		console.log("update_site: sending clear_cache message to service worker");
+		//console.log("update_site: sending clear_cache message to service worker");
 		//n.serviceWorker.postMessage({'type':'clear_cache'});
 		n.serviceWorker.controller.postMessage({'type':'clear_cache'});
 	}
@@ -166,10 +166,10 @@ window.update_site = async function (){
 			caches.keys()
 			.then(function(names) {
 			    for (let cache_name of names){
-					console.log("updater.js: update_site: spotted cache called: ", cache_name);
+					//console.log("updater.js: update_site: spotted cache called: ", cache_name);
 			    	for(let v = 0; v < window.settings.version; v++){
 			    		if(cache_name == 'v' + v){
-							console.log("update_site: deleting outdated cache: ", cache_name);
+							//console.log("update_site: deleting outdated cache: ", cache_name);
 			    			caches.delete(cache_name);
 			    		}
 			    	}
@@ -190,7 +190,7 @@ window.update_site = async function (){
 
 if(typeof navigator.serviceWorker != 'undefined'){
 	navigator.serviceWorker.addEventListener('controllerchange', (event) => {
-		console.log("updater.js: service worker changed: ", event);
+		//console.log("updater.js: service worker changed: ", event);
 		
 		
 		if(window.first_run == false){

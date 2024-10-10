@@ -171,7 +171,7 @@ window.do_ocr = async function (task,language=null){
 	if(language.length == 2){
 		console.error("do_ocr: language code was still 2 characters long, may have to change to 3 character version: ", language);
 	}
-	console.log("do_ocr: language: ", language);
+	//console.log("do_ocr: language: ", language);
     const worker = await Tesseract.createWorker(language);
     const ret = await worker.recognize(task.image_blob); //{progress: function(e){console.log(e)}}
 	//console.log("do_ocr: extracted text: ", ret, ret.data.text);
@@ -198,7 +198,7 @@ Tesseract.recognize("https://yoursite/image.jpg", {
 
 
 window.start_camera = function (simple=false){
-	console.log("in start_camera.  simple: ", simple);
+	//console.log("in start_camera.  simple: ", simple);
 	document.body.classList.add('show-camera');
 	document.body.classList.remove('prepare-translate-document');
 	document.body.classList.remove('prepare-sumarize-document');
@@ -217,7 +217,7 @@ window.start_camera = function (simple=false){
 	}
 	
 	if(simple){
-		console.log("window.start_camera: going the simple route");
+		//console.log("window.start_camera: going the simple route");
 		video_settings = true; // just give any video
 	}	
 			
@@ -271,7 +271,7 @@ const constraints = {
 					console.error("The error was an 'overconstrainedError'. Let's try again with simpler demands. ");
 					window.start_camera(true)
 					.then((value) => {
-						console.log("using simpler camera contraints solved the problem with getting the video stream");
+						//console.log("using simpler camera contraints solved the problem with getting the video stream");
 					})
 					.catch((err) => {
 						console.error("using simpler camera contraints did not solve the problem with getting the video stream");
@@ -530,14 +530,14 @@ window.perform_ocr_on_blobs = async function (blobs){
 			if(typeof merge_result == 'string' && merge_result.length){
 				for(let x = 0; x < window.ocr_scans.length; x++){
 					const similarity_score = similarity(window.ocr_scans[x],merge_result);
-					console.log("OCR similarity_score: ", similarity_score);
+					//console.log("OCR similarity_score: ", similarity_score);
 					if(similarity_score > highest_similarity_score){
 						highest_similarity_score = similarity_score;
 						best_scan = x;
 					}
 				}
 			}
-			console.log("perform_ocr_on_blobs: of the scans, when OCR-ed this picture best matched the resulting merged text: ", best_scan);
+			//console.log("perform_ocr_on_blobs: of the scans, when OCR-ed this picture best matched the resulting merged text: ", best_scan);
 			
 			if(typeof best_scan == 'number' && best_scan != 1){
 				let save_ocr_image_task = {
@@ -547,7 +547,7 @@ window.perform_ocr_on_blobs = async function (blobs){
 					'image_mime_type':'image/jpeg',
 					'image_blob':blobs[best_scan]
 				}
-				console.log("perform_ocr_on_blobs: adding save_image task: ", task);
+				//console.log("perform_ocr_on_blobs: adding save_image task: ", task);
 				window.add_task(save_ocr_image_task);//window.add_image_task(task);
 			}
 			/*
@@ -619,13 +619,13 @@ window.perform_ocr_on_blobs = async function (blobs){
 // The main OCR scan function. Not just for running continuously
 // async function do_continuous_ocr(){
 window.do_continuous_ocr = async function (){ 
-	console.log("in do_continuous_ocr.  window.doing_ocr_scan,window.continuous_ocr_enabled: ", window.doing_ocr_scan, window.continuous_ocr_enabled);
+	//console.log("in do_continuous_ocr.  window.doing_ocr_scan,window.continuous_ocr_enabled: ", window.doing_ocr_scan, window.continuous_ocr_enabled);
 	window.only_allow_voice_commands = true;
 	try{
 		
 		
 		if(window.opencv_jscanify){
-			console.log("do_continuous_ocr:  opencv_jscanify available: ", window.opencv_jscanify);
+			//console.log("do_continuous_ocr:  opencv_jscanify available: ", window.opencv_jscanify);
 			//window.detect_page_in_video();
 			
 			//camera_overlay_context.scale(1,1);
@@ -635,7 +635,7 @@ window.do_continuous_ocr = async function (){
 		else{
 			video_context.drawImage(video_el, 0, 0, window.camera_width, window.camera_height);
 			video_canvas_el.toBlob( async (blob) => {
-				console.log("continuous_ocr: video_canvas_el: toBlob result: ", blob);
+				//console.log("continuous_ocr: video_canvas_el: toBlob result: ", blob);
 			    window.ocr_blobs.push(blob);
 				
 				//console.log("continuous_ocr:  ret.data.text: ", ret.data.text);
@@ -1441,10 +1441,10 @@ window.merge_ocr_scans = function(scans=null){
 		}
 	}
 	
-	console.log("merge_ocr_scans: scan_data: ", scan_data);
-	console.log("merge_ocr_scans: line_data: ", line_data);
-	console.log("merge_ocr_scans: word_data: ", word_data);
-	console.log("merge_ocr_scans: initial line_scores: ", line_scores);
+	//console.log("merge_ocr_scans: scan_data: ", scan_data);
+	//console.log("merge_ocr_scans: line_data: ", line_data);
+	//console.log("merge_ocr_scans: word_data: ", word_data);
+	//console.log("merge_ocr_scans: initial line_scores: ", line_scores);
 
 	if(typeof word_data['|'] != 'undefined'){
 		delete word_data['|'];
@@ -1991,7 +1991,7 @@ window.analyze_video_stream = function(stream){
 						if(window.camera_width > window.camera_height){
 					
 							const width_offset = Math.floor( (window.camera_width - (window.camera_height / 1.5)) / 2);
-							console.log("start of camera stream. width_offset for scan hint box: ", width_offset, ", of: ", window.camera_width + "x" + window.camera_height)
+							//console.log("start of camera stream. width_offset for scan hint box: ", width_offset, ", of: ", window.camera_width + "x" + window.camera_height)
 							window.camera_crop_box = {
 							    "topLeftCorner": {
 							        "x": width_offset,
@@ -2037,7 +2037,7 @@ video_el.onloadedmetadata = (video_meta_data) => {
 		document.body.classList.add('show-camera');
 		
 		if(window.opencv_jscanify != null && window.detecting_page_in_video == false && window.camera_streaming == true && document.body.classList.contains('doing-ocr')){
-			console.log("video canplay event detected: starting detect_page_in_video loop");
+			//console.log("video canplay event detected: starting detect_page_in_video loop");
 			window.detect_page_in_video();
 		}
 		
@@ -2056,7 +2056,7 @@ async function enable_camera_switching(){
 	if(window.has_camera){
 		if(window.camera_select_el != null){
 			window.camera_select_el.addEventListener('change', () => {
-				console.log("camera select dropdown changed");
+				//console.log("camera select dropdown changed");
 				
 				//const videoDevice = videoDevices[0];
 				

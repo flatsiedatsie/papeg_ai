@@ -299,7 +299,7 @@ function doc_updated(){
 
 
 function update_tools_from_selection(){
-	console.log("in update_tools_from_selection");
+	//console.log("in update_tools_from_selection");
 	remove_highlight_selection();
 	if(typeof window.doc_selected_text == 'string'){
 		//console.log("update_tools_from_selection:  window.doc_selected_text: " + window.doc_selected_text.substr(0,30) + "...");
@@ -475,7 +475,7 @@ function show_doc_selection_hint(){
 				}
 				
 				else if( (inner_height - rect.y) > 65 && (rect.y + hint_height) > inner_height && (rect.y + hint_height) < (inner_height + hint_height) && (inner_height - rect.y) < 20){ // 
-					console.log("show_doc_selection_hint: selection hint would almost be outside of the bottom. Placing it above the selection instead. (inner_height - rect.y): ", (inner_height - rect.y));
+					//console.log("show_doc_selection_hint: selection hint would almost be outside of the bottom. Placing it above the selection instead. (inner_height - rect.y): ", (inner_height - rect.y));
 					/*
 					doc_selection_hint_el.style.bottom = ((inner_height - rect.y) - y_pos) + 'px'; // ((inner_height - (inner_height - rect.y)) - 15) + 'px'; // 
 					doc_selection_hint_el.style.top = 'auto';
@@ -491,10 +491,10 @@ function show_doc_selection_hint(){
 					
 				}
 				else if( ((rect.y + hint_height) - y_pos) > inner_height){ // 
-					console.log("show_doc_selection_hint: has to be placed higher?: ", (inner_height - rect.y));
+					//console.log("show_doc_selection_hint: has to be placed higher?: ", (inner_height - rect.y));
 					
 					if((inner_height - rect.y) < 0){
-						console.log("show_doc_selection_hint: placing it at a fixed position near the bottom");
+						//console.log("show_doc_selection_hint: placing it at a fixed position near the bottom");
 						doc_selection_hint_el.style.bottom = (document_form_container_el.clientHeight + 10) + 'px';
 						doc_selection_hint_el.style.top = 'auto'; //(y_pos + 50) + 'px';
 						//doc_selection_hint_el.style.left = (15 + rect.x) + 'px';
@@ -505,7 +505,7 @@ function show_doc_selection_hint(){
 						
 						let place_it_higher = 0;
 						if(selection_height < (playground_overlay_el.clientHeight - hint_height) ){ // && (inner_height - rect.y) > 200
-							console.log("show_doc_selection_hint: placing it a little higher too");
+							//console.log("show_doc_selection_hint: placing it a little higher too");
 							if(hint_height < 100){
 								place_it_higher = 25 + selection_height; //+ hint_height;
 							}
@@ -686,7 +686,7 @@ function prepare_summarize(){
 }
 
 function prepare_summarize_document(){
-	console.log("in prepare_summarize_document. window.doc_text: ",  window.doc_text);
+	//console.log("in prepare_summarize_document. window.doc_text: ",  window.doc_text);
 	//rewrite_prompt_el.value = '';
 	
 	window.switch_assistant('any_small_writer',true);
@@ -745,7 +745,7 @@ function prepare_summarize_document(){
 	if(window.settings.auto_detect_input_language && typeof window.doc_text == 'string' && window.doc_text.length > 5){
 		//console.log("prepate_summarize_document:  will attempt to auto-detect language of document");
 		
-		console.log("prepare_summarize_document: doc_text stripped of timestamps: ", window.strip_timestamps(window.doc_text));
+		//console.log("prepare_summarize_document: doc_text stripped of timestamps: ", window.strip_timestamps(window.doc_text));
 		
 		
 		detect_language( strip_timestamps(window.doc_text));
@@ -811,7 +811,7 @@ function prepare_translation(){
 }
 
 function prepare_translate_document(){
-	console.log("in prepare_translate_document. window.doc_text: ",  window.doc_text);
+	//console.log("in prepare_translate_document. window.doc_text: ",  window.doc_text);
 	rewrite_prompt_el.value = '';
 	rewrite_dialog_selected_text_el.textContent = '';
 	model_info_container_el.innerHTML = '';
@@ -901,7 +901,7 @@ window.prepare_translate_document = prepare_translate_document;
 
 
 async function pick_optimal_ai_from_text_language(source_text=null,detected_language=null){
-	console.log("in pick_optimal_ai_from_text_language.  source_text,detected_language:",source_text,detected_language);
+	//console.log("in pick_optimal_ai_from_text_language.  source_text,detected_language:",source_text,detected_language);
 	if(typeof source_text != 'string' && typeof detected_language != 'string'){
 		console.error("pick_optimal_ai_from_text_language:  no valid source text (or detected language) provided.  typeof source_text, typeof detected_language: ", typeof source_text, typeof detected_language);
 		return window.settings.assistant;
@@ -1051,7 +1051,7 @@ async function set_optimal_assistant_for_text(source_text=null,rewrite_type=null
 					//console.log("set_optimal_assistant_for_text: setting proofread prompt for the detected language: ", detected_language);
 					const optimal_default_prompt = get_translation("Fix_typos_spelling_and_grammar_errors_in_the_following_text", detected_language);
 					prompt_similarity_score = similarity(optimal_default_prompt,window.settings.proofread_prompt);
-					console.log("proofread prompt_similarity_score, when compared to the optimal prompt in the detected language: ", prompt_similarity_score, optimal_default_prompt,window.settings.proofread_prompt);
+					//console.log("proofread prompt_similarity_score, when compared to the optimal prompt in the detected language: ", prompt_similarity_score, optimal_default_prompt,window.settings.proofread_prompt);
 					if(prompt_similarity_score < .7 || window.settings.proofread_prompt.length < 10){
 						if(set_it){
 							window.settings.proofread_prompt = optimal_default_prompt;
@@ -1223,7 +1223,7 @@ window.already_proofread = {};
 
 
 function handle_proofread_result(task,fixed_text=null,finalize=true){
-	console.log("in handle_proofread_result. task: ", task);
+	//console.log("in handle_proofread_result. task: ", task);
 	
 	if(typeof task != 'undefined' && task != null){
 		
@@ -2351,7 +2351,7 @@ async function rewrite_selection(type=null,source_text,desired_results=1,parent_
 
 // Prepare question dialog
 function prepare_question(text=null){
-	console.log("in prepare_question. window.doc_selected_text: ", window.doc_selected_text);
+	//console.log("in prepare_question. window.doc_selected_text: ", window.doc_selected_text);
 	//console.log("in prepare_question. window.doc_selected_text: ",  window.doc_selected_text);
 	/*
 	rewrite_prompt_el.value = '';
@@ -2503,7 +2503,7 @@ function summarize_selection(){
 
 
 function translate_selection(text=null,desired_count=1,task=null,feeling_lucky=false){
-	console.log("in translate_selection. text, desired_count: ", text, desired_count);
+	//console.log("in translate_selection. text, desired_count: ", text, desired_count);
 	if(typeof desired_count != 'number'){
 		console.error("translate_selection: desired_count was not a number:", desired_count);
 		return false
@@ -2512,7 +2512,7 @@ function translate_selection(text=null,desired_count=1,task=null,feeling_lucky=f
 	
 	add_script('./translation_module.js')
 	.then((value) => {
-		console.log("translate_selection: translation_module.js loaded. value: ", value);
+		//console.log("translate_selection: translation_module.js loaded. value: ", value);
 		
 		//let text = window.doc_selected_text;
 		let origin = 'translate_document';
@@ -2612,7 +2612,7 @@ function translate_selection(text=null,desired_count=1,task=null,feeling_lucky=f
 			
 			for(let tt = 0; tt < desired_count; tt++){
 				
-				console.log("translate_selection: adding sentence translation subtask.  nr: ", tt);
+				//console.log("translate_selection: adding sentence translation subtask.  nr: ", tt);
 				
 				let translation_task = {
 					'assistant':'translator',
@@ -2674,7 +2674,7 @@ function translate_selection(text=null,desired_count=1,task=null,feeling_lucky=f
 
 
 function translate_document(){
-	console.log("in translate_document");
+	//console.log("in translate_document");
 	if(typeof window.doc_text != 'string'){
 		console.error("translate_document:  aborting, window.doc_text was not a string: ", window.doc_text);
 		return false
@@ -2792,7 +2792,7 @@ async function continue_document(source_text=null,use_selection=true,task=null){
 		return null
 	}
 	if(source_text == null){
-		console.log("continue_document: falling back to using entire document");
+		//console.log("continue_document: falling back to using entire document");
 		source_text = window.doc_text;
 	}
 	//source_text = source_text.trim();
@@ -2857,7 +2857,7 @@ async function continue_document(source_text=null,use_selection=true,task=null){
 	}
 	else{
 		task = {...task,...continue_task}
-		console.log("continue_document: ugraded task: ", task);
+		//console.log("continue_document: ugraded task: ", task);
 		return task
 	}
 	
@@ -3307,7 +3307,7 @@ function split_into_paragraphs(text,maximum_paragraph_length=1500,task=null){
 	}
 	
 	
-	console.log("split_into_paragraphs: maximum_paragraph_length: ", maximum_paragraph_length);
+	//console.log("split_into_paragraphs: maximum_paragraph_length: ", maximum_paragraph_length);
 	
 	if(maximum_paragraph_length > 5000){
 		maximum_paragraph_length -= 600;
@@ -3700,7 +3700,7 @@ function split_into_paragraphs(text,maximum_paragraph_length=1500,task=null){
 
 
 function prepare_do_prompt_at_line(){
-	console.log("in prepare_do_prompt_at_line");
+	//console.log("in prepare_do_prompt_at_line");
 	
 	switch_assistant('any_writer',true);
 	
@@ -3799,7 +3799,7 @@ function do_prompt_at_line(prompt_at_line=null){
 
 
 function do_blueprint(text){
-	console.log("in do_blueprint. Text: ", text);
+	//console.log("in do_blueprint. Text: ", text);
 	
 	if(typeof text != 'string'){
 		console.error("do_blueprint: provided text was invalid: ", typeof text, text);
@@ -3963,7 +3963,7 @@ function do_blueprint(text){
 								)
 								&& !filename_is_binary_image(filenames[f])
 							){
-								console.log("do_blueprint: skipping file that isn't a binary image: ", filenames[f]);
+								//console.log("do_blueprint: skipping file that isn't a binary image: ", filenames[f]);
 								continue
 							}
 							
@@ -3971,7 +3971,7 @@ function do_blueprint(text){
 								commands[c].trim().toLowerCase().endsWith(' video') 
 								&& !filename_is_video(filenames[f])
 							){
-								console.log("do_blueprint: skipping file that isn't a video: ", filenames[f]);
+								//console.log("do_blueprint: skipping file that isn't a video: ", filenames[f]);
 								continue
 							}
 							
@@ -3983,7 +3983,7 @@ function do_blueprint(text){
 								)
 								&& !filename_is_audio(filenames[f])
 							){
-								console.log("do_blueprint: skipping file that isn't a video: ", filenames[f]);
+								//console.log("do_blueprint: skipping file that isn't a video: ", filenames[f]);
 								continue
 							}
 							
@@ -3995,7 +3995,7 @@ function do_blueprint(text){
 								&& commands[c].trim().toLowerCase().endsWith(' document') 
 									
 							){
-								console.log("do_blueprint: skipping file that isn't a text document: ", filenames[f]);
+								//console.log("do_blueprint: skipping file that isn't a text document: ", filenames[f]);
 								continue
 							}
 							
@@ -4018,7 +4018,7 @@ function do_blueprint(text){
 							
 							
 							for(let t = c + 1; t < commands.length; t++){
-								console.log("adding blueprint command for origin file: ", filenames[f], " --> ", commands[t]);
+								//console.log("adding blueprint command for origin file: ", filenames[f], " --> ", commands[t]);
 								let per_file_task = JSON.parse(JSON.stringify(bp_task));
 								per_file_task['blueprint_for_each_file'] = true;
 								per_file_task['transcript'] = commands[t];
@@ -4064,7 +4064,7 @@ function do_blueprint(text){
 		
 		blueprint_parent_task['desired_results'] = (window.blueprint_command_counter - initial_blueprint_commands_counter);
 		blueprint_parent_task['end_blueprint_commands_counter'] = window.blueprint_command_counter;
-		console.log("final blueprint_parent_task: ", blueprint_parent_task);
+		//console.log("final blueprint_parent_task: ", blueprint_parent_task);
 	}
 	
 	
@@ -4281,7 +4281,7 @@ function do_blueprint(text){
 
 
 function stop_play_document(){
-	console.log("in stop_play_document");
+	//console.log("in stop_play_document");
 	
 	//console.warn("clearing audio queues");
 	window.playing_document = false;
@@ -4298,32 +4298,32 @@ window.stop_play_document = stop_play_document;
 
 // A task normally isn't provided, except from blueprints
 function start_play_document(task=null){
-	console.log("in start_play_document. task: ", task); 
+	//console.log("in start_play_document. task: ", task); 
 	
 	if(document.body.classList.contains('javascript-document')){
-		console.log("start_play_document: calling toggle_execute to test the javascript (instead of playing the document)");
+		//console.log("start_play_document: calling toggle_execute to test the javascript (instead of playing the document)");
 		toggle_execute(); // in ui.js
 		return;
 	}
 	
 	
 	if(document.body.classList.contains('subtitle-document')){
-		console.log("start_play_document: it's a subtitle document that possibly has a known related video file. files[current_file_name] meta: ", JSON.stringify(files[current_file_name],null,2));
+		//console.log("start_play_document: it's a subtitle document that possibly has a known related video file. files[current_file_name] meta: ", JSON.stringify(files[current_file_name],null,2));
 		
 		
 		if(typeof files[current_file_name] != 'undefined' && files[current_file_name] != null && typeof files[current_file_name].origin_file != 'undefined' && files[current_file_name].origin_file != null && typeof files[current_file_name].origin_file.filename == 'string' && filename_is_media(files[current_file_name].origin_file.filename)){
 			// open_file(target_filename=null,load_type=null,target_folder=null,save=false){
 			
-			console.log("click on play for a file with a related origin file: ", files[current_file_name].origin_file.filename, files[current_file_name]);
+			//console.log("click on play for a file with a related origin file: ", files[current_file_name].origin_file.filename, files[current_file_name]);
 			if(typeof files[ files[current_file_name].origin_file.filename ] == 'string'){
-				console.log("- the origin file is in the same folder: ", files[ files[current_file_name].origin_file.filename ]);
+				//console.log("- the origin file is in the same folder: ", files[ files[current_file_name].origin_file.filename ]);
 			}
 			if(typeof playground_live_backups[folder + '/' + current_file_name] == 'string'){
-				console.log("saving updated translation document to the subtitle meta of it's related video file: ", playground_live_backups[folder + '/' + current_file_name], "\n---META--->", files[current_file_name].origin_file.folder, files[current_file_name].origin_file.filename);
+				//console.log("saving updated translation document to the subtitle meta of it's related video file: ", playground_live_backups[folder + '/' + current_file_name], "\n---META--->", files[current_file_name].origin_file.folder, files[current_file_name].origin_file.filename);
 				save_file_meta('subtitle',playground_live_backups[folder + '/' + current_file_name], files[current_file_name].origin_file.folder, files[current_file_name].origin_file.filename); // save a potentially updated version of the subtitle to the file's meta data first
 			}
 			else if(typeof playground_saved_files[folder + '/' + current_file_name] == 'string'){
-				console.log("saving a saved translation document to the subtitle meta of it's related video file: ", playground_saved_files[folder + '/' + current_file_name], "\n---META--->", files[current_file_name].origin_file.folder, files[current_file_name].origin_file.filename);
+				//console.log("saving a saved translation document to the subtitle meta of it's related video file: ", playground_saved_files[folder + '/' + current_file_name], "\n---META--->", files[current_file_name].origin_file.folder, files[current_file_name].origin_file.filename);
 				save_file_meta('subtitle',playground_live_backups[folder + '/' + current_file_name], files[current_file_name].origin_file.folder, files[current_file_name].origin_file.filename); // save a potentially updated version of the subtitle to the file's meta data first
 			}
 			else{
@@ -4432,7 +4432,7 @@ function start_play_document(task=null){
 	}
 	
 	
-	console.log("start_play_document:  sentences: ", sentences);
+	//console.log("start_play_document:  sentences: ", sentences);
 	
 	let style_check_count = 5;
 	if(sentences.length < style_check_count){
@@ -4442,7 +4442,7 @@ function start_play_document(task=null){
 	for(let d = 0; d < style_check_count; d++){
 		let lowercased = sentences[d].toLowerCase();
 		if(lowercased.startsWith('once upon a time') || lowercased.startsWith('a fairy tale by ') || lowercased.startsWith('long, long ago, in a land') || lowercased.startsWith('er was eens') || lowercased.startsWith('lang, lang geleden ') || lowercased.startsWith('lang lang geleden ')){
-			console.log("Detected a fairytale");
+			//console.log("Detected a fairytale");
 			document_style = 'fairytale';
 			
 			document.body.classList.add('fairytale');
@@ -4468,7 +4468,7 @@ function start_play_document(task=null){
 			if(lowercased.startsWith('once upon a time') && window.settings.assistant == 'text_to_image' && text.length > 500){
 				if(typeof sentences[d+1] == 'string'){
 					imager_prompt = 'happy, friendly, line drawing, lush, Breughel. ' +  sentences[d] + ' ' + sentences[d+1]; // get the first two sentences and use it to generate an image
-					console.log("play_document: created a text_to_image prompt from the first two sentences of the fairy tale: ", imager_prompt);
+					//console.log("play_document: created a text_to_image prompt from the first two sentences of the fairy tale: ", imager_prompt);
 					
 				}
 				if(typeof sentences[d+2] == 'string'){
@@ -4551,7 +4551,7 @@ function start_play_document(task=null){
 
 		// Create image task for fairy tales
 		if(typeof imager_prompt == 'string'){
-			console.log("play_document: will also attempt to create an image");
+			//console.log("play_document: will also attempt to create an image");
 			play_document_parent_task['desired_results'] += 1;
 		
 			let play_document_imager_task = {
@@ -4919,7 +4919,7 @@ function split_into_sentences_and_punctuation(text){
 // Designed to re-find the intended selection, even if the document has changed in the mean time
 // Provided text must be the entire document text (not the needle!)
 function get_selection_from_task(task=null,text=null){
-	console.log("in get_selection_from_task.  task,text:", task, text);
+	//console.log("in get_selection_from_task.  task,text:", task, text);
 	/*
 	if(!is_valid_task(task)){
 		console.error("in get_selection_from_task: invalid task");
@@ -4941,7 +4941,7 @@ function get_selection_from_task(task=null,text=null){
 		console.error("get_selection_from_task: aborting, no valid text to operate on. Not provided, and could not get text from task: ", task);
 		return null
 	}
-	console.log("get_selection_from_task: got full text: ", text);
+	//console.log("get_selection_from_task: got full text: ", text);
 	
 	//let selection = {'from':null,'to':null}
 	let from_index_in_doc = null;
@@ -5019,10 +5019,10 @@ function get_selection_from_task(task=null,text=null){
 	
 	if(from_index_in_doc == null && to_index_in_doc == null){
 		if(typeof task.sentence == 'string' && task.sentence.length > 1 && typeof text == 'string'){ // && typeof task.type == 'string' && task.type == 'speak'
-			console.log("get_selection_from_task: attempting to find sentence to be spoken in text: ", task.sentence, text);
+			//console.log("get_selection_from_task: attempting to find sentence to be spoken in text: ", task.sentence, text);
 			const sentence_start_position_in_text = text.indexOf(task.sentence);
 			if(sentence_start_position_in_text != -1){
-				console.log("get_selection_from_task: found the sentence at position: ", sentence_start_position_in_text);
+				//console.log("get_selection_from_task: found the sentence at position: ", sentence_start_position_in_text);
 				from_index_in_doc = sentence_start_position_in_text;
 				to_index_in_doc = sentence_start_position_in_text + task.sentence.length;
 			}
@@ -5037,7 +5037,7 @@ function get_selection_from_task(task=null,text=null){
 	
 	
 	if(typeof from_index_in_doc == 'number' && typeof to_index_in_doc == 'number'){
-		console.log("get_selection_from_task: succesfully resonstructed cursor.  from_index_in_doc,to_index_in_doc: ", from_index_in_doc, to_index_in_doc);
+		//console.log("get_selection_from_task: succesfully resonstructed cursor.  from_index_in_doc,to_index_in_doc: ", from_index_in_doc, to_index_in_doc);
 		return {'from':from_index_in_doc, 'to':to_index_in_doc}
 	}
 	else{
@@ -5050,7 +5050,7 @@ function get_selection_from_task(task=null,text=null){
 
 
 function highlight_selection_from_task(task,split_on=null){
-	console.log("in highlight_selection_from_task. Task: ", task);
+	//console.log("in highlight_selection_from_task. Task: ", task);
 	if(typeof task == 'undefined' || task == null){
 		console.error("highlight_selection_from_task: invalid task provided: ", task);
 		return null;
@@ -5060,7 +5060,7 @@ function highlight_selection_from_task(task,split_on=null){
 		if(task.file.filename == current_file_name && task.file.folder == folder){
 			let selection = get_selection_from_task(task);
 			if(selection){
-				console.log("highlight_selection_from_task:  got selection: ", selection);
+				//console.log("highlight_selection_from_task:  got selection: ", selection);
 				highlight_selection(selection,split_on);
 				return selection
 			}
@@ -5371,7 +5371,7 @@ window.create_insert_into_doc_buttons = create_insert_into_doc_buttons;
 
 function insert_into_document(task=null,content=null,cursor=null){
 	if(window.settings.settings_complexity == 'developer' && typeof content == 'string'){
-		console.log("in insert_into_document.  task,content,cursor: ", task,content.substr(0,50) + '... ',cursor);
+		//console.log("in insert_into_document.  task,content,cursor: ", task,content.substr(0,50) + '... ',cursor);
 	}
 	
 	if(typeof window.doc_text == 'string'){
@@ -5458,7 +5458,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 			if(typeof task.file == 'object' && task.file != null){
 				
 				if(window.settings.docs.open != null && task.file.filename == window.settings.docs.open.filename && task.file.folder == window.settings.docs.open.folder){
-					console.log("insert_into_document: the content is for the currently open document");
+					//console.log("insert_into_document: the content is for the currently open document");
 					
 					if(typeof window.doc_length == 'number'){
 						//console.log("insert_into_document: cursor position is set to end of currently open document");
@@ -5480,7 +5480,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 										selection: {anchor: 0},
 									});
 									update_pre_and_post(task,{'from':content.length,'to':content.length});
-									console.log("insert_into_document: used JSON.parse to cleanly insert the new addition into the open JSON document");
+									//console.log("insert_into_document: used JSON.parse to cleanly insert the new addition into the open JSON document");
 									return true
 								}
 							}
@@ -5488,7 +5488,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 								console.error("was unable to parse JSON document's contents: ", err);
 								
 								if(content.startsWith('[') && content.endsWith(']')){
-									console.log("insert_into_document: stripping outer square brackets from json string");
+									//console.log("insert_into_document: stripping outer square brackets from json string");
 									content = content.substr(1,content.length-2);
 								}
 								// place in between the square brackets
@@ -5536,7 +5536,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 						if(task.file.filename.endsWith('.json') && typeof playground_live_backups[task.file.folder + '/' + task.file.filename] == 'string' && playground_live_backups[task.file.folder + '/' + task.file.filename].startsWith('[') && playground_live_backups[task.file.folder + '/' + task.file.filename].endsWith(']')){
 							
 							if(content.startsWith('[') && content.endsWith(']')){
-								console.log("insert_into_document: inserting content into JSON document that (perhaps also) is wrapped in with square brackets: ", content.substr(0,30) + "...");
+								//console.log("insert_into_document: inserting content into JSON document that (perhaps also) is wrapped in with square brackets: ", content.substr(0,30) + "...");
 								try{
 									// Ideally, we parse the existing JSON and the addition, and stringify the concatenation of the two
 									let old_json = JSON.parse(playground_live_backups[task.file.folder + '/' + task.file.filename]);
@@ -5544,7 +5544,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 									if(typeof old_json != 'undefined' && old_json != null && Array.isArray(old_json) && typeof addition != 'undefined' && addition != null && Array.isArray(addition)){
 										old_json = old_json.concat(addition);
 										playground_live_backups[task.file.folder + '/' + task.file.filename] = JSON.stringify(old_json,null,4);
-										console.log("insert_into_document: used JSON.parse to cleanly insert the new addition to the (not currently open) JSON document");
+										//console.log("insert_into_document: used JSON.parse to cleanly insert the new addition to the (not currently open) JSON document");
 										//update_pre_and_post(task,{'from':playground_live_backups[task.file.folder + '/' + task.file.filename].length - (content.length + 1),'to':playground_live_backups[task.file.folder + '/' + task.file.filename].length - 1});
 										//return true
 									}
@@ -5552,7 +5552,7 @@ function insert_into_document(task=null,content=null,cursor=null){
 								catch(err){
 									console.error("insert_into_document: caught error parsing live backup of JSON document, or the content addition: ", err);
 								
-									console.log("insert_into_document: falling back to messy string manipulation to append to JSON document");
+									//console.log("insert_into_document: falling back to messy string manipulation to append to JSON document");
 									
 									if(playground_live_backups[task.file.folder + '/' + task.file.filename] == '[]'){
 										playground_live_backups[task.file.folder + '/' + task.file.filename] = content;
@@ -5569,10 +5569,10 @@ function insert_into_document(task=null,content=null,cursor=null){
 							}
 							else{
 								if(content.length > 60){
-									console.log("insert_into_document: inserting content into JSON document, but the addition does not seem to be wrapped in square brackets: ", content.substr(0,30) + " ... " + content.substr(content.length - 30));
+									//console.log("insert_into_document: inserting content into JSON document, but the addition does not seem to be wrapped in square brackets: ", content.substr(0,30) + " ... " + content.substr(content.length - 30));
 								}
 								else{
-									console.log("insert_into_document: inserting content into JSON document, but the addition does not seem to be wrapped in square brackets: ", content);
+									//console.log("insert_into_document: inserting content into JSON document, but the addition does not seem to be wrapped in square brackets: ", content);
 								}
 								playground_live_backups[task.file.folder + '/' + task.file.filename] += content;
 							}
@@ -5580,10 +5580,10 @@ function insert_into_document(task=null,content=null,cursor=null){
 						}
 						else{
 							if(content.length > 60){
-								console.log("insert_into_document: inserting content into JSON document, but the existing content not seem to be wrapped in square brackets: ", content.substr(0,30) + " ... " + content.substr(content.length - 30));
+								//console.log("insert_into_document: inserting content into JSON document, but the existing content not seem to be wrapped in square brackets: ", content.substr(0,30) + " ... " + content.substr(content.length - 30));
 							}
 							else{
-								console.log("insert_into_document: inserting content into JSON document, but the existing content does not seem to be wrapped in square brackets: ", content);
+								//console.log("insert_into_document: inserting content into JSON document, but the existing content does not seem to be wrapped in square brackets: ", content);
 							}
 							playground_live_backups[task.file.folder + '/' + task.file.filename] += content;
 						}
@@ -5965,14 +5965,14 @@ window.text_to_email = async (text) => {
 
 
 window.download_text_as_txt = async (text=null,filename=null) => {
-	console.log("in window.download_text_as_txt. text,filename: ", text,filename);
+	//console.log("in window.download_text_as_txt. text,filename: ", text,filename);
 	
 	const force_text_extensions = ['pdf','notes'];
 	
 	if(typeof text == 'string'){
 		
 		if(typeof filename != 'string'){
-			console.log("download_text_as_txt: no prefered filename provided");
+			//console.log("download_text_as_txt: no prefered filename provided");
 			if(typeof current_file_name != 'string'){
 				return false
 			}

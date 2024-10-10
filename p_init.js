@@ -4439,10 +4439,15 @@ stop_assistant_icon_button_el.addEventListener("click", (event) => {
 	//console.log("clicked on stop assistant button");
 	console.log("clicked on stop assistant - assistant icon");
 	
+	// TODO this was never a good idea, but now that icons are set separately, it's even worse
 	let assistant_id = stop_assistant_button_assistant_icon_el.src.replace('_thumb.png','');
 	assistant_id = assistant_id.substr(assistant_id.lastIndexOf('/') + 1);
+	console.log("clicked on stop assistant assistant icon. Switch to that AI?: extracted assistant_id: ", assistant_id);
 	if(typeof window.assistants[assistant_id] != 'undefined' || typeof window.settings.assistants[assistant_id] != 'undefined'){
 		switch_assistant(assistant_id);
+	}
+	else{
+		console.error("did not extract valid AI from stop button image src: ", assistant_id);
 	}
 	
 	

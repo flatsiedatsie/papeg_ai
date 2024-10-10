@@ -693,7 +693,7 @@ let first_ui_generation_done = false;
 					setting_wrapper_el.appendChild(download_message_footer);
 					
 					setting_wrapper_el.addEventListener('click', () => {
-						console.log("clicked on download message");
+						//console.log("clicked on download message");
 						
 						if(pane != 'current' && pane != window.settings.assistant){
 							switch_assistant(pane); // switch to the AI being downloaded
@@ -1009,7 +1009,7 @@ let first_ui_generation_done = false;
 				else if(special_type == 'model_tutorial' || special_type == 'document_tutorial' || special_type == 'voice_tutorial'){
 					
 					if(window.active_destination == 'document'){
-						console.log("not showing tutorial hints, as the document has focus, and adding the chat message would take away from that");
+						//console.log("not showing tutorial hints, as the document has focus, and adding the chat message would take away from that");
 						return
 					}
 					
@@ -1472,8 +1472,8 @@ let first_ui_generation_done = false;
 				chat_profile_pic_el.classList.add('chat-bubble-assistant-icon-container');
 				
 				let icon_name = participant.replace('_32bit','');
-				if(typeof window.assistants[participant] != 'undefined' && typeof window.assistants[participant].icon == 'string'){
-					
+				if(typeof window.assistants[participant] != 'undefined' && typeof window.assistants[participant].icon == 'string' && window.assistants[participant].icon.length){
+					icon_name = window.assistants[participant].icon;
 				}
 				
 				chat_profile_pic_el.innerHTML = '<img src="images/' + icon_name + '_thumb.png" class="chat-bubble-assistant-icon"/>';
@@ -1810,7 +1810,7 @@ let first_ui_generation_done = false;
 	
 	
 	function scroll_a_bit(element='document',direction='down',amount='page'){
-		console.log("in scroll_a_bit.  element, direction, amount: ", element, direction, amount);
+		//console.log("in scroll_a_bit.  element, direction, amount: ", element, direction, amount);
 		
 		let target_el = null;
 		let pixels = 300;
@@ -1852,7 +1852,7 @@ let first_ui_generation_done = false;
 			
 			
 			const distance = Math.round(pixels) * direction;
-			console.log("scroll_a_bit: distance: ", distance);
+			//console.log("scroll_a_bit: distance: ", distance);
 			//target_el.scroll(0, distance);
 			target_el.scroll({
 			  top: distance,
@@ -2087,7 +2087,7 @@ let first_ui_generation_done = false;
 			if(delta >= 0 && delta < 1000){
 				new Audio('./audio/timer_done_harp.mp3').play();
 				//window.timers.splice(t,1);
-				console.log("timer complete.  window.tts_tasks_left, details: ", window.tts_tasks_left, details);
+				//console.log("timer complete.  window.tts_tasks_left, details: ", window.tts_tasks_left, details);
 				if(window.tts_tasks_left == 0){ // check_if_cached('speaker')
 					
 					timer_is_done_task = {
@@ -2281,11 +2281,11 @@ let first_ui_generation_done = false;
 
 
 	function update_timer_speak_sentence(timer_index, text){
-		console.log("in update_timer_speak_sentence.  timer_index, text: ", text);
+		//console.log("in update_timer_speak_sentence.  timer_index, text: ", text);
 		if(typeof timer_index == 'number' && typeof text == 'string'){
 			for(let t = (window.timers.length - 1); t >= 0 ; --t){
 				if(window.timers[t].timer_index == timer_index){
-					console.log("update_timer_speak_sentence: found it: ", window.timers[t]);
+					//console.log("update_timer_speak_sentence: found it: ", window.timers[t]);
 					window.timers[t].speak_sentence = text;
 					return true;
 				}
@@ -2466,7 +2466,7 @@ let first_ui_generation_done = false;
 	function generate_ui(){
 		/*
 		if(last_time_ui_generated < Date.now() - 1000){
-			console.log("generate_ui: generating immediately");
+			//console.log("generate_ui: generating immediately");
 			really_generate_ui();
 		}
 		else{
@@ -2811,10 +2811,14 @@ let first_ui_generation_done = false;
 			if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].real_name == 'string'){
 				assistant_icon_el.setAttribute('title',window.assistants[image_src].real_name);
 			}
-			if(typeof window.settings.assistants[assistant_id] != 'undefined' && window.settings.assistants[assistant_id].icon == 'string'){
+			if(typeof window.settings.assistants[assistant_id] != 'undefined' && window.settings.assistants[assistant_id].icon == 'string' && window.settings.assistants[assistant_id].icon.length){
 				image_src = window.settings.assistants[assistant_id].icon;
 			}
+			else if(typeof window.assistants[assistant_id] != 'undefined' && window.assistants[assistant_id].icon == 'string' && window.assistants[assistant_id].icon.length){
+				image_src = window.assistants[assistant_id].icon;
+			}
 			
+			// If an emoji is set, use that
 			if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['emoji'] == 'string'){
 				//console.log("adding emoji as icon");
 				let emoji_icon_el = document.createElement('div');
@@ -2839,6 +2843,7 @@ let first_ui_generation_done = false;
 				image_src = window.assistants[image_src].icon;
 			}
 			
+			// deprecated, custom assistants should use emojis as icons
 			else if(assistant_id.startsWith('custom_saved')){
 				custom_saved_assistant_counter++;
 				if(custom_saved_assistant_counter > 20){
@@ -2861,8 +2866,6 @@ let first_ui_generation_done = false;
 			assistant_icon_wrapper_el.appendChild(assistant_icon_inner_wrapper_el);
 			
 			
-			
-			//srcset="elva-fairy-320w.jpg, elva-fairy-480w.jpg 1.5x, elva-fairy-640w.jpg 2x"
 			
 			// Small circle to indicate which of the models is currently loaded
 			let assistant_loaded_indicator_el = document.createElement('div');
@@ -3937,14 +3940,15 @@ function generate_task_overview(){
 				}
 			}
 			else{
-				assistant_icon_el.src = 'images/' + window.task_queue[t].assistant.replace('_32bit','') + '_thumb.png';
+				let icon_name = window.task_queue[t].assistant.replace('_32bit','');
+				if(typeof window.settings.assistants[window.task_queue[t].assistant] != 'undefined' && typeof window.settings.assistants[window.task_queue[t].assistant].icon == 'string' && window.settings.assistants[window.task_queue[t].assistant].icon != ''){
+					icon_name = window.settings.assistants[window.task_queue[t].assistant].icon;
+				}
+				else if(typeof window.assistants[window.task_queue[t].assistant] != 'undefined' && typeof window.assistants[window.task_queue[t].assistant].icon == 'string' && window.assistants[window.task_queue[t].assistant].icon != ''){
+					icon_name = window.assistants[window.task_queue[t].assistant].icon;
+				}
 				
-				if(typeof window.settings.assistants[window.task_queue[t].assistant] != 'undefined' && typeof window.settings.assistants[window.task_queue[t].assistant].icon == 'string' && window.settings.assistants[window.task_queue[t].assistant].icon.length){
-					assistant_icon_el.src = 'images/' + window.settings.assistants[window.task_queue[t].assistant].icon + '_thumb.png';
-				}
-				else if(typeof window.assistants[window.task_queue[t].assistant] != 'undefined' && typeof window.assistants[window.task_queue[t].assistant].icon == 'string' && window.assistants[window.task_queue[t].assistant].icon.length){
-					assistant_icon_el.src = 'images/' + window.assistants[window.task_queue[t].assistant].icon + '_thumb.png';
-				}
+				assistant_icon_el.src = 'images/' + icon_name + '_thumb.png';
 				
 				assistant_icon_el.setAttribute('alt',get_translation(window.task_queue[t].assistant.replace('_32bit','') + '_name'));
 				//assistant_icon_html = '<img src="images/' + window.task_queue[t].assistant.replace('_32bit','') + '.png" class="simple-task-item-state-assistant-icon"/>';
@@ -5377,12 +5381,12 @@ function detect_language(text=null, element_id=null, flash_detected_language=fal
 		}
 		
 		if(typeof text == 'string' && text.length > 10){
-			console.log("in detect_language.  detecting from:  text,element_id: ", text, element_id);
+			//console.log("in detect_language.  detecting from:  text,element_id: ", text, element_id);
 		
 			add_script('./js/eld.M60.min.js')
 			.then((value) => {
 	
-				console.log("detect_language: loaded language detection script? value: ", value);
+				//console.log("detect_language: loaded language detection script? value: ", value);
 				
 				if(typeof eld != 'undefined'){  // typeof prompt_el.value == 'string' && 
 					//console.log("window.eld: ", window.eld);
@@ -6025,7 +6029,7 @@ window.load_write_code_example = load_write_code_example;
 
 // This function has become increasingly important, and is now used more widely than just the single example functionality
 async function load_meeting_notes_example(type='txt',document_content='', filename=''){
-	console.log("in load_meeting_notes_example.  type, document_content, filename: ", type, document_content, filename);
+	//console.log("in load_meeting_notes_example.  type, document_content, filename: ", type, document_content, filename);
 	if(typeof type != 'string'){ 
 		type = 'txt';
 	}
@@ -6822,7 +6826,7 @@ window.pip_header_canvas.height = 50;
 
 const pip_button_el = document.getElementById('do-pip-button');
 pip_button_el.addEventListener('click', async (event) => {
-	console.log("clicked on do-pip-button");
+	//console.log("clicked on do-pip-button");
 	event.preventDefault();
 	event.stopPropagation();
 	window.pip_started = true;
@@ -6937,21 +6941,21 @@ window.write_on_pip_canvas = write_on_pip_canvas;
 
 
 function image_to_pip_canvas(image_blob){
-	console.log("in image_to_pip_canvas.  window.pip_started,typeof image_blob: ", window.pip_started, typeof image_blob);
+	//console.log("in image_to_pip_canvas.  window.pip_started,typeof image_blob: ", window.pip_started, typeof image_blob);
 	if(window.pip_started && typeof image_blob != 'undefined'){
 		window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
 		window.pip_canvas_context.drawImage(window.pip_header_canvas, 5, 5);
-		console.log("image_to_pip_canvas: creating image");
+		//console.log("image_to_pip_canvas: creating image");
 		var img1 = new Image();
 		img1.onload = function(event) {
-			console.log("image_to_pip_canvas: blob succesfully loaded into image");
+			//console.log("image_to_pip_canvas: blob succesfully loaded into image");
 			if(typeof img1.width == 'number' && img1.width > 0){
 				const ratio = window.pip_canvas.width / img1.width;
-				console.log("image_to_pip_canvas: ratio: ", ratio);
+				//console.log("image_to_pip_canvas: ratio: ", ratio);
 				const centerShift_y = ( window.pip_canvas.height - img1.height*ratio ) / 2;  
 				var centerShift_x = ( window.pip_canvas.width - img1.width*ratio ) / 2;
-				console.log("image_to_pip_canvas: centerShift_x: ", centerShift_x);
-				console.log("image_to_pip_canvas: centerShift_y: ", centerShift_y);
+				//console.log("image_to_pip_canvas: centerShift_x: ", centerShift_x);
+				//console.log("image_to_pip_canvas: centerShift_y: ", centerShift_y);
 				window.pip_canvas_context.drawImage(img1, 0,0, img1.width, img1.height, centerShift_x, centerShift_y, img1.width*ratio, img1.height*ratio); 
 				window.pip_video.srcObject = window.pip_canvas.captureStream(0);
 			}
@@ -6977,25 +6981,25 @@ window.image_to_pip_canvas = image_to_pip_canvas;
 
 
 function select_paragraph(direction='next',allow_empty=false){
-	console.log("in select_paragraph. direction: ", direction);
+	//console.log("in select_paragraph. direction: ", direction);
 	let selected_paragraph = null;
 	try{
 		selected_paragraph = really_select_paragraph(direction,allow_empty);
 		
 		if(selected_paragraph){
-			console.log("select_paragraph: selected paragraph: ", selected_paragraph, selected_paragraph.textContent);
+			//console.log("select_paragraph: selected paragraph: ", selected_paragraph, selected_paragraph.textContent);
 			
 			if(window.settings.docs.open != null){
 			
 				remove_highlight_selection();
 			
 				if(selected_paragraph.textContent.trim() != '' && selected_paragraph.textContent.trim() != '\n'){
-					console.log("selected_paragraph.textContent.length: ", selected_paragraph.textContent.length);
+					//console.log("selected_paragraph.textContent.length: ", selected_paragraph.textContent.length);
 					window.select_element_text(selected_paragraph);
 				
-					console.log("select_paragraph: paragraph element has text. calling highlight_selection_from_task");
+					//console.log("select_paragraph: paragraph element has text. calling highlight_selection_from_task");
 					let cursor = highlight_selection_from_task({'sentence': selected_paragraph.textContent ,'file':window.settings.docs.open});
-					console.log("select_paragraph: cursor from highlight_selection_from_task: ", cursor);
+					//console.log("select_paragraph: cursor from highlight_selection_from_task: ", cursor);
 				
 					if(cursor){
 						/*
@@ -7030,8 +7034,8 @@ function select_paragraph(direction='next',allow_empty=false){
 			
 			window.last_selected_paragraph = selected_paragraph;
 			window.last_selected_paragraph_text = selected_paragraph.textContent;
-			console.log("window.last_selected_paragraph is now: ", window.last_selected_paragraph);
-			console.log("window.last_selected_paragraph_text is now: ", window.last_selected_paragraph_text);
+			//console.log("window.last_selected_paragraph is now: ", window.last_selected_paragraph);
+			//console.log("window.last_selected_paragraph_text is now: ", window.last_selected_paragraph_text);
 		
 		}
 		else{
@@ -7050,7 +7054,7 @@ window.select_paragraph = select_paragraph;
 
 
 function really_select_paragraph(direction='next',allow_empty=false){
-	console.log("in really_select_paragraph. direction: ", direction);
+	//console.log("in really_select_paragraph. direction: ", direction);
 	const cm_content_el = document.querySelector('.cm-content');
 	if(cm_content_el){
 		
@@ -7083,13 +7087,13 @@ function really_select_paragraph(direction='next',allow_empty=false){
 		else{
 			//check_if_paragraph_selected();
 			
-			console.log("really_select_paragraph: getting visible_els. window.last_selected_paragraph: ", window.last_selected_paragraph);
+			//console.log("really_select_paragraph: getting visible_els. window.last_selected_paragraph: ", window.last_selected_paragraph);
 			let visible_els = [];
 		
 			// add all the visible paragraphs to a list
 			for (var i = 0; i < cm_content_el.children.length; i++) {
 				if(check_if_element_visible(cm_content_el.children[i])){
-					console.log("really_select_paragraph: found a visible paragraph: ", cm_content_el.children[i]);
+					//console.log("really_select_paragraph: found a visible paragraph: ", cm_content_el.children[i]);
 					
 					visible_els.push(cm_content_el.children[i]);
 					//if(window.last_selected_paragraph == null){
@@ -7100,7 +7104,7 @@ function really_select_paragraph(direction='next',allow_empty=false){
 			
 			
 			if(visible_els.length){
-				console.log("really_select_paragraph: number of visible paragraphs: ", visible_els.length, visible_els);
+				//console.log("really_select_paragraph: number of visible paragraphs: ", visible_els.length, visible_els);
 				
 				if(typeof direction == 'number'){
 					if(direction < visible_els.length){
@@ -7136,12 +7140,12 @@ function really_select_paragraph(direction='next',allow_empty=false){
 						
 						//console.log("window.last_selected_paragraph BEFORE: ", window.last_selected_paragraph.textContent, window.last_selected_paragraph);
 						if(window.last_selected_paragraph || window.last_selected_paragraph == null){
-							console.log("really_select_paragraph: trying to match previous/next with window.last_selected_paragraph: ", window.last_selected_paragraph);
+							//console.log("really_select_paragraph: trying to match previous/next with window.last_selected_paragraph: ", window.last_selected_paragraph);
 							for (var vi = 0; vi < visible_els.length; vi++) {
-								console.log("vi: ", vi);
+								//console.log("vi: ", vi);
 								if(window.last_selected_paragraph == null || visible_els[vi] === window.last_selected_paragraph){
 									found_it = visible_els[vi];
-									console.log("really_select_paragraph: FOUND last_selected_paragraph: ", vi, visible_els[vi], " === ", window.last_selected_paragraph);
+									//console.log("really_select_paragraph: FOUND last_selected_paragraph: ", vi, visible_els[vi], " === ", window.last_selected_paragraph);
 									if(direction == 'previous'){
 										if(allow_empty && vi > 0){
 											return visible_els[vi - 1];
@@ -7195,7 +7199,7 @@ function really_select_paragraph(direction='next',allow_empty=false){
 						if(found_it == null && typeof window.last_selected_paragraph_text == 'string' && window.last_selected_paragraph_text.length > 60){
 							for (var vi = 0; vi < visible_els.length; vi++) {
 								if(visible_els[vi].textContent === window.last_selected_paragraph_text){
-									console.log("Found a match based on last_selected_paragraph_text: ", last_selected_paragraph_text);
+									//console.log("Found a match based on last_selected_paragraph_text: ", last_selected_paragraph_text);
 									found_it = visible_els[vi];
 									if(direction == 'previous'){
 										if(allow_empty && vi > 0){
@@ -7271,7 +7275,7 @@ function really_select_paragraph(direction='next',allow_empty=false){
 
 
 function place_cursor_after_element(selected_paragraph=null){
-	console.log("in place_cursor_after_element. selected_paragraph: ", selected_paragraph);
+	//console.log("in place_cursor_after_element. selected_paragraph: ", selected_paragraph);
 	if(selected_paragraph == null){
 		console.error("place_cursor_after_element: invalid element provided");
 		return
@@ -7286,36 +7290,36 @@ function place_cursor_after_element(selected_paragraph=null){
 		if(typeof selected_paragraph.nextSibling != 'undefined'){
 			after_text += selected_paragraph.nextSibling.textContent;
 			if(selected_paragraph.nextSibling.textContent == ''){after_text += '\n'}
-			console.log("after_text1: ", after_text);
+			//console.log("after_text1: ", after_text);
 		}
 		if(after_text.length > 5 && window.doc_text.indexOf(after_text) != -1 && window.doc_text.indexOf(after_text) == window.doc_text.lastIndexOf(after_text)){
 			from = window.doc_text.indexOf(after_text) - 1;
 			if(from < 0){from = 0}
-			console.log("from1: ", from);
+			//console.log("from1: ", from);
 			//editor.dispatch({selection: {'from':from,'to':from}});
 			editor.dispatch({ selection: {anchor: from}, scrollIntoView: true});
 		}
 		else if(typeof selected_paragraph.nextSibling.nextSibling != 'undefined'){
 			after_text += selected_paragraph.nextSibling.nextSibling.textContent;
 			if(selected_paragraph.nextSibling.nextSibling.textContent == ''){after_text += '\n'}
-			console.log("after_text2: ", after_text);
+			//console.log("after_text2: ", after_text);
 		}
 		if(from == null && after_text.length > 5 && window.doc_text.indexOf(after_text) != -1 && window.doc_text.indexOf(after_text) == window.doc_text.lastIndexOf(after_text)){
 			from = window.doc_text.indexOf(after_text) - 1;
 			if(from < 0){from = 0}
-			console.log("from2: ", from);
+			//console.log("from2: ", from);
 			//editor.dispatch({selection: {'from':from,'to':from}});
 			editor.dispatch({ selection: {anchor: from}, scrollIntoView: true});
 		}
 		else if(from == null && typeof selected_paragraph.nextSibling.nextSibling.nextSibling != 'undefined'){
 			after_text += selected_paragraph.nextSibling.nextSibling.nextSibling.textContent;
 			if(selected_paragraph.nextSibling.nextSibling.nextSibling.textContent == ''){after_text += '\n'}
-			console.log("after_text3: ", after_text);
+			//console.log("after_text3: ", after_text);
 		}
 		if(from == null && after_text.length > 5 && window.doc_text.indexOf(after_text) != -1 && window.doc_text.indexOf(after_text) == window.doc_text.lastIndexOf(after_text)){
 			from = window.doc_text.indexOf(after_text) - 1;
 			if(from < 0){from = 0}
-			console.log("from3: ", from);
+			//console.log("from3: ", from);
 			//editor.dispatch({selection: {'from':from,'to':from}});
 			editor.dispatch({ selection: {anchor: from}, scrollIntoView: true});
 		}
@@ -7327,11 +7331,11 @@ function place_cursor_after_element(selected_paragraph=null){
 		
 		if(from == null && typeof selected_paragraph.previousSibling != 'undefined'){
 			before_text += selected_paragraph.previousSibling.textContent;
-			console.log("before_text1: ", before_text);
+			//console.log("before_text1: ", before_text);
 		}
 		if(from == null && before_text.length > 5 && window.doc_text.indexOf(before_text) != -1 && window.doc_text.indexOf(before_text) == window.doc_text.lastIndexOf(before_text)){
 			from = window.doc_text.indexOf(before_text) + before_text.length;
-			console.log("from4: ", from);
+			//console.log("from4: ", from);
 			//editor.dispatch({selection: {'from':from,'to':from}});
 			editor.dispatch({ selection: {anchor: from}, scrollIntoView: true});
 		}
@@ -7339,22 +7343,22 @@ function place_cursor_after_element(selected_paragraph=null){
 			//before_text += selected_paragraph.previousSibling.previousSibling.textContent;
 			before_text = selected_paragraph.previousSibling.previousSibling.previousSibling.textContent + '\n' + before_text;
 			//if(selected_paragraph.previousSibling.previousSibling.textContent == ''){before_text = '\n' + before_text}
-			console.log("before_text2: ", before_text);
+			//console.log("before_text2: ", before_text);
 		}
 		if(from == null && before_text.length > 5 && window.doc_text.indexOf(before_text) != -1 && window.doc_text.indexOf(before_text) == window.doc_text.lastIndexOf(before_text)){
 			from = window.doc_text.indexOf(before_text) + before_text.length;
-			console.log("from5: ", from);
+			//console.log("from5: ", from);
 			////editor.dispatch({selection: {'from':from,'to':from}});
 			editor.dispatch({ selection: {anchor: from}, scrollIntoView: true});
 		}
 		else if(from == null && typeof selected_paragraph.previousSibling.previousSibling.previousSibling != 'undefined'){
 			before_text = selected_paragraph.previousSibling.previousSibling.previousSibling.textContent + '\n' + before_text;
 			//if(selected_paragraph.previousSibling.previousSibling.previousSibling.textContent == ''){before_text = '\n' + before_text}
-			console.log("before_text3: ", before_text);
+			//console.log("before_text3: ", before_text);
 		}
 		if(from == null && before_text.length > 5 && window.doc_text.indexOf(before_text) != -1 && window.doc_text.indexOf(before_text) == window.doc_text.lastIndexOf(before_text)){
 			from = window.doc_text.indexOf(before_text) + before_text.length;
-			console.log("from6: ", from);
+			//console.log("from6: ", from);
 			//editor.dispatch({selection: {'from':from,'to':from}});
 			editor.dispatch({ selection: {anchor: from}, scrollIntoView: true});
 		}
@@ -7363,7 +7367,7 @@ function place_cursor_after_element(selected_paragraph=null){
 			console.error("frankenstein reconstruction of cursor failed");
 		}
 		
-		console.log("selected_paragraph is empty. frankenstein from: ", from);
+		//console.log("selected_paragraph is empty. frankenstein from: ", from);
 	}
 }
 
@@ -7373,7 +7377,7 @@ function place_cursor_after_element(selected_paragraph=null){
 
 
 function check_if_paragraph_selected(){
-	console.log("in check_if_paragraph_selected (blocked)");
+	//console.log("in check_if_paragraph_selected (blocked)");
 	return
 	const cm_content_el = document.querySelector('.cm-content');
 	if(cm_content_el){
@@ -7383,19 +7387,19 @@ function check_if_paragraph_selected(){
 			if(check_if_element_visible(cm_content_el.children[i])){
 				
 				if(window.last_selected_paragraph == cm_content_el.children[i]){
-					console.log("check_if_paragraph_selected: the same paragraph is still visible");
+					//console.log("check_if_paragraph_selected: the same paragraph is still visible");
 					return window.last_selected_paragraph;
 				}
 				
-				console.log("check_if_paragraph_selected: found a visible paragraph: ", cm_content_el.children[i]);
+				//console.log("check_if_paragraph_selected: found a visible paragraph: ", cm_content_el.children[i]);
 				const text = cm_content_el.children[i].textContent;
 				
 				if(text.trim() == ''){
-					console.log("empty visible paragraph");
+					//console.log("empty visible paragraph");
 					continue
 				}
 				if(typeof window.selected_doc_text == 'string' && window.selected_doc_text.length && text.trim() == window.selected_doc_text.trim()){
-					console.log("check_if_paragraph_selected: FOUND SELECTED PARAGRAPH BASED ON THE SELECTED TEXT");
+					//console.log("check_if_paragraph_selected: FOUND SELECTED PARAGRAPH BASED ON THE SELECTED TEXT");
 					window.last_selected_paragraph = cm_content_el.children[i];
 					window.last_selected_paragraph_text = cm_content_el.children[i].textContent;
 					return cm_content_el.children[i];

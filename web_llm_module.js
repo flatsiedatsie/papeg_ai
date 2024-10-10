@@ -102,7 +102,7 @@ window.web_llm_model_being_loaded = null;
 
 // DO WEB_LLM 
 window.load_web_llm = async function (task){ 
-	console.log("in load_web_llm. task: ", task);
+	//console.log("in load_web_llm. task: ", task);
 	//my_task = task;
 	
 	let assistant_id = null;
@@ -118,7 +118,7 @@ window.load_web_llm = async function (task){
 		return false
 	}
 	
-	console.log("load_web_llm: assistant_id: ", assistant_id );
+	//console.log("load_web_llm: assistant_id: ", assistant_id );
 	
 	try{
 		previous_percentage = 1;
@@ -146,7 +146,7 @@ window.load_web_llm = async function (task){
 	
 		//if(window.my_webllm){
 		if(webllm){
-			console.log("load_web_llm: webllm: ", webllm);
+			//console.log("load_web_llm: webllm: ", webllm);
 			
 			
 			/*
@@ -155,7 +155,7 @@ window.load_web_llm = async function (task){
 				return false
 			}
 			else{
-				console.log("load_web_llm: loading.  assistant_id: ", assistant_id);
+				//console.log("load_web_llm: loading.  assistant_id: ", assistant_id);
 			}
 			*/
 			
@@ -261,7 +261,7 @@ export interface ChatConfig {
 						
 						
 			*/
-			console.log("creating web_llm_worker");
+			//console.log("creating web_llm_worker");
 			window.web_llm_worker = new Worker(
 				new URL('./web_llm_worker.js', import.meta.url), { type: 'module' }
 			)
@@ -281,7 +281,7 @@ export interface ChatConfig {
 				chatOpts
 			);
 			
-			console.log("load_web_llm: DONE, window.web_llm_engine is now: ", window.web_llm_engine);
+			//console.log("load_web_llm: DONE, window.web_llm_engine is now: ", window.web_llm_engine);
 			window.handle_web_llm_init_complete();
 			window.currently_loaded_web_llm_assistant = assistant_id;
 		 	
@@ -330,7 +330,7 @@ export interface ChatConfig {
 
 
 window.do_web_llm = (task) => { 
-	console.log("in do_web_llm. task: ", task);
+	//console.log("in do_web_llm. task: ", task);
 
 	if(typeof task == 'undefined' || task == null){
 		console.error("do_web_llm: provided task was invalid. Aborting.");
@@ -360,7 +360,7 @@ window.do_web_llm = (task) => {
 
 
 window.really_do_web_llm = async (task) => { 
-	console.log("in really_do_web_llm.  window.currently_loaded_web_llm_assistant, task: ", window.currently_loaded_web_llm_assistant, task);
+	//console.log("in really_do_web_llm.  window.currently_loaded_web_llm_assistant, task: ", window.currently_loaded_web_llm_assistant, task);
 	
 	
 	try{
@@ -372,10 +372,10 @@ window.really_do_web_llm = async (task) => {
 	
 		// Switch to a different WebLLM AI if the task requires it
 		else if(typeof window.currently_loaded_web_llm_assistant == 'string' && window.web_llm_model_being_loaded == null){
-			console.log("do_web_llm: a WebLLM AI is currently already loaded. window.currently_loaded_web_llm_assistant ", window.currently_loaded_web_llm_assistant);
+			//console.log("do_web_llm: a WebLLM AI is currently already loaded. window.currently_loaded_web_llm_assistant ", window.currently_loaded_web_llm_assistant);
 			if(typeof task.assistant == 'string'){
 				if(task.assistant != window.currently_loaded_web_llm_assistant){
-					console.log("do_web_llm: calling load_web_llm first, to load a different WebLLM assistant: ", window.currently_loaded_web_llm_assistant, " => ", task.assistant);
+					//console.log("do_web_llm: calling load_web_llm first, to load a different WebLLM assistant: ", window.currently_loaded_web_llm_assistant, " => ", task.assistant);
 					
 					let model_id = null;
 					if(typeof window.settings.assistants[task.assistant] != 'undefined' && typeof  window.settings.assistants[task.assistant].model_id != 'undefined'){
@@ -388,22 +388,22 @@ window.really_do_web_llm = async (task) => {
 					if(typeof model_id == 'string'){
 						
 						if(window.web_llm_engine){
-							console.log("do_web_llm: calling engine.reload with model_id: ", model_id);
+							//console.log("do_web_llm: calling engine.reload with model_id: ", model_id);
 							//await window.web_llm_engine.reload(selectedModel, undefined, window.web_llm_app_config);
 							await window.web_llm_engine.reload(model_id); // , undefined, window.web_llm_app_config
 							window.handle_web_llm_init_complete();
 							//console.log("Reload model end");
 						}
 						else{
-							console.log("do_web_llm: no engine? calling load_web_llm with task: : ", task);
+							//console.log("do_web_llm: no engine? calling load_web_llm with task: : ", task);
 							await window.load_web_llm(task);
 						}
 					}
 				
-					console.log("do_web_llm: load_web_llm has finished loading a different AI model");
+					//console.log("do_web_llm: load_web_llm has finished loading a different AI model");
 				}
 				else{
-					console.log("do_web_llm: OK, the currently loaded WebLLM model is the desired one: ", window.currently_loaded_web_llm_assistant);
+					//console.log("do_web_llm: OK, the currently loaded WebLLM model is the desired one: ", window.currently_loaded_web_llm_assistant);
 				}
 			
 			}
@@ -419,13 +419,13 @@ window.really_do_web_llm = async (task) => {
 		}
 		else{
 			console.error("web_llm UNEXPECTED");
-			console.log(" -- window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
-			console.log(" -- window.currently_loaded_web_llm_assistant: ", window.currently_loaded_web_llm_assistant);
+			//console.log(" -- window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
+			//console.log(" -- window.currently_loaded_web_llm_assistant: ", window.currently_loaded_web_llm_assistant);
 		}
 		
 		
 		if(window.currently_loaded_web_llm_assistant == null){
-			console.log("attempting to set window.currently_loaded_web_llm_assistant by calling get_loaded_web_llm_model");
+			//console.log("attempting to set window.currently_loaded_web_llm_assistant by calling get_loaded_web_llm_model");
 			window.currently_loaded_web_llm_assistant = get_loaded_web_llm_model();
 		}
 		
@@ -449,7 +449,7 @@ window.really_do_web_llm = async (task) => {
 		previous_response_so_far = '';
 		
 		if(window.web_llm_engine != null){
-			console.log("window.web_llm_engine exists: \n", window.web_llm_engine);
+			//console.log("window.web_llm_engine exists: \n", window.web_llm_engine);
 			
 		
 			if(typeof task.prompt == 'string' && task.prompt.length > 1){
@@ -552,7 +552,7 @@ window.really_do_web_llm = async (task) => {
 			
 			}
 			else if(window.currently_loaded_web_llm_assistant == null && typeof task.assistant == 'string'){
-				console.log("do_web_lmm: no valid prompt, but there is no currently loaded web_llm assistant yet either. This must be a preload request. Loading web_llm assistant: ", task.assistant);
+				//console.log("do_web_lmm: no valid prompt, but there is no currently loaded web_llm assistant yet either. This must be a preload request. Loading web_llm assistant: ", task.assistant);
 				window.load_web_llm(task);
 				return true
 			}
@@ -592,7 +592,7 @@ function get_loaded_web_llm_model(){
 		for (const [assistant_id, details] of Object.entries(window.settings.assistants)) {
 			if(typeof details.model_id == 'string' &&  details.model_id == window.web_llm_engine.model){
 				found_assistant_id = assistant_id;
-				console.log("get_loaded_web_llm_model: found a match in window.settings.assistants: ", assistant_id, details);
+				//console.log("get_loaded_web_llm_model: found a match in window.settings.assistants: ", assistant_id, details);
 				break
 			}
 		}
@@ -600,7 +600,7 @@ function get_loaded_web_llm_model(){
 			for (const [assistant_id, details] of Object.entries(window.assistants)) {
 				if(typeof details.model_id == 'string' && details.model_id == window.web_llm_engine.model){
 					found_assistant_id = assistant_id;
-					console.log("get_loaded_web_llm_model: found a match in window.assistants: ", assistant_id, details);
+					//console.log("get_loaded_web_llm_model: found a match in window.assistants: ", assistant_id, details);
 					break
 				}
 			}
@@ -616,7 +616,7 @@ window.get_loaded_web_llm_model = get_loaded_web_llm_model;
 
 
 window.interrupt_web_llm = async function (){ 
-	console.log("in interrupt_web_llm. my_task:", JSON.stringify(my_task),null,2);
+	//console.log("in interrupt_web_llm. my_task:", JSON.stringify(my_task),null,2);
 	//set_model_loaded(true);
 	if(window.web_llm_engine){
 		//console.log("interrupt_web_llm:  calling interrupt");
@@ -628,14 +628,14 @@ window.interrupt_web_llm = async function (){
 			previous_response_so_far = '';
 			window.web_llm_engine.interruptGenerate();
 		}
-		console.log("interrupt_web_llm. web_llm doesn't seem to be busy? Aborting doing interrupt");
+		//console.log("interrupt_web_llm. web_llm doesn't seem to be busy? Aborting doing interrupt");
 		
 	}
 }
 
 
 window.stop_web_llm = async function (){ 
-	console.log("in stop_web_llm");
+	//console.log("in stop_web_llm");
 	//set_model_loaded(true);
 	/*
 	if(window.my_webllm){
@@ -666,17 +666,17 @@ window.stop_web_llm = async function (){
 
 //window.web_llm_logger = async function (message){
 window.web_llm_logger = function (message){ 
-	console.log("in window.web_llm_logger. message: ", message);
+	//console.log("in window.web_llm_logger. message: ", message);
 }
 
 window.web_llm_load_complete = async function (){ 
-	console.log("web_llm_load_complete: LOAD COMPLETE");
+	//console.log("web_llm_load_complete: LOAD COMPLETE");
 	set_model_loaded(true);
 }
 
 
 window.web_llm_progression = async function (data){ 
-	console.log("in web_llm_progression: data: ", data);
+	//console.log("in web_llm_progression: data: ", data);
 }
 
 window.web_llm_done = async function (result){ 
@@ -687,7 +687,7 @@ window.web_llm_done = async function (result){
 }
 
 window.web_llm_unloaded = async function (){
-	console.log("web_llm is now unloaded");
+	//console.log("web_llm is now unloaded");
 	
 }
 
@@ -739,7 +739,7 @@ window.handle_web_llm_init_progress = async function (message){
 					}
 					
 					if(message.progress == 1){
-						console.log("handle_web_llm_init_progress: load complete");
+						//console.log("handle_web_llm_init_progress: load complete");
 						web_llm_progress_el.closest('.download-progress-chat-message').classList.add('download-complete-chat-message'); // superfluous, also handled when 'Finish loading' is spotted in the log output
 						setTimeout(() => {
 							web_llm_progress_el.closest('.download-progress-chat-message').remove();
@@ -799,7 +799,7 @@ window.handle_web_llm_init_progress = async function (message){
 
 // HANDLE WEB_LLM INIT DONE
 window.handle_web_llm_init_complete = async function (){ 
-	console.log("web_llm init done. window.web_llm_model_being_loaded was: " + window.web_llm_model_being_loaded);
+	//console.log("web_llm init done. window.web_llm_model_being_loaded was: " + window.web_llm_model_being_loaded);
 	//console.log("WEB_LLM LOADING COMPLETE");
 	
 	//window.currently_loaded_assistant = window.chatUI.selectedModel;

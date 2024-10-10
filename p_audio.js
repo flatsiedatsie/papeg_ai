@@ -69,7 +69,7 @@ window.create_main_audio_context = create_main_audio_context;
 //
 
 function enable_microphone(also_enable_speaker=true){
-	console.log("in enable_microphone.   window.stopped_whisper_because_of_low_memory, window.whisper_loaded,window.busy_loading_whisper: ", window.stopped_whisper_because_of_low_memory, window.whisper_loaded, window.busy_loading_whisper);
+	//console.log("in enable_microphone.   window.stopped_whisper_because_of_low_memory, window.whisper_loaded,window.busy_loading_whisper: ", window.stopped_whisper_because_of_low_memory, window.whisper_loaded, window.busy_loading_whisper);
 	
 	window.stopped_whisper_because_of_low_memory = false;
 	document.body.classList.remove('microphone-sleeping');
@@ -100,7 +100,7 @@ function enable_microphone(also_enable_speaker=true){
 		return
 	}
 	else if(window.simple_vad_source != null){
-		console.log("enable microphone: window.simple_vad_source already exists. Toggling SimpleVAD to on. state: ", state);
+		//console.log("enable microphone: window.simple_vad_source already exists. Toggling SimpleVAD to on. state: ", state);
 		//window.myvad.start();
 		window.unpauseSimpleVAD();
 		window.microphone_enabled = true;
@@ -116,7 +116,7 @@ function enable_microphone(also_enable_speaker=true){
 	}
 	
 	else{
-		console.log("enable_microphone: also calling start_vad()");
+		//console.log("enable_microphone: also calling start_vad()");
 		window.skip_first_vad_recording = true;
 		window.start_vad();
 		
@@ -134,7 +134,7 @@ function enable_microphone(also_enable_speaker=true){
 			window.continuous_vad();
 		}
 		if(window.current_scribe_voice_parent_task_id == null){
-			console.log("enable mmicrophone: Scribe, and current_scribe_voice_parent_task_id was null: calling create_scribe_parent_task");
+			//console.log("enable mmicrophone: Scribe, and current_scribe_voice_parent_task_id was null: calling create_scribe_parent_task");
 			window.create_scribe_parent_task();
 		}
 	}
@@ -143,12 +143,12 @@ function enable_microphone(also_enable_speaker=true){
 	
 	
 	if(window.whisper_loaded == false && window.busy_loading_whisper == false && window.whisper_worker_busy == false){
-		console.log("enable_microphone: whisper does not seem to be loaded, calling preload_whisper");
+		//console.log("enable_microphone: whisper does not seem to be loaded, calling preload_whisper");
 		
 		//window.whisper_loading = true;
 		window.add_chat_message('current','developer','_$_downloading_speech_recognition_model');
 		
-		console.log("enable_microphone: window.whisper_loaded was false. Calling preload_whisper");
+		//console.log("enable_microphone: window.whisper_loaded was false. Calling preload_whisper");
 		window.preload_whisper({'assistant':window.settings.assistant,'preload':true});
 		
 		
@@ -200,7 +200,7 @@ window.enable_microphone = enable_microphone;
 
 
 function disable_microphone(){
-	console.log("in disable_microphone");
+	//console.log("in disable_microphone");
 	window.microphone_enabled = false;
 	document.body.classList.remove('microphone-enabled');
 	window.continuous_vad(false);
@@ -340,7 +340,7 @@ window.disable_speaker = disable_speaker;
 
 
 function interrupt_speaker(){
-	console.log("in interrupt_speaker");
+	//console.log("in interrupt_speaker");
 	if(window.audio_player != null){
 		window.audio_player.stop();
 		window.audio_player_busy = false;
@@ -361,7 +361,7 @@ function interrupt_speaker(){
 	set_speaker_progress(100);
 	
 	window.interrupt_speaking_task_index = window.task_counter;
-	console.log("window.interrupt_speaking_task_index is now: ", window.interrupt_speaking_task_index);
+	//console.log("window.interrupt_speaking_task_index is now: ", window.interrupt_speaking_task_index);
 	
 	for(let t = 0; t < window.task_queue.length; t++){
 		if(typeof window.task_queue[t].state == 'string' && window.task_queue[t].state == 'doing_assistant'){
@@ -423,7 +423,7 @@ function start_transcribing(){
 // Perform Speech-To-Text on raw audio data
 function transform_recorded_audio(recorded_audio,origin='voice'){
 	console.error("in transform_recorded_audio. recorded_audio: ", recorded_audio);
-	console.log("transform_recorded_audio: audioData.numberOfChannels: ", recorded_audio.numberOfChannels);
+	//console.log("transform_recorded_audio: audioData.numberOfChannels: ", recorded_audio.numberOfChannels);
 	//window.busy_doing_stt = true;
 	
 	//if(window.settings.assistant != 'scribe'){
@@ -506,10 +506,10 @@ function transform_recorded_audio(recorded_audio,origin='voice'){
 	source.start(0);
 
 	offlineContext.startRendering().then(function(renderedBuffer) {
-		console.log("transform_recorded_audio: offlineContext.startRendering done. renderedBuffer: ", renderedBuffer)
+		//console.log("transform_recorded_audio: offlineContext.startRendering done. renderedBuffer: ", renderedBuffer)
 		
 		audio = renderedBuffer.getChannelData(0);
-		console.log("transform_recorded_audio: 1 channel:  audio.length, audio: ", audio.length, audio);
+		//console.log("transform_recorded_audio: 1 channel:  audio.length, audio: ", audio.length, audio);
 
 		//console.log('transform_recorded_audio: channel0 audio.length: ' + audio.length);
 
@@ -529,11 +529,11 @@ function transform_recorded_audio(recorded_audio,origin='voice'){
 			let loops_to_do = Math.floor(audio.length / samples_per_period);
 			//console.log("transform_recorded_audio: splitting VERY LONG recorded audio into a number of chunks: ", loops_to_do + 1);
 			for(let c = 0; c < loops_to_do; c++){
-				console.log("transform_recorded_audio: adding a big audio chunk task. also, since it's long audio: forcing output to a document");
+				//console.log("transform_recorded_audio: adding a big audio chunk task. also, since it's long audio: forcing output to a document");
 				window.push_stt_task(audio.slice(c*samples_per_period,(c+1)*samples_per_period),true); // true = force_document_destination; for such long audio bits, force output to a document
 			}
 			let leftover = audio.length % samples_per_period;
-			console.log("leftover audio: ", leftover);
+			//console.log("leftover audio: ", leftover);
 			if(leftover > 4000){
 				window.push_stt_task(audio.slice(audio.length-leftover,audio.length-1),true); // true = force_document_destination; for such long audio bits, force output to a document
 			}
@@ -542,7 +542,7 @@ function transform_recorded_audio(recorded_audio,origin='voice'){
 		}
 		else{
 			// TODO: Could also force commands longer than 20 seconds to go to a document
-			console.log("transform_recorded_audio: pushing recorded audio data to a task: ", audio);
+			//console.log("transform_recorded_audio: pushing recorded audio data to a task: ", audio);
 			window.push_stt_task(audio);
 		}
 		
@@ -650,7 +650,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		
 		
 		function trim_recording(recording){
-			console.log("push_stt_task: in push_stt_task sub-function trim_recording.  recording.length: ", typeof recording, recording.length, recording);
+			//console.log("push_stt_task: in push_stt_task sub-function trim_recording.  recording.length: ", typeof recording, recording.length, recording);
 			
 			if(recording == null || !Array.isArray(recording)){
 				console.error("push_stt_task: TRIM_RECORDING: recording was invalid: ", typeof recording, recording);
@@ -662,20 +662,20 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 				
 				let trim_end = true;
 				if(typeof stt_task["assistant"] == 'string' && stt_task["assistant"] == 'scribe'){
-					console.log("push_stt_task: Not trimming end of recording because assistant is Scribe");
+					//console.log("push_stt_task: Not trimming end of recording because assistant is Scribe");
 					return recording
 					trim_end = false;
 				}
 				
 				else if(typeof stt_task["add_timestamps"] == 'string' && (stt_task["add_timestamps"] == 'Precise' || stt_task["add_timestamps"] == 'Detailed')){
-					console.log("push_stt_task: Precise timestamps set in task, so not trimming end of recording");
+					//console.log("push_stt_task: Precise timestamps set in task, so not trimming end of recording");
 					//return recording
 					trim_end = false;
 				}
 				
 				// At the moment this can only by set for the 'scribe' assistant
 				else if(typeof stt_task["assistant"] == 'string' && typeof window.settings.assistants[ stt_task["assistant"] ] != 'undefined' && typeof window.settings.assistants[ stt_task["assistant"] ]['add_timestamps'] == 'string' && (window.settings.assistants[ stt_task["assistant"] ]['add_timestamps'] == 'Detailed' || window.settings.assistants[ stt_task["assistant"] ]['add_timestamps'] == 'Precise')){
-					console.log("push_stt_task: Precise timestamps selected for assistant, so not trimming end of recording");
+					//console.log("push_stt_task: Precise timestamps selected for assistant, so not trimming end of recording");
 					//return recording
 					trim_end = false;
 				}
@@ -695,7 +695,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 				if(audio_points_with_zero_value > 128){ // leave a little 
 					audio_points_with_zero_value = audio_points_with_zero_value - 128;
 				}
-				console.log("push_stt_task: trim_recording: removing audio with zero value from beginning of recording: ", audio_points_with_zero_value);
+				//console.log("push_stt_task: trim_recording: removing audio with zero value from beginning of recording: ", audio_points_with_zero_value);
 				recording.splice(0,audio_points_with_zero_value);
 			}
 			
@@ -720,7 +720,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 					else if(audio_points_with_zero_value > 128){ // leave a little 
 						audio_points_with_zero_value = audio_points_with_zero_value - 128;
 					}
-					console.log("push_stt_task: trim_recording: removing audio with zero value from end of recording: ", audio_points_with_zero_value);
+					//console.log("push_stt_task: trim_recording: removing audio with zero value from end of recording: ", audio_points_with_zero_value);
 					recording.splice(recording.length - audio_points_with_zero_value, audio_points_with_zero_value);
 				}
 			}
@@ -742,14 +742,14 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		// Decimate to get to 16000 samplerate
 		if(skip_factor > 1){
 			//skip_factor = skip_factor--;
-			console.log("push_stt_task: decimating audio, because of skip_factor: ", skip_factor, ", audio.length before: ", audio.length);
+			//console.log("push_stt_task: decimating audio, because of skip_factor: ", skip_factor, ", audio.length before: ", audio.length);
 			for(let x = 0; x < audio.length; x = x + skip_factor){
 				recording.push(audio[x]);
 			}
 			
 			
 			//recording = trim_recording(recording);
-			console.log("skip_factor -> recording.length after: ", recording.length);
+			//console.log("skip_factor -> recording.length after: ", recording.length);
 			
 		}
 		else{
@@ -837,7 +837,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	
 	if(typeof stt_task['recording_end_time'] == 'undefined' && typeof origin == 'string' && origin.endsWith('file') && typeof audio != 'undefined'){
-		console.log("push_stt_task: adding fake recording start and end time for file transcription");
+		//console.log("push_stt_task: adding fake recording start and end time for file transcription");
 		stt_task['recording_start_time'] = 0;
 		stt_task['recording_end_time'] = recording.length / 16;
 	}
@@ -873,7 +873,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	
 	if(typeof window.doc_text == 'string'){
-		console.log("push_stt_task:  window.doc_text: ", window.doc_text.substr(0, 50));
+		//console.log("push_stt_task:  window.doc_text: ", window.doc_text.substr(0, 50));
 	}
 	
 	
@@ -903,14 +903,14 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 		
 		if(origin.endsWith('file')){
-			console.log("push_to_stt: origin ends with 'file'");
-			console.log("- window.settings.docs.open: ", JSON.stringify((window.settings.docs.open,null,2)));
-			console.log("- document_filename: ", document_filename);
+			//console.log("push_to_stt: origin ends with 'file'");
+			//console.log("- window.settings.docs.open: ", JSON.stringify((window.settings.docs.open,null,2)));
+			//console.log("- document_filename: ", document_filename);
 			
 			// also remember the soruce media file that is being transcribed, which will be useful later to set as a meta property of the subtitle file
 			if(origin_file != null && typeof origin_file.filename == 'string'){
 				stt_task['origin_file'] = origin_file;
-				console.log("set STT task's origin_file to: ", stt_task['origin_file']);
+				//console.log("set STT task's origin_file to: ", stt_task['origin_file']);
 			}
 		}
 		
@@ -952,10 +952,10 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	
 	if(created_new_file && typeof stt_task['origin_file'] != 'undefined' && stt_task['origin_file'] != null && typeof stt_task['origin_file'].filename == 'string'){
 		save_file_meta('origin_file',stt_task['origin_file']); // cross-link between the media file and the subtitle file
-		console.log("push_stt_task: just created a new file.  current_file_name, window.settings.docs.open: " + current_file_name + JSON.stringify(window.settings.docs.open,null,2));
+		//console.log("push_stt_task: just created a new file.  current_file_name, window.settings.docs.open: " + current_file_name + JSON.stringify(window.settings.docs.open,null,2));
 		
 		if(typeof files[stt_task['origin_file'].filename] != 'undefined' && window.settings.docs.open != null && typeof window.settings.docs.open.filename == 'string'){
-			console.log("push_stt_task: setting file locations in origin_file meta");
+			//console.log("push_stt_task: setting file locations in origin_file meta");
 			if(origin.endsWith('file') ){
 				save_file_meta('subtitle_file',JSON.parse(JSON.stringify(window.settings.docs.open)), stt_task['origin_file'].folder, stt_task['origin_file'].filename);
 			}
@@ -981,7 +981,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	}
 	
 	if(window.settings.assistant == 'translator' && typeof window.settings.input_language == 'string' && typeof window.settings.output_language == 'string' && typeof stt_task['input_language'] == 'undefined'){
-		console.log("push_stt_task: adding translation details: ", window.settings.input_language, " -> ", window.settings.output_language);
+		//console.log("push_stt_task: adding translation details: ", window.settings.input_language, " -> ", window.settings.output_language);
 		stt_task['input_language'] = window.settings.input_language;
 		stt_task['output_language'] = window.settings.output_language;
 		stt_task['translation_details'] = get_translation_model_details_from_select(window.settings.output_language);
@@ -1026,7 +1026,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	let theoretical_start_time = stt_task['recording_end_time'] - (recording.length/16);
 	//console.log("theoretical_start_time: ", theoretical_start_time);
 	if(theoretical_start_time < 500 || theoretical_start_time < 0){
-		console.log("immediately a victim of rounding issues..");
+		//console.log("immediately a victim of rounding issues..");
 		theoretical_start_time = 0;
 	}
 	
@@ -1042,7 +1042,7 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 		else{
 			if(d > 0){
-				console.log("looping over recording data: no longer possible to get 29 seconds of audio data: ", recording_length);
+				//console.log("looping over recording data: no longer possible to get 29 seconds of audio data: ", recording_length);
 			}
 			frame_to = recording_length - 1;
 			final_snippet = true;
@@ -1180,7 +1180,7 @@ window.create_scribe_parent_task = create_scribe_parent_task;
 
 
 function stop_scribe_voice_task(task=null){
-	console.log("in stop_scribe_voice_task.  task: ", task);
+	//console.log("in stop_scribe_voice_task.  task: ", task);
 	let parent_task_index = null;
 	
 	if(window.microphone_enabled){
@@ -1246,7 +1246,7 @@ function play_float32_array_as_audio(audio_array){
 	
 			window.main_audio_context.decodeAudioData(encodeWAV(audio_array))
 			.then((decoded_audio) => {
-				console.log("got decoded audio");
+				//console.log("got decoded audio");
 				const source = window.main_audio_context.createBufferSource();
 				source.buffer = decoded_audio;
 				source.connect(window.main_audio_context.destination);
@@ -1625,7 +1625,7 @@ function get_browser_tts_languages() {
 	if(browser_synth){
 	    window.browser_tts_voices_raw = browser_synth.getVoices();
 		if(window.browser_tts_voices_raw){
-			console.log("get_browser_tts_languages: window.browser_tts_voices_raw.length: ", window.browser_tts_voices_raw.length);
+			//console.log("get_browser_tts_languages: window.browser_tts_voices_raw.length: ", window.browser_tts_voices_raw.length);
 		}
 		
 	    for (let i = 0; i < window.browser_tts_voices_raw.length; i++) {
@@ -1691,7 +1691,7 @@ async function browser_speak(task=null) {
 		console.error("browser_speak: invalid task.sentence: ", task.sentence);
 		return false
 	}
-	console.log("browser_speak: sentence: ", task.sentence);
+	//console.log("browser_speak: sentence: ", task.sentence);
 	
 	if(typeof browser_synth == 'undefined' || browser_synth == null){
 		console.error("browser_speak: aborting, browser_synth was undefined/null");
@@ -1803,7 +1803,7 @@ async function browser_speak(task=null) {
 				samantha = easy_speech_voices[i];
 			}
 	        if (easy_speech_voices.name === selectedOption) {
-				console.log("browser_speak: easy_speech: found voice: ", selectedOption, easy_speech_voices[i]);
+				//console.log("browser_speak: easy_speech: found voice: ", selectedOption, easy_speech_voices[i]);
 				voice = easy_speech_voices[i];
 				found_the_voice = true;
 				break;
@@ -1851,7 +1851,7 @@ async function browser_speak(task=null) {
 	    const utterThis = new SpeechSynthesisUtterance(task.sentence);
 
 	    utterThis.onend = function (event) {
-			console.log("browser_speak: SpeechSynthesisUtterance.onend");
+			//console.log("browser_speak: SpeechSynthesisUtterance.onend");
 		    window.tts_worker_busy = false;
 		    window.audio_player_busy = false;
 			if(window.microphone_enabled){

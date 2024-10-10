@@ -5,7 +5,7 @@ import { Template } from './jinja/index.js';
 
 
 function check_if_text_fits_in_context(text,context_size){
-	console.log("in check_if_text_fits_in_context.");
+	//console.log("in check_if_text_fits_in_context.");
 	if(typeof text != 'string' || typeof context_size != 'number'){
 		return false
 	}
@@ -22,7 +22,7 @@ window.check_if_text_fits_in_context = check_if_text_fits_in_context;
 
 
 const apply_chat_template = async (task, messages) => {
-	console.log("in apply_chat_template. messages: ", messages);
+	//console.log("in apply_chat_template. messages: ", messages);
 	
 	if(typeof task == 'undefined' || task == null){
 		console.error("apply_chat_template: invalid task provided");
@@ -42,7 +42,7 @@ const apply_chat_template = async (task, messages) => {
 	let assistant_id = null;
 	if(typeof task.assistant == 'string'){
 		assistant_id = task.assistant;
-		console.log("apply_chat_template:  got assistant_id from task: ", assistant_id);
+		//console.log("apply_chat_template:  got assistant_id from task: ", assistant_id);
 	}
 	
 	if(typeof assistant_id != 'string'){
