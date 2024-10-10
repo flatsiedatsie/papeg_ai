@@ -501,7 +501,7 @@ let cm_extensions = [
 				
   			}
   			else{
-  				console.warn("current_file_name has changed, so not calling editor_changed().  current_file_name,previous_open_file_name: ", current_file_name, previous_open_file_name);
+  				//console.warn("current_file_name has changed, so not calling editor_changed().  current_file_name,previous_open_file_name: ", current_file_name, previous_open_file_name);
   				previous_open_file_name = current_file_name;
   				document.body.classList.add('show-document');
   				window.settings.docs.open = {'filename':current_file_name,'folder':folder}

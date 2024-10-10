@@ -288,18 +288,18 @@ function clear_vars(){
 
 function reload_vars(){
 	//console.log("in reload_vars");
-	const files_before = JSON.stringify(files);
-	const sub_folders_before = JSON.stringify(sub_folders);
+	const files_before = JSON.stringify(files,null,2);
+	const sub_folders_before = JSON.stringify(sub_folders,null,2);
 	reload_folder_dict();
 	reload_files_dict();
-	if(JSON.stringify(files) != files_before || JSON.stringify(sub_folders) != sub_folders_before){
-		console.warn("RELOAD VARS RESULTED IN DIFFERENT FILES VALUES: ", files_before, JSON.stringify(files,null,2));
+	if(JSON.stringify(files,null,2) != files_before || JSON.stringify(sub_folders,null,2) != sub_folders_before){
+		console.warn("RELOAD VARS RESULTED IN DIFFERENT FILES OR FOLDER VALUES: \n\n-FILES BEFORE-\n\n", files_before, "\n\n-FILES AFTER-\n\n", JSON.stringify(files,null,2), "\n\n-SUB_FOLDERS BEFORE-\n\n", sub_folders_before,  "\n\n-SUB_FOLDERS AFTER-\n\n", JSON.stringify(sub_folders,null,2));
 		//console.log('\n\n',JsDiff.diffChars(files_before, JSON.stringify(files,null,2))[0],'\n\n');
 		//flash_message("reload_vars: files changed",1500,'warn');
 		update_ui();
 	}
-	if(JSON.stringify(sub_folders) != sub_folders_before){
-		console.warn("RELOAD VARS RESULTED IN DIFFERENT SUB_FOLDERS VALUES: ",sub_folders_before, JSON.stringify(sub_folders,null,2));
+	if(JSON.stringify(sub_folders,null,2) != sub_folders_before){
+		console.warn("RELOAD VARS RESULTED IN DIFFERENT SUB_FOLDERS VALUES: \n\n", sub_folders_before, "\n\n\n", JSON.stringify(sub_folders,null,2));
 		//console.log('\n\n',JsDiff.diffChars(sub_folders_before, JSON.stringify(sub_folders,null,2))[0],'\n\n');
 		//flash_message("reload_vars: sub_folders changed",1500,'warn');
 		update_ui();

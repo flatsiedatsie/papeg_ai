@@ -521,7 +521,7 @@ function create_folder(save=false,folder_name=null){
 						reject();
 		                return false;
 		            }
-		            console.log("create_folder: user provided new folder name: ", target_folder);
+		            //console.log("create_folder: user provided new folder name: ", target_folder);
 					//console.log("create_folder: folder and files before: ", folder, files);
 					create_and_open_the_folder(target_folder);
 					resolve(target_folder);
@@ -667,7 +667,7 @@ function open_folder(target_folder=null, intensity='production'){
 	clear_output();
 	hide_all_context_menus();
 	
-	console.log("open_folder clear and hide took this long: ", Date.now() - before_time);
+	//console.log("open_folder clear and hide took this long: ", Date.now() - before_time);
 	
 	if(target_folder == null){
 		folder = folder_path('get');
@@ -691,7 +691,7 @@ function open_folder(target_folder=null, intensity='production'){
 	// is there a snapshot for this folder?
 	reload_snapshots_meta();
 	
-	console.log("open_folder: + reload folder dict and reload snapshots_meta took this long: ", Date.now() - before_time);
+	//console.log("open_folder: + reload folder dict and reload snapshots_meta took this long: ", Date.now() - before_time);
 	
 	// What was the last opened file in this folder?
 	current_file_name = localStorage.getItem(folder + '_last_opened');
@@ -765,7 +765,7 @@ function open_folder(target_folder=null, intensity='production'){
 		//console.log("open_folder: not calling ajax for latest files list of real folders.  calling open_file(). folder,current_file_name: ", folder, current_file_name);
 		open_file()
 		.then(function(value) {
-			console.log("\n\n\n\n\nopen_folder: in  open_file().then, HURRAY.  current_file_name: ", current_file_name); //  value: ", value
+			//console.log("\n\n\n\n\nopen_folder: in  open_file().then, HURRAY.  current_file_name: ", current_file_name); //  value: ", value
 			update_ui();
 		})
 		.catch(function(err) {
@@ -1128,7 +1128,7 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 		}
 		reload_files_dict();
 		
-		console.log("open_file: + yet another reload files dict took this long: ", Date.now() - before_time);
+		//console.log("open_file: + yet another reload files dict took this long: ", Date.now() - before_time);
 		
 		//console.log("open_file: reloaded files dict: ", files);
 		//console.log("open_file:  folder,target_folder: ",folder,target_folder);
@@ -1215,21 +1215,21 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 					//localStorage.setItem(target_folder + '_last_opened', unsaved_file_name);
 					localStorage.setItem(target_folder + '_last_opened', null);
 					document.body.classList.remove('show-document');
-					console.log("open_file: + not opening unsaved_file_name.  took this long: ", Date.now() - before_time);
+					//console.log("open_file: + not opening unsaved_file_name.  took this long: ", Date.now() - before_time);
 					
 					reject(null);
 					return
 				}
 				else{
 					console.error("open_file: could not find file in files! have to switch to another file");
-					console.log("open_file: + discovering missing file took this long: ", Date.now() - before_time);
+					//console.log("open_file: + discovering missing file took this long: ", Date.now() - before_time);
 					//current_file_name = files[ keyz(files)[0] ];
 					//target_filename = files[ keyz(files)[0] ];
 					open_file(keyz(files)[0])
 					.then((value) => {
 						console.error("open_folder: setting the first file as the new _last_opened file: ", current_file_name);
 						//localStorage.setItem(target_folder + '_last_opened', keyz(files)[0]);
-						console.log("open_file: discovering missing file and opening a new one took this long: ", Date.now() - before_time);
+						//console.log("open_file: discovering missing file and opening a new one took this long: ", Date.now() - before_time);
 						resolve(value);
 					})
 					.catch((err) => {
@@ -4232,7 +4232,7 @@ function file_upload(inputElement,fs_files=[]) {
 
 
 function save_blob(blob,filename){
-	console.log("in save_blob.  blob,filename: ", typeof blob, blob, filename);
+	//console.log("in save_blob.  blob,filename: ", typeof blob, blob, filename);
 	var reader = new FileReader();
 	
 	reader.onloadend = () => {
@@ -4754,7 +4754,7 @@ async function handle_indexdb_worker_response(e_data){
 			if(window.settings.docs.open != null){
 				const before_time = Date.now();
 				open_folder();
-				console.log("open_folder took this long: ", Date.now() - before_time);
+				//console.log("open_folder took this long: ", Date.now() - before_time);
 			}
 			else{
 				//console.log("playground: loading file data only, not opening file");

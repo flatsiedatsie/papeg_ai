@@ -23,7 +23,7 @@ window.real_indexdb_helper_worker = null;
 window.indexdb_helper_worker_busy = false;
 
 async function create_indexdb_helper_worker(){
-	console.log("in create_indexdb_helper_worker");
+	//console.log("in create_indexdb_helper_worker");
 	
 	if(window.indexdb_helper_worker != null){
 		console.warn("create_indexdb_helper_worker: window.indexdb_helper_worker wasn't null initially");

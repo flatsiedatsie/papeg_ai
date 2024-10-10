@@ -750,7 +750,7 @@ const saveTemplateAsFile = (filename, dataObjToWrite) => {
     link.remove()
 };
 
-
+/*
 document.getElementById('backup-all-button').onclick = () => {
 	backup_all()
 	.then((everything) => {
@@ -762,7 +762,7 @@ document.getElementById('backup-all-button').onclick = () => {
 		console.error("\n\n\nBACKUP DATA FAILED: ", err);
 	})
 }
-
+*/
 
 function backup_all(){
 	let everything = {};
@@ -1207,10 +1207,10 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 	video_el.controls = true;
 	
 	video_el.addEventListener("play", (event) => {
-		console.log("generate_video: started playing video.  event: ", event);
+		//console.log("generate_video: started playing video.  event: ", event);
 		
 		if(window.scroll_description_to_time_timeout != null){
-			console.log("clearing old scroll_description_to_time_timeout first");
+			//console.log("clearing old scroll_description_to_time_timeout first");
 			clearTimeout(window.scroll_description_to_time_timeout);
 		}
 		scroll_description_to_time();
@@ -1220,7 +1220,7 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 	
 	
 	video_el.addEventListener('loadeddata', function() {
-	    console.log("MEDIA PLAYER ELEMENT IS LOADED");
+	    //console.log("MEDIA PLAYER ELEMENT IS LOADED");
 		
 		if(
 			typeof files[current_file_name] != 'undefined' 
@@ -1238,7 +1238,7 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 			view_subtitle_button_el.setAttribute('id','overlay-view-subtitles-button');
 			view_subtitle_button_el.textContent = get_translation('Edit_subtitles');
 			view_subtitle_button_el.addEventListener('click', () => {
-				console.log("clicked view subtitle for current media file.  subtitle from file meta: ", current_file_name, files[current_file_name]['subtitle']);
+				//console.log("clicked view subtitle for current media file.  subtitle from file meta: ", current_file_name, files[current_file_name]['subtitle']);
 				
 				if(typeof files[current_file_name]['subtitle'] == 'string'){
 					add_overlay_description(files[current_file_name]['subtitle'],'subtitle');
@@ -1259,7 +1259,7 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 							const short_name = remove_file_extension(current_file_name);
 							window.load_meeting_notes_example('vtt',files[current_file_name]['subtitle'],short_name)
 							.then(() => {
-								console.log("saving subtitle_file meta data to window.settings.docs.open.filename: " + window.settings.docs.open.filename +  ",  origin_file.filename: ", origin_file.filename);
+								//console.log("saving subtitle_file meta data to window.settings.docs.open.filename: " + window.settings.docs.open.filename +  ",  origin_file.filename: ", origin_file.filename);
 								save_file_meta('subtitle_file',JSON.parse(JSON.stringify(window.settings.docs.open)), origin_file.folder, origin_file.filename);
 								save_file_meta('origin_file',origin_file);
 							})
@@ -1282,7 +1282,7 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 						const short_name = remove_file_extension(current_file_name);
 						window.load_meeting_notes_example('vtt',files[current_file_name]['subtitle'],short_name)
 						.then(() => {
-							console.log("saving subtitle_file meta data to: " + window.settings.docs.open.filename +  ",  origin_file.filename: ", origin_file.filename);
+							//console.log("saving subtitle_file meta data to: " + window.settings.docs.open.filename +  ",  origin_file.filename: ", origin_file.filename);
 							save_file_meta('subtitle_file',JSON.parse(JSON.stringify(window.settings.docs.open)), origin_file.folder, origin_file.filename);
 							save_file_meta('origin_file',origin_file);
 						})
@@ -1305,7 +1305,7 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 			download_subtitle_button_el.addEventListener('click', () => {
 				if(typeof files[current_file_name]['subtitle'] == 'string'){
 					const subtitle_filename = sanitize_filename(remove_file_extension(current_file_name));
-					console.log("cleaned subtitle_filename: ", subtitle_filename);
+					//console.log("cleaned subtitle_filename: ", subtitle_filename);
 					window.download_text_as_txt( vtt_to_srt(files[current_file_name]['subtitle']), subtitle_filename + '.srt');
 					window.download_text_as_txt( files[current_file_name]['subtitle'], subtitle_filename + '.vtt');
 				}
@@ -1316,7 +1316,7 @@ function generate_video(data=null,target_folder=null,target_filename=null){
 			media_buttons_el.appendChild(subtitle_buttons_wrapper_el);
 		}
 		else{
-			console.log("there are no subtitles in the meta data for this file: ", current_file_name);
+			//console.log("there are no subtitles in the meta data for this file: ", current_file_name);
 		}
 		
 		
@@ -1697,7 +1697,7 @@ function add_overlay_description(text=null,text_type=null){
 			let overlay_description_el = document.getElementById('overlay-description');
 			if( overlay_description_el == null){
 		
-				console.log("add_overlay_description: adding overlay-image-description element");
+				//console.log("add_overlay_description: adding overlay-image-description element");
 				overlay_description_el = document.createElement('div');
 				overlay_description_el.classList.add('overlay-image-description');
 				overlay_description_el.setAttribute('id','overlay-description');
@@ -1904,7 +1904,7 @@ function add_overlay_description(text=null,text_type=null){
 			
 			if(typeof media_player_el.onplaying == 'undefined'){
 				media_player_el.onplaying = function() { 
-					console.log('Video is now loaded and playing');
+					//console.log('Video is now loaded and playing');
 					
 				}
 			}
@@ -1965,7 +1965,7 @@ function scroll_description_to_time(){
 								}
 								if(typeof next_chunk_seconds == 'number' && chunk_seconds >= video_seconds && video_seconds < next_chunk_seconds){
 									found_it = true;
-									console.log("FOUND OPTIMAL SUBTITLE CHUNK ELEMENT:  nr: ", sc, chunk_seconds, " >", video_seconds, "< ", next_chunk_seconds);
+									//console.log("FOUND OPTIMAL SUBTITLE CHUNK ELEMENT:  nr: ", sc, chunk_seconds, " >", video_seconds, "< ", next_chunk_seconds);
 									subtitle_chunk_els[sc].classList.add('highlighted-description-chunk');
 									subtitle_chunk_els[sc].scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
 								}
@@ -1980,7 +1980,7 @@ function scroll_description_to_time(){
 											subtitle_chunk_els[sc].scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
 										}
 										else{
-											console.log('Mouse is over the overlay-description-container element');
+											//console.log('Mouse is over the overlay-description-container element');
 										}
 										
 									}
@@ -1990,7 +1990,7 @@ function scroll_description_to_time(){
 											subtitle_chunk_els[sc-1].scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
 										}
 										else{
-											console.log('Mouse is over the overlay-description-container element');
+											//console.log('Mouse is over the overlay-description-container element');
 										}
 										
 									}
@@ -2025,11 +2025,11 @@ function scroll_description_to_time(){
 			
 		}
 		else{
-			console.log("media player has been paused");
+			//console.log("media player has been paused");
 		}
 	}
 	else{
-		console.log("media player element is gone");
+		//console.log("media player element is gone");
 	}
 	
 }
@@ -2062,7 +2062,7 @@ window.srt_to_vtt = srt_to_vtt;
 function vtt_to_srt(raw_subtitle){
 	if(typeof raw_subtitle == 'string' && raw_subtitle.indexOf(' --> ') != -1){
 		let chunks = raw_subtitle.split(/[\n]{2,}/); 
-		console.log("vtt_to_srt: chunks: ", chunks);
+		//console.log("vtt_to_srt: chunks: ", chunks);
 	
 		for(let y = chunks.length - 1; y >= 0; y--){
 			if(chunks[y].indexOf(' --> ') == -1){
@@ -2074,7 +2074,7 @@ function vtt_to_srt(raw_subtitle){
 		for(let x = 0; x < chunks.length; x++){
 			let chunk_lines = chunks[x].split('\n');
 			for(let cl = 0; cl < chunk_lines.length; cl++){
-				console.log("chunk_line: ", cl, chunk_lines[cl], ", double-dot-count: ", chunk_lines[cl].split(':').length);
+				//console.log("chunk_line: ", cl, chunk_lines[cl], ", double-dot-count: ", chunk_lines[cl].split(':').length);
 				if(chunk_lines[cl].indexOf(' --> ') != -1 && chunk_lines[cl].split(':').length > 6){
 					let timestamp_parts = chunk_lines[cl].split(':');
 					chunk_lines[cl] = timestamp_parts[0] + ':' + timestamp_parts[1] + ':' + timestamp_parts[2] + ',' + timestamp_parts[3] + ':' + timestamp_parts[4] + ':' + timestamp_parts[5] + ',' + timestamp_parts[6].substr(0,3);
@@ -2085,7 +2085,7 @@ function vtt_to_srt(raw_subtitle){
 				}
 			}
 			chunks[x] = chunk_lines.join('\n');
-			console.log("simplified VTT to SRT chunk: ", chunks[x]);
+			//console.log("simplified VTT to SRT chunk: ", chunks[x]);
 		
 			chunks[x] = x + '\n' + chunks[x];
 		}

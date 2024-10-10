@@ -358,7 +358,7 @@ async function update_ui_file_tabs(action='refresh'){
 
 // helper function for file tabs functinonality
 async function open_both(target_folder, target_filename){
-	console.log("in open_both.  target_folder, target_filename: ", target_folder, target_filename);
+	//console.log("in open_both.  target_folder, target_filename: ", target_folder, target_filename);
 	if(typeof target_folder == 'string'){
 		await open_folder(target_folder);
 		
@@ -760,13 +760,15 @@ function update_ui_file_menu(file_list=null) {
 	}
 	
 	//console.log("update_ui_file_menu: file_list.length: ", file_list.length, file_list);
-	
+
 	if(file_list.length == 0){
 		document.body.classList.add('no-files-in-folder');
 	}
 	else{
 		document.body.classList.remove('no-files-in-folder');
 	}
+	
+	
 	
 	
 	
@@ -790,6 +792,7 @@ function update_ui_file_menu(file_list=null) {
 	if(folder_parts.length == 0){
 		folder_parts = [''];
 		folder_select_container_el.innerHTML = '';
+		//document.body.classList.remove('has-folders');
 	}
 	
 	else{
@@ -879,8 +882,16 @@ function update_ui_file_menu(file_list=null) {
 					document.getElementById('upload-file-input').click();
 				})
 			},1);
-			
 		}
+		if(folder == ''){
+			document.body.classList.remove('has-folders');
+		}
+		else{
+			document.body.classList.add('has-folders');
+		}
+	}
+	else if(keyz(sub_folders).length > 0){
+		document.body.classList.add('has-folders');
 	}
 	
 	if(file_list.length < 1){
@@ -1278,7 +1289,7 @@ function update_ui_file_menu(file_list=null) {
 				//let msg = codeOutput;
 	            switch (e.button) {
 	                case 0:
-						console.log('Left mouse button clicked on file item.');
+						//console.log('Left mouse button clicked on file item.');
 						document.body.classList.remove('enlarge-functions');
 						document.body.classList.remove('show-rewrite');
 						
@@ -1292,7 +1303,7 @@ function update_ui_file_menu(file_list=null) {
 						localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
 						/*
 						const current_file_data = JSON.parse(JSON.stringify(files.splice(file_index, 1);
-						console.log("current_file_data: ", current_file_data);
+						//console.log("current_file_data: ", current_file_data);
 						files.unshift(current_file_data);
 						localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
 						*/
@@ -1377,19 +1388,27 @@ function update_ui_file_menu(file_list=null) {
 	if(modified_file_count > 0){
 		//console.log("update_ui_file_menu: at least one file is modified.  modified_file_count: ", modified_file_count);
 		modified = true;
-		document.body.classList.add('modified');
+		if(!document.body.classList.contains('modified')){
+			document.body.classList.add('modified');
+		}
 	}
 	else{
 		//console.log("update_ui_file_menu: no files are modified");
 		modified = false;
-		document.body.classList.remove('modified');
+		if(document.body.classList.contains('modified')){
+			document.body.classList.remove('modified');
+		}
 	}
 	
 	if(modified_file_count > 1){
-		document.body.classList.add('multiple-modified');
+		if(!document.body.classList.contains('multiple-modified')){
+			document.body.classList.add('multiple-modified');
+		}
 	}
 	else{
-		document.body.classList.remove('multiple-modified');
+		if(document.body.classList.contains('multiple-modified')){
+			document.body.classList.remove('multiple-modified');
+		}
 	}
 	
 	//console.log("unloaded_file_count: ", unloaded_file_count);
@@ -1405,6 +1424,16 @@ function update_ui_file_menu(file_list=null) {
 	// FOLDERS LIST
 	
 	sub_folders_list = keyz(sub_folders);
+	/*
+	if(sub_folder_list.length || folder != ''){
+		document.body.classList.add('has-folders');
+	}
+	else {
+		if(document.body.classList.contains('has-folders')){
+			document.body.classList.remove('has-folders');
+		}
+	}
+	*/
 	sub_folders_list = case_insensitive_sort(sub_folders_list);
 	save_folder_meta('sub_folder_count',sub_folders_list.length);
 	for(var f = 0; f < sub_folders_list.length; f++) {
@@ -3655,17 +3684,17 @@ function unzip(value=null,type='local',target_folder=null){
 	
 	new_zip.loadAsync(zip_buffer)
 	.then(function(zip) {
-		console.log("unzip:  zip:", zip);
+		//console.log("unzip:  zip:", zip);
 		
 		//let actual_zip_files = [];
 		let file_promises = [];
 		
 		Object.keys(zip.files).forEach(function (filename) {
 			
-			console.log("unzip: filename: ", filename);
+			//console.log("unzip: filename: ", filename);
 			
 			if(filename.startsWith('__MACOSX')){
-				console.log("unzip: skipping filename that starts with __MACOSX");
+				//console.log("unzip: skipping filename that starts with __MACOSX");
 				return
 			}
 			
@@ -3682,7 +3711,7 @@ function unzip(value=null,type='local',target_folder=null){
 			
 			
 		    let file_promise = zip.files[filename].async(file_type).then(function (fileData) {
-				console.log("unzip:  got fileData: ", filename, typeof fileData, fileData);
+				//console.log("unzip:  got fileData: ", filename, typeof fileData, fileData);
 				
 				let zip_filename = null;
 				let zip_folder = target_folder;
@@ -3713,7 +3742,7 @@ function unzip(value=null,type='local',target_folder=null){
 					//if(!zip_folder.startsWith('__MACOSX')){
 					
 					let new_file = new File([fileData], filename);
-					console.log("unzip created new file object: ", new_file);
+					//console.log("unzip created new file object: ", new_file);
 					
 					if(new_file){
 						return new_file;
@@ -3722,7 +3751,7 @@ function unzip(value=null,type='local',target_folder=null){
 					
 					
 					/*
-						console.log("unzip: typeof fileData: ", typeof fileData, fileData);
+						//console.log("unzip: typeof fileData: ", typeof fileData, fileData);
 						if(window.filename_is_binary(zip_filename)){
 							fileData = '_PLAYGROUND_BINARY_' + buffer_to_string(fileData);
 						}
@@ -3731,7 +3760,7 @@ function unzip(value=null,type='local',target_folder=null){
 						//save_file(zip_name + ".zip", buffer_to_string(arbuf), 'production', null, true);
 					//}
 					//else{
-					//	console.log("unzip: skipping __MACOSX file");
+					//	//console.log("unzip: skipping __MACOSX file");
 					//}
 					*/
 					
@@ -3746,9 +3775,9 @@ function unzip(value=null,type='local',target_folder=null){
 			
 		})
 		
-		console.log("unzip: file_promises.length: ", file_promises.length);
+		//console.log("unzip: file_promises.length: ", file_promises.length);
 		Promise.all(file_promises).then((values) => {
-			console.log("unzip file promises are all done: ", values);
+			//console.log("unzip file promises are all done: ", values);
 			file_upload(null,values);
 		});
 		
