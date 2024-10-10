@@ -4469,44 +4469,54 @@ async function verify_segments(segments, chunks, audio=null, verification_proces
 						let second_highest_count = null;
 						let second_highest_speaker = null;
 						let total_count = 0;
-					
-						for (let [seg, value] of Object.entries(final_id_map)) {
-							for (let [spkr, details] of Object.entries(value)) {
-								//console.log("id_map:  spkr, details: ", spkr, details);
 						
-								if(used_up_certain_ids.indexOf(spkr) == -1){
-									total_count += details.count;
-									if(details.count > highest_count){ // || (details.count > 0 && details.count == highest_count) ){
-										if(used_up_certain_ids.indexOf(sprk) == -1){
-											//console.log("id_map:  most likely speaker for segment is now:", seg, spkr);
+						if(Object.keys(final_id_map).length){
+							for (let [seg, value] of Object.entries(final_id_map)) {
+								if(typeof value != 'undefined' && value != null){
+									for (let [spkr, details] of Object.entries(value)) {
+										//console.log("id_map:  spkr, details: ", spkr, details);
+										if(typeof spkr == 'string' && typeof details != 'undefined' && details != null){
+											if(used_up_certain_ids.indexOf(spkr) == -1){
+												if(typeof details.count == 'number'){
+													total_count += details.count;
+													if(details.count > highest_count){ // || (details.count > 0 && details.count == highest_count) ){
+														if(used_up_certain_ids.indexOf(sprk) == -1){
+															//console.log("id_map:  most likely speaker for segment is now:", seg, spkr);
 								
-											if(highest_count > 0 && highest_speaker != null){
-												second_highest_count = highest_count;
-												second_highest_speaker = highest_speaker;
+															if(highest_count > 0 && highest_speaker != null){
+																second_highest_count = highest_count;
+																second_highest_speaker = highest_speaker;
+															}
+															highest_count = details.count;
+															highest_speaker = spkr;
+														}
+														else{
+															//console.log("id_map: skipping speaker_id that is already certain: ", spkr);
+														}
+													}
+												}
+												
 											}
-											highest_count = details.count;
-											highest_speaker = spkr;
 										}
-										else{
-											//console.log("id_map: skipping speaker_id that is already certain: ", spkr);
-										}
+						
 									}
 								}
-						
-							}
-					
-					
-					
-							//console.log("id_map: total_count, highest_count, second_highest_count: ", total_count, highest_count, second_highest_count, ' (', highest_speaker, second_highest_speaker);
-							if( total_count > 5 && (highest_count / total_count) > 0.65 && used_up_certain_ids.indexOf(highest_speaker) == -1){ //  && (second_highest_count == null || (second_highest_count/total_count) < 0.2) 
-								final_id_map[seg] = highest_speaker;
-								used_up_certain_ids.push(highest_speaker);
-							}
-							else if(total_count > 2 && (highest_count / total_count) > 0.74 && used_up_certain_ids.indexOf(highest_speaker) == -1){
-								final_id_map[seg] = highest_speaker;
-								used_up_certain_ids.push(highest_speaker);
+								
+								//console.log("id_map: total_count, highest_count, second_highest_count: ", total_count, highest_count, second_highest_count, ' (', highest_speaker, second_highest_speaker);
+								if(typeof highest_speaker == 'string'){
+									if( total_count > 5 && (highest_count / total_count) > 0.65 && used_up_certain_ids.indexOf(highest_speaker) == -1){ //  && (second_highest_count == null || (second_highest_count/total_count) < 0.2) 
+										final_id_map[seg] = highest_speaker;
+										used_up_certain_ids.push(highest_speaker);
+									}
+									else if(total_count > 2 && (highest_count / total_count) > 0.74 && used_up_certain_ids.indexOf(highest_speaker) == -1){
+										final_id_map[seg] = highest_speaker;
+										used_up_certain_ids.push(highest_speaker);
+									}
+								}
+								
 							}
 						}
+						
 					}
 					
 					

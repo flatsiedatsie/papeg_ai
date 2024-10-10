@@ -73,7 +73,7 @@ window.functionality = {
 	"transcribe":{
 		"type":"document",
 		"i18n_code":"Transcribe_an_audio_file",
-		"assistant_id":"scribe",
+		//"assistant_id":"scribe",
 		//"classes_to_add":["sidebar-chat"],
 		"classes_to_remove":["show-rewrite","sidebar"],
 		"better_with_web_gpu":true,
@@ -958,10 +958,10 @@ function do_functionality(functionality_name){
 			}
 	
 			if(window.web_gpu_supported && typeof details.fast_assistant_id == 'string'){
-				switch_assistant(details.fast_assistant_id);
+				switch_assistant(details.fast_assistant_id, true);
 			}
 			else{
-				switch_assistant(details.assistant_id);
+				switch_assistant(details.assistant_id, true);
 			}
 	
 			if(typeof details.functions != 'undefined'){

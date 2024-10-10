@@ -916,14 +916,16 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		
 		
 		// Make sure a file to write the results to exists in case of file transcription
-		if(origin.endsWith('file') && typeof prefered_extension == 'string'){
+		if(created_new_file == false && origin.endsWith('file') && typeof prefered_extension == 'string'){
 			await window.load_meeting_notes_example(prefered_extension,'\n',document_filename); //remove_file_extension(document_filename));
 			created_new_file = true;
 		}
-		else if(typeof window.current_scribe_voice_parent_task_id != 'number'){
+		else if(created_new_file == false && typeof window.current_scribe_voice_parent_task_id != 'number'){
 			await window.load_meeting_notes_example('notes');
 			created_new_file = true;
 		}
+		
+		// Copy file data from parent task (for voice transcription)
 		else if(typeof stt_task['file'] == 'undefined'){
 			let found_it = false;
 			for(let t = 0; t < window.task_queue.length; t++){
@@ -935,7 +937,14 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 			}
 			if(found_it == false){
 				await window.load_meeting_notes_example('notes');
-				created_new_file = true;
+				if(window.settings.docs.open != null){
+					stt_task['file'] = JSON.parse(JSON.stringify(window.settings.docs.open));
+					created_new_file = true;
+				}
+				else{
+					console.error("failed to quickly create a new file to place transcription into?  window.settings.docs.open: ", window.settings.docs.open);
+				}
+				
 			}
 		}
 		
@@ -956,13 +965,13 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 		}
 	}
 	
-	//console.log("push_stt_task: created_new_file: ", created_new_file);
+	//console.log("push_stt_task: created_new_file?: ", created_new_file);
 	
 	if(typeof stt_task['assistant'] != 'string'){
 		stt_task['assistant'] = window.settings.assistant;
 	}
 	
-	//let type = 'chat';
+
 	if(stt_task['assistant'] == 'scribe' || (window.active_destination == 'document' && window.settings.docs.open != null)){
 		//console.warn("push_stt_task: destination is document.");
 		//stt_task['type'] = 'undetermined';

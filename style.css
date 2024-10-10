@@ -1914,10 +1914,11 @@ body.show-rewrite .chat .content .message-form{
 		min-width: 300px;
 	}
 	
-	
+	/*
 	.chat .content .message-header .user-info{
 		padding-left:8px;
 	}
+	*/
 	 
 	#back-button-container{
 		display:none;

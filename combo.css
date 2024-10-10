@@ -3286,7 +3286,7 @@ body.chat-message-form-minimum-height:not(.settings-complexity-advanced).chat-sh
 	}
 
 	.chat-shrink:not(.show-rewrite):not(.show-camera):not(.show-document).sidebar .chat .content .message-header .user-info{
-		padding-left: 8px;
+		/*padding-left: 8px;*/
 		transition:all ease .3s;
 	}
 	.chat-shrink:not(.show-rewrite):not(.show-camera):not(.show-document):not(.sidebar) .chat .content .message-header .user-info{
@@ -3430,7 +3430,7 @@ body.chat-message-form-minimum-height:not(.settings-complexity-advanced).chat-sh
 	}
 
 	.chat-shrink:not(.show-rewrite):not(.show-camera).sidebar .chat .content .message-header .user-info{
-		padding-left: 9px;
+		/*padding-left: 9px;*/
 		transition:all ease .3s;
 	}
 	.chat-shrink:not(.show-rewrite):not(.show-camera):not(.sidebar) .chat .content .message-header .user-info{

@@ -1,6 +1,6 @@
 /*! coi-serviceworker v0.1.7 - Guido Zuidhof and contributors, licensed under MIT */
 
-var service_worker_version = 225;
+var service_worker_version = 234;
 
 var previousCacheName = null; 
 var cacheName = 'v' + service_worker_version; 
@@ -257,7 +257,7 @@ if (typeof window === 'undefined') {
 										
 				                    }
 									else{
-										console.log("service worker: response status was not 0. returning crafted response");
+										//console.log("service worker: response status was not 0. returning crafted response");
 					                    const newHeaders = new Headers(response.headers);
 					                    newHeaders.set("Cross-Origin-Embedder-Policy",
 					                        coepCredentialless ? "credentialless" : "require-corp"

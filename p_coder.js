@@ -3,6 +3,7 @@
 //console.log("Hello from chatty_coder.js");
 
 let files_to_load = [
+	'./pjs/dayjs-with-plugins.min.js',
 	'./pjs/diff.js',
 	'./pjs/linter.min.js',
 	'./pjs/stylelint-bundle.min.js',

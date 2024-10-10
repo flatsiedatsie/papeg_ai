@@ -741,7 +741,7 @@
 		
 	
 		function check_cache() {
-			console.log("in check_cache");
+			//console.log("in check_cache");
 			return new Promise(function(resolve,reject) {
 			    try {
 					
@@ -1400,7 +1400,7 @@
 		
 		
 		
-console.log("early loaded");
+//console.log("early loaded");
 
 
 
