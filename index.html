@@ -30,21 +30,17 @@
 	<meta content="1630" property="og:image:width">
 	<meta content="1200" property="og:image:height">
 	
-	
-	
 	<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
 	<link rel="manifest" href="./site.webmanifest">
-	
-	<!--<script src="./first.js"></script>-->
 	
 	<script>
 	
 		// Cobbled together by Tijmen Schep, 2024
 		// For Fleur, Levien, Dirk, Linde and Denise
 
-		// THE CODE IS VERY MESSY. It's an experiment that became a prototype that became a website.. #cargocult
+		// THE CODE IS VERY MESSY. It's an experiment that became a prototype that became a project.. #cargocult
 		
 		
 		
@@ -74,17 +70,12 @@
 				'text_to_image':{'selected':true},
 				'scribe':{'selected':true,'privacy_level':'Medium','add_timestamps':'Minutes','transcription_quality':'High','continuous_mic':'Detect_slow'},
 				'translator':{'selected':true,'add_both_languages_to_documents':false,'force_webgpu':false, 'prefered_voice_gender':'female'},
-				
-				//'fast_llama3_8B':{'selected':true},
-		
+
 				'fast_mistral':{'selected':true},
 				'mistral':{'selected':true},
 		
 				'fast_phi3_mini':{'selected':false},
 				'phi3_mini':{'selected':false},
-		
-				//'fast_phi2':{'selected':true},
-				//'phi2':{'selected':true},
 		
 				'fast_llama3_3b':{'selected':true},
 				'llama3_3b':{'selected':true},
@@ -95,12 +86,8 @@
 				'fast_tiny_llama':{'selected':false},
 				'tiny_llama':{'selected':false},
 				
-				
-				// I <3 Danube
 				'danube':{'selected':false},
 				'danube_3_500m':{'selected':true},
-		
-				//'llama160':{'selected':true},
 		
 				// Specialized
 				'medical6':{'selected':true},
@@ -110,10 +97,7 @@
 			},
 			'last_loaded_text_ai':window.first_assistant,
 			'limit_memory':0, // 0 = auto
-			//'save_conversations':false,
-			// Blueprints
-			//'blueprints':{},
-	
+			
 			// UI state
 			'language':'en',
 			'types':{'generic':{'last_loaded':window.first_assistant}}, // TODO is this still used?
@@ -160,8 +144,6 @@
 			'auto_detect_input_language':true,
 			'auto_detect_proofread_input_language':true,
 			
-			
-	
 			// Rewrite
 			'summarize_tags':{
 				'en':[['short','very_short'],'bullet_points'],
@@ -196,9 +178,8 @@
 		  --main-bg-color: #151515;
 		  --body-weaker-bg:#2a2934;
 		  --body-even-weaker-bg: #444;
-		  /*--chat-bg:#1A1923;*/
 		  --chat-bg:#242424;
-		  --chat-section-bg:#1c1c1c; /*#240030;*/
+		  --chat-section-bg:#1c1c1c;
 		  
 		  --chat-header-bg: #333333;
 		  --chat-footer-bg: #333333;
@@ -226,44 +207,34 @@
 		  --green-text-color:#028d45;
 		  --assistant-status-text-color: #00B37E;
 		  
-		  /*--sidebar-bg: rgb(54, 54, 54);*/
 		  --sidebar-bg: rgb(43 43 43);
 		  
 		  --sidebar-header-bg: #333;
 		  --dialog-bg: #666;
-		  --files-bg: rgb(54, 54, 54); /*#3a2f4e;*/
+		  --files-bg: rgb(54, 54, 54);
 		  --highlight-bg: #151546;
 		  
 		  --selected-bg:#282c7b;
-		  /*--selected-bg:rgba(0,0,0,.3);*/
 		  --dropdown-bg:#5e5e5e;
 		  
 		  --developer-bubble-bg:#444;
 		  --assistant-bubble-bg:#633BBC;
 		  --assistant-bubble-text-color:white;
-		  --user-bubble-bg:#0e9130;  /*#07847e;   #0e9130, rgb(83, 243, 190); */
+		  --user-bubble-bg:#0e9130;
 		  --user-bubble-text-color:white;
-		  
 		  
 		  --input-bg: #1c212c;
 		  --input-focus-bg:#0c111c;
 		  --input-color: #ddd;
 		  --item-hover-bg:rgb(40,40,40);
 		  
-		  /*--button-bg: #0172ad;*/
-		  --button-blue-bg: #0e5981; /*#0172ad;*/
-		  --button-bg: #0e5981; /*#151a1d;*/ /*#171b1d;*/ /* #424a4f */
-		  
-
-
-
-		  /*--button-text-color:#ddd;*/
+		  --button-blue-bg: #0e5981;
+		  --button-bg: #0e5981;
 		  --button-text-color:#bbb;
 		  --button-hover-bg:#027fc0;
 		  --button-hover-color:#fff;
 		  --button-warning-bg:#ad6201;
 		  
-		  /*--thin-border-color:rgb(73, 73, 73);*/
 		  --thin-border-color:transparent;
 		  --thick-border-color:#666;
 		  
@@ -286,7 +257,6 @@
 		  
 		}
 		
-		/*#dddddd*/
 		.light {
 			
   		  --body-bg:#ddd;
@@ -386,11 +356,6 @@
 			position:relative;
 		}
 		
-		
-		
-		
-		
-		
 		.center{
 			display:flex;
 			align-items:center;
@@ -407,8 +372,6 @@
 		body.serverless .hide-if-serverless{
 			display:none!important;
 		}
-		
-		
 		
 		#musicgen-prompt-settings-container,
 		#speaker-voice-buttons-container{
@@ -433,7 +396,6 @@
 			display:none;
 		}
 		
-		
 		.cm-gutters{
 			background-color:transparent!important;
 			border-right:none!important;
@@ -443,7 +405,6 @@
 		body.web-gpu32 .hide-if-web-gpu{
 			display:none
 		}
-		
 		
 		.file-loading-warning-container,
 		.files-loading-warning-container{
@@ -458,29 +419,15 @@
 			display:flex;
 		}
 		
-		
-		
 		#content-container{
 			display:flex;
 			height:100%;
-			/*max-height:100vh;*/
-			/*height:-webkit-fill-available;*/
-			/*min-height: -webkit-fill-available;*/
-			/*max-height: -webkit-fill-available;*/
 			max-height:100%;
 			width:100%;
 			max-width:100vw;
-			/*max-height: calc( 100vh - env(keyboard-inset-height, 0px) );*/
 			position:fixed;
 			top:0;
-			/*bottom:0;*/
 		}
-		/*
-		body:not(.mobile) #content-container{
-			position:fixed;
-		}
-		*/
-
 
 
 		#playground-sidebar{
@@ -497,33 +444,6 @@
 			flex-direction:column;
 		}
 		
-		
-		/*
-		#papegai-logo{
-			transition: all ease 2s;
-		}
-		body.first-run #papegai-logo{
-			display:none;
-		}
-		
-		
-		body {
-		    display: grid;
-		    margin: 0;
-		    height: 100vh;
-		    grid-template:
-		      "messages" 1fr
-		      "input" auto
-		      "keyboard" env(keyboard-inset-height, 0px);
-		  }
-		*/
-		
-		/*
-		body.first-run:not(.show-document) #main-chat{
-			max-width:450px;
-		}
-		*/
-		
 		#do-pip-button{
 			display:none;
 		}
@@ -539,48 +459,20 @@
 		#tutorial-menu-inner{
 			height:50px;
 		}
-		/*
-		#tutorial-menu > div{
-			transition:all ease .5s;
-			position:absolute;
-			right:0;
-			top:0;
-		}
-		*/
-		
-		
-		
 		
 	</style>
-	<!--
-	<link rel="stylesheet" href="./res/styles/main.css">
-    <script src="res/lib/codemirror.js"></script>
-	-->
-		
-    
-	<!--<link rel="stylesheet" href="./css/pico.min.css" />-->
+	
+	
 	<link rel="stylesheet" href="./css/pico.css" />
 	<link rel="stylesheet" href="./css/chat_style.css" />
 	<link rel="stylesheet" href="./style.css" />
 	
-	
-    
-    <!--
-    <script src="res/lib/codemirror_dialog.js"></script>
-    <script src="res/lib/codemirror_jump-to-line.js"></script>
-    <script src="res/lib/codemirror_search.js"></script>
-    <script src="res/lib/codemirror_searchcursor.js"></script>
-    
-    <script defer src="./pjs/dayjs-with-plugins.min.js"></script>
-	-->
-		
     <link rel="stylesheet" href="./codemirror/codemirror.css">
     <link rel="stylesheet" href="./codemirror/codemirror_dialog.css">
-    <!--
-	<link rel="stylesheet" href="./res/theme/dracula.css">
-	-->
 	<link rel="stylesheet" href="./pcss/context_menu_kali_dark.css">
-	
+    <!--
+	<link rel="stylesheet" href="codemirror/dracula.css">
+	-->
 	
 	
     <script src="vex/js/vex.combined.min.js"></script>
@@ -622,15 +514,8 @@
 				<div id="file-drag-overlay" data-i18n="Drop_here_to_open">Drop<br>here<br><br>to<br>open</div>
 				
 				<div id="sidebar-filter-container">
-					
 					<div class="flex">
-						
 						<input id="sidebar-filter-input" type="search" value="" placeholder="Filter" data-i18n-placeholder="Filter" >
-						<!--
-						<div id="clear-filter-button" class="center">
-							<div class="round-button"><span class="unicode-icon">×</span></div>
-						</div>
-						-->
 					</div>
 				</div>
 				
@@ -653,34 +538,12 @@
 				</div>
 				<div id="chat-sidebar-container" class="chat">
 					<div id="chat-sidebar" class="chat-sidebar">
-				        <!--
-						<div class="search">
-				          <input type="text" placeholder="Search..." >
-				          <i class="fa fa-search"></i>
-				        </div>
-						// -->
-				
-						<!--
-						<div id="sidebar-top-menu">
-							<div>Chatbots</div>
-							<div id="select-assistants-button" class="sidebar-top-menu-button">
-								<div class="circle-square-button">
-									<span class="btn-stage">➕</span>
-									<span class="btn-stage">Save</span>
-								</div>
-							</div>
-						</div>
-						-->
-	        			
 						<div class="contacts">
 				          <div id="contacts-list">
 							  <ul id="generated-contacts-list">
 						            <li class="selected-ai">
 						              <div class="contact-item">
-						                <img
-						                  src="images/developer.png"
-						                  alt="The developer"
-						                >
+						                <img src="images/developer.png" alt="The developer">
 						                <div class="contact">
 						                  <div class="name">Loading</div>
 						                  <div class="message" data-i18n="developer_description">One moment..</div>
@@ -704,12 +567,7 @@
 							<span class="spinner rotating">&nbsp;</span> &nbsp; <span data-i18n="Loading_files">Loading files</span>
 						</div>
 					</div>
-					<!--
-					<div id="file-drag-overlay" data-i18n="Drop_here_to_open">Drop<br>here<br><br>to<br>open</div>
-					-->
-					<!--
-					<div id="folder-select-container" class="space-between"><button id="folder-back-button" class="icon-button no-further-up"><span class="unicode-icon-folder-up" style="font-size:1.5rem">↩</span></button><select id="folder-select" class="hide-when-serverless"></select></div>
-					-->
+
 					<div id="folder-select-container" class="space-between"></div>
 						
 			        <div id="sidebar-tabs">
@@ -759,15 +617,7 @@
 					            </div>
 								<div></div>
 							</div>
-				            
-				
-							<!--
-				            <div class="new button">
-				                <input onchange = 'file_upload(event)' type='file' multiple>
-				            </div>
-							-->
-				
-				
+							
 				        </div>
 				
 						<div id="function-index-list"></div>
@@ -780,9 +630,6 @@
 							
 							<div class="search-input-container">
 								<textarea id="rag-search-prompt" name="rag-search-prompt" class="prompt" placeholder=""></textarea>
-								<!--
-								<div id="start-rag-search-button" class="start-search-button-container center"><img class="submit-prompt-button-image" src="images/submit_question.svg" alt="submit"></div>
-								-->
 					        </div>
 						</div>
 						
@@ -799,48 +646,21 @@
 					            </div>
 								
 					            <div id="start-ocr-button" class="new button add-icon"  title="Start the camera to scan text">
-									<!--<span class="unicode-icon">📷</span>-->
 									<img class="" width="26" height="26" alt="Camera icon" src="images/camera.svg">
 					            </div>
 								
 								<div id="sidebar-upload-container">
-									<!--<input id="pdffile" name="pdffile" type="file" multiple>-->
 									<label class="file-input-label-container">
-										<input id="upload-file-input" type="file" multiple="multiple" name="upload-file-input" aria-label="file browser"> <!--  onchange="file_upload(this)"  -->
-										<!--<span class="file-input-custom" data-i18n="Open_file"> 📎 &nbsp; Open file</span>-->
+										<input id="upload-file-input" type="file" multiple="multiple" name="upload-file-input" aria-label="file browser">
 									</label>
 								
 								</div>
-								
-								
 							</div>
 				            
-							
-							
 							<div id="sidebar-right-container" class="center">
-								<!--<input id="pdffile" name="pdffile" type="file" multiple>-->
-					            <!--
-								<div id="toggle-rag-search-button" class="new button"  title="Chat with your documents">
-									<img width="26" height="26" alt="Search icon" src="images/search_icon.svg">
-					            </div>
-								-->
-								
 								<div id="start-rag-search-button" class="start-search-button-container center"><div id="start-rag-search-inner-button" class="center"><img class="submit-prompt-button-image" src="images/submit_rag_search.png" alt="submit"></div></div>
-							
 							</div>
 							
-							
-							<!--
-				            <div id="new-file-button-container" class="new button">
-								<span id="new-file-button" onclick="create_file()">
-				                + File
-								</span>
-								
-				            </div>
-							-->
-					
-						
-				
 					</div>
 				</div>
 				
@@ -934,27 +754,16 @@
 									<button id="clear-site-cache-button" data-i18n="Reload">RELOAD</button>
 								</li>
 								<li id="settings-reset-container" class="flex-space-between flex-align-center settings-button-item">
-									<!--<span data-i18n="Settings">Settings</span>-->
 									<button id="clear-local-storage-button" data-i18n="Delete_settings">CLEAR SETTINGS</button>
 								</li>
-								<!--
-								<li id="ai-reset-container" class="flex-space-between flex-align-center settings-button-item">
-									<span data-i18n="AI">AI</span>
-									<button id="clear-cache-button" data-i18n="Delete_all_AIs">DELETE ALL AI's</button>
-								</li>
-								-->
 								<li id="data-reset-container" class="flex-space-between flex-align-center settings-button-item">
-									<!--<span data-i18n="Data">Files</span>-->
 									
 									<button id="clear-data-button" data-i18n="Delete_my_files">DELETE MY FILES</button>
 								</li>
 								<li id="clear-everything-container" class="flex-space-between flex-align-center settings-button-item show-if-developer">
-									<!--<span>Everything</span>-->
-									
 									<button id="clear-everything-button">☢️ FULL RESET</button>
 								</li>
 							</ul>
-							<!--<button id="show-advanced-settings-toggle-button" data-i18n="Show_advanced_settings">Show advanced settings<button>-->
 							
 						</div>
 						<div id="settings-sidebar-tabs-tasks">
@@ -1003,13 +812,6 @@
 									<div id="chat-header-name" class="name capitalize-first-letter"></div>
 									<div class="time user-status show-if-model-loaded"><span data-i18n="online">online</span></div>
 									<div class="time user-status show-if-model-not-loaded" data-i18n="offline">offline</div>
-									<!--
-									<span class="ai-status show-if-summarize" data-i18n="Summarizing">Summarizing</span>
-									<span class="ai-status show-if-rewrite" data-i18n="Rewriting">Rewriting</span>
-									<span class="ai-status show-if-continue" data-i18n="Writing">Writing</span>
-									<span class="ai-status show-if-translation" data-i18n="Translating">Translating</span>
-									-->
-									
 								</div>
 							</div>
 						</div>
@@ -1029,8 +831,6 @@
 					
 				</div>
 				
-				
-				
 				<div id="model-info-container"></div>
 		
 				<div id="message-content-container"></div>
@@ -1040,7 +840,6 @@
 				<div id="tools">
 					<div id="stop-camera-button" class="circular-corner-close-button center" aria-label="close"><div class="center close-button-cross bg-icon"><span class="bg-icon"></span></div></div> <!-- × -->
 					<div id="close-tools-button" class="circular-corner-close-button center" aria-label="close"><div class="center close-button-cross bg-icon"><span class="bg-icon"></span></div></div>
-					<!--<button id="close-tools-button" name="close-tools-button" aria-label="close" type="button" class="grey-button"><span class="unicode-icon">×</span></button>-->
 					<div id="yet-another-tools-wrapper">
 						
 						<div id="tools-content">
@@ -1064,6 +863,7 @@
 									<button id="camera-ocr-scan-button"><span class="img-icon"><img src="images/image_to_text_ocr.png" width="20" height="20" alt="Document scanner icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Scan">Scan</span> <span id="doing-ocr-scan-counter"></span></button>
 									<button id="camera-image_to_text-describe-button"><span class="img-icon"><img src="images/image_to_text.png" width="20" height="20" alt="Describe image icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Describe">Describe</span></button>
 								</div>
+								
 								<details id="camera-do-ocr-details" class="tools-details">
 									<summary class="summary-button" id="camera-do-ocr-summary-button">
 										<span class="h3" id="camera-ocr-scan-dialog-title"><span class="img-icon"><img src="images/image_to_text_ocr.png" width="20" height="20" alt="Document scanner icon"></span> <span data-i18n="image_to_text_ocr_name">Document scanner</span></span>
@@ -1093,14 +893,7 @@
 										<div id="camera-ocr-save-scan-container" class="checkbox-setting-container">
 											<input id="camera-ocr-save-scan-input" type="checkbox" checked><label for="camera-ocr-save-scan-input" class="simple-input-label" data-i18n="Save_to_document">Save to document</label>
 										</div>
-										
-									
-										<!--
-										<div id="camera-ocr-buttons-container">
-											<button id="camera-ocr-save-button" data-i18n="Save">Save</button>
-											<button id="camera-do-ocr-button" onclick="window.take_picture({'state':'should_ocr'})" data-i18n="Photo_to_Text">Photo to Text</button>
-										</div>
-										-->
+
 									</div>
 				
 								</details>
@@ -1111,9 +904,6 @@
 										<span class="h3"  id="camera-image_to_text-scan-dialog-title"><span class="img-icon"><img src="images/image_to_text.png" width="20" height="20" alt="Describe icon"></span> <span data-i18n="image_to_text_name">Image describer</span></span>
 									</summary>
 									<div class="details-content">
-										<!--
-										<div id="live-image_to_text-scans-container" class="flex-between"></div>
-										-->
 										<div id="live-image_to_text-prompt-container" class="flex-between">
 											<div id="live-image_to_text-thumbnail-container"></div>
 											<textarea id="live-image_to_text-prompt" class="prompt" placeholder=""></textarea>
@@ -1124,8 +914,7 @@
 										</div>
 										
 										<progress id="camera-image_to_text-scan-progress" value="0"></progress>
-										<!--
-										<div id="camera-image_to_text-footer-buttons-container"><button id="camera-image_to_text-improve-button" data-i18n="Improve">Improve</button></div>-->
+										
 										<div id="camera-image_to_text-auto-scan-container" class="checkbox-setting-container">
 											<input id="camera-image_to_text-auto-scan-input" type="checkbox"><label for="camera-image_to_text-auto-scan-input" class="simple-input-label" data-i18n="Continuous_scanning">Continuous scanning</label>
 										</div>
@@ -1133,32 +922,21 @@
 											<input id="camera-image_to_text-save-auto-scan-input" type="checkbox" checked><label for="camera-image_to_text-save-auto-scan-input" class="simple-input-label" data-i18n="Save_to_document">Save to document</label>
 										</div>
 									
-										<!--
-										<div id="camera-image_to_text-buttons-container">
-											<button id="camera-image_to_text-save-button" data-i18n="Save">Save</button>
-											<button id="camera-image_to_text-button" onclick="window.take_picture({'state':'should_image_to_text'})" data-i18n="Photo_to_Text">Photo to Text</button>
-										</div>
-										-->
 									</div>
 				
 								</details>
 			
-							
 								<canvas id="video-canvas" width="1920" height="1080"></canvas>
 							</div>
-						
-						
 						
 							<div id="tools-rewrite-container">
 								<div id="rewrite-dialog-header-wrapper">
 								
 									<div id="rewrite-dialog-header">
-										<!--<h3 id="rewrite-sidebar-title" data-i18n="Tools">Tools</h3>-->
 										<button id="close-rewrite-dialog-button" class="corner-close-button close-button-cross bg-icon" name="close-rewrite-tools-button" aria-label="close" type="button"></button><!-- × -->
 									</div>
 								
 								</div>
-					
 					
 								<div id="rewrite-dialog">
 						
@@ -1168,16 +946,11 @@
 											<div id="rewrite-dialog-selected-text-overlay"></div>
 										</div>
 										<span></span>
-										<!--<button id="close-tools-button" name="close-tools-button" aria-label="close" type="button" class="grey-button"><span class="unicode-icon">×</span></button>-->
 									</div>
-									
-									
-									
 									
 									<details id="proofread-details" class="tools-details">
 										<summary>
 											<span class="h3" id="proofread-dialog-title"><span class="svg-icon"><img src="images/glasses.svg" width="25" height="25" alt="👓"></span> <span data-i18n="Proofread">Proofread</span></span>
-											<!--<span class="h3" id="proofread-document-dialog-title"><span class="svg-icon"><img src="images/glasses.svg" width="25" height="25" alt="👓"></span> <span data-i18n="Proofread_document">Proofread document</span></span>-->
 										</summary>
 										<div class="details-content">
 											<div id="proofread-dialog-content-toggles-and-tags-container">
@@ -1190,22 +963,6 @@
 											<div id="proofread-auto-detect-language-container" class="checkbox-setting-container">
 												<input id="proofread-auto-detect-language-input" type="checkbox" checked/><label for="proofread-auto-detect-language-input" class="simple-input-label"><span data-i18n="Auto_detect_language">Auto-detect language</span> <span id="proofread-auto-detected-language"></span></label>
 											</div>
-											
-											<!--
-											<div class="align-right">
-												<div id="dialog-proofread-submit-prompt-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div>
-											</div>
-											-->
-											<!--
-											<div id="proofread-new-file-container" class="flex-column">
-												<div id="proofread-new-file-container-close-button" class="small-corner-close-button" aria-label="close">×</div>
-												<label for="proofread-new-file-name-input" data-i18n="New_document_name" class="simple-input-label">Name of new document</label>
-												<div class="flex-space-between">
-													<input id="proofread-new-file-name-input" class="simple-text-input">
-													<button id="proofread-save-as-new-file-button"><img class="tiny-prompt-button-image" src="images/submit_prompt.svg" alt="submit"></button>
-												</div>
-											</div>
-											-->
 											
 										</div>
 										
@@ -1305,23 +1062,12 @@
 							
 							
 									</details>
-									<!--
-									<div id="load-text-ai-hint" class="hint-area">
-										<span data-i18n="To_use_text_tools_you_will_need_to_load_an_AI_that_can_work_on_text_first"></span>
-										<div class="text-align-right"><button id="load-a-text-based-ai-button" data-i18n="Do_that">Do that</button></div>
-									</div>
-									// -->
 									<form id="tools-submit-form-container" method="dialog" class="flex-between">
-										<!--<button>Cancel</button>-->
+										
 										<div id="submit-multi-commands-buttons-wrapper" class="submit-multi-commands-buttons-wrapper">
-			
 								  			<div id="dialog-rewrite-4x-submit-prompt-button" class="multi-submit-button"><div><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div><div><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div></div>
-			
 								  			<div id="dialog-rewrite-2x-submit-prompt-button" class="multi-submit-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div>
-			
 											<div id="dialog-rewrite-submit-prompt-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></div>
-											
-											
 								  		</div>
 										<div></div>
 										<div class="submit-multi-commands-buttons-wrapper">
@@ -1330,20 +1076,16 @@
 									</form>
 								</div>
 	
-					
-	
 								<div id="rewrite-results-dialog">
 									<div id="rewrite-results-dialog-content-container" class="rewrite-results-dialog-content-container"></div>
 								</div>
 					
-							
 								<div id="rewrite-status-container">
 									<div id="rewrite-status" class="rewrite-status"></div>
 									<div id="rewrite-status-progress-container">
 										<progress id="rewrite-status-progress" class="progress"></progress>
 									</div>
 								</div>
-					
 					
 							</div>
 					
@@ -1353,8 +1095,6 @@
 				</div>
 		
 		
-		
-	        	
 				<div id="image-to-text-prompt-settings-container-wrapper" class="hide-if-chat-shrink">
 					<div id="image-to-text-prompt-settings-container">
 						<img id="image-to-text-prompt-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt="current image">
@@ -1398,13 +1138,7 @@
 		  	  		              		</div>
 		  	  		            	</div>
 									
-									
-									
-									
 								</div>
-								
-								
-								
 							</div>
 
 				            <div id="message-form-prompt-container" class="input">
@@ -1418,12 +1152,9 @@
 										<div id="question-prompt-clear-button" class="question-prompt-icon center">🧽</div>
 									</div>
 									
-									
-									
 									<div id="musicgen-prompt-settings-container" class="prompt-setting-container">
 										<div class="prompt-setting-slider-container"><span class="tiny-range-label">10</span><input id="musicgen-duration-slider" type="range" min="10" max="30" step="1" value="30"><span class="tiny-range-label">30</span></div> <span id="musicgen-prompt-duration-output-wrapper"><span class="prompt-setting-container-unicode-icon">⏱️</span><span id="musicgen-duration-output">30</span><span data-i18n="Seconds">Seconds</span></span>
 									</div>
-									
 									
 									<div id="speaker-voice-buttons-container" class="prompt-setting-container">
 										<div id="speaker-voice-buttons-background" class="width100"><span id="speaker-voice-buttons-background-ball-pusher"><span id="speaker-voice-buttons-background-ball"></span></span></div>
@@ -1486,18 +1217,12 @@
 									
 									<div id="do-prompt-buttons">
 										
-										
 										<div id="document-chat-upload-button-container">
 											<input id="document-chat-upload-input" type="file" hidden />
 											<button id="document-chat-upload-button" type="button" onclick="document.getElementById('document-chat-upload-input').click()" class="file-input-label-container"></button>
 										</div>
 										
 				                		<button id="submit-prompt-button" class="submit-prompt-button"><img id="submit-prompt-button-image" class="submit-prompt-button-image" src="images/submit_prompt.svg" alt="Submit"></button>
-										
-										<!--
-										<button id="submit-question-button" class="submit-prompt-button"><img id="submit-question-button-image" class="submit-prompt-button-image" src="images/submit_question.svg" alt="Submit"></button>
-										<button id="submit-prompt-at-line-button" class="submit-prompt-button"><img id="submit-prompt-at-line-button-image" class="submit-prompt-button-image" src="images/submit_prompt_at_line.svg" alt="Submit"></button>
-										-->
 										
 									</div>
 				              	</div>
@@ -1510,8 +1235,7 @@
 			</div>
 		</div>
 	
-	
-		
+
 		<div id="tutorial">
 			<div id="tutorial-menu">
 				<div id="tutorial-menu-inner" class="space-between center">
@@ -1538,8 +1262,6 @@
 				</div>
 			</div>
 			
-			
-			
 			<div id="tutorial-content">
 				
 				<div id="recently-opened-documents-list-container">
@@ -1551,8 +1273,6 @@
 						</div>
 					</div>
 				</div>
-				
-				
 				
 				<div id="intro-tutorial-welcome-message">
 					<!--<h1>Papeg.ai</h1>-->
@@ -1572,9 +1292,6 @@
 								<li><span data-i18n="The_AI_downloads_are_kindly_provided_by">The AI downloads are kindly provided by</span> <a href="https://www.huggingface.co" target="_blank" rel="noreferrer">www.huggingface.co</a>.</li>
 							</ul>
 						</div>
-						<!--
-						<p>100% Privacy is guaranteed because this website downloads the AI models to your own device first. All data stays on your own device, and all processing happens on your own device.</p>
-						-->
 					</div>
 				</div>
 				
@@ -1617,12 +1334,6 @@
 							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="images/learning.svg"> <span data-i18n="Research">Research</span></h3>
 							<div id="learning-functionalities-list" class="functionalities-list"></div>
 						</div>
-						<!--
-						<div>
-							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Camera icon" src="images/coding.svg"> <span data-i18n="Programming">Programming</span></h3>
-							<div id="coding-functionalities-list" class="functionalities-list"></div>
-						</div>
-						-->
 						<div>
 							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="images/programming.svg"> <span data-i18n="Programming">Programming</span></h3>
 							<div id="programming-functionalities-list" class="functionalities-list"></div>
@@ -1652,8 +1363,6 @@
 						</div>
 					</div>
 				</div>
-				
-				
 				
 				<div id="mobile-warning" class="show-if-mobile">
 					<div class="center">
@@ -1688,8 +1397,6 @@
 						
 						<!--<button id="toggle-css-button">CSS</button>
 						<button id="download-backup-button">DOWNLOAD BACKUP</button>-->
-						
-						
 						<!--<button id="save-file-beta-button" onclick="save_file(null,null,'beta')">SAVE BETA</button>
 						
 						<button id="inspect-button" onclick="inspect()"><span class="material-icons">fact_check</span></button>-->
@@ -1700,7 +1407,7 @@
 					</div>
 					
 					
-					
+					<!--
 					<div id="hamburger-options" class="context">
 						<ul>
 							<li></li>
@@ -1709,7 +1416,6 @@
 							
 							<li class="hamburger-option item enabled" id="display-projects-button" onclick="display_projects()"><span class="material-icons">menu_book</span>Projects</li>
 							<li class="hamburger-option item enabled" id="backup-all-button"><span class="material-icons">cloud_download</span>Backup all</li>
-							<!--<li class="hamburger-option item enabled" onclick="download_backup()" id="download-backup-button"><span class="material-icons">download</span>Download backup</li>-->
 							<li class="hamburger-option item enabled" onclick="inspect()"><span class="material-icons">fact_check</span>Inspect</li>
 								
 							<li class="hamburger-option item enabled"><div id="disk-space-container" class="progress-bar-container">
@@ -1733,6 +1439,7 @@
 							
 						</ul>
 					</div>
+					// -->
 					
 				</div>
 				
@@ -1742,7 +1449,7 @@
 						<div id="current-folder"></div>
 						<div id="current-file-name"></div>
 					</div>
-					<button id="close-document-view" name="close" aria-label="close" type="button" class="center"><div class="bg-icon close-button-cross"></div></button><!-- × -->
+					<button id="close-document-view" name="close" aria-label="close" type="button" class="center"><div class="bg-icon close-button-cross"></div></button>
 				</div>
 				
 				<div id="document-recording-warning" class="warning-section">
@@ -1791,8 +1498,6 @@
 						</div>
 					</div>
 					
-					
-					
 					<div id="playground-overlay"></div>
 					<div id="parchment">
 						<svg viewbox="0 0 600 600">
@@ -1835,19 +1540,13 @@
 					<div id="document-form">
 						<div id="document-form-limiter">
 							<div id="rewrite-document-buttons-container" class="document-footer-buttons-wrapper">
-								
 								<button id="document-search-button"><img class="iconic" src="images/submit_question.svg" height="20" width="20" alt="Search-Question"></button>
 								<button id="document-question-button"><img class="iconic" src="images/chat.svg" height="20" width="20" alt="Question"></button>
-								
-								<!--<button id="document-rewrite-button" class="show-if-doc-selection">Rewrite</button>-->
 								<button id="document-proofread-button" class="center"><img class="icon" src="images/glasses.svg" width="20" height="20" alt="👓"><span data-i18n="Proofread">Proofread</span></button>
-								
 								<button id="document-summarize-button" class="center"><img class="svg-icon icon" src="images/summarize_clamp_icon.svg" width="20" height="20" alt="🗜️"><span data-i18n="Summarize">Summarize</span></button> <!-- <span class="unicode-icon icon brighten">🗜️</span> -->
 								<button id="document-continue-button" class="center"><img class="svg-icon icon" src="images/continue_icon.svg" width="20" height="20" alt="✒️"><span data-i18n="Continue">Continue</span></button> <!-- <span class="unicode-icon icon">✒️</span><span data-i18n="Continue">Continue</span> ✒️ -->
 								<button id="document-translate-button" class="center"><img class="svg-icon icon" src="images/translation-icon.svg" width="20" height="20" alt="🇳🇱"></span><span data-i18n="Translate" >Translate</span></button>
-								
 								<button id="import-settings-backup-button" class="center"><img class="svg-icon icon" src="images/import_icon.svg" width="20" height="20" alt="🔺"></span><span data-i18n="Import"></span></button>
-								
 							</div>
 						
 							<div id="undo-redo-buttons-container" class="document-footer-buttons-wrapper">
@@ -1856,7 +1555,6 @@
 							</div>
 							
 							<div class="flex">
-								
 								
 								<div id="code-tools-buttons-container" class="document-footer-buttons-wrapper">
 									<button id="line-bookmark-button" onclick="line_bookmark()" class="show-if-advanced"><span class="unicode-icon icon rotate-45">🏷️</span></button>
@@ -1870,12 +1568,11 @@
 										<button id="play-document-button" title="Play" class="center"><span class="unicode-icon icon">▶</span></button>
 										<button id="stop-play-document-button" title="Stop" class="center"><img class="stop-icon icon" src="images/stop_square.svg" alt="Stop"></button><!-- ⏸ -->
 									</div>
-							
-									<!-- ⬇ -->
 									<div id="download-buttons-container" class="document-footer-buttons-wrapper">
-										<button id="download-document-button" class="center" title="Download document"><!--<img src="images/download.svg" class="svg-icon" width="24" height="24" alt="Download" title="Download">--></button>
+										<button id="download-document-button" class="center" title="Download document"></button>
 									</div>
 								</div>
+								
 							</div>
 						</div>
 					</div>
@@ -1968,7 +1665,7 @@
 	
 	<dialog id="emoji-picker-dialog">
 		<div class="prevent-propagation">
-			<h3 id="emoji-picker-dialog-hint"><!--<span class="unicode-icon">🐹</span>--><span data-i18n="Select_an_emoji">Select an emoji</span></h3>
+			<h3 id="emoji-picker-dialog-hint"><span data-i18n="Select_an_emoji">Select an emoji</span></h3>
 			<div id="emoji-picker-container"></div>
 			<form method="dialog" class="flex-between">
 				<button data-i18n="Cancel">Cancel</button><span></span>
@@ -1982,14 +1679,10 @@
 	<dialog id="new-custom-ai-dialog">
 		<div class="prevent-propagation">
 			<img class="dialog-papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="25">
-			<h1 id="new-custom-ai-dialog-hint"><!--<span class="unicode-icon">🦜</span>--><span data-i18n="New_AI">New AI</span></h1>
+			<h1 id="new-custom-ai-dialog-hint"><span data-i18n="New_AI">New AI</span></h1>
 			
 			<div id="received-ai-dialog-warning" class="dialog-warning show-if-creating-new-ai">
 				<p><span data-i18n="You_clicked_on_a_link_to_add_an_AI">You_clicked_on_a_link_to_add_an_AI</span>. <span data-i18n="Only_continue_if_you_did_this_on_purpose">Only continue if you did this on purpose</span>.</p>
-				<!--
-				<textarea id="received-ai-prompt-preview" class="prompt"></textarea>
-				<p data-i18n="The_AI_came_with_a_command_to_run">The AI came with a command to run. Please review it to make sure you're OK with running it.</p>
-				-->
 			</div>
 			
 			<div id="new-custom-ai-error-hint" class="vertical-margin hide-if-empty"></div>
@@ -2012,40 +1705,7 @@
 	        <form method="dialog" class="flex-between">
 				<button id="add-custom-ai-cancel-button" data-i18n="Cancel">Cancel</button> <button id="add-custom-ai-next-button" data-i18n="Next">Next</button>
 	        </form>
-	  <!--
-  	  <h2>1</h2>
-  	  <p>Do you want to base the new AI on an existing one, or should it be completely new?</p>
-	  
-  	  <div id="new-custom-ai-type-selection">
-			
-  			<input type="radio" id="new-custom-ai-template" name="new-custom-ai-radio" value="template" selected>
-  			<label for="new-custom-ai-template" class="new-custom-ai-radio-label">Start from a template</label>
-			
-  			<input type="radio" id="new-custom-ai-clone" name="new-custom-ai-radio" value="clone">
-  			<label for="new-custom-ai-clone" class="new-custom-ai-radio-label">Clone an existing AI</label>
-			
-  			<input type="radio" id="new-custom-ai-fresh" name="new-custom-ai-radio" value="fresh">
-  			<label for="new-custom-ai-fresh" class="new-custom-ai-radio-label">Custom (advanced)</label>
-			
-  			<div id="new-custom-ai-template-container" class="new-custom-ai-radio-container">
-  				<h3>Template</h3>
-  				<ul>
-  					<li>Template 1</li>
-  				</ul>
-  			</div>
-			
-  			<div id="new-custom-ai-clone-container" class="new-custom-ai-radio-container">
-  				<h3>Clone</h3>
-  				<ul>
-  					<li>Clone 1</li>
-  				</ul>
-  			</div>
-			
-  	  </div>
-	  // -->
-	  
-	  
-		  
+	 
 		</div>
 	</dialog>
 	
@@ -2054,8 +1714,7 @@
 	<dialog id="share-prompt-dialog">
 		<div class="prevent-propagation">
 			<h3 id="share-prompt-dialog-hint"><span class="unicode-icon">🔗</span><span data-i18n="Share_a_link">Share a link with this command</span></h3>
-			<h3 id="share-prompt-dialog-edit-ai-details-hint"><!--<span class="unicode-icon">⚙️</span>--><span data-i18n="AI_settings">AI_settings</span></h3>
-			<!--<select id="share-prompt-assistants-select"></select>-->
+			<h3 id="share-prompt-dialog-edit-ai-details-hint"><span data-i18n="AI_settings">AI_settings</span></h3>
 	  
 			<div id="share-prompt-assistant-name-container">
 				<div id="share-prompt-assistant-name-wrapper">
@@ -2085,8 +1744,6 @@
 				<button id="share-prompt-show-more-options-button" class="small-button show-if-advanced" data-i18n="More_settings">More settings</button>
 			</div>
 	  
-  	 
-	  
 			<div id="share-prompt-link-container">
 				<div id="share-prompt-link"></div>
 				<div id="share-prompt-copy-to-clipboard-button" class="svg-icon center share-prompt-copy-to-clipboard-button" title="Copy"><img src="images/copy_to_clipboard.svg" width="25" height="25" alt="Copy"></div><!-- 📋 ✂️ //-->
@@ -2098,8 +1755,6 @@
 			</form>
 		</div>  
 	</dialog>
-	
-	
 	
 	<dialog id="received-prompt-dialog">
 		<div class="prevent-propagation">
@@ -2124,7 +1779,6 @@
 		</div>
 	</dialog>
 	
-	
 	<div id="overlay-container" class="show-if-overlay">
 		<div id="overlay-window">
 			<div id="overlay-header" class="space-between"><span></span><span id="close-overlay-button" class="button" onclick="close_overlay()">✕</span></div>
@@ -2136,82 +1790,47 @@
 
 
 
-
-
 	<script src="./early.js"></script>
-		
-	<script type="module" src="./service_module.js"></script>
-
+	<script src="./service_module.js" type="module"></script>
 	<script src="./ai.js"></script>
 	<script src="./translations.js"></script>
 	<script src="./p_translation.js"></script>
-
 	<script src="./p_init.js"></script>
 	<script src="./js/various_utils.js"></script>
 	<script src="./js/promise-worker.js"></script>
-
-    
-
 	<script src="./p_ui.js"></script>
-
     <script src="./llama_cpp.js" type="module"></script>
-
-	<!--
-    <script src="./js/onnx_runtime.js"></script>
-    <script src="./js/vad_bundle.min.js"></script>
-	-->
-		
 	<script src="./p_audio.js"></script>
-	
-	<!--
-	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
-	//-->
-
-
 	<script src="./p_main.js"></script>
-
 	<script src="./p_audio_module.js" type="module"></script>
-
 	<script src="./p_docs.js"></script>
-	
 	<script src="./main_module.js" type="module"></script>
-
 	<script src="./pjs/first.js"></script>	
 	<script src="./pjs/data.js"></script>
-	
 	<script src="./t2i_module.js" type="module"></script>
 	<script src="./web_llm_module.js" type="module"></script>
-	
 	<script defer src="./js/chrono.js"></script>
-	
 	<script defer="" src="./pjs/context_menu.js"></script>
 	<script defer="" src="./pjs/codemirror.js"></script>
     <script defer="" src="./pjs/codemirror-indentation-markers.js"></script>
 	<script defer="" src="./pjs/utils.js"></script>	
 	<script defer="" src="./pjs/ui.js"></script>
 	<script defer="" src="./pjs/editor.js"></script>	
-	
     <script defer="" src="./pjs/main.js"></script>
 	<script defer="" src="./pjs/jszip.min.js"></script>
 	<script defer="" src="./pjs/crypto-js.min.js"></script>
 	<script defer="" src="./p_constants.js"></script>
-	<!--
-	<script defer src="./js/canvasTxt.js"></script>
-	// -->
 	<script defer src="./last.js"></script>
 	<script defer src="./counter.php"></script>
 	
 	
-	
 	<!-- 
+	<script defer src="./js/canvasTxt.js"></script>
 	<script defer src="./tts_worker.js" type="module"></script>
 	<script defer src="./whisper_worker.js" type="module"></script>
-		
 	//-->
 	
 	
 	
-
 </body>
 </html>

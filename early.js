@@ -46,44 +46,61 @@
 		let received_url_parameters = null;
 		
 		window.url_parameters = new URLSearchParams(window.location.search);
-		//console.log("url_parameters: ", url_parameters);
+		console.log("window.url_parameters: ", window.url_parameters);
 		
 		
 		window.url_parameter_functionality = window.url_parameters.get('do');
+		
 		if(typeof window.url_parameter_functionality == 'string'){
+			console.log("received functionality link. window.url_parameter_functionality: ", window.url_parameter_functionality);
 			history.replaceState(null, 'Papeg.ai', window.location.origin + window.location.pathname);
 		}
 		
 		
 		
 		const url_parameter_ai = window.url_parameters.get('ai');
+		if(typeof url_parameter_ai == 'string'){
+			console.log("received AI in url:  url_parameter_ai: ", url_parameter_ai);
+		}
 		//console.log("url_parameter_ai: ", url_parameter_ai);
 		//const url_parameter_prompt = window.url_parameters.get('prompt');
 		//console.log("url_parameter_prompt: ", url_parameter_prompt);
 		//window.location.href = window.location.origin + window.location.pathname;
 		
 		window.received_prompt = window.url_parameters.get('prompt');
-		//console.log("window.received_prompt: ", window.received_prompt);
-		
-		
-		function show_received_prompt(){
-			//console.log("in show_received_prompt");
-			if(typeof window.received_prompt == 'string' && window.received_prompt.length > 2 && typeof url_parameter_ai == 'string' && url_parameter_ai.length > 1){
-				document.getElementById('received-prompt-textarea').value = window.received_prompt;
-				if(typeof textAreaAdjust === 'function'){
-					textAreaAdjust(document.getElementById('received-prompt-textarea'));
-				}
-				document.getElementById('received-prompt-dialog').showModal();
-			}
+		if(typeof window.received_prompt == 'string'){
+			console.log("spotted prompt in url:  window.received_prompt: ", window.received_prompt);
 		}
 		
+		const received_prompt_textarea_el = document.getElementById('received-prompt-textarea');
 		
-		
-		
-		
-		
-		
-		
+		function show_received_prompt(){
+			console.log("in show_received_prompt. window.received_prompt: ", window.received_prompt);
+			if(typeof window.received_prompt == 'string' && window.received_prompt.length > 2 && typeof url_parameter_ai == 'string' && url_parameter_ai.length > 1){
+				
+				received_prompt_textarea_el.value = window.received_prompt;
+				if(typeof textAreaAdjust === 'function'){
+					textAreaAdjust(received_prompt_textarea_el);
+				}
+				
+				if(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && typeof window.settings.assistants[window.settings.assistant].emoji == 'string' && window.settings.assistants[window.settings.assistant].emoji.length){
+					let received_emoji_icon_el = document.getElementById('received-prompt-assistant-emoji');
+					received_emoji_icon_el.textContent = window.settings.assistants[window.settings.assistant].emoji;
+					if(typeof window.settings.assistants[window.settings.assistant].emoji_bg == 'string' && window.settings.assistants[window.settings.assistant].emoji_bg.length > 2){
+						received_emoji_icon_el.style.backgroundColor = window.settings.assistants[window.settings.assistant].emoji_bg;
+					}
+				}
+				else if(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && typeof window.settings.assistants[window.settings.assistant].icon == 'string' && window.settings.assistants[window.settings.assistant].icon.length){
+					let received_prompt_icon_el = document.getElementById('received-prompt-assistant-name-icon');
+					received_prompt_icon_el.src = 'images/' + window.settings.assistants[window.settings.assistant].icon + '_thumb.png';
+				}
+				
+				
+				document.getElementById('received-prompt-dialog').showModal();
+				
+			}
+			window.received_prompt = null;
+		}
 		
 		
 		
@@ -1200,6 +1217,8 @@
 			
 			window.used_memory = check_memory({},true);
 			console.log("window.used_memory: ", window.used_memory);
+			console.log("")
+			console.log("window.received_prompt: ", window.received_prompt);
 			console.log("")
 			
 			

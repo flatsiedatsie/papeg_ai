@@ -2741,6 +2741,11 @@ window.translations = {
 		"en":"Clone this AI",
 		"nl":"Kloon deze AI",
 	},
+	"create_clone_AI_model":{ 
+		"en":"Create AI clone",
+		"nl":"Kloon AI",
+	},
+	
 	"AI_model_name":{ 
 		"en":"AI name",
 		"nl":"AI naam",

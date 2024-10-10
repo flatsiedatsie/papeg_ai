@@ -5559,7 +5559,7 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 	
 	
 	let custom_description_part = '';
-	if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_description'] == 'string' && typeof window.settings.assistants[assistant_id]['custom_description'] != ''){
+	if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_description'] == 'string' && window.settings.assistants[assistant_id]['custom_description'].trim().length > 3){
 		custom_description_part = '&custom_description=' + encode_url_component(window.settings.assistants[assistant_id]['custom_description']);
 	}
 	
@@ -5580,10 +5580,27 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 	}
 	else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && !window.settings.assistants[assistant_id]['clone_original'].startsWith('custom')){
 		ai_part = '?ai=' + encode_url_component(window.settings.assistants[assistant_id]['clone_original']);
-		has_download_url = true;
+		//has_download_url = true;
 		//if(assistant_id.startsWith('custom')){
-			has_clone_original = true;
+		has_clone_original = true;
 		//}
+	}
+	else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].download_url == 'string' && window.settings.assistants[assistant_id].download_url.length){
+		ai_part = '?ai=' + encode_url_component(window.settings.assistants[assistant_id].download_url);
+		has_download_url = true;
+	}
+	else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].download_url == 'string' && window.assistants[assistant_id].download_url.length){
+		ai_part = '?ai=' + encode_url_component(window.assistants[assistant_id].download_url);
+		has_download_url = true;
+	}
+	else{
+		console.error("creating AI parameter for share link fell through. assistant_id: ", assistant_id);
+		if(typeof window.settings.assistants[assistant_id] != 'undefined'){
+			console.error("settings.assistant data: ", window.settings.assistants[assistant_id]);
+		}
+		if(typeof window.assistants[assistant_id] != 'undefined'){
+			console.error("assistant data: ", window.assistants[assistant_id]);
+		}
 	}
 	let webllm_id_part = '';
 	

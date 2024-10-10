@@ -130,7 +130,7 @@ const onModelLoaded = async (task=null,first_load=true) => {
 		//console.log("wllama: using context size from assistants dict: ", ctx_size);
 	}
 	else{
-		console.error("wllama: getting context size fell through");
+		console.error("wllama: getting context size fell through, so it's still the default: ", ctx_size);
 	}
 	
 	if(typeof window.assistants[window.currently_loaded_llama_cpp_assistant]['top_k'] == 'number'){
@@ -290,7 +290,7 @@ const onModelLoaded = async (task=null,first_load=true) => {
 				useCache: true,
 	            onNewToken: (token, piece, currentText, { abortSignal }) => {
     				if (window.interrupt_wllama) {
-						console.log("sending interrupt signal to Wllama");
+						//console.log("sending interrupt signal to Wllama");
 						abortSignal();
 						window.interrupt_wllama = false;
 					}
@@ -383,7 +383,7 @@ async function repair_wllama(){
 // Doesn't seem to be called anymore
 /*
 const onMessageChunk = (text) => {
-	console.log("llama_cpp: onMessageChunk: ", text);
+	//console.log("llama_cpp: onMessageChunk: ", text);
 	//console.log("llama_cpp: updated response_so_far: ", response_so_far);
 	if(text != ''){
 		//window.llama_cpp_model_being_loaded = null;
@@ -438,7 +438,7 @@ async function wllama_update_model_download_progress(progression, assistant_id=n
 	
 	if(progression == 1){
 		if(typeof assistant_id == 'string'){
-			console.log("llama_cpp model download complete: ", assistant_id);
+			//console.log("llama_cpp model download complete: ", assistant_id);
 			//flash_message(window.get_translation("Download_complete"),2000);
 			if(window.settings.assistant == assistant_id){
 				document.body.classList.add('model-loaded');
@@ -481,7 +481,7 @@ async function wllama_update_model_download_progress(progression, assistant_id=n
 			if(progress_el == null){
 				
 				if(progression != 1){
-					console.log("llama_cpp (down)load progress element is missing, adding it now: ", assistant_id, percent);
+					//console.log("llama_cpp (down)load progress element is missing, adding it now: ", assistant_id, percent);
 					window.add_chat_message(assistant_id,assistant_id,"download_progress#setting---");
 				}
 			}
@@ -631,7 +631,7 @@ function generate_model_settings(task){
 		model_settings['temp'] = temperature;
 		if(temperature == 0){
 			model_settings['seed'] = 42;
-			console.log("wllama: temperature was 0, seed set to 42");
+			//console.log("wllama: temperature was 0, seed set to 42");
 		}
 	}
 	return model_settings
@@ -705,8 +705,8 @@ window.do_llama_cpp = do_llama_cpp;
 
 
 async function really_do_llama_cpp(task=null, model_url=null, query=''){
-	console.log("in really_do_llama_cpp. task: ", task);
-	console.log("window.llama_cpp_app: ", window.llama_cpp_app);
+	//console.log("in really_do_llama_cpp. task: ", task);
+	//console.log("window.llama_cpp_app: ", window.llama_cpp_app);
 	
 	window.llama_cpp_busy = true;
 	called_on_model_loaded = false;
@@ -845,7 +845,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 	
     //if (app && app.url == selectModel.value) {
 	if (window.llama_cpp_app && typeof window.currently_loaded_llama_cpp_assistant == 'string' && window.currently_loaded_llama_cpp_assistant == assistant_id) {
-		console.log("do_llama_cpp: this model was already the loaded model. Jumping to onModelLoaded.  currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
+		//console.log("do_llama_cpp: this model was already the loaded model. Jumping to onModelLoaded.  currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
 		await onModelLoaded(task, false); // false indicates that the model was already loaded
 		return true;
     }
@@ -864,7 +864,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 			console.warn("do_llama_cpp:  first doing window.llama_cpp_app.exit().  typeof window.llama_cpp_app.exit: ", typeof window.llama_cpp_app.exit);
 			try{
 				if(window.llama_cpp_app != null && typeof window.llama_cpp_app['exit'] === 'function'){
-					console.log("really_do_llama_cpp:  window.llama_cpp_app.exit exists and is a function. calling exit.  window.llama_cpp_app: ", window.llama_cpp_app);
+					//console.log("really_do_llama_cpp:  window.llama_cpp_app.exit exists and is a function. calling exit.  window.llama_cpp_app: ", window.llama_cpp_app);
 					await window.llama_cpp_app.exit();
 				}
 				else{
@@ -988,7 +988,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 		
 		// LOADING FROM URL
 		//window.llama_cpp_model_being_loaded = assistant_id;
-		console.log("do_llama_cpp: calling loadModelFromUrl with:  model_url,model_settings: ", model_url, model_settings);
+		//console.log("do_llama_cpp: calling loadModelFromUrl with:  model_url,model_settings: ", model_url, model_settings);
 		console.warn("do_llama_cpp: window.llama_cpp_app: ", window.llama_cpp_app);
 		console.warn("do_llama_cpp: window.currently_loaded_llama_cpp_assistant: ", window.currently_loaded_llama_cpp_assistant);
 		
@@ -1036,7 +1036,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 					}
 					else{
 						console.error("window.llama_cpp_app.loadModelFromUrl was undefined?", window.llama_cpp_app);
-						console.log("window.llama_cpp_busy: ", window.llama_cpp_busy);
+						//console.log("window.llama_cpp_busy: ", window.llama_cpp_busy);
 					}
 				}
 				
@@ -1061,12 +1061,12 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 			if(typeof window.settings.assistants[assistant_id] == 'undefined'){
 				window.settings.assistants[assistant_id] = {};
 			}
-			console.log("wllama: setting general.name: ", assistant_id, " -> ", window.llama_cpp_app.metadata.meta['general.name']);
+			//console.log("wllama: setting general.name: ", assistant_id, " -> ", window.llama_cpp_app.metadata.meta['general.name']);
 			window.settings.assistants[assistant_id]['llama_cpp_general_name'] = window.llama_cpp_app.metadata.meta['general.name'];
 		}
 		//window.llama_cpp_model_being_loaded = null;
 		window.currently_loaded_assistant = assistant_id;
-		console.log("window.currently_loaded_llama_cpp_assistant is now: ", window.currently_loaded_llama_cpp_assistant);
+		//console.log("window.currently_loaded_llama_cpp_assistant is now: ", window.currently_loaded_llama_cpp_assistant);
 		
 		window.settings.last_loaded_text_ai = assistant_id;
 		window.save_settings();
@@ -1078,7 +1078,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 		
 		/*
 		if(typeof window.llama_cpp_model_being_loaded == 'string'){
-			console.log("do_llama_cpp: window.llama_cpp_model_being_loaded was string: ", window.llama_cpp_model_being_loaded);
+			//console.log("do_llama_cpp: window.llama_cpp_model_being_loaded was string: ", window.llama_cpp_model_being_loaded);
 		    const progress_el = document.getElementById('download-progress-' + window.llama_cpp_model_being_loaded);
 		    if(progress_el){
 				wllama_update_model_download_progress(100);
@@ -1112,7 +1112,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 		// Somehow this isn't called by Wllama anymore?
 		
 		if(called_on_model_loaded == false){
-			console.log("called_on_model_loaded was false. Calling onModelLoaded now, with task: ", task);
+			//console.log("called_on_model_loaded was false. Calling onModelLoaded now, with task: ", task);
 			//await onModelLoaded(task,true);
 		}
 		
@@ -1182,7 +1182,7 @@ async function really_do_llama_cpp(task=null, model_url=null, query=''){
 function display_error(task=null,err=''){
 	
 	if(task == null && my_task != null){
-		console.log("display_error: grabbing my_task: ", my_task);
+		//console.log("display_error: grabbing my_task: ", my_task);
 		task = my_task;
 	}
 	
@@ -1232,7 +1232,7 @@ window.display_error = display_error;
 
 
 async function interrupt_llama_cpp(){
-	console.log("in interrupt_llama_cpp. window.llama_cpp_app: ", window.llama_cpp_app);
+	//console.log("in interrupt_llama_cpp. window.llama_cpp_app: ", window.llama_cpp_app);
 	if(window.llama_cpp_busy){
 		if(window.llama_cpp_app){ //  && my_task != null
 			console.error("interrupt_llama_cpp: window.llama_cpp_app exists. setting window.interrupt_wllama to true");
@@ -1378,11 +1378,11 @@ async function unload_llama_cpp(){
 		//console.warn("WLLAMA: unload_llama_cpp: a_model_is_loaded?: ", a_model_is_loaded, window.llama_cpp_app);
 		
 		if(a_model_is_loaded){
-			console.log("unload_llama_cpp: a model seems to be loaded, attempting unload")
+			//console.log("unload_llama_cpp: a model seems to be loaded, attempting unload")
 			try{
 				if(typeof window.llama_cpp_app.unloadModel === 'function'){
 					await window.llama_cpp_app.unloadModel();
-					console.log("\n\nWLLAMA\nUNLOAD MODEL SUCCESS\n\n");
+					//console.log("\n\nWLLAMA\nUNLOAD MODEL SUCCESS\n\n");
 				}
 				else{
 					console.error("window.llama_cpp_app has no unloadModel function");
@@ -1398,13 +1398,13 @@ async function unload_llama_cpp(){
 		}
 		/*
 		if(a_model_is_loaded && typeof window.llama_cpp_app.unloadModel != 'undefined'){
-			console.log("wllama: unloading loaded model first.  window.llama_cpp_app: ", window.llama_cpp_app);
+			//console.log("wllama: unloading loaded model first.  window.llama_cpp_app: ", window.llama_cpp_app);
 			await window.llama_cpp_app.unloadModel();
 		}
 		else if(a_model_is_loaded && typeof window.llama_cpp_app.exit != 'undefined'){
 			console.error("wllama: unloading loaded model first by calling exit instead of unloadModel.  window.llama_cpp_app: ", window.llama_cpp_app);
 			await window.llama_cpp_app.exit();
-			console.log("wllama exited.  window.llama_cpp_app is now: ", window.llama_cpp_app);
+			//console.log("wllama exited.  window.llama_cpp_app is now: ", window.llama_cpp_app);
 		}
 		else if(a_model_is_loaded){
 			console.error("WLLAMA HAS A MODEL LOADED, BUT NO WAY TO UNLOAD IT?  window.llama_cpp_app: ", window.llama_cpp_app);
@@ -1420,7 +1420,7 @@ async function unload_llama_cpp(){
 		console.error("llama_cpp_add has no isModelLoaded: ", window.llama_cpp_app);
 	}
 	else{
-		console.log("window.llama_cpp_app is currently null");
+		//console.log("window.llama_cpp_app is currently null");
 	}
 }
 
@@ -1431,7 +1431,7 @@ window.unload_llama_cpp = unload_llama_cpp;
 
 
 async function restart_llama_cpp(planned=false){
-	console.log("in restart_llama_cpp. restart is on purpose? (blocked): ", planned);
+	//console.log("in restart_llama_cpp. restart is on purpose? (blocked): ", planned);
 	return false
 	if(typeof window.currently_loaded_llama_cpp_assistant == 'string' && window.llama_cpp_model_being_loaded == null){
 		const current_assistant = '' + window.currently_loaded_llama_cpp_assistant;

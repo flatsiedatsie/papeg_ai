@@ -1,6 +1,6 @@
 /*! coi-serviceworker v0.1.7 - Guido Zuidhof and contributors, licensed under MIT */
 
-var service_worker_version = 235;
+var service_worker_version = 236;
 
 var previousCacheName = null; 
 var cacheName = 'v' + service_worker_version; 

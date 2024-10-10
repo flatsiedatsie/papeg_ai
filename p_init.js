@@ -1681,32 +1681,31 @@ function parse_ai_from_url(){
 	
 	let new_ai_settings = {};
 	
+	
+	// If it's using a default AI
 	if(typeof window.assistants[url_parameter_ai] != 'undefined'){
-		//window.settings.assistant = url_parameter_ai;
-		
-		if(url_parameter_ai.indexOf('.gguf') == -1){
-			new_ai_settings = JSON.parse(JSON.stringify(window.assistants[url_parameter_ai]));
-			
-			if(typeof window.settings.assistants[url_parameter_ai] != 'undefined'){
-				//console.log("parse_ai_from_url: applying existing custom settings over base settings from assistants dict");
-				new_ai_settings = {...new_ai_settings,...window.settings.assistants[url_parameter_ai]};
-			}
+		new_ai_settings = JSON.parse(JSON.stringify(window.assistants[url_parameter_ai]));
+		if(typeof window.settings.assistants[url_parameter_ai] != 'undefined'){
+			//console.log("parse_ai_from_url: applying existing custom settings over base settings from assistants dict");
+			new_ai_settings = {...new_ai_settings,...window.settings.assistants[url_parameter_ai]};
 		}
-		else{
-			new_ai_settings = {'download_url':url_parameter_ai,'runner':'llama_cpp'}
-		}
-		
 	}
-	//console.log("parse_ai_from_url: initial new_ai_settings: ", new_ai_settings);
+	console.log("parse_ai_from_url: initial new_ai_settings: ", new_ai_settings);
 	
 	for (let [key, value] of Object.entries(received_url_parameters)) {
-		//console.log("___parse_ai_from_url: KEY VALUE:\n", key, typeof value, value);
+		console.log("___parse_ai_from_url: KEY VALUE:\n", key, typeof value, value);
 		if(value == null){
 			console.warn("parse_ai_from_url: skipping key that had null as value: ", key);
 			continue
 		}
-		if( ['custom_name','custom_description','emoji','emoji_bg','download_url','config_url','context','temperature','system_prompt','second_prompt','cache_type_k','chatter','model_type','size','markdown_supported','brevity_supported','license','add_timestamps','privacy_level'].indexOf(key) == -1){
+		if( ['ai','prompt','custom_name','custom_description','emoji','emoji_bg','download_url','config_url','context','temperature','system_prompt','second_prompt','cache_type_k','chatter','model_type','size','markdown_supported','brevity_supported','license','add_timestamps','privacy_level','voice_gender'].indexOf(key) == -1){
+			console.error("invalid parameter in provided URL: ", key);
 			continue
+		}
+		
+		if(key == 'prompt'){
+			console.log("A prompt was also provided: ", value);
+			console.log("Should be the same as: ", window.received_prompt);
 		}
 		
 		if(key == 'ai'){
@@ -1717,6 +1716,9 @@ function parse_ai_from_url(){
 				//console.log("parse_ai_from_url: rehydrated url_parameter_ai: ", url_parameter_ai);
 				new_ai_settings['download_url'] = url_parameter_ai;
 				new_ai_settings['runner'] = 'llama_cpp';
+			}
+			else if(typeof window.assistants[url_parameter_ai] != 'undefined'){
+				new_ai_settings['clone_original'] = url_parameter_ai;
 			}
 		}
 		else{
@@ -1758,9 +1760,16 @@ function parse_ai_from_url(){
 	}
 	console.log("parse_ai_from_url: total new_ai_settings: ", new_ai_settings);
 	
+	if(typeof new_ai_settings.ai != 'undefined'){
+		delete new_ai_settings.ai;
+	}
+	if(typeof new_ai_settings.prompt != 'undefined'){
+		delete new_ai_settings.prompt;
+	}
 	if(typeof new_ai_settings.availability != 'undefined'){
 		delete new_ai_settings.availability;
 	}
+	
 	
 	document.body.classList.add('busy-editing-received-ai');
 	document.body.classList.add('busy-editing-assistant');
@@ -3031,29 +3040,45 @@ function update_prompt_adjustments(assistant_id=null){
 	//console.log("update_prompt_adjustments: assistant_id is now: ", assistant_id);
 	//console.log("update_prompt_adjustments:  typeof assistant_id, typeof window.assistants[assistant_id]: ", typeof assistant_id, typeof window.assistants[assistant_id]);
 	
-	if(typeof assistant_id == 'string' && typeof window.assistants[assistant_id] != 'undefined'){
+	if(typeof assistant_id == 'string' && (typeof window.settings.assistants[assistant_id] != 'undefined' || typeof window.assistants[assistant_id] != 'undefined')){
 		
 		//console.log("update_prompt_adjustments. checking brevity: ", assistant_id, window.settings.assistants[assistant_id]['brevity_enabled']);
 		
 		// Brevity
-		if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['brevity_supported'] == 'boolean' && window.assistants[assistant_id]['brevity_supported'] == true && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['brevity_enabled'] == 'boolean'){
+		if(
+			(
+				(typeof window.assistants[assistant_id] != 'undefined' 
+				&& typeof window.assistants[assistant_id]['brevity_supported'] == 'boolean' 
+				&& window.assistants[assistant_id]['brevity_supported'] == true)
+				||
+				(typeof window.settings.assistants[assistant_id] != 'undefined' 
+				&& typeof window.settings.assistants[assistant_id]['brevity_supported'] == 'boolean' 
+				&& window.settings.assistants[assistant_id]['brevity_supported'] == true)
+			)
+			
+			&& typeof window.settings.assistants[assistant_id] != 'undefined' 
+			&& typeof window.settings.assistants[assistant_id]['brevity_enabled'] == 'boolean'){
 			//console.log("update_prompt_adjustment:  window.settings.assistants[assistant_id].brevity_enabled: ", window.settings.assistants[assistant_id].brevity_enabled);
 			if(window.settings.assistants[assistant_id]['brevity_enabled']){
 				new_adjustment_prompt += get_translation('Write_your_answer_short_and_succinct') + '. ';
 				document.body.classList.add('brevity-enabled');
 			}
 			else{
-				document.body.classList.remove('brevity-enabled');
+				if(document.body.classList.contains('brevity-enabled')){
+					document.body.classList.remove('brevity-enabled');
+				}
 			}
 		}
 		else if(typeof window.assistants[assistant_id]['brevity_enabled'] == 'boolean' && window.assistants[assistant_id]['brevity_enabled'] == true){
-			//console.log("update_prompt_adjustment: falling back to brevity in assistants dict, which is set to true");
+			//console.log("update_prompt_adjustment: falling back to brevity in assistants dict, which is set to true as the default");
 			new_adjustment_prompt += get_translation('Write_your_answer_short_and_succinct') + '. ';
 			document.body.classList.add('brevity-enabled');
 		}
 		else{
 			//console.log("update_prompt_adjustment:  brevity fell through (not enabled in setting or in assistants dict)");
-			document.body.classList.remove('brevity-enabled');
+			if(document.body.classList.contains('brevity-enabled')){
+				document.body.classList.remove('brevity-enabled');
+			}
 		}
 	
 		// No explanations (not used, has been merged into brevity)
@@ -3063,7 +3088,10 @@ function update_prompt_adjustments(assistant_id=null){
 				document.body.classList.add('no-explanations-enabled');
 			}
 			else{
-				document.body.classList.remove('no-explanations-enabled');
+				if(document.body.classList.contains('no-explanations-enabled')){
+					document.body.classList.remove('no-explanations-enabled');
+				}
+				
 			}
 		
 		}
@@ -3072,7 +3100,9 @@ function update_prompt_adjustments(assistant_id=null){
 			document.body.classList.add('no-explanations-enabled');
 		}
 		else{
-			document.body.classList.remove('no-explanations-enabled');
+			if(document.body.classList.contains('no-explanations-enabled')){
+				document.body.classList.remove('no-explanations-enabled');
+			}
 		}
 	
 		// Markdown
@@ -3082,7 +3112,9 @@ function update_prompt_adjustments(assistant_id=null){
 				document.body.classList.add('markdown-enabled');
 			}
 			else{
-				document.body.classList.remove('markdown-enabled');
+				if(document.body.classList.contains('markdown-enabled')){
+					document.body.classList.remove('markdown-enabled');
+				}
 			}
 		}
 		else if(typeof window.assistants[assistant_id]['markdown_enabled'] == 'boolean' && window.assistants[assistant_id]['markdown_enabled']){
@@ -3090,12 +3122,14 @@ function update_prompt_adjustments(assistant_id=null){
 			document.body.classList.add('markdown-enabled');
 		}
 		else{
-			document.body.classList.remove('markdown-enabled');
+			if(document.body.classList.contains('markdown-enabled')){
+				document.body.classList.remove('markdown-enabled');
+			}
 		}
 		
 	}
 	else{
-		console.error("update_prompt_adjustment:  assistant was not present in settings (just deleted?)");
+		console.error("update_prompt_adjustment:  assistant was not present in settings (just deleted?).  assistant_id: ", assistant_id);
 		prompt_adjustments_el.value = '';
 		textAreaAdjust(prompt_adjustments_el);
 		return '';
@@ -4864,24 +4898,33 @@ function custom_ai_next(){
 	share_prompt_dialog_el.showModal();
 }
 
+
 function save_edited_ai(details=null,assistant_id=null){
 	if(typeof details != 'object' || details == null){
 		console.error("save_edited_ai: no valid details to save provided");
 		return false
 	}
 	if(typeof assistant_id != 'string' && typeof window.ai_being_edited == 'string'){
-		//console.log("save_edited_ai:  no assistant_id provided, falling back to window.ai_being_edited: ", window.ai_being_edited);
+		console.error("save_edited_ai:  no assistant_id provided, falling back to window.ai_being_edited: ", window.ai_being_edited);
 		assistant_id = window.ai_being_edited;
 	}
 	//console.log("in save_edited_ai.  assistant_id,details: ", assistant_id, details);
 	if(typeof assistant_id == 'string'){
 		if(typeof window.settings.assistants[assistant_id] == 'undefined'){
-			//console.log("save_edited_ai:  had to create empty dict in window.settings.assistants first");
+			console.warn("save_edited_ai:  had to create empty dict in window.settings.assistants first");
 			window.settings.assistants[assistant_id] = {};
+			really_generate_ui(); // this should generate the missing chat pane
 		}
 		window.settings.assistants[assistant_id] = {...window.settings.assistants[assistant_id], ...details};
 		save_settings();
 		
+		if(assistant_id != window.settings.assistant){
+			switch_assistant(assistant_id,true);
+		}
+		
+		if(typeof window.received_prompt == 'string'){
+			show_received_prompt();
+		}
 		
 		//console.log("save_edited_ai:  OK, SAVED");
 		return true
@@ -4905,12 +4948,12 @@ share_prompt_show_more_options_button_el.addEventListener("click", () => {
 });
 
 share_prompt_dialog_done_button_el.addEventListener("click", () => {
-	//console.log("clicked on share prompt done button");
+	console.log("clicked on share prompt done button");
 	document.body.classList.remove('busy-editing-assistant');
 	document.body.classList.remove('busy-editing-received-ai');
 	
-	if(window.received_prompt != null){
-		//console.log("there is a received prompt to handle next");
+	if(typeof window.received_prompt == 'string'){
+		console.log("there is a received prompt to handle next");
 		show_received_prompt();
 	}
 	//update_assistant_property('example_prompt', share_prompt_input_el.value); // on assistants with example_input it's always a dictionary with language options. Could perhaps change the current language one.. why though.
@@ -4918,9 +4961,9 @@ share_prompt_dialog_done_button_el.addEventListener("click", () => {
 
 
 run_the_received_prompt_button_el.addEventListener("click", () => {
-	//console.log("clicked on run received prompt button");
+	console.log("clicked on run received prompt button");
 	document.body.classList.remove('received-prompt');
-	do_prompt({'assistant':url_parameter_ai},window.received_prompt);
+	do_prompt({'assistant':window.settings.assistant},received_prompt_textarea_el.value);
 	//window.received_prompt = null;
 	//update_assistant_property('example_prompt', share_prompt_input_el.value); // on assistants with example_input it's always a dictionary with language options. Could perhaps change the current language one.. why though.
 });
@@ -7310,7 +7353,7 @@ function show_model_info(){
 					}
 					
 					window.settings.assistants[window.settings.assistant]['custom_name'] = save_received_name_el.value;
-					window.assistants[window.settings.assistant]['custom_name'] = save_received_name_el.value;
+					//window.assistants[window.settings.assistant]['custom_name'] = save_received_name_el.value;
 					save_settings();
 					generate_ui();
 				}
@@ -7353,7 +7396,7 @@ function show_model_info(){
 				
 				//console.log("model name changed: ", save_received_description_el.value);
 				window.settings.assistants[window.settings.assistant]['custom_description'] = save_received_description_el.value;
-				window.assistants[window.settings.assistant]['custom_description'] = save_received_description_el.value;
+				//window.assistants[window.settings.assistant]['custom_description'] = save_received_description_el.value;
 				save_settings();
 				generate_ui();
 				
@@ -8503,7 +8546,15 @@ function show_model_info(){
 		
 
 		// Custom model URL
-		if(typeof window.settings.assistant == 'string' && typeof window.assistants[window.settings.assistant].download_url == 'string'){
+		if(
+			typeof window.settings.assistant == 'string' 
+			&& (
+				(typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant].download_url == 'string')
+				||
+				(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && typeof window.settings.assistants[window.settings.assistant].download_url == 'string')
+				|| window.settings.assistant.startsWith('custom')
+			)
+		){
 			let download_url_container_el = document.createElement('div');
 			download_url_container_el.classList.add('model-info-setting-container');
 			download_url_container_el.setAttribute('id','model-info-setting-url-container');

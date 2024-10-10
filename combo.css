@@ -5525,7 +5525,7 @@ body:not(.coder) #right-bar{
 dialog {
 	margin:auto;
 	background-color:var(--sidebar-bg);
-	padding: 1rem;
+	padding: 2rem;
 	border-radius:.5rem;
 	border: none !important;
 	max-width: 90vw;
@@ -8672,6 +8672,7 @@ body.show-documents-search #file-manager{
 
 #share-prompt-assistant-emoji,
 #share-prompt-assistant-name-icon,
+#received-prompt-assistant-emoji,
 #received-prompt-assistant-icon-container > img{
 	width:36px;
 	height:36px;
@@ -10416,6 +10417,9 @@ body.light .spinner{
 		min-width:330px;
 	}
 	
+	dialog {
+		padding: 4rem;
+	}
 }
 
 @media only screen and (min-width: 1201px){
