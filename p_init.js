@@ -1863,23 +1863,29 @@ check_gpu();
 
 
 document.getElementById('about-link').addEventListener("click", () => {
+	/*
 	window.add_script('./specials/about.js')
 	.then((value) => {
 		setTimeout(create_about_document,100);
 	})
 	.catch((err) => {
-		console.error("error adding privacy policy script");
+		console.error("error adding about script");
 	})
+	*/
+	create_about_document(); // TODO Brave doesn't allow loading in these files on demand, might be a CORS issue
 })
 
 document.getElementById('privacy-policy-link').addEventListener("click", () => {
+	/*
 	window.add_script('./specials/privacy_policy.js')
 	.then((value) => {
-		setTimeout(create_privacy_policy_document,100);
+		setTimeout(create_privacy_policy_document,200);
 	})
 	.catch((err) => {
 		console.error("error adding privacy policy script");
 	})
+	*/
+	create_privacy_policy_document();
 	
 })
 
@@ -7288,7 +7294,9 @@ function show_model_info(){
 		// MODEL INFO SETTINGS
 		
 		// Save received model URL / Clone AI model
-		if((window.settings.assistant.startsWith('custom') || window.settings.settings_complexity != 'normal') && (typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant]['media'] != 'undefined' && typeof window.assistants[window.settings.assistant]['media'].indexOf('text') != -1 && window.assistants[window.settings.assistant]['media'].length == 1)){
+		//if((window.settings.assistant.startsWith('custom') || window.settings.settings_complexity != 'normal') && (typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant]['media'] != 'undefined' && typeof window.assistants[window.settings.assistant]['media'].indexOf('text') != -1 && window.assistants[window.settings.assistant]['media'].length == 1)){
+		if(window.settings.assistant.startsWith('custom')){
+		
 			//console.log("creating model settings for cloning the model as a custom model");
 			
 			let save_received_container_el = document.createElement('div');
