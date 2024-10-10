@@ -306,26 +306,26 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	
 	
 	if(called_from_automation == false || first_run == true){
-		if(assistant_id == 'scribe'){
-			add_chat_message_once(window.settings.assistant,'developer','scribe_privacy#setting---');
 		
-			if(typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe']['add_timestamps'] == 'string' && window.settings.assistants['scribe']['add_timestamps'] != 'None'){
-				add_chat_message_once(window.settings.assistant,'developer','scribe_clock#setting---');
-				if(window.microphone_enabled && window.audio_player_busy == false && window.vad_paused == false && window.last_time_scribe_started == null){
-					//window.pause_vad();
-				}
-			
-			}
-		
-		}
-		else if(window.microphone_enabled && window.audio_player_busy == false && window.vad_paused){
+		else if(assistant_id != 'scribe' && window.microphone_enabled && window.audio_player_busy == false && window.vad_paused){
 			window.unpause_vad();
 		}
 		
 		sidebar_filter_input_el.value = '';
 	}
 	
+	if(assistant_id == 'scribe'){
+		add_chat_message_once(window.settings.assistant,'developer','scribe_privacy#setting---');
+	
+		if(typeof window.settings.assistants['scribe'] != 'undefined' && typeof window.settings.assistants['scribe']['add_timestamps'] == 'string' && window.settings.assistants['scribe']['add_timestamps'] != 'None'){
+			add_chat_message_once(window.settings.assistant,'developer','scribe_clock#setting---');
+			if(window.microphone_enabled && window.audio_player_busy == false && window.vad_paused == false && window.last_time_scribe_started == null){
+				//window.pause_vad();
+			}
 		
+		}
+	
+	}
 	
 	
 	// Scribe: show suggestion to create empty document

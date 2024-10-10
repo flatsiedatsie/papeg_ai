@@ -16,6 +16,7 @@ register('coi-serviceworker.js', {
 			console.error("service_module.js: window.service_worker_ready did not exist (yet)");
 			setTimeout(() => {
 				if(typeof window.service_worker_ready != 'undefined'){
+					console.log("OK, window.service_worker_ready exists now");
 					window.service_worker_ready(registration);
 				}
 				else{
@@ -28,13 +29,13 @@ register('coi-serviceworker.js', {
 		
     },
     registered (registration) {
-		console.log('Service manager: Service worker has been registered.');
+		//console.log('Service manager: Service worker has been registered.');
 		if(typeof window.service_worker_registered != 'undefined'){
 			console.log('Service manager: calling window.service_worker_registered');
 			window.service_worker_registered(registration);
 		}
 		else{
-			console.error("service_module.js: window.service_worker_registered did not exist (yet)");
+			//console.error("service_module.js: window.service_worker_registered did not exist (yet)");
 			setTimeout(() => {
 				if(typeof window.service_worker_registered != 'undefined'){
 					window.service_worker_registered(registration);
@@ -48,16 +49,16 @@ register('coi-serviceworker.js', {
 		
     },
     cached (registration) {
-		console.log('Service manager: Content has been cached for offline use.')
+		console.log('Service manager: Content has been cached for offline use.');
     },
     updatefound (registration) {
 		console.log('Service manager: New content is downloading.', registration);
     },
     updated (registration) {
-		console.log('Service manager: New content is available; please refresh.')
+		console.log('Service manager: New content is available; please refresh.');
 		/*
-		if(window.time_started  - Date.now() < 10000){
-			window.flash_message(window. get_translation("Updating"),10000);
+		if(window.time_started - Date.now() < 10000){
+			window.flash_message(window.get_translation("Updating"),10000);
 			setTimeout(() => {
 				window.location.reload(true);
 			},1000);
@@ -69,7 +70,7 @@ register('coi-serviceworker.js', {
 		window.service_worker_offline();
     },
     error (error) {
-		console.error('Service manager: Error during service worker registration:', error)
+		console.error('Service manager: Error during service worker registration:', error);
     }
 })
 
