@@ -20,3 +20,8 @@ Use at your own risk.
 ## COMMERCIAL USE
 
 Get in touch with Tijmen Schep if you're interested in using papeg.ai and/or this code in a for-profit situation.
+
+
+## INSTALLATION
+
+You don't need to install this on your own device. Simply visit https://www.papeg.ai to use it.
