@@ -1,6 +1,6 @@
 /*! coi-serviceworker v0.1.7 - Guido Zuidhof and contributors, licensed under MIT */
 
-var service_worker_version = 241;
+var service_worker_version = 243;
 
 var previousCacheName = null; 
 var cacheName = 'v' + service_worker_version; 
@@ -290,12 +290,12 @@ if (typeof window === 'undefined') {
 													
 													//https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0-alpha.14/dist/ort-wasm-simd-threaded.jsep.wasm
 													else if(request.url.indexOf('https://cdn.jsdelivr.net/npm/@huggingface/transformers') != -1){
-														console.log("COI service worker: adding 200 JSDELIVR response to cache.  request.url, response_clone: ", request.url);
+														//console.log("COI service worker: adding 200 JSDELIVR response to cache.  request.url, response_clone: ", request.url);
 														cache.put(request, response_clone);
 													}
 													
 													else{
-														console.log("COI service worker: purposefully not caching: ", request.url);
+														//console.log("COI service worker: purposefully not caching: ", request.url);
 													}
 												}
 												else{

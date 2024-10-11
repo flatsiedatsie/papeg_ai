@@ -468,7 +468,7 @@ self.addEventListener('message', async (e) => {
 		*/
 
         case 'interrupt':
-			console.log("musicgen_worker:  doing stopping_criteria.interrupt");
+			//console.log("musicgen_worker:  doing stopping_criteria.interrupt");
             stopping_criteria.interrupt();
 			postMessage({'task':self.task,'action':'interrupt'});
 			self.task = null;

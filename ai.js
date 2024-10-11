@@ -58,8 +58,8 @@ window.assistants = {
 		"do_not_load":true,
 		"type":"listener",
 		"media":["audio","special"],
-		"memory":0.6,
-		"size":0.3,
+		"memory":3,
+		"size":0.8,
 	},
 	
 	

@@ -15,7 +15,7 @@ let musicgen_files = [];
 
 
 window.interrupt_musicgen = function(){
-	console.log("in interrupt_musicgen");
+	//console.log("in interrupt_musicgen");
 	if(window.real_musicgen_worker != null){
 		window.real_musicgen_worker.postMessage({'action':'interrupt'});
 		return true
@@ -29,7 +29,7 @@ window.interrupt_musicgen = function(){
 	return false
 }
 window.stop_musicgen = function(){
-	console.log("in stop_musicgen");
+	//console.log("in stop_musicgen");
 	if(window.real_musicgen_worker != null){
 		window.real_musicgen_worker.postMessage({'action':'stop'});
 		return true
@@ -38,7 +38,7 @@ window.stop_musicgen = function(){
 }
 
 async function create_musicgen_worker(){
-	console.log("in create_musicgen_worker");
+	//console.log("in create_musicgen_worker");
 	
 	return new Promise((resolve, reject) => {
 		
@@ -63,7 +63,7 @@ async function create_musicgen_worker(){
 				
 				if(e.data.status == 'interrupt' || e.data.status == 'stop'){
 				
-					console.log("musicgen worker sent message that is has interrupted or stopped: " + e.data.status);
+					//console.log("musicgen worker sent message that is has interrupted or stopped: " + e.data.status);
 					// remove download message
 					let musicgen_progress_el = document.getElementById('download-progress-musicgen');
 					if(musicgen_progress_el){
@@ -198,7 +198,7 @@ async function create_musicgen_worker(){
 							add_chat_message('current','musicgen','download_progress#setting---');
 						}
 						else{
-							console.log("updating musicgen (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
+							//console.log("updating musicgen (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
 						}
 						*/
 					}
@@ -222,11 +222,11 @@ async function create_musicgen_worker(){
 				
 				}
 				else if(e.data.status == 'exists'){
-					console.log("musicgen worker sent exists message");
+					//console.log("musicgen worker sent exists message");
 				}
 			
 				else if(e.data.status == 'ready'){
-					console.log("musicgen worker sent ready message. e.data: ", e.data);
+					//console.log("musicgen worker sent ready message. e.data: ", e.data);
 					window.musicgen_worker_busy = false;
 					window.busy_loading_assistant = false;
 					window.musicgen_loaded == true;
@@ -251,12 +251,12 @@ async function create_musicgen_worker(){
 				}
 			
 				else if(e.data.status == 'initiate'){
-					console.log("musicgen worker sent initiate message");
+					//console.log("musicgen worker sent initiate message");
 				}
 				
 			
 				else if(e.data.status == 'download'){
-					console.log("musicgen worker sent download message: ", e.data.file);
+					//console.log("musicgen worker sent download message: ", e.data.file);
 					const file_to_cache = 'https://www.huggingface.co/' + e.data.name + '/resolve/main/' + e.data.file;
 					
 					if(document.body.classList.contains('developer')){
@@ -265,13 +265,13 @@ async function create_musicgen_worker(){
 				}
 			
 				else if(e.data.status == 'preloaded'){
-					console.log("musicgen worker sent 'preloaded' message. Seems to be ready to go.");
+					//console.log("musicgen worker sent 'preloaded' message. Seems to be ready to go.");
 					add_chat_message('musicgen','musicgen',get_translation('Loading_complete'),'Loading_complete');
 				}
 				
 			
 				else if(e.data.status == 'done'){
-					console.log("musicgen worker sent 'done' message. Seems to be for a file being done downloading");
+					//console.log("musicgen worker sent 'done' message. Seems to be for a file being done downloading");
 					handle_download_complete(false);
 				}
 				
@@ -324,7 +324,7 @@ async function create_musicgen_worker(){
 										const delta = Date.now() - musicgen_previous_percentage_timestamp;
 										//console.log("musicgen_progress: time it took for 1% progress: ", delta);
 										const percent_remaning = 100 - percentage;
-										console.log("musicgen_progress: seconds remaining: ", (percent_remaning * delta) / 1000);
+										//console.log("musicgen_progress: seconds remaining: ", (percent_remaning * delta) / 1000);
 										//musicgen_time_remaining_element.innerHTML = '<span></span>';
 										
 										let time_remaining = (percent_remaning * delta) / 1000;
@@ -361,7 +361,7 @@ async function create_musicgen_worker(){
 				}
 				
 				else if(e.data.status == 'download_required'){
-					console.log("musicgen worker sent 'download_required' message.");
+					//console.log("musicgen worker sent 'download_required' message.");
 					flash_message(get_translation("A_model_has_to_be_downloaded_from_the_internet_but_there_is_no_internet_connection"), 4000, 'fail');
 				}
 				
@@ -377,24 +377,24 @@ async function create_musicgen_worker(){
 				else if(e.data.status == 'complete'){
 					window.musicgen_worker_busy = false;
 					//set_chat_status('',2);
-					console.log('GOT MUSICGEN COMPLETE.  e.data: ', e.data);
+					//console.log('GOT MUSICGEN COMPLETE.  e.data: ', e.data);
 					
 					document.body.classList.remove('doing-musicgen');
 					
 					if(typeof e.data.task != 'undefined' && typeof e.data.task.index == 'number' && typeof e.data.wav_blob != 'undefined'){
-						console.log("musicgen worker: complete, and returned wav_blob");
+						//console.log("musicgen worker: complete, and returned wav_blob");
 						let musicgen_task_output_el = document.getElementById('chat-message-task-musicgen-musicgen' + e.data.task.index);
 						if(musicgen_task_output_el){
 							musicgen_task_output_el.innerHTML = '';
 							let audio_player_el = document.createElement('audio');
-							console.log("audio_player_el: ", audio_player_el);
+							//console.log("audio_player_el: ", audio_player_el);
 							audio_player_el.classList.add('chat-message-audio-player');
 							audio_player_el.setAttribute('controls',true);
 							//audio_player_el.setAttribute("type","audio/mpeg");
 							audio_player_el.setAttribute('id','chat-message-audio-player-task' + e.data.task.index);
 							audio_player_el.src = window.URL.createObjectURL(e.data.wav_blob);
 							//audio_player_el.load();
-							console.log("do_audio_player: appending audio_player to bubble: ", audio_player_el);
+							//console.log("do_audio_player: appending audio_player to bubble: ", audio_player_el);
 							musicgen_task_output_el.appendChild(audio_player_el);
 							
 							if(window.settings.assistant != 'musicgen'){
@@ -448,13 +448,13 @@ async function create_musicgen_worker(){
 						
 					}
 					else{
-						console.log("missing data in musicgen complete message: ", e.data);
+						//console.log("missing data in musicgen complete message: ", e.data);
 					}
 				
 				}
 				
 				else if(e.data.status == 'error'){
-					console.log("received error from musicgen worker.  e.data: ", e.data);
+					//console.log("received error from musicgen worker.  e.data: ", e.data);
 					if(typeof e.data.error == 'string'){
 						if(e.data.error.indexOf('no available backend found') != -1 || e.data.error.indexOf('Failed to fetch') != -1){
 							flash_message(get_translation('A_model_needs_to_be_downloaded_but_there_is_no_internet_connection'),4000,'warn');
@@ -478,13 +478,13 @@ async function create_musicgen_worker(){
 				}
 				
 				else{
-					console.log("musicgen worker sent an unexpected content message: ", e.data);
+					//console.log("musicgen worker sent an unexpected content message: ", e.data);
 					window.musicgen_worker_busy = false;
 				}
 			}
 			
 			if(window.enable_microphone == false){
-				console.log("musicgen worker returned audio file, but in the meantime enable_microphone was disabled. Throwing away the data.");
+				//console.log("musicgen worker returned audio file, but in the meantime enable_microphone was disabled. Throwing away the data.");
 			}
 			else{
 			
@@ -503,7 +503,7 @@ async function create_musicgen_worker(){
 			window.musicgen_worker_busy = false;
 			if(typeof error != 'undefined' && musicgen_worker_error_count < 10){
 				setTimeout(() => {
-					console.log("attempting to restart musicgen worker");
+					//console.log("attempting to restart musicgen worker");
 					create_musicgen_worker();
 				},1000);
 			}
@@ -534,7 +534,7 @@ create_musicgen_worker();
 
 
 window.do_musicgen = async function (task){ // musicgen_queue_item
-	console.log("in do_musicgen. Task: ", task);
+	//console.log("in do_musicgen. Task: ", task);
 	
 	//await caches.open(window.cache_name).then((my_cache) => my_cache.add(e.data.file))
 	//await create_musicgen_worker();
@@ -566,11 +566,11 @@ window.do_musicgen = async function (task){ // musicgen_queue_item
 		
 		
 		if(window.musicgen_worker == null){
-			console.log("do_musicgen: calling create_musicgen_worker");
+			//console.log("do_musicgen: calling create_musicgen_worker");
 			create_musicgen_worker()
 			.then((value) => {
-				console.log("do_musicgen: .then: create_musicgen_worker should be done now. value: ", value);
-				console.log("do_musicgen: window.musicgen_worker: ", window.musicgen_worker);
+				//console.log("do_musicgen: .then: create_musicgen_worker should be done now. value: ", value);
+				//console.log("do_musicgen: window.musicgen_worker: ", window.musicgen_worker);
 			
 				if(window.musicgen_worker == null){
 					console.error("do_musicgen: creating musicgen promise worker failed");
@@ -586,7 +586,7 @@ window.do_musicgen = async function (task){ // musicgen_queue_item
 						'type': 'en'
 					})
 					.then((response) => {
-						console.log("musicgen promise worker response: ", response);
+						//console.log("musicgen promise worker response: ", response);
 						document.body.classList.remove('doing-musicgen');
 						resolve(response);
 						return response;
@@ -599,9 +599,9 @@ window.do_musicgen = async function (task){ // musicgen_queue_item
 						
 						/*
 						const download_progress_el = document.querySelector('.message.pane-musicgen.download-progress-chat-message');
-						console.log("download_progress_el: ", download_progress_el)
+						//console.log("download_progress_el: ", download_progress_el)
 						if(download_progress_el){
-							console.log("musicgen error: download progress element still existed, removing it now");
+							//console.log("musicgen error: download progress element still existed, removing it now");
 							setTimeout(() => {
 								download_progress_el.remove()
 							},1000);
@@ -627,7 +627,7 @@ window.do_musicgen = async function (task){ // musicgen_queue_item
 			
 			})
 			.then((value) => {
-				console.log("do_musicgen: start promise worker: final then: value: ", value);
+				//console.log("do_musicgen: start promise worker: final then: value: ", value);
 				resolve(value);
 			})
 			.catch((err) => {
@@ -635,7 +635,7 @@ window.do_musicgen = async function (task){ // musicgen_queue_item
 			})
 		}
 		else{
-			console.log("do_musicgen: doing postMessage. sending:  task,musicgen_worker: ", task, window.musicgen_worker);
+			//console.log("do_musicgen: doing postMessage. sending:  task,musicgen_worker: ", task, window.musicgen_worker);
 			document.body.classList.add('doing-assistant');
 			
 			window.musicgen_worker.postMessage({
@@ -644,7 +644,7 @@ window.do_musicgen = async function (task){ // musicgen_queue_item
 			})
 			.then((response) => {
 				console.error("\n\nHURRAY\n\nin musicgen promiseWorker.then!\n\n");
-				console.log("musicgen promise worker response: ", response);
+				//console.log("musicgen promise worker response: ", response);
 				document.body.classList.remove('doing-assistant');
 				resolve(response);
 				return response;

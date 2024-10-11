@@ -80,7 +80,7 @@ window.service_worker_ready = async function (registration){
 		});
 		
 		
-		console.error("updater.js: attempting postMessage to service worker. registration.active: ", registration.active);
+		//console.error("updater.js: attempting postMessage to service worker. registration.active: ", registration.active);
 		//registration.active.postMessage({'type':'get_version_number'});
 		
 		send_message_to_service_worker(registration.active, {"type":"get_version_number"})

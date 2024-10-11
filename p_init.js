@@ -4969,7 +4969,7 @@ share_prompt_dialog_done_button_el.addEventListener("click", () => {
 run_the_received_prompt_button_el.addEventListener("click", () => {
 	console.log("clicked on run received prompt button");
 	document.body.classList.remove('received-prompt');
-	do_prompt({'assistant':window.settings.assistant},received_prompt_textarea_el.value);
+	do_prompt(null,received_prompt_textarea_el.value);
 	//window.received_prompt = null;
 	//update_assistant_property('example_prompt', share_prompt_input_el.value); // on assistants with example_input it's always a dictionary with language options. Could perhaps change the current language one.. why though.
 });

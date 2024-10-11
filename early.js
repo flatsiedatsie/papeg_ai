@@ -46,7 +46,7 @@
 		let received_url_parameters = null;
 		
 		window.url_parameters = new URLSearchParams(window.location.search);
-		console.log("window.url_parameters: ", window.url_parameters);
+		//console.log("window.url_parameters: ", window.url_parameters);
 		
 		
 		window.url_parameter_functionality = window.url_parameters.get('do');
@@ -766,7 +766,7 @@
 					.then((cacheNames) =>
 					
 				 	 	cacheNames.map(cacheName => {
-				    		console.warn("cacheName: ", cacheName);
+				    		console.log("cached version: ", cacheName);
 						
 							caches.open(cacheName)
 							.then(cache => {
