@@ -307,7 +307,7 @@ function switch_assistant(assistant_id,called_from_automation=false,prefered_lan
 	
 	if(called_from_automation == false || first_run == true){
 		
-		else if(assistant_id != 'scribe' && window.microphone_enabled && window.audio_player_busy == false && window.vad_paused){
+		if(assistant_id != 'scribe' && window.microphone_enabled && window.audio_player_busy == false && window.vad_paused){
 			window.unpause_vad();
 		}
 		
