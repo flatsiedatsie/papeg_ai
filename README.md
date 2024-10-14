@@ -20,6 +20,8 @@ This code is currently **not** available under an open source licence. You may n
 
 Use at your own risk. www.papeg.ai and this source are provided as-is.
 
+Commercial use may also be restricted by the usage license of certain AI models (most notably the image generation AI's).
+
 ## COMMERCIAL USE
 
 Get in touch with Tijmen Schep if you're interested in using papeg.ai and/or this code in a for-profit situation.
