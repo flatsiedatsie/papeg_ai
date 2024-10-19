@@ -30,3 +30,8 @@ Get in touch with Tijmen Schep if you're interested in using papeg.ai and/or thi
 ## INSTALLATION
 
 You don't need to install this on your own device. Simply visit https://www.papeg.ai to use it.
+
+But if you really want to:
+- Download the latest release zip file, and unzip that to a folder.
+- Open a terminal for that folder, and type `python3 -m http.server`, then press enter.
+- Open a browser and surf to: `localhost:8000` (or, alternatively, `127.0.0.1:8000`). You may need to change the 8000 to 8080 or 5000.
