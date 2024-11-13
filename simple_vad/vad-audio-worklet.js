@@ -44,7 +44,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
       options.processorOptions.lastCommandWasSpeech ??
       this.last_command_was_speech;
     this.sample_rate = options.processorOptions.sampleRate;
-	console.log("VAD_audio_worklet: this.sample_rate: ", this.sample_rate);
+	//console.log("VAD_audio_worklet: this.sample_rate: ", this.sample_rate);
     this.fft_size = options.processorOptions.fftSize ?? this.fft_size;
 	//console.log("VAD audio worklet: this.fft_size: ", this.fft_size);
     this.fft = new FFT(this.fft_size);
@@ -76,12 +76,13 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 	this.continuous = false;
 	this.last_winner = null;
 	this.state_update_delta = 0;
-	this.flush_count = null;
+	this.flush_count = 0;
 	this.flush_threshold = 15; // 15 seconds normally, but when doing non-stop recording this can be increased
 	this.optimal_flush_buffer_cut_frame = null;
 	this.sample_rate_check_recording_start_time = null;
 	
 	this.seconds_counter = 0;
+	this.send_pings = true;
 	this.ping();
 	
 	
@@ -89,12 +90,14 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 		
 		if(typeof e.data.ping == 'boolean'){
 			if(e.data.ping){
+				//console.log("VAD WORKLET: received ping command");
+				this.send_pings = true;
 				this.ping();
 			}
 		}
 		
 		if(typeof e.data.continuous == 'boolean'){
-			console.log("VAD WORKLET:  received e.data.continuous: ", e.data.continuous);
+			//console.log("VAD WORKLET:  received e.data.continuous: ", e.data.continuous);
 			if(this.continuous == false && e.data.continuous == true){
 				this.flush_count = 0;
 				this.recording = [];
@@ -117,7 +120,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 		}
 		
 		if(typeof e.data.minimal_silence_threshold == 'number'){
-			console.log("VAD WORKLET:  received e.data.minimal_silence_threshold: ", e.data.minimal_silence_threshold);
+			//console.log("VAD WORKLET:  received e.data.minimal_silence_threshold: ", e.data.minimal_silence_threshold);
 			
 			this.minimal_silent_frame_threshold = e.data.minimal_silence_threshold;
 			this.maximal_silent_frame_threshold = this.minimal_silent_frame_threshold + 30;
@@ -132,7 +135,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 		if(typeof e.data.listening == 'boolean'){
 			this.listening = e.data.listening;
 			//console.log("VAD audio worklet: received message: ", e.data);
-			console.log("VAD audio worklet:  this.listening: ", this.listening);
+			//console.log("VAD audio worklet:  this.listening: ", this.listening);
 		
 			if(this.listening == false){
 				
@@ -148,18 +151,23 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 				//this.frame_counter = 0;
 				this.buffer = [];
 				this.buffer.length = 0;
+				this.seconds_counter = 0;
 			    this.is_speech_frame_counter = 0;
 			    this.is_silent_frame_counter = 1;
 				this.last_command_was_speech = false;
 				this.optimal_flush_buffer_cut_frame = null;
 				this.continuous = false;
-				this.flush_count = null;
+				this.flush_count = 0;
 				
 				//this.audio_chunk_size = null;
 
 			    this.e_min = null;
 			    this.f_min = null;
 			    this.sfm_min = null;
+				
+			}
+			else{
+				this.send_pings = true;
 			}
 		}
 		//else{
@@ -174,7 +182,9 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 
   ping(){
     //console.log("VAD AUDIO WORKLET: SENDING PING");
-  	this.post('ping',{'listening':this.listening,'last_command_was_speech':this.last_command_was_speech});
+	if(this.send_pings){
+		this.post('ping',{'listening':this.listening,'last_command_was_speech':this.last_command_was_speech});
+	}
   }
 
 
@@ -186,7 +196,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
   }
   
   send_recording(){
-    console.log("VAD WORKLET: in send_recording. continuous: ", this.continuous);
+    //console.log("VAD WORKLET: in send_recording. continuous: ", this.continuous);
     const now_stamp = Date.now();
 	this.recording_start_time = now_stamp - (this.recording.length / (this.sample_rate / 1000)); // assuming 16000 sample_rate, this would be divided by 16 to get to milliseconds (16 audio floats per millisecond);
 	this.sample_rate_check_recording_start_time = now_stamp;
@@ -247,6 +257,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 	}
 	
 	if(this.listening == false){
+		this.send_pings = false;
 		return true;
 	}
 	
@@ -300,12 +311,12 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 	}
 	if(this.real_sample_rate == null && typeof this.sample_rate_check_recording_start_time == 'number' && (Date.now() - this.sample_rate_check_recording_start_time) > 1000){
 		const real_sample_rate_measuring_duration = Date.now() - this.sample_rate_check_recording_start_time;
-		console.log("real_sample_rate: real_sample_rate_measuring_duration: ", real_sample_rate_measuring_duration);
+		//console.log("real_sample_rate: real_sample_rate_measuring_duration: ", real_sample_rate_measuring_duration);
 		
 		if(typeof this.actual_pre_recording_size == 'number'){
-			console.log("real_sample_rate: recorded samples: ", (this.recording.length - this.actual_pre_recording_size));
+			//console.log("real_sample_rate: recorded samples: ", (this.recording.length - this.actual_pre_recording_size));
 			
-			this.real_sample_rate = (this.recording.length - this.actual_pre_recording_size) / (real_sample_rate_measuring_duration/1000);
+			this.real_sample_rate = Math.round((this.recording.length - this.actual_pre_recording_size) / (real_sample_rate_measuring_duration/1000));
 			console.log("VAD audio worklet: real_sample_rate: saw this many samples in a second: ", this.real_sample_rate);
 		}
 		else{
@@ -452,7 +463,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 		//console.error("VAD audio worklet: forcing flush: ", this.recording.length);
 		
 		if(this.is_silent_frame_counter > 1 || this.recording.length > this.sample_rate * (this.flush_threshold + 4)){ // e.g. 15 soft limit -> 19 hard limit
-			console.error("RECORDING WAS GETTING VERY LONG, FORCING FLUSH");
+			console.error("RECORDING WAS GETTING VERY LONG, FORCING FLUSH.  this.flush_count: ", this.flush_count);
 			
 			if(this.recording.length > this.sample_rate * (this.flush_threshold + 4)){
 				console.warn("VAD audio worklet: had to cut of audio rather abruptly");
@@ -482,7 +493,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 				this.flush_offset -= (this.sample_rate * 5);
 			}
 			else if(this.continuous){
-				console.log("VAD WORKLET: KEEPING LAST 5 SECONDS IN BUFFER FOR OVERLAP MERGING");
+				//console.log("VAD WORKLET: KEEPING LAST 5 SECONDS IN BUFFER FOR OVERLAP MERGING");
 				this.recording.splice(0, this.recording.length - (this.sample_rate * 5)); // keep the last 5 seconds, which will be useful later to glue the snippets/segments together later
 				this.flush_offset -= (this.sample_rate * 5);
 			}
@@ -564,7 +575,7 @@ class AudioVADProcessor extends AudioWorkletProcessor {
 	//console.log("this.is_silent_frame_counter & speech_counter: ", this.is_silent_frame_counter, this.is_speech_frame_counter);
     if (this.is_silent_frame_counter > this.silent_frame_threshold && this.last_command_was_speech) {
 		if(this.silent_frame_threshold < this.minimal_silent_frame_threshold){
-			console.log("VAD audio worklet: increased silent frame threshold to: ", this.silent_frame_threshold);
+			//console.log("VAD audio worklet: increased silent frame threshold to: ", this.silent_frame_threshold);
 			this.silent_frame_threshold += 10;
 		}
 	  
