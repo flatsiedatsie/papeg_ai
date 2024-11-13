@@ -13,7 +13,7 @@ This project was developed by a self-taught digital artist from Amsterdam, not a
 
 ## WEBSITE LICENSE
 
-You may use the online version at https://papeg.ai (and the beta version at https://papegai.eu) freely in any situation. If you use it in a corporate context, then you are honour-bound to get in touch and help to financially support the project (and in turn allow me to support the projects and services that make papeg.ai possible).
+You may use the online version at https://papeg.ai (and the beta version at https://papegai.eu) freely in any situation. If you use it in a corporate context, then you are honour-bound to get in touch and help to financially support the project (and in turn allow me to support the projects and services that make papeg.ai possible). A monthly fee of 2 euro per user is suggested.
 
 
 ## SOURCE CODE LICENSE
