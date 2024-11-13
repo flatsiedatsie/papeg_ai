@@ -1,14 +1,24 @@
 # Papeg.ai
 
+This is the source code for Papeg.ai, a website that offers popular AI features such as chat and document editing, and makes them free, easy to use and completely private.
+
 See the code in action here:
-https://www.papeg.ai
+https://papeg.ai
 
 ## TRANSPARENCY
-Papeg.ai runs completely client-side, which means you always have access to the complete source code. The code is placed here as a convenience, to make inspecting it as easy as possible. 
+Papeg.ai runs completely client-side, which means you always have access to the complete source code as it's running inside your web browser. The code is placed here as a convenience, to make inspecting it as easy as possible. 
 
-There are likely still many bugs, and you should not rely on papeg.ai for anything serious or mission-critical.
+This project was developed by a self-taught digital artist from Amsterdam, not a professional development team. You should not rely on papeg.ai for anything serious or mission-critical.
 
-## LICENSE
+
+## WEBSITE LICENSE
+
+You may use the online version at https://papeg.ai (and the beta version at https://papegai.eu) freely in any situation. If you use it in a corporate context, then you are honour-bound to get in touch and help to financially support the project (and in turn allow me to support the projects and services that make papeg.ai possible).
+
+
+## SOURCE CODE LICENSE
+
+If you want to use this source code, for example to create a local deployment on your own server, then there are more restrictions as details below.
 
 This code is currently **not** available under an open source licence. You may not use or duplicate this code except under the following conditions:
 
