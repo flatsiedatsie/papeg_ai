@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Papeg.ai - 404 - page not found</title>
+	
+	<style>
+		body{
+			background-color:black;
+			font-family:helvetica,arial,sans-serif;
+			position:relative;
+		}
+		#centerer{
+			display:flex;
+			align-items:center;
+			justify-content:center;
+			height:80vh;
+			width:100vw;
+			z-index:2;
+		}
+		#centered{
+			padding:2rem;
+			border-radius:.5rem;
+			background-color:rgba(64,64,64,.3);
+			color:white;
+			text-align:center;
+			z-index:2;
+		}
+		h1{
+			font-size:400%;
+		}
+		
+		a{
+			display:block;
+			background-color:#0e5981;
+			padding:1rem 2rem;
+			border-radius:.5rem;
+			color:white;
+			margin:1.5rem;
+			transition:all ease .3s;
+			text-decoration:none;
+		}
+		a:hover{
+			transform:scale(1.2);
+		}
+		
+		#parrot{
+			position:absolute;
+			font-size:3000%;
+			bottom:0;
+			left:20%;
+			z-index:1;
+		}
+		
+		@media only screen and (min-width: 801px){
+			#parrot{
+				right:10%;
+				left:auto;
+			}
+		}
+		
+	</style>
+  </head>
+  <body>
+	  <div id="parrot">🦜</div>
+	  <div id="centerer">
+	  	<div id="centered">
+		  <h1>404</h1>
+		  <p>Page not found</p>
+		  <a href="index.html">GO BACK</a>
+	  	</div>
+	</div>
+  </body>
+</html>
+
+
+ErrorDocument 404 http://example.com/404/
