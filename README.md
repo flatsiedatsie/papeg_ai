@@ -24,7 +24,7 @@ This code is currently **not** available under an open source licence. You may n
 
 ![What can I do for free?](papegai_licensing.png)
 
-- A. Small business may use www.papeg.ai, but they may not host the code provided here on their own devices or servers unless given permission to do so.
+- A. While businesses may use www.papeg.ai, they may not host the code provided here on their own devices or servers unless given permission to do so.
 - B. You may use this code for individual non-profit personal use, or within a non-profit organisation (e.g. schools, universities, government). You may deploy it on the localhost on your own device, or make it available on a local network only. You may not place it online anywhere.
 - C. In any other case you may use, copy, deploy or otherwise enagage with this code if given explicit written permission to do so by Tijmen Schep.
 
