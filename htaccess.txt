@@ -1,9 +1,13 @@
+# RENAME THIS TO .htaccess
+
+
 <IfModule mod_deflate.c>
 AddOutputFilterByType DEFLATE text/plain
 AddOutputFilterByType DEFLATE text/html
 AddOutputFilterByType DEFLATE text/xml
 AddOutputFilterByType DEFLATE text/css
 AddOutputFilterByType DEFLATE text/csv
+AddOutputFilterByType DEFLATE text/javascript
 AddOutputFilterByType DEFLATE application/xml
 AddOutputFilterByType DEFLATE application/xhtml+xml
 AddOutputFilterByType DEFLATE application/rss+xml
@@ -11,13 +15,14 @@ AddOutputFilterByType DEFLATE application/javascript
 AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-Header set Cross-Origin-Embedder-Policy "require-corp"
-Header set Cross-Origin-Opener-Policy "same-origin"
+SetEnvIfNoCase User-Agent ^$ noUserAgent
+SetEnvIfNoCase User-Agent (binlar|casper|cmsworldmap|comodo|diavol|dotbot|feedfinder|flicky|ia_archiver|jakarta|kmccrew|nutch|planetwork|purebot|pycurl|skygrid|sucker|turnit|vikspider|zmeu) badUserAgent=$1
 
-Header set Cross-Origin-Resource-Policy: "cross-origin"
-Header set Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
-
-#Header set Access-Control-Allow-Origin "*"
+<limit GET POST PUT>
+  Order Allow,Deny
+  Allow from all
+  Deny from env=badUserAgent
+</limit>
 
 
 AddType text/javascript .js .ts .mjs .cjs
@@ -26,7 +31,18 @@ AddType application/wasm wasm
 
 
 <IfModule mod_headers.c>
+	
+	Header set Cross-Origin-Embedder-Policy "require-corp"
+	Header set Cross-Origin-Opener-Policy "same-origin"
 
+	Header set Cross-Origin-Resource-Policy: "cross-origin"
+	#Header set Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
+
+	Header set Referrer-Policy: "origin"
+	Header set Reporting-Endpoints: "devnull=https://papeg.ai/devnull.php"
+
+	#Header set Access-Control-Allow-Origin "*"
+	
 	Header always set Cache-Control "no-cache, no-store, must-revalidate" 	
 	Header always set Pragma "no-cache" 	
 	Header always set Expires 0 
@@ -34,26 +50,50 @@ AddType application/wasm wasm
 	Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
 	#Header always set Permissions-Policy: interest-cohort=()
 
-	
-
-
-
 	<IfModule mod_rewrite.c>
+		
 		RewriteEngine On
+		RewriteBase /
+		Options +FollowSymLinks
+		Options -Indexes
+		
+		<IfModule mod_negotiation.c>
+		    Options -MultiViews
+		</IfModule>
+		
 		RewriteCond %{HTTPS} !=on
 		RewriteRule ^(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 		
-		#Options +FollowSymLinks
-    	
-		SetEnvIf Origin "http(s)?://(.+\.)?(localhost|localhostje\.dd|papeg\.ai|huggingface\.co|github\.com|jsdelivr\.net)(:\d{1,5})?$" CORS=$0
-		Header add Content-Security-Policy "default-src * data: 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'inline-speculation-rules' data: blob:  %{CORS}e" env=CORS
-    	Header merge  Vary "Origin"
-	
-		RewriteRule ^([0-9A-Za-z_]+)$ /index.html?do=$1 [NC,R=301]
-		#RewriteRule ^do/([0-9A-Za-z\-_]+) ./index.html?do=$1 [NC, L]
+		# NC = case insensitive
+		# R = temporary redirect to new URL
+		# R=301 = permanent redirect to new URL
+		# QSA = append query string from request to substituted URL
 		
+		
+		
+    	
+		# TODO Not sure that this makes sense. Wouldn't this just allow those sites to load files from this one?
+		SetEnvIf Origin "http(s)?://(.+\.)?(localhost|localhostje\.dd|papeg\.ai|papegai\.eu|hf\.co|huggingface\.co|github\.com|jsdelivr\.net)(:\d{1,5})?$" CORS=$0
+		Header add Content-Security-Policy "default-src * data: 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'inline-speculation-rules' data: blob: ; base-uri 'self' ; report-uri https://papeg.ai/devnull.php ; report-to devnull %{CORS}e" env=CORS
+    	Header merge  Vary "Origin"
+		
+		RewriteCond %{REQUEST_FILENAME} !-f
+		RewriteCond %{REQUEST_FILENAME} !-d
+		RewriteCond %{REQUEST_URI} !index.html
+		RewriteCond %{REQUEST_URI} !cors_fetch
+		
+		RewriteRule ^\?file=https://papeg.ai/$ / [NC,R=301] # not sure what is causing this behaviour in the first place
+		RewriteRule ^\?file=https://papegai.eu/$ / [NC,R=301]
+			
+		RewriteRule ^\??(http[0-9A-Za-z@%_\-\.\:\/]+.gguf) /index.html?ai=$1 [NC,R=301,QSA,L]
+		
+		RewriteRule ^\??([0-9A-Za-z_]+)\/(http[0-9A-Za-z@%_\-\.\:\/]+) /index.html?do=$1&file=$2 [NC,R=301,QSA,L]  # /describe/https://www.example.org/image.jpg
+			
+		RewriteRule ^\??(http[0-9A-Za-z@%_\-\.\:\/]+) /index.html?file=$1 [NC,R=301,QSA,L]
+			
+		RewriteRule ^\??([0-9A-Za-z_]+)$ /index.html?do=$1 [NC,R=301,L]
+
 	</IfModule>
 	
 </IfModule>
-
 
