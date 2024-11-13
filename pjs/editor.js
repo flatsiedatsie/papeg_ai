@@ -460,8 +460,10 @@ let cm_extensions = [
 		
 		
 		
-		
-  		save_file_meta('state_selection_main', current_selection );      //editor.state.selection.ranges[0]);
+		if(current_file_name != unsaved_file_name){
+			save_file_meta('state_selection_main', current_selection );      //editor.state.selection.ranges[0]);
+		}
+  		
 		
   		//save_file_meta('cursor_head_nr',state.doc.lineAt(state.selection.main.head).number);
   		//save_file_meta('cursor_line_nr',state.doc.lineAt(state.selection.main.head).number);
@@ -588,14 +590,18 @@ document.body.addEventListener('keydown', function (e) {
     if (e.keyCode == 83 && e.metaKey) {
 		//console.log("Ctrl-S detected");
         e.preventDefault();
-		save_file(current_file_name);
+		if(document.body.classList.contains('show-document')){
+			save_file(current_file_name);
+		}
     }
 	
 	// SEARCH
     if (e.keyCode == 70 && e.metaKey) {
 		//console.log("Ctrl-F detected");
         //e.preventDefault();
-		open_text_search();
+		if(document.body.classList.contains('show-document')){
+			open_text_search();
+		}
     }
 	
     if (e.keyCode == 38) {
@@ -1033,7 +1039,7 @@ function editor_changed(){
 
 // SET VALUE
 
-async function editor_set_value(value){
+async function really_editor_set_value(value){
 	try{
 		if(typeof value == 'string'){
 			//console.log("editor_set_value:  \n-string value: \n", value.substr(0,60) , "\n-current_file_name, files[current_file_name]: ",current_file_name, files[current_file_name]);
@@ -1358,7 +1364,7 @@ async function editor_set_value(value){
 								'origin':'chat', // Playground?
 								'type':'image_processing',
 								'state':'should_ocr',
-								'prompt':'',
+								'prompt':'Scan',
 								//'file':window.last_image_to_text_blob_file
 							}
 							
@@ -1369,8 +1375,10 @@ async function editor_set_value(value){
 									window.last_user_query = remove_file_extension(window.last_image_to_text_blob_file.filename);
 								}
 							}
-							
-							window.create_image_to_text_task(new_ocr_task);
+							if(window.add_task(new_ocr_task)){
+								window.add_chat_message('image_to_text_ocr','user',get_translation('Scan') + ' ' + window.last_image_to_text_blob_file.filename);
+							}
+							//window.create_image_to_text_task(new_ocr_task);
 					
 							/*
 							if(window.innerWidth < 641){
@@ -1391,7 +1399,7 @@ async function editor_set_value(value){
 					if(window.web_gpu_supported){
 						let describe_image_button_el = document.createElement('button');
 						describe_image_button_el.setAttribute('data-i18n','Describe');
-						scan_image_button_el.setAttribute('id','overlay-describe-file-button');
+						describe_image_button_el.setAttribute('id','overlay-describe-file-button');
 						describe_image_button_el.textContent = get_translation('Describe');
 						describe_image_button_el.addEventListener('click', () => {
 							//console.log("clicked on describe image button");
@@ -1589,7 +1597,10 @@ async function editor_set_value(value){
 		
 			if(typeof files[current_file_name] != 'undefined' && typeof files[current_file_name]['state_selection_main'] != 'undefined'){
 				//editor.dispatch({selection: {anchor: N, head: N}})
-				//console.log("editor_set_value. restoring selection: ", files[current_file_name]['state_selection_main']);
+				if(window.settings.settings_complexity == 'developer'){
+					console.warn("editor_set_value. restoring selection: ", files[current_file_name]['state_selection_main']);
+				}
+				
 				//editor.dispatch({selection: files[current_file_name]['state_selection_main']})
 				scroll_to_selection(files[current_file_name]['state_selection_main']); // files[current_file_name]['state_selection_main'] is also the default, so doesn't realy have to be provided here
 		
@@ -2321,7 +2332,7 @@ window.every_second = setInterval(() => {
     else{
         //console.warn("not executing");
     }
-},100);
+},1000);
 
 
 window.supervisor = setInterval(() => {
@@ -2344,7 +2355,7 @@ window.supervisor = setInterval(() => {
 
 // EXECUTE CODE
 
-function executeCode(){
+function executeCode(code_to_execute=''){
     //console.log("in executeCode. should_run: ", should_run);
     alert_counter = 0;
     document.getElementById('alert').style.display = 'none';
@@ -2360,6 +2371,21 @@ function executeCode(){
         return
     }
     */
+	
+	if(code_to_execute == ''){
+		if(typeof window.doc_selected_text == 'string' && window.doc_selected_text.trim().length > 5){
+			code_to_execute = window.doc_selected_text;
+		}
+		else{
+			code_to_execute = code;
+		}
+	}
+	
+	if(typeof code_to_execute != 'string' || (typeof code_to_execute == 'string' && code_to_execute.length < 6)){
+		console.error("executeCode: no valid code to execute: ", code_to_execute);
+		flash_message("No code?",1000,'fail');
+		return false
+	}
     
     if(window.worker != null){
         window.worker.terminate();
@@ -2374,7 +2400,7 @@ function executeCode(){
     
 	// Lint CSS
 	if(current_file_name.toLowerCase().endsWith('.css')){
-		lint_css(code);
+		lint_css(code_to_execute);
 		return;
 	}
 	
@@ -2382,13 +2408,17 @@ function executeCode(){
 	if( current_file_name.toLowerCase().endsWith('html') || code.substr(0,20).toLowerCase().indexOf('<!DOCTYPE html>') != -1 || code.substr(0,30).toLowerCase().indexOf('\n<html') != -1){
 		//codeOutput.innerHTML = '<p>Seems to be a HTML file</p>';
 		//codeOutput.classList.add('hidden');
-		open_viewer('window','beta');
+		if(!serverless){
+			open_viewer('window','beta');
+		}
+		// TODO could create an iframe with the HTML as a temporary object when serverless
 		return
 	}
 	
-	else if(code.startsWith('<?php') || code.indexOf('\n<?php') != -1){
+	else if(code.startsWith('<?php') || code.indexOf('\n<?php' || code_to_execute.trim().startsWith('<?php')) != -1){
 		//codeOutput.innerHTML = '<p>Seems to be a PHP file</p>';
 		//codeOutput.classList.add('hidden');
+		flash_message('Cannot test PHP',1000,'fail');
 		return
 	}
 	else{
@@ -2407,14 +2437,14 @@ function executeCode(){
 	
 	
 	
-    if(code.trim() == '') {
+    if(code_to_execute.trim() == '') {
         codeOutput.innerHTML = ''; // <h4 style="color: #ff5555">🤣 First write some code, then run it!</h4>
 		clear_gutter_classes();
         return;
     }
     
     
-    let wrapped_code = safe_code_template.replace('//code_goes_here',code);
+    let wrapped_code = safe_code_template.replace('//code_goes_here',code_to_execute);
 
     // prepare the string into an executable blob
      var bb = new Blob([wrapped_code], {
@@ -2510,7 +2540,7 @@ function executeCode(){
           let all_lines_count = code.split('\n').length;
           //console.log("linter: all_lines_count: ", all_lines_count);
           let lines_done = 0;
-          let code_parts = code.split('\n}');
+          let code_parts = code_to_execute.split('\n}');
           let previous_part = '';
           let previous_part_length = 0;
           //console.warn("linter code_parts:", code_parts);

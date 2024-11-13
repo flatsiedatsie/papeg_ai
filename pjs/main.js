@@ -90,8 +90,8 @@ function create_file(save=false,content='',desired_filename) {
 				}
 				
 				
-				if(potential_file_name.length > 40){
-					potential_file_name = potential_file_name.substr(potential_file_name.length - 40);
+				if(potential_file_name.length > 50){
+					potential_file_name = potential_file_name.substr(potential_file_name.length - 50);
 					
 					if(potential_file_name.startsWith('What ')){
 						potential_file_name = potential_file_name.replace('What ','');
@@ -175,88 +175,90 @@ function create_file(save=false,content='',desired_filename) {
 				//suggested_filename = suggested_filename.toLowerCase();
 			} 
 			//console.log("create_file:  suggested_filename,files: ", suggested_filename, files);
-			
+			ask_for_name_dialog_input_el.value = suggested_filename;
 			setTimeout(() => {
-				let vex_dialog_input_el = document.querySelector('.vex-dialog-prompt-input');
-				if(vex_dialog_input_el){
-					//console.log("found the vex input element");
-					vex_dialog_input_el.setSelectionRange(0, vex_dialog_input_el.value.length);
+				ask_for_name_dialog_input_el.setSelectionRange(0, ask_for_name_dialog_input_el.length);
+			},50);
+			
+			let ask_for_name_cancel_button_el = document.createElement('button');
+			ask_for_name_cancel_button_el.textContent = get_translation('Cancel');
+			ask_for_name_cancel_button_el.addEventListener('click', () => {
+				ask_for_name_dialog_el.close();
+				reject(null);
+			})
+			
+			let ask_for_name_save_button_el = document.createElement('button');
+			ask_for_name_save_button_el.textContent = get_translation('Save');
+			ask_for_name_save_button_el.addEventListener('click', () => {
+				
+				let target_filename = ask_for_name_dialog_input_el.value;
+				
+				reload_files_dict();
+				
+				let allow_existing_name = false;
+				if(typeof current_file_name == 'string' && current_file_name.endsWith('.blueprint')){
+					allow_existing_name = true;
 				}
-			},10);
-		    vex.dialog.prompt({
-		        message: 'Provide file name',
-				value:suggested_filename,
-		        placeholder: 'File name',
-		        callback: function (target_filename) {
-					console.warn("in vex dialog callback");
-					//console.log("create_file: suggested_filename: ", suggested_filename);
-					reload_files_dict();
-					/*
-		            if(!valid_new_name(target_filename)) {
-						flash_message("That file name is invalid or not allowed",3000,'fail');
-						reject("That file name is invalid or not allowed");
-						suggested_filename = '';
-		                return false;
-		            }
-					*/
+				
+				extension_offset = target_filename.length - 1;
+				if(target_filename.length > 10){
+					extension_offset = 10;
+				}
+				if(target_filename.indexOf('.') == -1 || target_filename.lastIndexOf('.') < (target_filename.length - extension_offset) ){
+					//console.log("target_filename did not have an extension yet");
+					target_filename = target_filename + ".txt";
+				}
+				
+				if(valid_new_name(target_filename, allow_existing_name)) {
+					//console.log("create_file: user provided a valid target_filename: ", target_filename);
 					
-					if(typeof target_filename != 'string'){
-						return
-					}
-					
-					let allow_existing_name = false;
-					if(typeof current_file_name == 'string' && current_file_name.endsWith('.blueprint')){
-						allow_existing_name = true;
-					}
-					
-					extension_offset = target_filename.length - 1;
-					if(target_filename.length > 10){
-						extension_offset = 10;
-					}
-					if(target_filename.indexOf('.') == -1 || target_filename.lastIndexOf('.') < (target_filename.length - extension_offset) ){
-						//console.log("target_filename did not have an extension yet");
-						target_filename = target_filename + ".txt";
-					}
-					
-					if(valid_new_name(target_filename, allow_existing_name)) {
-						//console.log("create_file: user provided a valid target_filename: ", target_filename);
-						
-						// For AI chat
-						try{
-							if(typeof current_file_name == 'string' && allow_existing_name && typeof window.busy_doing_blueprint_task == 'boolean' && window.busy_doing_blueprint_task == false && typeof window.doc_text == 'string'){
-								
-								let create_document_command = '\n\n' + get_translation("create_a_new_document_called") + ' ' + target_filename + '\n\n';
-								if(!window.doc_text.endsWith(create_document_command)){
-									insert_into_document({'file':window.settings.docs.open,'selection':window.doc_selection,'line_nr':window.doc_current_line_nr}, create_document_command);
-								}
-								else{
-									//console.log("blueprint already ended with a command to create this file");
-								}
-								
+					// For AI chat
+					try{
+						if(typeof current_file_name == 'string' && allow_existing_name && typeof window.busy_doing_blueprint_task == 'boolean' && window.busy_doing_blueprint_task == false && typeof window.doc_text == 'string'){
+							
+							let create_document_command = '\n\n' + get_translation("create_a_new_document_called") + ' ' + target_filename + '\n\n';
+							if(!window.doc_text.endsWith(create_document_command)){
+								insert_into_document({'file':window.settings.docs.open,'selection':window.doc_selection,'line_nr':window.doc_current_line_nr}, create_document_command);
 							}
+							else{
+								//console.log("blueprint already ended with a command to create this file");
+							}
+							
 						}
-						catch(err){
-							console.error("error adding open file string to blueprint file: ", err);
-						}
-						
-						
-						//console.log("calling really_create_file");
-						really_create_file(save,content,target_filename)
-						.then((value) => {
-							//console.log("create_file: called really_create_file succesfully.  value: ", value);
-							setTimeout(reload_vars,200);
-							resolve(value);
-						})
-						.catch((err) => {
-							console.error("create_file: calling really_create_file failed:  err: ", err);
-							setTimeout(reload_vars,200);
-							reject(err);
-						})
+					}
+					catch(err){
+						console.error("error adding open file string to blueprint file: ", err);
 					}
 					
 					
-		        }
-		    });
+					//console.log("calling really_create_file");
+					really_create_file(save,content,target_filename)
+					.then((value) => {
+						//console.log("create_file: called really_create_file succesfully.  value: ", value);
+						setTimeout(reload_vars,200);
+						resolve(value);
+					})
+					.catch((err) => {
+						console.error("create_file: calling really_create_file failed:  err: ", err);
+						setTimeout(reload_vars,200);
+						reject(err);
+					})
+					
+					ask_for_name_dialog_el.close();
+				}
+				else{
+					flash_message(get_translation('Invalid_file_name'),1000,'warn');
+				}
+				
+			})
+			
+			ask_for_name_dialog_title_el.textContent = get_translation("New_file_name");
+			ask_for_name_dialog_buttons_container_el.innerHTML = '';
+			ask_for_name_dialog_buttons_container_el.appendChild(ask_for_name_cancel_button_el);
+			ask_for_name_dialog_buttons_container_el.appendChild(ask_for_name_save_button_el);
+			
+			ask_for_name_dialog_el.showModal();
+			
 		}
 		
 	});
@@ -366,7 +368,8 @@ function really_create_file(save,content=null,target_filename=null,target_folder
 			})
 			
 		
-        } else {
+        } 
+		else {
 			// setting initial content of brand new file
 			//console.log("really_create_file: save was false, so saving content (defaults to empty string) in local storage: ", target_folder + '/' + target_filename);
 		
@@ -461,7 +464,7 @@ function really_create_file(save,content=null,target_filename=null,target_folder
 
 
 function create_folder(save=false,folder_name=null){
-	//console.log("in create_folder.  save,folder_name: ", save,folder_name);
+	console.log("in create_folder.  save,folder_name: ", save,folder_name);
 	return new Promise((resolve, reject) => {
 		
 		function create_and_open_the_folder(target_folder){
@@ -503,33 +506,46 @@ function create_folder(save=false,folder_name=null){
 		}
 		
 		if(typeof folder_name != 'string'){
-		    vex.dialog.prompt({
-		        message: 'Provide folder name',
-		        placeholder: 'Folder name',
-		        callback: function (target_folder) {
-		            if(!valid_new_name(target_folder) ){
-		                //vex.dialog.alert("That folder name is invalid or not allowed");
-						/*
-						if(target_folder == ''){
-							flash_message("That folder name is invalid or not allowed",3000,'fail');
-						}
-						else{
-							flash_message("That folder name is invalid or not allowed",3000,'fail');
-						}
-						*/
-						flash_message("That folder name is invalid or not allowed",3000,'fail');
-						reject();
-		                return false;
-		            }
-		            //console.log("create_folder: user provided new folder name: ", target_folder);
-					//console.log("create_folder: folder and files before: ", folder, files);
-					create_and_open_the_folder(target_folder);
-					resolve(target_folder);
-					// for some reason calling folder_path() here fails
 			
-		        }
-		    });
-			//change_folder(value);
+			ask_for_name_dialog_title_el.textContent = get_translation("New_folder_name");
+			ask_for_name_dialog_input_el.value = '';
+			setTimeout(() => {
+				ask_for_name_dialog_input_el.focus();
+			},10)
+			
+			let ask_for_name_cancel_button_el = document.createElement('button');
+			ask_for_name_cancel_button_el.textContent = get_translation('Cancel');
+			ask_for_name_cancel_button_el.addEventListener('click', () => {
+				ask_for_name_dialog_el.close();
+				reject(null);
+			})
+			
+			let ask_for_name_save_button_el = document.createElement('button');
+			ask_for_name_save_button_el.textContent = get_translation('Cancel');
+			ask_for_name_save_button_el.addEventListener('click', () => {
+				
+				let target_folder_name = ask_for_name_dialog_input_el.value;
+				
+	            if(!valid_new_name(target_folder_name) ){
+					flash_message("Invalid_folder_name",2000,'warn');
+	            }
+				else{
+					create_and_open_the_folder(target_folder_name);
+					resolve(target_folder_name);
+					ask_for_name_dialog_el.close();
+				}
+	            //console.log("create_folder: user provided new folder name: ", target_folder);
+				//console.log("create_folder: folder and files before: ", folder, files);
+				
+				
+			})
+			
+			ask_for_name_dialog_buttons_container_el.innerHTML = '';
+			ask_for_name_dialog_buttons_container_el.appendChild(ask_for_name_cancel_button_el);
+			ask_for_name_dialog_buttons_container_el.appendChild(ask_for_name_save_button_el);
+			
+			ask_for_name_dialog_el.showModal();
+			
 		}
 		else{
 			//console.log("create_folder: using the provided folder name: ", folder_name);
@@ -642,7 +658,9 @@ function add_sub_folder(folder_base_path,folder_name){
 
 // change folder name
 function change_folder(new_folder_name){
-	//console.log("\n\n\n\n.\n..\n...\nchange_folder.  new_folder_name: ", new_folder_name);
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("\n\n\n\n.\n..\n...\ndev: change_folder.  new_folder_name: ", new_folder_name);
+	}
 	if(typeof new_folder_name == 'string'){
 		folder_path('add',new_folder_name);
 		open_folder(folder);
@@ -784,7 +802,9 @@ function open_folder(target_folder=null, intensity='production'){
 
 
 function delete_file(target_filename=null,intensity=null,target_folder=null){
-	//console.log("in delete_file.  target_filename,intensity,target_folder: ", target_filename,intensity,target_folder);
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("dev: in delete_file.  target_filename,intensity,target_folder: ", target_filename,intensity,target_folder);
+	}
 	if(target_folder == null){
 		target_folder = folder;
 	}
@@ -1082,7 +1102,10 @@ function delete_folder(target_folder=null,intensity=null){
 // should first open a new folder if the file target is in a different folder
 function open_file(target_filename=null,load_type=null,target_folder=null,save=false){
 	if(load_type==null){load_type='latest'}
-	//console.log("___\n|   |   OPEN FILE " + target_filename + " (" + load_type + ")\n----");
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("___\n|   |   dev: OPEN FILE " + target_filename + " (" + load_type + ")\n----");
+	}
+	
 	//console.log("in open_file.  target_filename,load_type,target_folder: ", target_filename,load_type,target_folder);
 	//console.log("- files: ", typeof files, files);
 	document.body.classList.add("loading-file");
@@ -1380,6 +1403,7 @@ function open_file(target_filename=null,load_type=null,target_folder=null,save=f
 			if(load_type == 'latest' && typeof playground_live_backups[current_file_path] == 'string' && playground_live_backups[current_file_path] != '_PLAYGROUND_BINARY_' && typeof current_file_name == 'string'  ){ // && !window.filename_is_binary(current_file_name)){
 				//console.log("open_file: type was latest, and found the filename in live_backups. Using that data: ", current_file_path, typeof playground_live_backups[current_file_path], "-->",playground_live_backups[current_file_path],"<--");
 				editor_set_value(playground_live_backups[current_file_path]);
+				document.body.classList.remove('loading-file');
 				resolve(playground_live_backups[current_file_path]);
 				//update_ui();
 				return;
@@ -1692,8 +1716,7 @@ function save_file(new_file_name=null,new_data=null,intensity=null,target_folder
 				console.error("main.js: save_file: aborting: new data was not a string, it was: ", typeof new_data, new_data);
 				reject(null);
 				return
-			}
-		
+			}		
 			//playground_live_backups[target_folder + '/' + target_filename] = value;
 			//playground_saved_files[target_folder + '/' + target_filename] = value;
 			
@@ -2739,8 +2762,10 @@ function ajax(action='list_files',options={}){
 			_do_ajax();
 		}
 	
-	
-		function _ask_for_password(){
+		
+		async function _ask_for_password(){
+			/*
+			// TODO Disabled for papeg.ai (and vex dependency has been removed), but could be restored 
 		    vex.dialog.prompt({
 		        message: 'Please provide the password',
 				//value: '',
@@ -2749,7 +2774,7 @@ function ajax(action='list_files',options={}){
 					if(value != ''){
 						//console.log("user provided a password: ", value);
 						if(value.length > 5 && value.length < 40){
-							password_hash = sha512(value);
+							password_hash = await sha512(value);
 							//console.log("password_hash: ", password_hash);
 							localStorage.setItem('playground_password_hash',password_hash);
 							//ajax(action,options);
@@ -2762,6 +2787,7 @@ function ajax(action='list_files',options={}){
 					}
 		        }
 		    });
+			*/
 		}
 	
 	
@@ -3133,7 +3159,7 @@ function file_upload(inputElement,fs_files=[]) {
 
 		
 	
-		if(fs_files.length == 0 && typeof inputElement != 'undefined'){
+		if(fs_files.length == 0 && typeof inputElement != 'undefined' && inputElement != null){
 			fs_files = inputElement.files || [];
 		}
 	    
@@ -3149,7 +3175,9 @@ function file_upload(inputElement,fs_files=[]) {
 	        return;
 			*/
 	    } 
-		
+		else{
+			add_body_class('loading-file');
+		}
 		
 		
 	
@@ -3162,7 +3190,7 @@ function file_upload(inputElement,fs_files=[]) {
 			const file_upload_promise = new Promise((resolve, reject) => {
 				
 				function file_parsed(){
-					//console.log("all uploaded files parsed.  did an error occur?: ", an_error_occured);
+					console.warn("all uploaded files parsed.  did an error occur?: ", an_error_occured);
 					file_upload_progress_container_el.innerHTML = '';
 					get_files_dict();
 					update_ui();
@@ -3372,9 +3400,9 @@ function file_upload(inputElement,fs_files=[]) {
 		
 
 
-					    console.log("\n+\n+ +\n+ + +\nfile_upload: file: ", file);
-					    console.log("file_upload: file.name: ", file.name);
-					    console.log("file_upload: file.type: ", file.type);
+					    //console.log("\n+\n+ +\n+ + +\nfile_upload: file: ", file);
+					    //console.log("file_upload: file.name: ", file.name);
+					    //console.log("file_upload: file.type: ", file.type);
     	
 						const is_binary_image = filename_is_binary_image(file.name);
 						//console.log("file_upload: is_binary_image?: ", is_binary_image);
@@ -3384,7 +3412,7 @@ function file_upload(inputElement,fs_files=[]) {
 							//console.log("file_upload: onloadend:  file.name,is_binary_image: ", file.name, is_binary_image);
 							//console.log("file_upload: file reader onload end event: ", event);
 					        let arrayBuffer = reader.result;
-					        console.log("file_upload: arrayBuffer: ", typeof arrayBuffer, arrayBuffer);
+					        //console.log("file_upload: arrayBuffer: ", typeof arrayBuffer, arrayBuffer);
 			
 							//console.log("file_upload: event.result: ", typeof event.result, event.result);
 					        //console.log("file_upload: event.target.result: ", typeof event.target.result, event.target.result);
@@ -3404,11 +3432,83 @@ function file_upload(inputElement,fs_files=[]) {
 				
 						    try{
 						
-						
+								
+								if(file.name.toLowerCase().endsWith('.pptx') || file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.odp') || file.name.toLowerCase().endsWith('.ods')){
+								
+									window.add_script('./office_parser/officeParserBundle.js')
+									.then((value) => {
+										console.log("officeParser library should now be loaded");
+					                	
+						                // Your configuration options for officeParser
+						                const office_parser_config = {
+						                    outputErrorToConsole: true,
+						                    newlineDelimiter: '\n',
+						                    ignoreNotes: false,
+						                    putNotesAtLast: false
+						                };
+										
+						                //const arrayBuffer = await file.arrayBuffer();
+						                officeParser.parseOfficeAsync(arrayBuffer, office_parser_config)
+										.then(function(doc_text) {
+						                	console.log("office_parser: extracted doc_text: ", doc_text);
+											if(typeof doc_text == 'string'){
+												current_file_name = file.name;
+												localStorage.setItem(folder + '_last_opened', current_file_name);
+									
+												reload_files_dict();
+									
+												if(!keyz(files).includes(file.name)){
+													files[file.name] = {'loaded':true,'modified':false,'last_time_opened':Date.now(),'last_time_edited':0,'pin':0};
+													localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
+													//console.log("file_upload:  file.name,new_value: ", file.name, doc_text);
+													save_file(file.name,doc_text);
+											
+													save_file_meta('type','text',folder,file.name);
+													document.body.classList.add('show-document');
+													editor_set_value(doc_text);
+										
+													file_parsed();
+												}
+												else{
+													if(confirm(get_translation("Overwrite_file") + " " + file.name)){
+														files[file.name].loaded = true; // = {'loaded':true,'modified':false};;
+														files[file.name].modifed = true;
+														localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
+														save_file(file.name,doc_text);
+												
+														save_file_meta('type','text',folder,file.name);
+														document.body.classList.add('show-document');
+														editor_set_value(doc_text);
+										
+														file_parsed();
+													}
+													else{
+														file_parsed();
+													}
+												}
+											}
+											else{
+												console.error("OfficeParser extraction result was not a string: ", typeof doc_text, doc_text);
+												flash_message(get_translation('An_error_occured_while_reading_documents'),1500,'fail');
+											}
+											
+										})
+										.catch((err) => {
+											console.error("OfficeParser caught error parsing file: ", err);
+											flash_message(get_translation('An_error_occured_while_reading_documents'),1500,'fail');
+										})
+										
+									})
+									.catch((err) => {
+										console.error("caught error loading in OfficeParser library: ", err);
+									})
+									
+								}
+				            	
 						
 								// DOCX ALTERNATIVE
 						
-								if(file.name.toLowerCase().endsWith('.odt')){
+								else if(file.name.toLowerCase().endsWith('.odt')){
 							
 									if(JSZip){
 										var new_zip = new JSZip();
@@ -3788,9 +3888,9 @@ function file_upload(inputElement,fs_files=[]) {
 								
 								
 								
-										window.add_script('./pdf_parse2.js',true) // load as module
+										window.add_script('./pdf_parse.js',true) // load as module
 										.then((value) => {
-											//console.log("filename ends with .pdf -> pdf_parse2.js has loaded.  value,arrayBuffer: ", value, arrayBuffer);
+											console.log("filename ends with .pdf -> pdf_parse.js has loaded.  value,arrayBuffer: ", value, arrayBuffer);
 											const extract_from_pdf = async () => {
 												
 												//console.log("extract_from_pdf:  window.pdf_parser,arrayBuffer: ", window.pdf_parser,arrayBuffer);
@@ -3908,7 +4008,7 @@ function file_upload(inputElement,fs_files=[]) {
 										//const pdfData = await window.pdf_parser.loadPDF(arrayBuffer);
 										})
 										.catch((err) => {
-											console.error("caught error loading in pdf_parse2.js module which can parse .pdf files: ", err);
+											console.error("caught error loading in pdf_parse.js module which can parse .pdf files: ", err);
 											an_error_occured = true;
 											file_parsed();
 										})
@@ -4063,7 +4163,7 @@ function file_upload(inputElement,fs_files=[]) {
 								}
 								*/
 								else if(typeof new_value == 'string' && filename_is_binary(file.name) == false){
-									//console.log("uploaded file is a basic text file: ", file.name);
+									console.warn("uploaded file seems to be a basic text file: ", file.name);
 						
 									current_file_name = file.name;
 									localStorage.setItem(folder + '_last_opened', current_file_name);
@@ -4179,7 +4279,7 @@ function file_upload(inputElement,fs_files=[]) {
 			
 					    }
 						//console.error("\n\n\nfilename_is_binary_image(file.name): ", filename_is_binary_image(file.name));
-						if(filename_is_binary(file.name) || file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.epub') || file.name.toLowerCase().endsWith('.odt') ){
+						if(filename_is_binary(file.name) || file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.epub') || file.name.toLowerCase().endsWith('.odt') || file.name.toLowerCase().endsWith('.odp') || file.name.toLowerCase().endsWith('.ods') || file.name.toLowerCase().endsWith('.pptx') || file.name.toLowerCase().endsWith('.xlsx')){
 							//console.log("file_upload: filereader: reading binary file");
 							//reader.readAsBinaryString(file);
 							reader.readAsArrayBuffer(file);
@@ -4754,7 +4854,10 @@ async function handle_indexdb_worker_response(e_data){
 			if(window.settings.docs.open != null){
 				const before_time = Date.now();
 				open_folder();
-				//console.log("open_folder took this long: ", Date.now() - before_time);
+				if(window.settings.settings_complexity == 'developer'){
+					console.warn("main.js: open_folder took this long: ", Date.now() - before_time);
+				}
+				
 			}
 			else{
 				//console.log("playground: loading file data only, not opening file");
@@ -4778,7 +4881,7 @@ async function handle_indexdb_worker_response(e_data){
 		
 		
 		// For Chat AI project
-		window.file_data_loaded();
+		window.file_data_loaded(); // in init.js
 		window.indexdb_worker.terminate();
 	}
 }

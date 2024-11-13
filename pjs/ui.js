@@ -2,14 +2,346 @@
 const folder_select_container_el = document.getElementById('folder-select-container');
 let context_menu_mouse_down_timer = 0;
 
-flash_message_el.onclick = () => {flash_message_el.textContent = ''}
+
+
+//
+// CONTEXT MENU SCRIPT, placed here to avoid a separate server request
+//
+
+/* Author: @UnrealSec */
+class ContextMenu {
+    constructor(container, items) {
+        this.container = container;
+        this.dom = null;
+        this.shown = false;
+        this.root = true;
+        this.parent = null;
+        this.submenus = [];
+        this.items = items;
+
+        this._onclick = e => {
+			e.preventDefault();
+			e.stopPropagation();
+        };
+
+        this._oncontextmenu = e => {
+            e.preventDefault();
+			e.stopPropagation();
+			if (e.target != this.dom && 
+                e.target.parentElement != this.dom && 
+                !e.target.classList.contains('item') && 
+                !e.target.parentElement.classList.contains('item')
+			) {
+				this.hideAll();
+				this.show(e.clientX, e.clientY, e);
+            }
+        };
+
+        this._oncontextmenu_keydown = e => {
+            if (e.keyCode != 93) return;
+            e.preventDefault();
+
+            this.hideAll();
+            this.show(e.clientX, e.clientY);
+        };
+		
+        this._oncontextmenu_mousedown = e => {
+			
+			var isRightMB;
+		    e = e || window.event;
+
+			e.stopPropagation();
+			
+		    if ("which" in e){  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+		        isRightMB = e.which == 3; 
+		    }else if ("button" in e){  // IE, Opera 
+		        isRightMB = e.button == 2; 
+			}
+			
+			if(isRightMB){
+				hide_all_context_menus();
+				e.preventDefault();
+			}
+        };
+		
+        this._oncontextmenu_mouseup = e => {
+			e.preventDefault();
+			e.stopPropagation();
+			e.handled = true;
+			if(Date.now() - this.last_mouse_down_time > 500 && Date.now() - this.last_mouse_down_time < 5000){
+				//console.warn(" mouseup: Detected long mouse press on context menu");
+				e.preventDefault();
+				e.stopPropagation();
+				e.handled = true;
+				this._oncontextmenu(e);
+				setTimeout(() => {
+					//console.log("delayed right mouse click. e: ", e);
+					
+					//this.hideAll();
+					
+					this.show(e.clientX, e.clientY, e);
+				},300);
+			
+			
+				// simulate right mouse button click
+				//var e = element.ownerDocument.createEvent('MouseEvents');
+
+				//e.initMouseEvent('contextmenu', true, true,
+				//     element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
+				//     false, false, false,2, null);
+				//return !element.dispatchEvent(e);
+				
+			}
+			
+        }
+		
+        this._onblur = e => {
+			//console.log("context menu: detected blur");
+            this.hideAll();
+        };
+    }
+
+    getMenuDom() {
+        const menu = document.createElement('div');
+        menu.classList.add('context');
+
+        for (const item of this.items) {
+            menu.appendChild(this.itemToDomEl(item));
+        }
+
+        return menu;
+    }
+
+    itemToDomEl(data) {
+        const item = document.createElement('div');
+
+        if (data === null) {
+            item.classList = 'separator';
+            return item;
+        }
+
+        if (data.hasOwnProperty('color') && /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(data.color.toString())) {
+            item.style.cssText = `color: ${data.color}`;
+        }
+
+        item.classList.add('item');
+		item.setAttribute('data-text',data.hasOwnProperty('text') ? data['text'].toString() : '');
+        const label = document.createElement('span');
+        label.classList = 'label';
+		
+        label.innerHTML = data.hasOwnProperty('text') ? data['text'].toString() : '';
+        item.appendChild(label);
+
+        if (data.hasOwnProperty('disabled') && data['disabled']) {
+            item.classList.add('disabled');
+        } else {
+            item.classList.add('enabled');
+        }
+
+        const hotkey = document.createElement('span');
+        hotkey.classList = 'hotkey';
+        hotkey.innerText = data.hasOwnProperty('hotkey') ? data['hotkey'].toString() : '';
+        item.appendChild(hotkey);
+
+        if (data.hasOwnProperty('subitems') && Array.isArray(data['subitems']) && data['subitems'].length > 0) {
+            const menu = new ContextMenu(this.container, data['subitems']);
+            menu.root = false;
+            menu.parent = this;
+
+            const openSubItems = e => {
+                if (data.hasOwnProperty('disabled') && data['disabled'] == true)
+                    return;
+
+                this.hideSubMenus();
+
+                const x = this.dom.offsetLeft + this.dom.clientWidth + item.offsetLeft;
+                const y = this.dom.offsetTop + item.offsetTop;
+
+                if (!menu.shown) {
+                    menu.show(x, y);
+                } else {
+                    menu.hide();
+                }
+            };
+
+            this.submenus.push(menu);
+
+            item.classList.add('has-subitems');
+            item.addEventListener('click', openSubItems);
+            item.addEventListener('mousemove', openSubItems);
+        } 
+		else if (data.hasOwnProperty('submenu') && data['submenu'] instanceof ContextMenu) {
+            const menu = data['submenu'];
+            menu.root = false;
+            menu.parent = this;
+
+            const openSubItems = e => {
+                if (data.hasOwnProperty('disabled') && data['disabled'] == true)
+                    return;
+
+                this.hideSubMenus();
+
+                const x = this.dom.offsetLeft + this.dom.clientWidth + item.offsetLeft;
+                const y = this.dom.offsetTop + item.offsetTop;
+
+                if (!menu.shown) {
+                    menu.show(x, y);
+                } else {
+                    menu.hide();
+                }
+            };
+
+            this.submenus.push(menu);
+
+            item.classList.add('has-subitems');
+            item.addEventListener('click', openSubItems);
+            item.addEventListener('mousemove', openSubItems);
+        } 
+		else {
+            item.addEventListener('click', e => { 
+				//console.log("clicked on context menu item");
+				e.preventDefault();
+				e.stopPropagation();
+				
+                this.hideSubMenus();
+
+                if (item.classList.contains('disabled'))
+                    return;
+
+                if (data.hasOwnProperty('onclick') && typeof data['onclick'] === 'function') {
+                    const event = {
+                        handled: false,
+                        item: item,
+                        label: label,
+                        hotkey: hotkey,
+                        items: this.items,
+                        data: data,
+						event:e,
+						context:this
+                    };
+        
+                    data['onclick'](event);
+        			
+                    if (!event.handled) {
+                        this.hide();
+                    }
+                } else {
+                    this.hide();
+                }
+				
+            });
+
+            item.addEventListener('mousemove', e => {
+                this.hideSubMenus();
+            });
+			
+			item.addEventListener('mousedown', e => { 
+				e.stopPropagation();
+			});
+			item.addEventListener('mouseup', e => { 
+				e.stopPropagation();
+			});
+        }
+
+        return item;
+    }
+
+    hideAll() {
+        if (this.root && !this.parent) {
+            if (this.shown) {
+                this.hideSubMenus();
+
+                this.shown = false;
+                this.container.removeChild(this.dom);
+
+                if (this.parent && this.parent.shown) {
+                    this.parent.hide();
+                }
+            }
+
+            return;
+        }
+
+        this.parent.hide();
+    }
+
+    hide() {
+        if (this.dom && this.shown) {
+            this.shown = false;
+            this.hideSubMenus();
+            this.container.removeChild(this.dom);
+
+            if (this.parent && this.parent.shown) {
+                this.parent.hide();
+            }
+        }
+    }
+
+    hideSubMenus() {
+        for (const menu of this.submenus) {
+            if (menu.shown) {
+                menu.shown = false;
+                menu.container.removeChild(menu.dom);
+            }
+            menu.hideSubMenus();
+        }
+    }
+
+    show(x, y,e=null) {
+        this.dom = this.getMenuDom();
+		//console.log("context menu: show: this.dom: ", this.dom);
+		
+		let final_y = y;
+		
+		this.dom.style.left = `${x}px`;
+		
+		if(e.clientY > (window.innerHeight * 0.7)){
+			final_y = window.innerHeight - y;
+			this.dom.style.top = `auto`;
+			this.dom.style.bottom= `${final_y}px`;
+		}
+		else{
+			this.dom.style.top = `${y}px`;
+			this.dom.style.bottom = `auto`;
+		}
+        this.shown = true;
+        this.container.appendChild(this.dom);
+    }
+
+    install() {
+        this.container.addEventListener('contextmenu', this._oncontextmenu);
+        this.container.addEventListener('keydown', this._oncontextmenu_keydown);
+		this.container.addEventListener('mousedown', this._oncontextmenu_mousedown);
+		this.container.addEventListener('mouseup', this._oncontextmenu_mouseup);
+        this.container.addEventListener('click', this._onclick);
+        window.addEventListener('blur', this._onblur);
+		//window.addEventListener('click', this._onclick);
+    }
+
+    uninstall() {
+		//console.log("uninstalling context menu");
+        this.dom = null;
+        this.container.removeEventListener('contextmenu', this._oncontextmenu);
+        this.container.removeEventListener('keydown', this._oncontextmenu_keydown);
+		this.container.removeEventListener('mousedown', this._oncontextmenu_mousedown);
+		//this.container.removeEventListener('mouseup', this._oncontextmenu_mouseup);
+        this.container.removeEventListener('click', this._onclick);
+        window.removeEventListener('blur', this._onblur);
+		//window.removeEventListener('click', this._onclick);
+    }
+}
+
+
+if(flash_message_el){
+	flash_message_el.onclick = () => {flash_message_el.textContent = ''}
+}
+
 
 function close_sidebar(){
 	document.body.classList.remove('sidebar');
 	document.body.classList.remove('busy-selecting-assistants');
 	window.settings.left_sidebar_open = false;
 	save_settings();
-	
 }
 function open_sidebar(){
 	document.body.classList.add('sidebar');
@@ -28,14 +360,6 @@ document.getElementById('close-sidebar-button').addEventListener('click',close_s
 
 load_all_files_button_el.onclick = () => {
 	loadAll();
-	/*
-	.then((values) => {
-		//console.log('loadAll then done.  values: ', values);
-	})
-	.catch((err) => {
-		console.error("loadAll caught error: ", err);
-	})
-	*/
 }
 
 
@@ -100,6 +424,7 @@ const tabsClickHandler = e => {
 	
 	
 	else if(e.label.textContent == 'Delete'){
+		console.error("UNHANDLED DELETE REQUEST");
 		/*
 		let filename_to_delete = filename;
 		//console.log("Delete chosen. filename_to_delete: ", filename_to_delete);
@@ -280,14 +605,8 @@ async function update_ui_file_tabs(action='refresh'){
 					status_span_el.classList.add('draggable-tab-status');
 					draggable_el.appendChild(status_span_el);
 					
-					//draggable_el.appendChild( document.createElement('span').innerHTML.classList.add('draggable-tab-folder');
-					//draggable_el.appendChild('<span class="draggable-tab-folder">' + folder_name + '</span>');
-					//draggable_el.appendChild('<span class="draggable-tab-filename">' + details.filename + '</span>');
-					//draggable_el.appendChild('<span class="draggable-tab-status">&nbsp;</span>');
 					draggable_el.onclick = (event) => {
-						
 						open_both(details.folder,details.filename);
-						
 					}
 					file_tabs_container_el.appendChild(draggable_el);
 					file_tab_counter++;
@@ -320,8 +639,6 @@ async function update_ui_file_tabs(action='refresh'){
 					document.body.classList.remove("show-tab-folders");
 				}
 				
-				
-
 				[].forEach.call(draggableElements, function(element) {
 					//console.log("adding listener to draggableElement: ", element);
 				    element.addEventListener('dragstart', handleDragStart, false);
@@ -340,9 +657,6 @@ async function update_ui_file_tabs(action='refresh'){
 				    element.addEventListener('drop', handleDrop, false);
 				});
 				
-				
-				
-				//file_tabs_container_el.innerHTML = new_html;
 			}
 			
 		}
@@ -358,7 +672,7 @@ async function update_ui_file_tabs(action='refresh'){
 
 // helper function for file tabs functinonality
 async function open_both(target_folder, target_filename){
-	//console.log("in open_both.  target_folder, target_filename: ", target_folder, target_filename);
+	console.log("in open_both.  target_folder, target_filename: ", target_folder, target_filename);
 	if(typeof target_folder == 'string'){
 		await open_folder(target_folder);
 		
@@ -698,17 +1012,12 @@ document.body.onclick = (event) => {
 //  UPDATE UI
 //
 
-
-
-// Horendous, I know. This is to avoid rebuilding the UI too often in quick succession
+// Dodgy, I know. This is to avoid rebuilding the UI too often in quick succession
 //let update_ui_moment = 0;
 let ui_update_timeout = null;
 function update_ui(){
-	//console.warn("\n\n - - - - - -\ndelaying UI update: in update_ui");
-	//let current_now = Date.now() + 100;
-	//console.log("delaying UI update: current_now delta with update_ui_moment: ", current_now - update_ui_moment);
-	//update_ui_moment = current_now;
-	
+	//console.warn("in update_ui");
+
 	if(ui_update_timeout != null){
 		//console.log("update_ui: clearing old update_ui timeout");
 		clearTimeout(ui_update_timeout);
@@ -717,19 +1026,8 @@ function update_ui(){
 	
 	if(ui_update_timeout == null){
 		ui_update_timeout = setTimeout(function(){
-			//let new_now = Date.now();
-			//console.log("delaying UI update: delta: ", update_ui_moment - new_now);
-			//if(new_now > update_ui_moment){
-				//console.warn("delaying UI update: no");
-				//clear_output();
-				update_ui_timeout = null;
-				update_ui_file_menu();
-				
-				//debug_popup();
-			//}
-			//else{
-				//console.warn("delaying UI update: yes");
-			//}
+			update_ui_timeout = null;
+			update_ui_file_menu();
 		},101);
 	}
 	
@@ -777,15 +1075,6 @@ function update_ui_file_menu(file_list=null) {
 	let folder_tree_el = document.createElement('div');
 	folder_tree_el.classList.add('folder-tree');
 	
-	
-	/*
-	if(folder_parts.length < 2){
-		folder_back_button_el.classList.add('no-further-up');
-	}
-	else{
-		folder_back_button_el.classList.remove('no-further-up');
-	}
-	*/
 	
 	let indent = '';
 	let partial_folder_path = '';
@@ -901,18 +1190,12 @@ function update_ui_file_menu(file_list=null) {
 		document.body.classList.add('has-file');
 	}
 	
-	
-	
-	
-	//for(var f = 0; f < file_list.length; f++) {
 	for(var f = file_list.length - 1; f >= 0; f--) {
 	
-		//const file_index = f;
 		let file = file_list[f];
-		//console.warn("file: ", file);
 		
 		if(file == unsaved_file_name){
-			//continue;
+			continue;
 		}
 		
 		let fileContextMenu;
@@ -962,7 +1245,7 @@ function update_ui_file_menu(file_list=null) {
 			}
 			if(file.endsWith('.svg')){
 				//file_icon = '🖼️';
-				file_icon = '<div class="file-list-image svg-file-list-image"><img src="./images/image_icon.svg" alt="Imagee" width="16" height="16"></div>';
+				file_icon = '<div class="file-list-image svg-file-list-image"><img src="./images/image_icon.svg" alt="Image" width="16" height="16"></div>';
 				if(typeof file== 'string' && typeof playground_live_backups[ folder + '/' + file ] == 'string'){
 					const svg_data = playground_live_backups[ folder + '/' + file ];
 					//console.log("file manager icon: svg_data: ", svg_data);
@@ -1011,7 +1294,7 @@ function update_ui_file_menu(file_list=null) {
 			if(extension == 'mp3' || extension == 'wav' || extension == 'flac' || extension == 'm4a' || extension == 'ogg'){
 				//media_type = 'audio';
 				//file_icon = '🎵';
-				file_icon = '<div class="file-list-image svg-file-list-image"><img src="./images/audio_icon.svg" alt="Audio" width="16" height="16"></div>';
+				file_icon = '<div class="file-list-image svg-file-list-image svg-file-list-image-audio"><img src="./images/audio_icon.svg" alt="Audio" width="16" height="16"></div>';
 			}
 			
 			
@@ -1275,13 +1558,7 @@ function update_ui_file_menu(file_list=null) {
 		fileItem.onmouseup = (e) => {
   			clearTimeout(pressTimer);
 			//console.log("fileItem: detected mouse up. e.target.tagName,e.target.classList:", e.target.tagName, e.target.classList);
-			/*
-			if(window.last_time_context_menu_clicked > (Date.now() - 100)){
-				console.warn("file manager caught a click it shouldn't have..");
-				return
-			}
-			*/
-			
+
 			if(Date.now() - context_menu_mouse_down_timer > 1000 && Date.now() - context_menu_mouse_down_timer < 5000){
 				//console.log("Not doing normal file opening process because long press was detected");
 			}
@@ -1371,15 +1648,6 @@ function update_ui_file_menu(file_list=null) {
 		//file_menu_el.appendChild(fileItem);
     }
 	
-    //if(files = localStorage.getItem(folder + '_playground_files')) {
-	//	if(typeof files == 'string'){
-	//		files = JSON.parse(files);
-	//	}
-		
-        //files = keyz(files);
-		//files.forEach(file => {
-	
-    
 	//console.log("saving folder meta counts");
 	save_folder_meta('file_count',file_list.length-1);
 	save_folder_meta('modified',modified_file_count);
@@ -1424,16 +1692,6 @@ function update_ui_file_menu(file_list=null) {
 	// FOLDERS LIST
 	
 	sub_folders_list = keyz(sub_folders);
-	/*
-	if(sub_folder_list.length || folder != ''){
-		document.body.classList.add('has-folders');
-	}
-	else {
-		if(document.body.classList.contains('has-folders')){
-			document.body.classList.remove('has-folders');
-		}
-	}
-	*/
 	sub_folders_list = case_insensitive_sort(sub_folders_list);
 	save_folder_meta('sub_folder_count',sub_folders_list.length);
 	for(var f = 0; f < sub_folders_list.length; f++) {
@@ -1484,19 +1742,6 @@ function update_ui_file_menu(file_list=null) {
 			console.error("What how? folder name was not in sub_folders: ", folder_name, sub_folders);
 		}
 		
-		
-		/*
-		else if(typeof sub_folders[folder_name].modified != 'undefined'){
-			folder_files_dict = JSON.parse(folder_files_dict);
-			
-			if(sub_folders[folder_name].modified == true){
-				folder_item.classList.add('modified');
-			}
-			else{
-				folder_item.classList.remove('modified');
-			}
-		}
-		*/
 		folder_item.setAttribute('data-folder', folder + '/' + folder_name);
 		//unloaded_file_count++;
 		folder_item.addEventListener('mousedown', (e) => {
@@ -1560,12 +1805,32 @@ function update_ui_file_menu(file_list=null) {
 			
 			else if(e.label.textContent == 'Delete' || e.label.textContent == 'Delete from production'){
 				//console.log("clicked " + e.label.textContent + " folder. folder_name: ", folder_name);
-		
+				
+				if(confirm('Are you sure you want to delete ' + folder_name + '?')){
+					let short_folder_name = folder_name.split('/')[folder_name.split('/').length-1];
+			
+					if(typeof sub_folders[short_folder_name] != 'undefined'){
+						flash_message("Deleting folder: " + short_folder_name);
+						
+						if(e.label.textContent == 'Delete from production'){
+							delete_folder(folder_name,'production');
+						}
+						else{
+							delete_folder(folder_name,'beta');
+						}
+						
+                        update_ui();
+                    }
+					else{
+						console.error("folder delete button: folder name was not in sub_folders: ", folder_name, sub_folders );
+					}
+				}
+				
+				/*
 		        vex.dialog.confirm({
 		            message: 'Are you sure you want to delete ' + folder_name + '?',
 		            callback: function (value) {
 		                if (value) {
-					
 							//console.log("delete value: ", value)
 							//console.log("delete folder_name: ", folder_name);
 					
@@ -1574,8 +1839,6 @@ function update_ui_file_menu(file_list=null) {
 							if(typeof sub_folders[short_folder_name] != 'undefined'){
 								flash_message("Deleting folder: " + short_folder_name);
 								
-								//delete sub_folders[short_folder_name];
-								
 								if(e.label.textContent == 'Delete from production'){
 									delete_folder(folder_name,'production');
 								}
@@ -1583,12 +1846,6 @@ function update_ui_file_menu(file_list=null) {
 									delete_folder(folder_name,'beta');
 								}
 								
-		                        //editor_set_value('');
-		                        //files.splice(index, 1);
-								//delete_file( filename_to_delete );
-						
-								//open_file(unsaved_file_name);
-		                        //current_file_name = unsaved_file_name;
 		                        update_ui();
 		                    }
 							else{
@@ -1597,6 +1854,7 @@ function update_ui_file_menu(file_list=null) {
 		                }
 		            }
 		        });
+				*/
 		
 			}
 			
@@ -1679,7 +1937,6 @@ function update_ui_file_menu(file_list=null) {
 		folderContextMenu.install();
 		
 		new_file_list_els.push(folder_item);
-		//file_menu_el.appendChild(folder_item);
 		
 		window.context_menus.push(folderContextMenu);
 		
@@ -1689,125 +1946,11 @@ function update_ui_file_menu(file_list=null) {
 		file_menu_el.appendChild(new_file_list_els[d]);
 	}
 	
-	
-	
-	//update_ui();
-	
 	update_ui_folder(); // updates the folder name above the document
 	update_ui_file();
-	//update_ui_folder_dropdown();
 	update_ui_file_tabs();
-	//debug2();
-	
-    //editor.focus();
     
 }
-
-
-// Not used anymore as for the AI chat project the dropdown has been replaced with a visual folder structure
-/*
-function update_ui_folder_dropdownX(){
-	//console.log("in update_ui_folder_dropdown.  sub_folders: ", sub_folders);
-	//console.log("folder_parts: ", folder_parts);
-	
-	folder_select_el.innerHTML = '';
-	
-	let set_default = false;
-	let folder_last_part = '';
-	if(folder_parts.length){
-		folder_last_part = folder_parts[folder_parts.length-1];
-	}
-	
-	if(folder_parts.length > 1){
-		document.body.classList.add('has-folder');
-		document.body.classList.add('in-folder');
-	}
-	else{
-		document.body.classList.remove('in-folder');
-	}
-	
-	//let folder_last_part = folder_path('last');
-	//console.log("update_folder_dropdown: folder_last_part: ", folder_last_part);
-	// Add browser local storage option
-	
-	
-	//console.log("update_ui_folder_dropdown: folder_parts: ", folder_parts);
-	
-	let indent = '';
-	let partial_folder_path = '';
-	if(folder_parts.length == 0){
-		folder_parts = [''];
-	}
-	for(let fp=0; fp<folder_parts.length; fp++){
-		let folder_part_name = folder_parts[fp];
-		if(folder_part_name != ''){
-			if(!folder_part_name.startsWith('/')){
-				partial_folder_path += '/';
-			}
-			partial_folder_path += folder_part_name;
-		}
-		//console.log("update_ui_folder_dropdown: folder_parts: ", partial_folder_path);
-		//partial_folder_path = partial_folder_path + folder_part_name;
-		
-		// Add root option
-		new_folder_option_el = document.createElement('option');
-		new_folder_option_el.value = partial_folder_path;
-		if(folder_parts[fp] == ''){
-			new_folder_option_el.id = 'folder-select-root-option';
-			
-		}
-		
-		if(partial_folder_path == folder){
-			//console.log("update_ui_folder_dropdown: current folder path: ", partial_folder_path);
-			set_default = true;
-			new_folder_option_el.defaultSelected = true;
-		}
-		
-		
-		new_folder_option_el.textContent = indent + '/' + folder_parts[fp]; // + '/';
-		
-		
-		folder_select_el.appendChild(new_folder_option_el);
-		if(fp>0){
-			indent += '/';
-		}
-		
-	}
-	
-	if(indent == '/'){
-		//indent = '';
-	}
-	//console.log("update_ui_folder_dropdown: sub_folders: ", sub_folders);
-	// for(let q=0; q<sub_folders.length; q++){
-	for (const [sub_folder_name, details] of Object.entries(sub_folders) ){
-	
-	    let new_option_el = document.createElement('option');
-	    new_option_el.value = partial_folder_path + '/' + sub_folder_name;
-	    if(folder_last_part == sub_folder_name){
-	        //console.log("This folder select option is the current one: ", sub_folders[q]);
-			if(set_default == false){
-				set_default = true;
-	        	new_option_el.defaultSelected = true;
-			}
-	    }
-	    new_option_el.textContent = indent + '/' + sub_folder_name;
-	    folder_select_el.appendChild(new_option_el);
-	}
-	
-	if(folder_parts.length < 2){
-		folder_back_button_el.classList.add('no-further-up');
-	}
-	else{
-		folder_back_button_el.classList.remove('no-further-up');
-	}
-	
-}
-*/
-
-
-
-
-
 
 
 
@@ -1877,7 +2020,7 @@ function update_ui_folder(){
 		if(window.settings.docs.open != null && typeof window.settings.docs.open.folder == 'string'){
 			path_el.textContent = window.settings.docs.open.folder;
 			path_el.setAttribute('data-folder',window.settings.docs.open.folder);
-			//console.log("update_ui_folder: folder comparison: ", window.settings.docs.open.folder, folder);
+			console.log("update_ui_folder: folder comparison: ", window.settings.docs.open.folder, " =?= ", folder);
 			if(window.settings.docs.open.folder != folder){
 				open_folder(window.settings.docs.open.folder);
 			}
@@ -1906,7 +2049,7 @@ function update_ui_folder(){
 			}
 		
 			path_el.onclick = () =>{
-				//console.log("clicked on path element. path_so_far: ", path_el.getAttribute('data-folder'));
+				console.log("clicked on path element. path_so_far: ", path_el.getAttribute('data-folder'));
 				open_folder(path_el.getAttribute('data-folder'));
 			}
 		
@@ -1921,141 +2064,10 @@ function update_ui_folder(){
 
 
 
-
-/*
-folder_back_button_el.onclick = (event) => {
-	//console.log("folder back button clicked");
-	//folder = folder_path('back');
-	if(folder != ''){
-		//sidebar_tabs_el.classList.add('move-to-right');
-		file_manager_el.classList.add('move-to-right');
-		setTimeout(() => {
-			//sidebar_tabs_el.classList.remove('move-to-right');
-			file_manager_el.classList.remove('move-to-right');
-		},400);
-		folder_path('back');
-		//console.log("folder is now: ", folder);
-		open_folder();
-	}
-	
-}
-
-
-
-folder_select_el.onchange = () => {
-    console.log("folder_select_el changed to: ", folder_select_el.value);
-	//folder_path('add',folder_select_el.value);
-	open_folder(folder_select_el.value);
-}
-
-
-
-function update_ui_folder_dropdown(){
-	//console.log("in update_ui_folder_dropdown.  sub_folders: ", sub_folders);
-	//console.log("folder_parts: ", folder_parts);
-	
-	folder_select_el.innerHTML = '';
-	
-	let set_default = false;
-	let folder_last_part = '';
-	if(folder_parts.length){
-		folder_last_part = folder_parts[folder_parts.length-1];
-	}
-	
-	if(folder_parts.length > 1){
-		document.body.classList.add('has-folder');
-		document.body.classList.add('in-folder');
-	}
-	else{
-		document.body.classList.remove('in-folder');
-	}
-	
-	
-	let indent = '';
-	let partial_folder_path = '';
-	if(folder_parts.length == 0){
-		folder_parts = [''];
-	}
-	for(let fp=0; fp<folder_parts.length; fp++){
-		let folder_part_name = folder_parts[fp];
-		if(folder_part_name != ''){
-			if(!folder_part_name.startsWith('/')){
-				partial_folder_path += '/';
-			}
-			partial_folder_path += folder_part_name;
-		}
-		//console.log("update_ui_folder_dropdown: folder_parts: ", partial_folder_path);
-		//partial_folder_path = partial_folder_path + folder_part_name;
-		
-		// Add root option
-		new_folder_option_el = document.createElement('option');
-		new_folder_option_el.value = partial_folder_path;
-		if(folder_parts[fp] == ''){
-			new_folder_option_el.id = 'folder-select-root-option';
-			
-		}
-		
-		if(partial_folder_path == folder){
-			//console.log("update_ui_folder_dropdown: current folder path: ", partial_folder_path);
-			set_default = true;
-			new_folder_option_el.defaultSelected = true;
-		}
-		
-		new_folder_option_el.textContent = indent + '/' + folder_parts[fp]; // + '/';
-		
-		
-		folder_select_el.appendChild(new_folder_option_el);
-		if(fp>0){
-			indent += '/';
-		}
-		
-	}
-	
-	if(indent == '/'){
-		//indent = '';
-	}
-	//console.log("update_ui_folder_dropdown: sub_folders: ", sub_folders);
-	// for(let q=0; q<sub_folders.length; q++){
-	for (const [sub_folder_name, details] of Object.entries(sub_folders) ){
-	
-	    let new_option_el = document.createElement('option');
-	    new_option_el.value = partial_folder_path + '/' + sub_folder_name;
-	    if(folder_last_part == sub_folder_name){
-	        //console.log("This folder select option is the current one: ", sub_folders[q]);
-			if(set_default == false){
-				set_default = true;
-	        	new_option_el.defaultSelected = true;
-			}
-	    }
-	    new_option_el.textContent = indent + '/' + sub_folder_name;
-	    folder_select_el.appendChild(new_option_el);
-	}
-	
-	if(folder_parts.length < 2){
-		folder_back_button_el.classList.add('no-further-up');
-	}
-	else{
-		folder_back_button_el.classList.remove('no-further-up');
-	}
-	
-}
-*/
-
-
-
-
-
-
-
-
-
 // Context menu clicks
 const clickHandler = e => {
-	//console.log("\n\nin clickHandler.  e:", e, e.event, e.label.textContent);
-	//alert("in clickHandler");
-    //e.label.textContent = e.label.textContent.split('').reverse().join('');
-    //e.data.text = e.label.textContent;
-    
+	console.log("\n\nin clickHandler.  e:", e, e.event, e.label.textContent);
+	console.log("e.label.innerHTML: -->" +  e.label.innerHTML + "<--");
     e.event.stopPropagation();
     e.event.preventDefault();
 	let fileItem = e.event.target.closest('li.file-item');
@@ -2086,6 +2098,19 @@ const clickHandler = e => {
 	
 	
 		// New file
+		
+		else if(e.label.textContent == 'From URL'){
+			let ask_for_url_dialog_el = document.getElementById('ask-for-url-dialog');
+			if(ask_for_url_dialog_el){
+				ask_for_url_dialog_el.showModal();
+			}
+			ask_for_url_dialog_image_el.classList.add('hidden');
+			
+			//suggested_filename = 'my_automation.blueprint';
+			//create_file(false,blueprint_boilerplate);
+			//save_file('index.html',html5_boilerplate);
+		}
+		
 		else if(e.label.textContent == 'Blueprint'){
 			suggested_filename = 'my_automation.blueprint';
 			create_file(false,blueprint_boilerplate);
@@ -2160,12 +2185,19 @@ const clickHandler = e => {
 				window.text_to_email(playground_live_backups[ folder + '/' + current_file_name ]);
 			}
 		}
-		else if(e.label.innerHTML == '<img src="./images/copy_to_clipboard.svg" width="16" height="16" alt="Copy"/> Copy'){
+		else if(e.label.innerHTML.startsWith('<img src="./images/copy_to_clipboard.svg" width="16" height="16" alt="Copy"')){
 			//create_file(false,blueprint_boilerplate);
 			//save_file('index.html',html5_boilerplate);
 			if(typeof folder == 'string' && typeof current_file_name == 'string'){
 				//console.log("context menu -> calling window.text_to_email");
 				window.text_to_clipboard(playground_live_backups[ folder + '/' + current_file_name ]);
+			}
+		}
+		else if(e.label.innerHTML.startsWith('<img src="./images/share.svg" width="16" height="16" alt="Share"')){
+			console.log("clicked on share option");
+			if(typeof folder == 'string' && typeof current_file_name == 'string'){
+				console.log("context menu -> calling share_document");
+				share_document();
 			}
 		}
 		
@@ -2389,6 +2421,21 @@ const clickHandler = e => {
 			let filename_to_delete = filename;
 			//console.log("Delete chosen. filename_to_delete: ", filename_to_delete);
 		
+			if(confirm('Are you sure you want to delete ' + filename_to_delete + '?')){
+				if(typeof files[filename_to_delete] != 'undefined'){
+                    //editor_set_value('');
+                    //files.splice(index, 1);
+					delete_file( filename_to_delete );
+				
+					open_file(unsaved_file_name);
+                    current_file_name = unsaved_file_name;
+                    update_ui();
+                }
+				else{
+					console.error("deleteBtn: value was not in files: ", value );
+				}
+			}
+			/*
 	        vex.dialog.confirm({
 	            message: 'Are you sure you want to delete ' + filename_to_delete + '?',
 	            callback: function (value) {
@@ -2413,11 +2460,27 @@ const clickHandler = e => {
 	                }
 	            }
 	        });
+			*/
 		}
 		else if(e.label.textContent == 'Delete from production'){
 			let filename_to_delete = filename;
 			//console.log("Delete chosen. filename_to_delete: ", filename_to_delete);
 		
+			if(confirm('Are you sure you want to delete ' + filename_to_delete + ' from production?')){
+				if(typeof files[filename_to_delete] != 'undefined'){
+                    //editor_set_value('');
+                    //files.splice(index, 1);
+					delete_file( filename_to_delete,'production');
+				
+					open_file(unsaved_file_name);
+                    current_file_name = unsaved_file_name;
+                    update_ui();
+                }
+				else{
+					console.error("deleteBtn: value was not in files: ", value );
+				}
+			}
+			/*
 	        vex.dialog.confirm({
 	            message: 'Are you sure you want to delete ' + filename_to_delete + ' from production?',
 	            callback: function (value) {
@@ -2442,6 +2505,7 @@ const clickHandler = e => {
 	                }
 	            }
 	        });
+			*/
 		}
 	}
 	catch(err){
@@ -2455,6 +2519,7 @@ const clickHandler = e => {
 
 // new file context menu
 const new_file_context_menu = new ContextMenu(new_file_button_el, [
+	{text: 'From URL', onclick: clickHandler},
 	{text: 'Blueprint', onclick: clickHandler},
     {text: 'HTML Boilerplate', onclick: clickHandler},
 	{text: 'CSS Boilerplate', onclick: clickHandler},
@@ -2495,7 +2560,8 @@ const download_file_context_menu = new ContextMenu(download_document_button_el, 
 	{text: 'MD', onclick: clickHandler},
 	null,
 	{text: '✉️ Email', onclick: clickHandler},
-	{text: '<img src="./images/copy_to_clipboard.svg" width="16" height="16" alt="Copy"/> Copy', onclick: clickHandler},
+	{text: '<img src="./images/copy_to_clipboard.svg" width="16" height="16" alt="Copy"> Copy', onclick: clickHandler},
+	{text: '<img src="./images/share.svg" width="16" height="16" alt="Share"> Share', onclick: clickHandler},
 	null,
 	{text: 'Cancel', onclick: clickHandler},
 ]);
@@ -2574,10 +2640,6 @@ function update_ui_function_list(){
 				}
 				else{
 					if(line.indexOf('function') != -1 || line.indexOf('=>') != -1){
-						//let true_function = false;
-						//if(line.toLowerCase().indexOf('function') != -1){
-						//	true_function = true;
-						//}
 						line = line.replace('function',' ');
 						line = line.replace('{',' ');
 						line = line.replace('=>',' ');
@@ -2588,9 +2650,9 @@ function update_ui_function_list(){
 						line = line.replace('addEventListener',' ');
 						line = line.replace('.',' ');
 						line = line.trim();
-						if(line.replace(/\(.*?\)/g, "").length > 5){
+						//if(line.replace(/\(.*?\)/g, "").length > 5){
 							//line = line.replace(/\(.*?\)/g, "");
-						}
+						//}
 						
 						line = line.replaceAll('(',' ');
 						line = line.replaceAll(')',' ');
@@ -3070,7 +3132,6 @@ function add_error_to_output(selection=null, error_line=null, error_message, typ
 	
     
     error_message_el.onclick = (e) => {
-    
 		if(target_folder != null && target_filename != null && search_results != null){
 			open_file(target_filename,null,target_folder)
 			.then((value) => {
@@ -3082,17 +3143,8 @@ function add_error_to_output(selection=null, error_line=null, error_message, typ
 			})
 		}
 	
-		if(error_line != null){
-        	//console.log("add_error_to_output: click! error data-lineNumber: ", error_line, ' =?= ', e.target.getAttribute('data-lineNumber') );
-		}
-        //codeOutput.innerHTML += '<hr/>error on line <br/>';
-        
-        //const editor_line = editor.state.doc.line(error_line);
-        //console.log("editor_: ", editor_);
-        
 		let line = null;
         let selection_delay = 0;
-        //[lines_done, lines_and_part_done]
         if(selection != null && Array.isArray(selection)){
             selection_delay = 500;
             editor.dispatch({
@@ -3118,17 +3170,6 @@ function add_error_to_output(selection=null, error_line=null, error_message, typ
 	            });
 	        }, selection_delay);
 		}
-        
-        
-        
-        
-        /*
-    
-        editor.dispatch({
-            selection: {  anchor: error_line}, // line.to // head: error_line ,
-            scrollIntoView: true
-        });
-        */
     }
 	//console.log("add_error_to_output: appending: ", error_message_el, codeOutput);
     codeOutput.appendChild(error_message_el);
@@ -3543,6 +3584,19 @@ function display_projects(){
 	add_project_button_el.classList.add('btn');
 	add_project_button_el.textContent = "+ Add project";
 	add_project_button_el.onclick = () => {
+		
+		let new_project_name = prompt('Provide new project name', '');
+		if (typeof new_project_name == 'string') {
+			if(new_project_name.length){
+				update_projects('add',value);
+				display_projects();
+			}
+			else{
+				flash_message('Invalid project name', 2000,'fail');
+			}
+			
+		}
+		/*
 	    vex.dialog.prompt({
 	        message: 'Provide new project name',
 			//value: '',
@@ -3558,6 +3612,7 @@ function display_projects(){
 				}
 	        }
 	    });
+		*/
 	}
 	playground_overlay_el.appendChild(add_project_button_el);
 	
@@ -3697,6 +3752,10 @@ function unzip(value=null,type='local',target_folder=null){
 				//console.log("unzip: skipping filename that starts with __MACOSX");
 				return
 			}
+			if(filename.startsWith('._')){
+				//console.log("unzip: skipping filename that starts with ._");
+				return
+			}
 			
 			/*
 			let file_type = 'string';
@@ -3707,8 +3766,6 @@ function unzip(value=null,type='local',target_folder=null){
 			let file_type = 'arraybuffer';
 			
 			// TODO implement promiseAll
-			
-			
 			
 		    let file_promise = zip.files[filename].async(file_type).then(function (fileData) {
 				//console.log("unzip:  got fileData: ", filename, typeof fileData, fileData);
@@ -3735,44 +3792,17 @@ function unzip(value=null,type='local',target_folder=null){
 					if(zip_folder.endsWith('/')){
 						zip_folder = zip_folder.substr(0,zip_folder.length-1);
 					}
-					//console.log("zip_filename: ", zip_filename);
-					//console.log("zip_folder: ", zip_folder);
-					//let zip_folder = filename.replace(zip_filename,'');
-					
-					//if(!zip_folder.startsWith('__MACOSX')){
-					
 					let new_file = new File([fileData], filename);
-					//console.log("unzip created new file object: ", new_file);
 					
 					if(new_file){
 						return new_file;
-						//file_upload(null,[new_file]);
 					}
-					
-					
-					/*
-						//console.log("unzip: typeof fileData: ", typeof fileData, fileData);
-						if(window.filename_is_binary(zip_filename)){
-							fileData = '_PLAYGROUND_BINARY_' + buffer_to_string(fileData);
-						}
-						save_file(zip_filename,fileData,null,zip_folder,true); // force save
-						//save_file(zip_filename,fileData,null,null,true); // force save
-						//save_file(zip_name + ".zip", buffer_to_string(arbuf), 'production', null, true);
-					//}
-					//else{
-					//	//console.log("unzip: skipping __MACOSX file");
-					//}
-					*/
-					
 					
 				}
 				return null
-				//save_file()
 		    })
 			
-			file_promises.push(file_promise);
-			
-			
+			file_promises.push(file_promise);			
 		})
 		
 		//console.log("unzip: file_promises.length: ", file_promises.length);
@@ -3781,23 +3811,6 @@ function unzip(value=null,type='local',target_folder=null){
 			file_upload(null,values);
 		});
 		
-		//let zip_content_el = document.createElement('div');
-		//zip_content_el.id = 'zip-content';
-		/*
-        Object.keys(contents.files).forEach(function(filename) {
-            zip.file(filename).async('nodebuffer').then(function(content) {
-                var dest = path + filename;
-                fs.writeFileSync(dest, content);
-            });
-        });
-		*/
-		/*
-		zip.forEach(function (relativePath, zipEntry) { 
-			//console.log("zipEntry: ", relativePath, zipEntry);
-			
-		});
-		*/
-		//playground_overlay_el.appendChild(zip_content_el);
 		
 	});
 }
@@ -3809,23 +3822,17 @@ function unzip(value=null,type='local',target_folder=null){
 
 function create_image_editor(editor_image_el=null){
 	//console.log("in create_image_editor.  editor_image_el: ", editor_image_el);
-	//let image_editor_el = document.createElement('div');
-	//image_editor_el.id = 'image-editor';
-	
 	document.body.classList.add('image-editor');
 	
 	if(editor_image_el == null){
 		editor_image_el = document.getElementById('editor-image');
 	}
 	
-	//playground_overlay_el.innerHTML = '';
-	//playground_overlay_el.appendChild(image_editor_el);
-	
 	const { TABS, TOOLS } = FilerobotImageEditor;
 	const config = {
-  	  source: editor_image_el, //'https://scaleflex.airstore.io/demo/stephen-walker-unsplash.jpg',
+  	  source: editor_image_el,
   	  onSave: (editedImageObject, designState) => {
-  	  	// const image = `Img=image/jpeg;base64,T25seUV4YW1wbGU=`
+		  // const image = `Img=image/jpeg;base64,T25seUV4YW1wbGU=`
 		  console.log('saved', editedImageObject,'\n\n', designState);
 		  
 		  console.log("editedImageObject.ImageBase64: ", editedImageObject['imageBase64']);

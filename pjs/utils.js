@@ -543,9 +543,20 @@ function html_to_string(input) {
 }
 
 
-function sha512(str) {
-    return CryptoJS.SHA512(str).toString(CryptoJS.enc.Hex);
+// This function relied on a JS library, but modern browsers support this natively.
+//function sha512(str) {
+//    return CryptoJS.SHA512(str).toString(CryptoJS.enc.Hex);
+//}
+
+async function sha512(message) {
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
 }
+
+
 
 
 //
@@ -836,11 +847,6 @@ function backup_all(){
 
 
 
-
-
-
-
-
 function split_file_extension(filename){
 	if(typeof filename == 'string'){
 		
@@ -849,7 +855,7 @@ function split_file_extension(filename){
 			tail = filename.length - 2;
 		}
 		if(filename.lastIndexOf('.') > 0 && filename.lastIndexOf('.') > (filename.length - tail)){
-			return [filename.substr(0,filename.lastIndexOf('.')),filename.substr(filename.lastIndexOf('.'))]//re.exec(filename);
+			return [filename.substr(0,filename.lastIndexOf('.')),filename.substr(filename.lastIndexOf('.'))] //re.exec(filename);
 		}
 		else{
 			return [filename];
@@ -2816,7 +2822,5 @@ function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 window.capitalizeFirstLetter = capitalizeFirstLetter;
-
-
 
 

@@ -39,10 +39,11 @@ const codeOutput = document.querySelector('#output');
 const resizeHandle = document.querySelector('#resizer');
 window.code_mirror_editor_el = null;
 
-
+/*
 if(typeof window.settings == 'undefined'){ // for AI chat
 	window.settings = {'docs':{'open':null}};
 }
+*/
 
 let playground_code_output_width = localStorage.getItem('_playground_code_output_width');
 if(playground_code_output_width != null){
@@ -93,13 +94,6 @@ let current_file_name = unsaved_file_name; // current filename. empty string unt
 //const empty_image_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkAQAAAABYmaj5AAAAGElEQVR4AWP4jwQ+0Jo3yhvljfJGeaM8AL7rCVwFt2PiAAAAAElFTkSuQmCC';
 const empty_image_encoded = "%C2%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00d%00%00%00d%01%00%00%00%00X%C2%99%C2%A8%C3%B9%00%00%00%18IDATx%01c%C3%B8%C2%8F%04%3E%C3%90%C2%9A7%C3%8A%1B%C3%A5%C2%8D%C3%B2Fy%C2%A3%3C%00%C2%BE%C3%AB%09%5C%05%C2%B7c%C3%A2%00%00%00%00IEND%C2%AEB%60%C2%82"
 const empty_image_base64 = 'wolQTkcKGgoAAAANSUhEUgAAAGQAAABkAQAAAABYwpnCqMO5AAAAGElEQVR4AWPDuMKPBD7DkMKaN8OKG8Olwo3DskZ5wqM8AMK+w6sJXAXCt2PDogAAAABJRU5Ewq5CYMKC';
-const text_file_extensions = ['txt','js','ts','json','html','xhtml','css','yaml','ino','py','readme'];
-const binary_image_extensions = ['png','jpg','jpeg','gif','webp','ico','bmp','tiff'];
-const binary_video_extensions = ['mp4','h264','h265','mjpeg','webm','mov','ogv'];
-const binary_audio_extensions = ['mp3','wav','flac','aac','m4a','ogg'];
-const binary_media_extensions = binary_video_extensions.concat(binary_audio_extensions);  //['mp4','mp3','wav','h264','h265','mjpeg','flac','aac','webm','m4a','ogg'];
-const archive_extensions = ['zip','gzip'];
-const binary_document_extensions = ['pdf','epub']; // epub is zipped html
 const uninformative_folder_names = []; //['js','css','img','images','assets','res','source','sources','resources','scripts','pjs','pcss']; // are not shown in file tabs
 const color_keys = ['#warning','#error','#info','#ok','#note','#nowrap','#orange','#red','#grey','#green','#blue','#yellow','#purple']; //Object.keys(colors_lookup);
 var color_added = 0;
@@ -143,11 +137,12 @@ if(window.location.href.indexOf('//localhost') != -1 || window.location.href.ind
 	localhost = true;
 }
 
+/*
 if(window.location.href.indexOf('debug') != -1 || window.location.search.indexOf('debug') != -1){
 	//console.log("window.location.search: ", window.location.search);
 	document.body.classList.add('developer');
 }
-
+*/
 
 
 
@@ -317,32 +312,6 @@ function reload_files_dict(){
 	
 	files = gotten_files;
 	//console.log("reload_files_dict: files after: ", keyz(files).length, files);
-	
-	
-	/*
-	let new_files = localStorage.getItem(folder + '_playground_files');
-    if(new_files != null && typeof new_files == 'string'){
-		try{
-			new_files = JSON.parse(new_files); //files.split(',');
-			files = new_files;
-		}
-		catch(e){
-			console.error("\n\n\n\nreload_files_dict: error loading files. Resetting files dict..", e);
-			files = {};
-			files[unsaved_file_name] = {};
-			localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
-		}
-		//console.log("reload_files_dict: found (possibly outdated) files list in local storage: ", files);
-	}
-	else{
-		console.warn("reload_files_dict: no files data or unexpected data type found: ", typeof new_files, new_files);
-		files = {};
-		files[unsaved_file_name] = {};
-		localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
-		//console.log("reload_files_dict: did not find files list in local storage. Setting to list with unsaved_file_name only: ", files);
-	}
-	//console.log("reload_files_dict: files after: ", files);
-	*/
 }
 
 
@@ -355,20 +324,17 @@ function get_files_dict(target_folder=null){
     if(new_files != null && typeof new_files == 'string'){
 		try{
 			//console.log("get_files_dict: for from localStorage: ", new_files);
-			new_files = JSON.parse(new_files); //files.split(',');
+			new_files = JSON.parse(new_files);
 		}
 		catch(e){
 			console.error("\n\n\n\nreload_files_dict: error loading files. Resetting files dict..", e);
 			new_files = {};
-			//new_files[unsaved_file_name] = {};
-			//localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
 		}
 		//console.log("reload_files_dict: found (possibly outdated) files list in local storage: ", files);
 	}
 	else{
 		console.warn("reload_files_dict: no files data or unexpected data type found: ", typeof new_files, new_files);
 		new_files = {};
-		//new_files[unsaved_file_name] = {};
 		localStorage.setItem(folder + '_playground_files', JSON.stringify(files));
 	}
 	return new_files;
@@ -465,8 +431,10 @@ function folder_path(action='full',part=null){
 	if(current_file_name != unsaved_file_name){
 		window.location.hash = "#" + encodeURIComponent(new_folder_path + '/' + current_file_name);
 	}
-	else{
+	else if(new_folder_path.trim() != ''){
 		window.location.hash = "#" + encodeURIComponent(new_folder_path);
+	}else{
+		window.location.hash = '';
 	}
 	//console.log("folder_path. set location hash.");
 	/*
@@ -860,10 +828,10 @@ const css_boilerplate = `
 /*   ANIMATION   */
 
 .move-to-left{
-	animation: slideIn .2s ease-out ; /* forwards .2s;*/
+	animation: slideIn .2s ease-out;
 }
 .move-to-right{
-	animation: slideIn .2s ease-out reverse; /* forwards .2s;*/
+	animation: slideIn .2s ease-out reverse;
 }
 
 @keyframes slideIn {
