@@ -1,0 +1,173 @@
+
+
+
+#assistant-developer #message-form-container{
+	display:none;
+}
+
+
+
+
+
+/*   SIDEBAR   */
+
+
+#chat-sidebar-container{
+	width:100%;
+	overflow:hidden;
+}
+
+.chat-sidebar-overlay #chat-sidebar-container{
+	width:300px;
+	max-width:300px;
+	height:100vh;
+	z-index:10;
+	position:fixed;
+	top:0;
+	left:0;
+}
+
+
+.assistants-checkbox-container{
+	width:40px;
+	height:40px;
+	display:flex;
+	align-items:center;
+}
+
+
+#chat-sidebar-container{
+	position:relative;
+}
+
+#chat-sidebar{
+	/*padding-bottom:50px;*/
+}
+
+
+#select-assistants-button-wrapper{
+	display:flex;
+	position:absolute;
+	bottom:0px;
+	right:1px;
+	min-width:56px;
+	height:52px;
+	align-items:center;
+	justify-content:space-between;
+	padding-right:15px;
+	cursor:pointer;
+	background: var(--sidebar-bg);
+	border-top-left-radius:10px;
+	
+	z-index:11;
+}
+
+
+#select-assistants-button-wrapper:hover .circle-square-button{
+	background-color:var(--button-hover-bg);
+	
+}
+
+.circle-square-button:hover .plus-icon,
+#select-assistants-button-wrapper:hover .circle-square-button > span,
+#select-assistants-button-wrapper:hover .circle-square-button .plus-icon{
+	color:#fff!important;
+}
+
+.characters-button-more_characters .icon-container .center,
+.blueprints-button-more_blueprints .icon-container .center,
+.plus-icon{
+	background-image:url(../images/plus.svg);
+	background-repeat:no-repeat;
+	background-position:center;
+	background-size:20px 20px;
+}
+.plus-icon{
+	width:26px;
+	height:26px;
+}
+	
+	
+#add-assistants-hint-container{
+	display:none;
+	align-items:center;
+	padding-right:10px;
+	opacity:.6;
+}
+#select-assistants-button-wrapper:hover #add-assistants-hint-container{
+	opacity:1;
+}
+
+#add-assistants-hint{
+	margin-left:1rem;
+}
+
+
+/*  MESSAGE INPUT FORM  */
+
+#message-form-container,
+#message-header-container{
+	min-height:50px;
+	max-height:300px;
+    transition-duration: 100ms;
+    transition: max-height .1s, opacity 1s;
+    transition-timing-function: ease;
+	opacity:1;
+	flex-shrink:0;
+}
+#message-form-container{
+	background-color:var(--chat-footer-bg);
+}
+
+
+.intro #chat-content{
+	max-width:40rem;
+	margin:0 auto;
+	border-left:none;
+}
+
+
+.chat .content .message-form,
+.chat .content .message-form > div{
+	height:100%;
+	max-height:300px;
+	max-width:100%;
+}
+
+
+.chat .content .message-form > div{
+	height:100%;
+}
+
+
+body:not(.developer) .time.user-status{
+	display:none!important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+@media only screen and (min-width: 801px) {
+    #chat-sidebar-container{
+		width:300px;
+		max-width:300px;
+    	min-width:56px;
+    }
+	
+	body:not(.show-document):not(.chat-shrink) .chat .content{
+		min-width: 300px;
+	}
+	 
+	body.sidebar #back-button-container{
+		display:none;
+	}
+}

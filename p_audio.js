@@ -68,11 +68,23 @@ window.create_main_audio_context = create_main_audio_context;
 //  MICROPHONE
 //
 
-function enable_microphone(also_enable_speaker=true){
-	//console.log("in enable_microphone.   window.stopped_whisper_because_of_low_memory, window.whisper_loaded,window.busy_loading_whisper: ", window.stopped_whisper_because_of_low_memory, window.whisper_loaded, window.busy_loading_whisper);
+
+
+async function enable_microphone(also_enable_speaker=true){
+	if(window.settings.settings_complexity == 'developer'){
+		console.log("in enable_microphone.   window.stopped_whisper_because_of_low_memory, window.whisper_loaded,window.busy_loading_whisper: ", window.stopped_whisper_because_of_low_memory, window.whisper_loaded, window.busy_loading_whisper);
+	}
 	
 	window.stopped_whisper_because_of_low_memory = false;
-	document.body.classList.remove('microphone-sleeping');
+	remove_body_class('microphone-sleeping');
+	
+	if(window.audio_module_loaded == false){
+		console.log("loading audio module");
+		window.audio_module_loaded = true;
+		await window.add_script('p_audio_module.js');
+		await delay(100);
+	}
+	
 	
 	if(window.settings.assistant == 'scribe' && window.last_time_scribe_started == null){
 		window.last_time_scribe_started = Date.now();
@@ -83,15 +95,15 @@ function enable_microphone(also_enable_speaker=true){
 	}
 	
 	if(window.idle && window.ram < 4001){
-		console.warn("enable_microphone: low memory, so calling do_unload to unload everything but Whisper");
-		window.do_unload();
+		//console.warn("enable_microphone: low memory, so calling do_unload to unload everything but Whisper");
+		window.do_unload([]);
 	}
 	
 	if(window.myvad != null){
 		//console.log("enable microphone: window.myvad already exists. Toggling VAD to on. state: ", state);
 		window.myvad.start();
 		window.microphone_enabled = true;
-		document.body.classList.add('microphone-enabled');
+		add_body_class('microphone-enabled');
 		
 		if(state != DOING_ASSISTANT && state != DOING_TTS){
 			set_state(LISTENING);
@@ -100,11 +112,14 @@ function enable_microphone(also_enable_speaker=true){
 		return
 	}
 	else if(window.simple_vad_source != null){
-		//console.log("enable microphone: window.simple_vad_source already exists. Toggling SimpleVAD to on. state: ", state);
+		if(window.settings.settings_complexity == 'developer'){
+			console.log("enable microphone: window.simple_vad_source already exists. Toggling SimpleVAD to on. state: ", state);
+		}
 		//window.myvad.start();
 		window.unpauseSimpleVAD();
 		window.microphone_enabled = true;
-		document.body.classList.add('microphone-enabled');
+		add_body_class('microphone-enabled');
+		
 		set_state(LISTENING);
 		/*
 		if(state != DOING_ASSISTANT && state != DOING_TTS){
@@ -121,7 +136,7 @@ function enable_microphone(also_enable_speaker=true){
 		window.start_vad();
 		
 		window.microphone_enabled = true;
-		document.body.classList.add('microphone-enabled');
+		add_body_class('microphone-enabled');
 		
 		if(state != DOING_ASSISTANT && state != DOING_TTS){
 			set_state(LISTENING);
@@ -200,21 +215,24 @@ window.enable_microphone = enable_microphone;
 
 
 function disable_microphone(){
-	//console.log("in disable_microphone");
+	console.log("in disable_microphone");
 	window.microphone_enabled = false;
-	document.body.classList.remove('microphone-enabled');
+	remove_body_class('microphone-enabled');
 	window.continuous_vad(false);
 	window.stop_vad();
 	setTimeout(() => {
-		document.body.classList.remove('doing-recording');
+		remove_body_class('doing-recording');
 	},100);
-	document.body.classList.remove('doing-recording');
+	remove_body_class('doing-recording');
 	/*
 	if(window.myvad != null){
 		window.myvad.pause();
 	}
 	*/
 	
+	if(typeof window.current_scribe_voice_parent_task_id == 'number'){
+		stop_scribe_voice_task();
+	}
 	
 	if(window.whisper_worker != null){
 		//console.log("disable microphone: also terminating whisper worker");
@@ -256,33 +274,43 @@ window.disable_microphone = disable_microphone;
 //  SPEAKER
 //
 
-function enable_speaker(){
+async function enable_speaker(){
 	window.speaker_enabled = true;
-	document.body.classList.add('speaking-out-loud');
+	add_body_class('speaking-out-loud');
+	
+	if(window.audio_module_loaded == false){
+		console.log("enable_speaker: loading audio module");
+		window.audio_module_loaded = true;
+		await window.add_script('p_audio_module.js');
+		await delay(100);
+	}
+	
 	window.create_main_audio_context(16000);
 	
-	if(window.added_scripts.indexOf('./easy_speech/EasySpeech.iife.js') == -1){
-		window.add_script('./easy_speech/EasySpeech.iife.js')
-		.then((value) => {
-			if(EasySpeech){
-				EasySpeech.init({ maxTimeout: 5000, interval: 250 })
-    			.then(() => {
-					console.debug('easy_speech load complete');
-					window.easy_speech_loaded = true;
-				})
-    			.catch(e => {
-					console.error('easy_speech init failed: ', e);
-					if(window.settings.language != 'en'){
-						flash_message(get_translation('This_browser_does_not_support_Text-to-Speech'),2000,'warn');
-						disable_speaker();
-					}
-				});
-			}
+	if(window.settings.language != 'en' || window.settings.assistant == 'translator'){
+		if(!window.added_scripts.indexOf('./easy_speech/EasySpeech.iife.js') == -1){
+			window.add_script('./easy_speech/EasySpeech.iife.js')
+			.then((value) => {
+				if(EasySpeech){
+					EasySpeech.init({ maxTimeout: 30000, interval: 250 })
+	    			.then(() => {
+						//console.debug('easy_speech load complete');
+						window.easy_speech_loaded = true;
+					})
+	    			.catch(e => {
+						console.error('easy_speech init failed: ', e);
+						if(window.settings.language != 'en'){
+							flash_message(get_translation('This_browser_does_not_support_Text-to-Speech'),2000,'warn');
+							disable_speaker();
+						}
+					});
+				}
 
-		})
-		.catch((err) => {
-			console.error("enable_speaker: failed to load easy_speech: ", err);
-		})
+			})
+			.catch((err) => {
+				console.error("enable_speaker: failed to load easy_speech: ", err);
+			})
+		}
 	}
 	
 	
@@ -296,12 +324,24 @@ function enable_speaker(){
 			//console.log("blueprint already ended with this prompt command");
 		}
 	}
+	
+	if(window.tts_worker_loaded === false && window.busy_loading_tts === false && window.ram > 4000){
+		console.log("enable speaker: calling preload_tts");
+		if(typeof window.preload_tts == 'function'){
+			window.preload_tts();
+		}
+		
+	}
+	
 }
 window.enable_speaker = enable_speaker;
 
+
+
 function disable_speaker(){
 	window.speaker_enabled = false;
-	document.body.classList.remove('speaking-out-loud');
+	window.doing_low_memory_tts_chat_response = false;
+	remove_body_class('speaking-out-loud');
 
 	// TODO: set all 'speak' tasks to interrupted
 	try{
@@ -340,7 +380,10 @@ window.disable_speaker = disable_speaker;
 
 
 function interrupt_speaker(){
-	//console.log("in interrupt_speaker");
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("dev: in interrupt_speaker");
+	}
+	
 	if(window.audio_player != null){
 		window.audio_player.stop();
 		window.audio_player_busy = false;
@@ -352,6 +395,7 @@ function interrupt_speaker(){
 	else if(window.web_llm_busy){
 		window.interrupt_web_llm();
 	}
+	// TODO allow image-to-text describer to be interrupted too
 	
 	change_tasks_with_state('should_assistant');
 	change_tasks_with_state('doing_tts');
@@ -360,6 +404,7 @@ function interrupt_speaker(){
 	change_tasks_with_state('doing_audio_player');
 	set_speaker_progress(100);
 	
+	window.doing_low_memory_tts_chat_response = false;
 	window.interrupt_speaking_task_index = window.task_counter;
 	//console.log("window.interrupt_speaking_task_index is now: ", window.interrupt_speaking_task_index);
 	
@@ -793,15 +838,18 @@ async function push_stt_task(audio,force_document_destination=false,stt_task=nul
 	// destination
 	if(window.settings.docs.open != null && audio.length > frames_max){  // (16000 * 29)      //6000000){     // If the audio is very long it's unlikely to be a chat command input
 		//console.log("push_stt_task: very long audio recording, and a document is open. Overriding, and assuming destination is document. recording.length: ", recording.length);
-		destination = 'document';
+		//destination = 'document';
 	}
 	if(typeof force_document_destination == 'boolean' && force_document_destination == true){
+		console.log("push_stt_task: force_document_destination was true");
 		destination = 'document';
 	}
-	if(window.settings.assistant == 'scribe'){
+	if(window.settings.assistant == 'scribe'){ // TODO this is set twice (also earlier in this function)?
 		destination = 'document';
 	}
-	
+	else if(!document.body.classList.contains('show-document') && !document.body.classList.contains('chat-shrink')){
+		destination = 'chat';
+	}
 	
 	//console.log("push_stt_task: destination: ", destination);
 	
@@ -1125,7 +1173,7 @@ async function do_stt(task){
 	if(typeof task.recorded_audio != 'undefined'){
 		//console.log("do_stt: calling do_whisper_web with recorded audio. task.recorded_audio.length: ", task.recorded_audio.length);
 		task.state = 'doing_stt'; // superfluous, already set to this by main interval
-		return do_whisper_web(task);
+		return await window.do_whisper_web(task);
 		//console.log("do_stt: data should be passed to whisper worker now.");  // removing recorded_audio from task
 		//return true
 	}
@@ -1201,10 +1249,8 @@ function stop_scribe_voice_task(task=null){
 		window.handle_completed_task({'index':parent_task_index},null,{'state':'completed'});
 		//window.current_scribe_voice_parent_task_id = null;
 		
-		
 		// TODO no need to do this twice
 		let transcription_bubble_el = document.querySelector('#scribe-transcription-info-container-bubble' + parent_task_index);
-		
 		if(transcription_bubble_el){
 			transcription_bubble_el.classList.add('scribe-transcription-stopped');
 		}
@@ -1358,7 +1404,7 @@ function create_mp3_worker(){
 		//console.log("create_mp3_worker: received message from mp3_worker: ", e.data);
 
 		window.mp3_worker_busy = false;
-		document.body.classList.remove('doing-mp3');
+		remove_body_class('doing-mp3');
 		
 		if(typeof e.data.action == 'string'){
 			if(e.data.action == 'error'){
@@ -1418,8 +1464,8 @@ window.do_mp3 = async function (task){
 		}
 		if(window.mp3_worker && typeof task == 'object' && task != null && typeof task.audio != 'undefined'){
 			window.mp3_worker_busy = true;
-			document.body.classList.add('doing-mp3');
-			if(window.tts_worker_busy == 'false'){
+			add_body_class('doing-mp3');
+			if(window.tts_worker_busy == false){
 				//console.log("do_mp3: tts_worker_busy is false, so setting speaker AI description to 'doing_mp3'");
 				let speaker_contact_description_el = document.getElementById('speaker-contacts-description');
 				if(speaker_contact_description_el){
@@ -1789,7 +1835,7 @@ async function browser_speak(task=null) {
 	
 	// If easy_speech is loaded, use that
 	if(typeof EasySpeech != 'undefined' && window.easy_speech_loaded.loaded){
-		//console.log("browser_speak: easy_speech is available");
+		console.log("browser_speak: easy_speech is available");
 		
 		let easy_speech_voices = EasySpeech.voices();
 		//console.log("easy_speech_voices: ", easy_speech_voices);
@@ -1839,7 +1885,13 @@ async function browser_speak(task=null) {
 		if(window.microphone_enabled){
 			window.unpause_vad();
 		}
-		window.handle_completed_task(task,true,{'state':'completed'});
+		await window.handle_completed_task(task,true,{'state':'completed'});
+		
+		if(window.doing_low_memory_tts_chat_response && window.tts_tasks_left == 0){
+			console.warn("End of playing audio: All TTS tasks are done, setting window.doing_low_memory_tts_chat_response to false");
+			window.doing_low_memory_tts_chat_response = false;
+		}
+		
 	}
 	else{
 		

@@ -14,11 +14,9 @@ let image_to_text_files = {};
 
 
 window.interrupt_image_to_text = function(){
-	console.log("in interrupt_image_to_text");
+	//console.log("in interrupt_image_to_text");
 	
 	window.change_tasks_with_type('image_to_text');
-	
-	
 	
 	if(window.real_image_to_text_worker != null){
 		window.real_image_to_text_worker.postMessage({'action':'interrupt'});
@@ -26,21 +24,31 @@ window.interrupt_image_to_text = function(){
 	}
 	return false
 }
+
 window.stop_image_to_text = function(){
-	console.log("in stop_image_to_text");
+	//console.log("in stop_image_to_text");
 	if(window.real_image_to_text_worker != null){
-		console.log("stop_image_to_text: posting stop message to worker");
-		window.real_image_to_text_worker.postMessage({'action':'stop'});
+		//console.log("stop_image_to_text: posting stop message to worker");
+		window.real_image_to_text_worker.postMessage({'action':'dispose'});
+		setTimeout(() => {
+			if(window.real_image_to_text_worker != null){
+				window.real_image_to_text_worker.terminate();
+				window.real_image_to_text_worker = null;
+				window.image_to_text_worker_busy = false;
+				window.busy_loading_image_to_text = null;
+				window.image_to_text_worker_loaded = false;
+			}
+		},1000);
 		return true
 	}
 	else{
-		console.log("stop_image_to_text: worker is already null");
+		//console.log("stop_image_to_text: worker is already null");
 	}
 	return false
 }
 
-async function create_image_to_text_worker(){
-	console.log("in create_image_to_text_worker.");
+function create_image_to_text_worker(){
+	//console.log("in create_image_to_text_worker.");
 	if(window.busy_loading_assistant != null){
 		console.error("create_image_to_text_worker: notice only: window.busy_loading_assistant was not null")
 	}
@@ -48,14 +56,14 @@ async function create_image_to_text_worker(){
 	
 	return new Promise((resolve, reject) => {
 		
-		window.image_to_text_worker = null;
+		//window.image_to_text_worker = null;
 		window.real_image_to_text_worker = null;
 		window.real_image_to_text_worker = new Worker('./image_to_text_worker.js', {
 		  	type: 'module'
 		})
-		window.image_to_text_worker = new PromiseWorker(window.real_image_to_text_worker);
+		//window.image_to_text_worker = new PromiseWorker(window.real_image_to_text_worker);
 		
-		console.log("image_to_text_module: window.image_to_text_worker: ", window.image_to_text_worker);
+		//console.log("image_to_text_module: window.image_to_text_worker: ", window.image_to_text_worker);
 		
 		setTimeout(() => {
 			window.add_chat_message_once('image_to_text','image_to_text','model_examples#setting---');
@@ -66,51 +74,50 @@ async function create_image_to_text_worker(){
 
 		
 			if(typeof e.data.status == 'string'){
+				//console.log("image_to_text_module: received message from image_to_text_worker.  status: ", e.data.status);
 				
 				if(e.data.status == 'progress' && typeof e.data.file == 'string'){
 					//console.log("image_to_text worker sent download progress: ", e.data.progress);
 					
-					let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
-					if(image_to_text_progress_el == null && !e.data.progress == 100){
-						console.error("image_to_text (down)load progress element is missing");
-						add_chat_message('image_to_text','image_to_text','download_progress#setting---');
+					
+					let total_bytes = 0;
+					let loaded_bytes = 0;
+					
+					image_to_text_files[e.data.file] = e.data;
+					
+					let image_to_text_file_names = keyz(image_to_text_files);
+					//console.log("image_to_text_file_names.length: ", image_to_text_file_names.length);
+					if(image_to_text_file_names.length > 4){
+						for(let w = 0; w < image_to_text_file_names.length; w++){
+							if(typeof image_to_text_files[image_to_text_file_names[w]].total == 'number' && typeof image_to_text_files[image_to_text_file_names[w]].loaded == 'number'){
+								total_bytes += image_to_text_files[image_to_text_file_names[w]].total;
+								loaded_bytes += image_to_text_files[image_to_text_file_names[w]].loaded;
+							}
+						}
 					}
 					
-					if(image_to_text_progress_el){
+					
+					
+					if(total_bytes > 10000000 && loaded_bytes == total_bytes){
+						image_to_text_files = {};
+						remove_download_message();
 						
-						if(e.data.progress == 100){
-							image_to_text_files = {};
-							let chat_message_el = image_to_text_progress_el.closest('download-progress-chat-message');
-							if(chat_message_el){
-								//chat_message_el.classList.add('download-complete-chat-message');
-								chat_message_el.remove();
-								window.set_model_loaded(true);
-							}
-							//window.busy_loading_image_to_text = false;
-							return
+						if(window.settings.assistant == 'image_to_text'){
+							window.set_model_loaded(true);
 						}
 						
-						image_to_text_files[e.data.file] = e.data;
-				
-						//console.log("image_to_text_files: ", image_to_text_files);
-				
-						let total_bytes = 0;
-						let loaded_bytes = 0;
-						let image_to_text_file_names = keyz(image_to_text_files);
-						if(image_to_text_file_names.length > 0){
-							for(let w = 0; w < image_to_text_file_names.length; w++){
-								if(typeof image_to_text_files[image_to_text_file_names[w]].total == 'number' && typeof image_to_text_files[image_to_text_file_names[w]].loaded == 'number'){
-									total_bytes += image_to_text_files[image_to_text_file_names[w]].total;
-									loaded_bytes += image_to_text_files[image_to_text_file_names[w]].loaded;
-								}
-						
-							}
+						if(typeof window.busy_loading_assistant == 'string' && window.busy_loading_assistant == 'image_to_text'){
+							window.busy_loading_assistant = null;
 						}
-						if(total_bytes > 0){
-							
-							//e.data.progress
-							image_to_text_progress_el.value = loaded_bytes / total_bytes;//e.data.progress / 100;
-							
+						
+						//window.busy_loading_image_to_text = false;
+						return
+					}
+					
+					else{
+						
+						
+						if(total_bytes > 10000000){
 							
 							let percentage = (loaded_bytes / total_bytes) * 100;
 							if(image_to_text_previous_percentage > percentage){
@@ -118,15 +125,20 @@ async function create_image_to_text_worker(){
 							}
 							if(Math.floor(percentage) > image_to_text_previous_percentage){
 								//console.log("image_to_text: download %: ", percentage);
-								/*
-								if(percentage == 1){
-									image_to_text_previous_percentage_timestamp = Date.now();
-								}
-								else 
-								*/
+								
 								if(percentage > 2){
 									
-									let image_to_text_progress_parent_el = image_to_text_progress_el.parentNode;
+									let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
+									if(image_to_text_progress_el == null){
+										console.error("image_to_text (down)load progress element is missing");
+										window.add_chat_message('current','image_to_text','download_progress#setting---');
+									}
+									else{
+										//console.log("updating image_to_text (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
+										image_to_text_progress_el.value = loaded_bytes / total_bytes; 
+									}
+									
+									let image_to_text_progress_parent_el = image_to_text_progress_el.closest('.message');
 									if(image_to_text_progress_parent_el){
 										
 										let image_to_text_time_remaining_element = image_to_text_progress_parent_el.querySelector('.time-remaining');
@@ -144,6 +156,21 @@ async function create_image_to_text_worker(){
 										else{
 											console.error("could not find image_to_text .time-remaining element");
 										}
+										
+										if(total_bytes > (1024 * 1024)){
+											let image_to_text_size_el = image_to_text_progress_parent_el.querySelector('.ai-model-size');
+											if(image_to_text_size_el){
+												if(total_bytes > (1024 * 1024 * 1024)){
+													image_to_text_size_el.innerHTML = '<span class="ai-model-size-number">' + (Math.round(total_bytes / (1024 * 1024 * 10240))/10) + '</span><span class="ai-model-size-gb">GB</span>';
+												}
+												else{
+													image_to_text_size_el.innerHTML = '<span class="ai-model-size-number">' + Math.round(total_bytes / (1024 * 1024)) + '</span><span class="ai-model-size-gb">MB</span>';
+												}
+								
+											}
+										}
+										
+										
 									}
 									else{
 										console.error("could not find image_to_text parent for .time-remaining element");
@@ -158,31 +185,21 @@ async function create_image_to_text_worker(){
 							
 							}
 							
-							
-							
-							
-							
-							
-							/*
-							//let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
-							if(image_to_text_progress_el == null){
-								console.error("image_to_text (down)load progress element is missing");
-								add_chat_message('current','image_to_text','download_progress#setting---');
-							}
-							else{
-								console.log("updating image_to_text (down)load progress: ", ((loaded_bytes / total_bytes) * 100) + "%");
-							}
-							*/
 						}
 						else{
 							console.error("image_to_text loading: total_bytes is 0");
 						}
-						
-						
-						
-						//console.log("updating whisper (down)load progress");
-						//image_to_text_progress_el.value = e.data.progress / 100;
 					}
+					
+					
+					
+					let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
+					if(image_to_text_progress_el == null && !e.data.progress == 100){
+						console.error("image_to_text (down)load progress element is missing");
+						window.add_chat_message('image_to_text','image_to_text','download_progress#setting---');
+					}
+					
+					
 					
 					
 					
@@ -190,7 +207,7 @@ async function create_image_to_text_worker(){
 					let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
 					if(image_to_text_progress_el == null){
 						console.error("image_to_text (down)load progress element is missing");
-						add_chat_message('image_to_text','image_to_text','download_progress#setting---');
+						window.add_chat_message('image_to_text','image_to_text','download_progress#setting---');
 					}
 					else{
 						//console.log("updating image_to_text (down)load progress");
@@ -200,13 +217,18 @@ async function create_image_to_text_worker(){
 				
 				}
 				else if(e.data.status == 'exists'){
-					console.log("image_to_text worker sent exists message");
-					console.log("window.image_to_text_worker_loaded: ", window.image_to_text_worker_loaded);
-					console.log("window.busy_loading_image_to_text: ", window.busy_loading_image_to_text);
+					//console.log("image_to_text worker sent exists message");
+					//console.log("window.image_to_text_worker_loaded: ", window.image_to_text_worker_loaded);
+					//console.log("window.busy_loading_image_to_text: ", window.busy_loading_image_to_text);
 				}
 			
+			
 				else if(e.data.status == 'ready'){
-					console.log("image_to_text worker sent ready message. e.data: ", e.data);
+					
+				}
+				
+				else if(e.data.status == 'preloaded'){
+					//console.log("image_to_text worker sent preloaded message. e.data: ", e.data);
 					//window.image_to_text_worker_busy = false;
 					
 					if(typeof window.busy_loading_assistant == 'string' && window.busy_loading_assistant == 'image_to_text'){
@@ -218,17 +240,20 @@ async function create_image_to_text_worker(){
 					window.image_to_text_worker_loaded = true;
 					window.busy_loading_image_to_text = false;
 					window.currently_loaded_assistant = 'image_to_text';
-					set_model_loaded(true);
-					add_chat_message('current','developer',get_translation('Image_to_text_AI_has_loaded'));
+					if(window.settings.assistant == 'image_to_text'){
+						window.set_model_loaded(true);
+					}
+					window.add_chat_message('image_to_text','developer',get_translation('Image_to_text_AI_has_loaded'));
+					
 					let image_to_text_progress_el = document.getElementById('download-progress-image_to_text');
 					if(image_to_text_progress_el){
-						console.log("image_to_text became ready, adding 'download-complete-chat-message' class to chat message");
+						//console.log("image_to_text became ready, adding 'download-complete-chat-message' class to chat message");
 						let download_progress_chat_message_el = image_to_text_progress_el.closest('.message');
 						if(download_progress_chat_message_el){
 							download_progress_chat_message_el.classList.add('download-complete-chat-message');
 							setTimeout(() => {
 								download_progress_chat_message_el.remove();
-							},3000);
+							},1000);
 						}
 						else{
 							console.error("image_to_text became ready, but cannot find parent chat message to add download complete class");
@@ -237,33 +262,51 @@ async function create_image_to_text_worker(){
 					else{
 						console.error("image_to_text became ready, but cannot find loading progress indicator element");
 					}
+					remove_download_message();
 				}
 			
 				else if(e.data.status == 'initiate'){
-					console.log("image_to_text worker sent initiate message");
+					//console.log("image_to_text worker sent initiate message");
 				}
 			
-				//https://huggingface.co/Xenova/opus-mt-nl-en/resolve/main/onnx/decoder_model_merged_quantized.onnx?download=true
-			
 				else if(e.data.status == 'download'){
-					console.log("image_to_text worker sent download message: ", e.data.file);
+					//console.log("image_to_text worker sent download message: ", e.data.file);
 					//const file_to_cache = 'https://www.huggingface.co/' + e.data.name + '/resolve/main/' + e.data.file;
 					
 					if(document.body.classList.contains('developer')){
-						add_chat_message('current','developer','(down)loading: ' + e.data.file);
+						window.add_chat_message('current','developer','(down)loading: ' + e.data.file);
 					}
 				}
 			
+				/*
 				else if(e.data.status == 'preloaded'){
-					console.log("image_to_text worker sent 'preloaded' message. Seems to be ready to go.");
-					add_chat_message('image_to_text','image_to_text', get_translation('Loading_complete'),'Loading_complete');
+					//console.log("image_to_text worker sent 'preloaded' message. Seems to be ready to go.");
+					window.add_chat_message('image_to_text','image_to_text', get_translation('Loading_complete'),'Loading_complete');
+					window.image_to_text_worker_loaded = true;
+					remove_download_message();
 				}
+				*/
 				
 			
 				else if(e.data.status == 'done'){
-					console.log("image_to_text worker sent 'done' message. Seems to be for a file being done downloading");
-					handle_download_complete(false);
+					//console.log("image_to_text worker sent 'done' message. Seems to be for a file being done downloading: ", e.data.file);
+					//handle_download_complete(false);
 				}
+				
+				else if(e.data.status == 'disposed'){
+					//console.log("image_to_text worker sent message that dispose is complete");
+					if(window.real_image_to_text_worker != null){
+						window.real_image_to_text_worker.terminate();
+						window.real_image_to_text_worker = null;
+						window.image_to_text_worker_busy = false;
+						window.busy_loading_image_to_text = null;
+						window.image_to_text_worker_loaded = false;
+					}
+					remove_download_message();
+				}
+				
+				
+				
 				
 				
 				else if(e.data.status == 'image_to_text_progress'){
@@ -290,8 +333,6 @@ async function create_image_to_text_worker(){
 						if(image_to_text_progress_el){
 							image_to_text_progress_el.value = e.data.progress;
 							
-							
-							
 							const image_to_text_time_remaining_element = document.getElementById('chat-message-task-image_to_text-time-remaining' + e.data.task.index);
 							if(image_to_text_time_remaining_element){
 								const percentage = e.data.progress * 100;
@@ -309,7 +350,7 @@ async function create_image_to_text_worker(){
 										const delta = Date.now() - image_to_text_previous_percentage_timestamp;
 										//console.log("image_to_text_progress: time it took for 1% progress: ", delta);
 										const percent_remaning = 100 - percentage;
-										console.log("image_to_text_progress: seconds remaning: ", (percent_remaning * delta) / 1000);
+										//console.log("image_to_text_progress: seconds remaning: ", (percent_remaning * delta) / 1000);
 										//image_to_text_time_remaining_element.innerHTML = '<span></span>';
 										
 										let time_remaining = (percent_remaning * delta) / 1000;
@@ -343,7 +384,7 @@ async function create_image_to_text_worker(){
 				}
 				
 				else if(e.data.status == 'download_required'){
-					console.log("image_to_text worker sent 'download_required' message.");
+					//console.log("image_to_text worker sent 'download_required' message.");
 					flash_message(get_translation("A_model_has_to_be_downloaded_from_the_internet_but_there_is_no_internet_connection"), 4000, 'fail');
 				}
 			
@@ -357,40 +398,13 @@ async function create_image_to_text_worker(){
 				
 				else if(e.data.status == 'complete'){
 					//window.image_to_text_worker_busy = false;
-					//set_chat_status('',2);
-					console.log('GOT IMAGE TO TEXT COMPLETE.  e.data: ', e.data);
-					/*
-					if(typeof e.data.task != 'undefined' && typeof e.data.task.index == 'number' && typeof e.data.wav_blob != 'undefined'){
-						console.log("image_to_text worker: complete, and returned wav_blob");
-						let image_to_text_task_el = document.getElementById('chat-message-task-image_to_text' + e.data.task.index);
-						if(image_to_text_task_el){
-							image_to_text_task_el.innerHTML = '';
-							let audio_player_el = document.createElement('audio');
-							console.log("audio_player_el: ", audio_player_el);
-							audio_player_el.classList.add('chat-message-audio-player');
-							audio_player_el.setAttribute('controls',true);
-							//audio_player_el.setAttribute("type","audio/mpeg");
-							audio_player_el.setAttribute('id','chat-message-audio-player-task' + e.data.index);
-							audio_player_el.src = window.URL.createObjectURL(e.data.wav_blob);
-							//audio_player_el.load();
-							console.log("do_audio_player: appending audio_player to bubble: ", audio_player_el);
-							image_to_text_task_el.appendChild(audio_player_el);
-							
-							if(window.settings.assistant != 'image_to_text'){
-								flash_message(get_translation("Music_has_been_generated"));
-							}
-						}
-						
-						
-					}
-					else{
-						console.log("missing data in image_to_text complete message: ", e.data);
-					}
-					*/
-				
+					//set_chat_status({'assistant':'image_to_text'},'');
+					//console.log('OK, IMAGE TO TEXT WORKER SENT COMPLETE MESSAGE.  e.data: ', e.data);
+					image_to_text_task_complete(e.data);
 				}
 				
 				else if(e.data.status == 'error'){
+					console.error("image_to_text worker sent an error message: ", e.data);
 					if(typeof e.data.error == 'string'){
 						if(e.data.error.indexOf('no available backend found') != -1){
 							flash_message(get_translation('A_model_needs_to_be_downloaded_but_there_is_no_internet_connection'),4000,'warn');
@@ -400,13 +414,17 @@ async function create_image_to_text_worker(){
 						}
 					}
 					
+					remove_download_message();
+					
+					if(my_image_to_text_task != null){
+						window.handle_completed_task(my_image_to_text_task,false,{'state':'failed'});
+						my_image_to_text_task = null;
+					}
 					window.image_to_text_worker_busy = false;
 				}
 				
-				
-				
 				else{
-					console.log("image_to_text worker sent an unexpected content message: ", e.data);
+					//console.log("image_to_text worker sent an unexpected content message: ", e.data);
 					window.image_to_text_worker_busy = false;
 				}
 			}
@@ -420,20 +438,23 @@ async function create_image_to_text_worker(){
 			image_to_text_worker_error_count++;
 			
 			window.real_image_to_text_worker.terminate();
-			window.image_to_text_worker = null;
+			window.real_image_to_text_worker = null;
+			//window.image_to_text_worker = null;
 			window.image_to_text_worker_busy = false;
 			if(window.busy_loading_assistant == 'image_to_text'){
 				window.busy_loading_assistant = null;
 			}
-			if(typeof error != 'undefined' && image_to_text_worker_error_count < 10){
+			/*
+			if(typeof error != 'undefined' && image_to_text_worker_error_count < 3){
 				setTimeout(() => {
-					console.log("attempting to restart image_to_text worker");
+					//console.log("attempting to restart image_to_text worker");
 					create_image_to_text_worker();
 				},1000);
 			}
 			else{
 				console.error("image_to_text_worker errored out");
 			}
+			*/
 			
 			// TODO: clean up the partially executed task?
 			if(my_image_to_text_task != null){
@@ -449,138 +470,181 @@ async function create_image_to_text_worker(){
 
 
 
-window.do_image_to_text = function (task){ // image_to_text_queue_item
-	console.log("in do_image_to_text. Task: ", task);
-	
-	return new Promise((resolve, reject) => {
-		
-		if(task == null){
-			console.error("do_image_to_text: task was null");
-			reject(false);
-			return false
-		}
-		
-		if(typeof task.image_blob == 'undefined' || task.image_blob == null){
-			console.error("do_image_to_text: invalid image_blob provided");
-			reject(false);
-			return false
-		}
-		
-		// This AI can use different models under the hood. It's not optimal to do this nested approach..
-		if(typeof window.settings.assistants['image_to_text'] != 'undefined' && typeof window.settings.assistants['image_to_text']['huggingface_id'] == 'string' && window.settings.assistants['image_to_text']['huggingface_id'].length){  // window.settings['image_to_text'].model_id.toLowerCase().indexOf('nanollava') != -1
-			task['huggingface_id'] = window.settings.assistants['image_to_text'].huggingface_id;
-			console.log('do_image_to_text: setting task.huggingface_id as: ', window.settings.assistants['image_to_text'].huggingface_id);
-		}
-		else{
-			console.error('do_image_to_text: NOT setting task.huggingface_id.  window.settings.assistants[image_to_text]:  ', window.settings.assistants['image_to_text']);
-		}
-		
-		my_image_to_text_task = task;
-		
-		
-		
-		if(window.image_to_text_worker == null){
-			console.log("do_image_to_text: calling create_image_to_text_worker");
-			create_image_to_text_worker()
-			.then((value) => {
-				console.log("do_image_to_text: .then: create_image_to_text_worker should be done now. value: ",value);
-				console.log("do_image_to_text: window.image_to_text_worker: ", window.image_to_text_worker);
-			
-				if(window.image_to_text_worker == null){
-					console.error("do_image_to_text: creating image_to_text promise worker failed");
-					reject(false);
-				}
-				else{
-					console.warn("do_image_to_text: window.image_to_text_worker seems to exist: ", window.image_to_text_worker);
-					//image_to_text_worker.postMessage({'task':task});
-			
-					document.body.classList.add('doing-image-to-text');
-					
-					console.warn("do_image_to_text: posting message to image_to_text_worker");
-					window.image_to_text_worker.postMessage({
-						'task':task
-					})
-					.then((response) => {
-						console.error("\n\nHURRAY\n\nin image_to_text promiseWorker then!\n\n");
-						console.log("image_to_text -> promise worker response: ", response);
-						document.body.classList.remove('doing-image-to-text');
-						resolve(response);
-						//return response;
-					})
-					.catch((err) => {
-						console.error("promise image_to_text worker: received error which was caught in worker: ", err);
-						document.body.classList.remove('doing-image-to-text');
-						if( ('' + err).indexOf('network error') != -1){
-							flash_message(get_translation('A_network_connection_error_occured'),5000,'error');
-						}
-						
-						
-						reject(false);
-						return false;
-					})
-			
-				}
-			
-			})
-			.catch((err) => {
-				console.error("do_image_to_text: caught error from create_image_to_text_worker: ", err);
-			})
-		}
-		else{
-			console.log("do_image_to_text: doing postMessage. sending:  task,image_to_text_worker: ", task, window.image_to_text_worker);
-			
-			window.image_to_text_worker.postMessage({
-				'task':task
-			})
-			.then((response) => {
-				console.error("\n\nHURRAY\n\nin image_to_text promiseWorker.then!\n\n");
-				console.log("image_to_text promise worker response: ", response);
-				if(typeof response != 'undefined'){
-					if(window.continuous_image_to_text_enabled == false){
-						document.body.classList.remove('doing-image-to-text');
-					}
-					resolve(response);
-					return response;
-				}
-				else{
-					console.error("promise image_to_text worker: response was 'undefined'");
-					document.body.classList.remove('doing-image-to-text');
-					reject(false);
-					return false;
-				}
-				
-			})
-			.catch((err) => {
-				console.error("promise image_to_text worker: received error which was caught in worker: ", err);
-				document.body.classList.remove('doing-image-to-text');
-				reject(false);
-				return false;
-			})
-		}
-		
-		
-	});
-	
+function remove_download_message(){
+	let download_progress_chat_message_el = document.querySelector('.message.pane-image_to_text.download-progress-chat-message');
+	if(download_progress_chat_message_el){
+		console.error("found download progress el. Removing it.");
+		download_progress_chat_message_el.classList.add('download-complete-chat-message');
+		setTimeout(() => {
+			download_progress_chat_message_el.remove();
+		},1000);
+	}
 }
 
 
+
+async function image_to_text_task_complete(response){
+	try{
+		if(typeof response != 'undefined' && response != null && typeof response.result != 'undefined' && typeof response.task != 'undefined' && response.task != null && typeof response.task.origin == 'string' && typeof response.task.prompt == 'string'){ // && typeof response.task.image_to_text_index == 'number'
+			//console.log("image_to_text_task_complete: GOOD RESPONSE: ", response.result);
+		
+			if(Array.isArray(response.result) && response.result.length){
+				//console.log("image_to_text_task_complete: flattening response.result array");
+				if(response.result.length == 1){
+					response.result = response.result[0];
+				}
+				else{
+					response.result = response.join('\n\n');
+				}
+		
+			}
+			if(typeof response.result == 'string' && response.result.indexOf(response.task.prompt) != -1){
+				response.result = response.result.substr( response.result.indexOf(response.task.prompt) + response.task.prompt.length );
+			
+				//console.log("image_to_text_task_complete: cut-down response.result: ", response.result);
+				response.result = response.result.replaceAll('Answer: ','');
+				response.result = response.result.replaceAll('<|end-of-text|>','');
+				response.result = response.result.replaceAll('<|endoftext|>','');
+		
+				response.result = response.result.trim();
+				//console.log("image_to_text_task_complete even more cut-down image_to_text response.result: ", response.result);
+		
+				// this should be handled in handle_completed_task
+				if(typeof response.task != 'undefined' && response.task != null && typeof response.task.origin == 'string' && response.task.origin == 'chat'){
+					if(typeof response.task.image_to_text_index == 'number'){
+						const image_to_text_output_el = document.getElementById('image-to-text-result-output' + response.task.image_to_text_index);
+						if(image_to_text_output_el){
+							image_to_text_output_el.textContent = response.result;
+					
+							if(window.settings.language != 'en' && typeof response.task.index == 'number'){
+							
+								let local_task = window.get_task(response.task.index)
+								// TODO use the q system for this instead?
+								local_task.state = 'should_translation';
+								local_task.text = response.result;
+								local_task['input_language'] = 'en';
+								local_task['output_language'] = window.settings.language;
+								local_task['translation_details'] = get_translation_model_details_from_languages('en',window.settings.language);
+								//console.log("should translate the image_to_text task result. Updated task:", local_task);
+							}
+							else{
+								//console.log("image_to_text_task_complete promise done, calling handle_completed_task with response.result: ", response.result);
+								await window.handle_completed_task(response.task, response.result);
+							}
+					
+						}
+						else{
+							console.error("image_to_text_task_complete origin is chat, but could not find element to place output into");
+							await window.handle_completed_task(response.task,response.result);
+						}
+					}
+				
+				}
+				else if(response.task.origin == 'camera'){
+					live_image_to_text_output_el.value = response.result;
+					await window.handle_completed_task(response.task,response.result);
+				}
+				else{ // blueprint
+					await window.handle_completed_task(response.task,response.result);
+				}
+		
+		
+			}
+			else{
+				console.error("image_to_text_task_complete response is missing prompt?  response: ", response);
+				await window.handle_completed_task(response.task,response.result);
+			}
+		
+		}
+		else{
+			console.error("image_to_text_task_complete response is missing required parts (result & task.prompt,task.image_to_text_index,task.origin).  response: ", response);
+			await window.handle_completed_task(window.task_queue[t],null,{'state':'failed'});
+			window.clean_up_dead_task(window.task_queue[t]);
+		}
+	
+	}
+	catch(err){
+		console.error("caught error in image_to_text_task_complete: ", err);
+	}
+	
+	window.remove_body_class('doing-image-to-text');
+	//window.handle_completed_task(window.task_queue[t],value.);
+	window.image_to_text_worker_busy = false;
+}
+
+
+
+
+
+window.do_image_to_text = async function (task){
+	//console.log("in do_image_to_text.  task: ", task);
+	
+	if(task == null){
+		console.error("do_image_to_text: task was null");
+		//reject(false);
+		return false
+	}
+	
+	if(typeof task.image_blob == 'undefined' || task.image_blob == null){
+		console.error("do_image_to_text: invalid image_blob provided");
+		//reject(false);
+		return false
+	}
+	
+	// This AI can use different models under the hood. It's not optimal to do this nested approach..
+	if(typeof window.settings.assistants['image_to_text'] != 'undefined' && typeof window.settings.assistants['image_to_text']['huggingface_id'] == 'string' && window.settings.assistants['image_to_text']['huggingface_id'].length){  // window.settings['image_to_text'].model_id.toLowerCase().indexOf('nanollava') != -1
+		task['huggingface_id'] = window.settings.assistants['image_to_text'].huggingface_id;
+		//console.log('do_image_to_text: setting task.huggingface_id as: ', window.settings.assistants['image_to_text'].huggingface_id);
+	}
+	else{
+		console.error('do_image_to_text: NOT setting task.huggingface_id.  window.settings.assistants[image_to_text]:  ', window.settings.assistants['image_to_text']);
+	}
+	
+	my_image_to_text_task = task;
+	
+	if(window.real_image_to_text_worker == null){
+		//console.log("do_image_to_text: calling create_image_to_text_worker. task.assistant: ", task.assistant);
+		
+		window.add_chat_message(task.assistant,task.assistant,"download_progress#setting---");
+		
+		await create_image_to_text_worker();
+		await window.delay(500);
+	}
+	
+	if(window.real_image_to_text_worker == null){
+		console.error("image_to_text_worker was still null somehow");
+		return false
+	}
+	
+	window.add_body_class('doing-image-to-text');
+	
+	//console.log("image_to_text_worker: sending task to worker");
+	window.real_image_to_text_worker.postMessage({
+		'task':task
+	})
+
+	return true
+}
+
+
+
 window.do_continuous_image_to_text = async function (task=null){ // image_to_text_queue_item
-	console.log("in do_continuous_image_to_text. window.waiting_for_image_to_text: ", window.waiting_for_image_to_text);
+	//console.log("in do_continuous_image_to_text. window.waiting_for_image_to_text: ", window.waiting_for_image_to_text);
 	window.continuous_image_to_text_enabled = true;
 	
 	window.continuous_image_to_text_scan_counter = 0;
 	window.busy_starting_camera = false;
 	
 	if(window.camera_on == false){
-		console.log("do_continuous_image_to_text: have to start the camera first");
+		//console.log("do_continuous_image_to_text: have to start the camera first");
 		window.busy_starting_camera = true;
 		window.add_script('./camera_module.js',true) // add it as a module
 		.then((value) => {
-			console.log("do_continuous_image_to_text: starting camera..");
+			//console.log("do_continuous_image_to_text: starting camera..");
 			return window.start_camera();
 		})
 		.then((start_camera_state) => {
-			console.log("do_continuous_image_to_text: camera should now be started..  start_camera_state: ", start_camera_state);
+			//console.log("do_continuous_image_to_text: camera should now be started..  start_camera_state: ", start_camera_state);
 		})
 		.catch((err) => {
 			console.error("do_continuous_image_to_text: caught error loading camera_module script or starting the camera: ", err);
@@ -596,7 +660,7 @@ window.do_continuous_image_to_text = async function (task=null){ // image_to_tex
 		//console.log("* do_continuous_image_to_text: in image_to_text interval. window.continuous_image_to_text_enabled: ", window.continuous_image_to_text_enabled);
 		//console.log("window.waiting_for_image_to_text: ", window.waiting_for_image_to_text);
 		if(window.continuous_image_to_text_enabled == false || window.settings.assistant == 'image_to_text'){
-			console.log("do_continuous_image_to_text: clearing window.image_to_text_interval and exiting image-to-text continuous interval loop");
+			//console.log("do_continuous_image_to_text: clearing window.image_to_text_interval and exiting image-to-text continuous interval loop");
 			clearInterval(window.image_to_text_interval);
 			window.image_to_text_interval = null;
 			window.update_task_overview();
@@ -616,7 +680,7 @@ window.do_continuous_image_to_text = async function (task=null){ // image_to_tex
 		}
 		
 		if(window.camera_on && window.waiting_for_image_to_text == false){
-			console.log("do_continuous_image_to_text: not waiting_for_image_to_text");
+			//console.log("do_continuous_image_to_text: not waiting_for_image_to_text");
 			window.image_to_text_start_time = Date.now();
 			window.describe_one_camera_frame();
 			window.update_task_overview();
@@ -647,24 +711,22 @@ window.do_continuous_image_to_text = async function (task=null){ // image_to_tex
 
 
 window.describe_one_camera_frame = () => {
-	console.log("in describe_one_camera_frame");
+	//console.log("in describe_one_camera_frame");
 	
 	camera_do_ocr_details_el.open = false;
 	camera_image_to_text_details_el.open = true;
 	
 	window.last_image_to_text_blob_file = null;
 	
-	
-	
 	window.get_camera_jpeg_blob() // this should also restart the camera if it was stopped by accident // TODO: check is this is the case
 	.then((blob) => {
 		
 		if(window.camera_streaming){
-			console.log("describe_one_camera_frame: in theory the camera is streaming. ");
+			//console.log("describe_one_camera_frame: in theory the camera is streaming. ");
 			
 			
 			function add_image_to_text_task(fresh_blob){
-				console.log("describe_one_camera_frame: in theory the camera is streaming, so will attempt to grab an image from the stream");
+				//console.log("describe_one_camera_frame: in theory the camera is streaming, so will attempt to grab an image from the stream");
 				window.last_image_to_text_blob = fresh_blob;
 				window.last_image_to_text_blob_file = null;
 				window.continuous_image_to_text_scan_counter = 0;
@@ -681,7 +743,7 @@ window.describe_one_camera_frame = () => {
 				if(image_to_text_prompt.length > 4){
 					continuous_image_to_text_task['prompt'] = image_to_text_prompt;
 					if(window.settings.image_to_text_prompt != image_to_text_prompt){
-						console.log("image_to_text_prompt changed to: ",  image_to_text_prompt);
+						//console.log("image_to_text_prompt changed to: ",  image_to_text_prompt);
 						window.settings.image_to_text_prompt = image_to_text_prompt;
 						save_settings();
 					}
@@ -691,7 +753,7 @@ window.describe_one_camera_frame = () => {
 				}
 			
 				if(window.create_image_to_text_task(continuous_image_to_text_task)){
-					console.log("describe_one_camera_frame: a new continuous image_to_text task was added succesfully");
+					//console.log("describe_one_camera_frame: a new continuous image_to_text task was added succesfully");
 				}
 				else{
 					console.error("describe_one_camera_frame: failed to create_camera_to_text_task, add_task returned false");
@@ -705,7 +767,7 @@ window.describe_one_camera_frame = () => {
 				.then((original_bitmap) => {
 					const { width, height } = original_bitmap;
 					if(width > 1280 || height > 1280){
-						console.log("describe_one_camera_frame: image-to-text blob should be resized, it's rather large.  width, height: ", width, height);
+						//console.log("describe_one_camera_frame: image-to-text blob should be resized, it's rather large.  width, height: ", width, height);
 		  				let scale_factor = 1;
 		  				let desired_width = width;
 		    			let desired_height = height;
@@ -758,10 +820,7 @@ window.describe_one_camera_frame = () => {
 				add_image_to_text_task(blob);
 			}
 			
-			
-	
 		}
-		
 		
 	})
 	.catch((err) => {
@@ -770,13 +829,12 @@ window.describe_one_camera_frame = () => {
 		window.continuous_image_to_text_scan_counter = 0;
 	})
 	
-	
 }
 
 
 
 window.new_document_from_image_to_text_scan_result = function (){
-	console.log("in new_document_from_image_to_text_scan_result");
+	//console.log("in new_document_from_image_to_text_scan_result");
 	
 	let save_image_to_text_task = {
 		'prompt':null,
@@ -805,7 +863,6 @@ window.new_document_from_image_to_text_scan_result = function (){
 window.insert_image_to_text_scan_result = async function(task=null,selection=null){
 	// live_image_to_text_output_el.value + '\n'
 	
-	
 	let save_image_to_text_task = {
 		'prompt':null,
 		'origin':'picture',
@@ -827,11 +884,11 @@ window.insert_image_to_text_scan_result = async function(task=null,selection=nul
 			//window.settings['continous_image_to_text'] = false;
 		
 			//return false
-		
+			
 			const new_date_time = make_date_string();
 			await window.create_new_document(get_translation('image_to_text_name') + ' - ' + new_date_time + '\n\n', get_translation('image_to_text_name') + "-" + new_date_time + ".txt");
 			window.scroll_to_end();
-			console.log("window.settings.docs.open is now: ", window.settings.docs.open);
+			//console.log("window.settings.docs.open is now: ", window.settings.docs.open);
 			save_image_to_text_task['file'] = window.settings.docs.open;
 		}
 		

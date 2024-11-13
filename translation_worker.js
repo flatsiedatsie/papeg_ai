@@ -54,11 +54,11 @@ await hasFp16();
 console.log("TRANSLATION WORKER: self.supports_web_gpu16: ", self.supports_web_gpu16);
 console.log("TRANSLATION WORKER: self.supports_web_gpu32: ", self.supports_web_gpu32);
 if(self.supports_web_gpu16 == false && self.supports_web_gpu32 == false){
-	console.log("TRANSLATION WORKER: NO WEB GPU");
+	//console.log("TRANSLATION WORKER: NO WEB GPU");
 	self.device = 'wasm';
 }
 else{
-	console.log("TRANSLATION WORKER: WEB GPU IS AVAILABLE");
+	//console.log("TRANSLATION WORKER: WEB GPU IS AVAILABLE");
 	self.device = 'webgpu';
 }
 
@@ -214,7 +214,7 @@ function check_if_already_target_language(paragraph,output_language){
 
 
 function extract_sentences(text, output_language){
-	console.log("translation worker: in extract_sentences. text,output_language: ", text, output_language);
+	//console.log("translation worker: in extract_sentences. text,output_language: ", text, output_language);
 	if(typeof text != 'string'){
 		console.error("extract_sentences: returning empty array, as text was not a string: ", text);
 		return [];
@@ -258,7 +258,7 @@ function extract_sentences(text, output_language){
 		let ok_line = '';
 		
 		for(let l = lines.length - 1; l >= 0; l--){
-			console.log("translation worker: extract_sentences: l: ", l, lines[l].charAt(2));
+			//console.log("translation worker: extract_sentences: l: ", l, lines[l].charAt(2));
 			if(typeof lines[l] == 'string'){
 				//if(lines[l].startsWith('🕰️ ') && lines[l].endsWith(' )') && lines[l].indexOf(' ( T+ ') != -1){
 				if(lines[l].startsWith('🕰️ ') && !isNaN(lines[l].charAt(3))){
@@ -571,7 +571,7 @@ class PipelineSingleton {
 
 
 registerPromiseWorker(function (message) {
-	console.log("registerPromiseWorker: translation worker got message: ", message);
+	//console.log("registerPromiseWorker: translation worker got message: ", message);
 	////console.log("WORKER: registerPromiseWorker: GOT MESSAGE: ", message); // { hello: 'world', answer: 42, 'this is fun': true }
 	
 	
@@ -589,7 +589,7 @@ registerPromiseWorker(function (message) {
 		try{
 			
 			if(typeof message.task != 'undefined' && message.task != null){
-				console.log("TRANSLATION WORKER: received a task: ", message.task);
+				//console.log("TRANSLATION WORKER: received a task: ", message.task);
 			
 				//return {"error":"translation worker: this is a test"};
 				/*
@@ -645,7 +645,7 @@ registerPromiseWorker(function (message) {
 				}
 				////console.log("source_text came from this task property: ", translated_property);
 				
-				console.log("translation worker: source_text: ", source_text);
+				//console.log("translation worker: source_text: ", source_text);
 				if(source_text){
 					
 					let input_language = null;
@@ -656,8 +656,8 @@ registerPromiseWorker(function (message) {
 					if(typeof  message.task.output_language == 'string'){
 						output_language =  message.task.output_language.toLowerCase();
 					}
-					console.log("TRANSLATION WORKER: input_language: ", input_language);
-					console.log("TRANSLATION WORKER: output_language: ", output_language);
+					//console.log("TRANSLATION WORKER: input_language: ", input_language);
+					//console.log("TRANSLATION WORKER: output_language: ", output_language);
 		
 					//await caches.open("transformers").then((my_cache) => my_cache.add('./tjs/transformers.js'));
 			
@@ -681,7 +681,7 @@ registerPromiseWorker(function (message) {
 					
 					if(typeof message.task.translation_details != 'undefined' && message.task.translation_details != null){
 						if(typeof message.task.translation_details.model == 'string'){
-							console.log("TRANSLATION WORKER: found model name in translation_details: ", message.task.translation_details.model);
+							//console.log("TRANSLATION WORKER: found model name in translation_details: ", message.task.translation_details.model);
 							hf_model_url = message.task.translation_details.model;
 						}
 					}
@@ -718,12 +718,12 @@ let translator = await pipeline(
 					let new_text = '' + source_text;
 					let sentences = [];
 					if(typeof message.task.sentences_to_translate != 'undefined'){
-						console.log("TRANSLATION WORKER: TASK HAS LIST OF PRE-SPLIT SENTENCES_TO_TRANSLATE: ", message.task.sentences_to_translate);
+						//console.log("TRANSLATION WORKER: TASK HAS LIST OF PRE-SPLIT SENTENCES_TO_TRANSLATE: ", message.task.sentences_to_translate);
 						sentences = message.task.sentences_to_translate;
 					}
 					else{
 						sentences = extract_sentences(source_text,output_language);
-						console.log("TRANSLATION WORKER: used extract_sentences. Sentences list is now: ", sentences);
+						//console.log("TRANSLATION WORKER: used extract_sentences. Sentences list is now: ", sentences);
 					}
 					console.warn("TRANSLATION WORKER: sentences to translate: ", sentences.length, sentences);
 					let s = 0;
@@ -770,10 +770,10 @@ let translator = await pipeline(
 									return
 								}
 								const pre_part = ahead_text.substr(0,ahead_text.indexOf(sentence));
-								console.log("pre_part: -->" + pre_part + "<--");
+								//console.log("pre_part: -->" + pre_part + "<--");
 								////console.log("next cursor with pre_part + sentence: ", ahead_text.indexOf(sentence) + sentence.length);
 								ahead_text = ahead_text.substr(ahead_text.indexOf(sentence) + sentence.length);
-								console.log("ahead text has shrunk to:  -->" +  ahead_text);
+								//console.log("ahead text has shrunk to:  -->" +  ahead_text);
 								//console.log("TRANSLATION WORKER: TRANSLATING: SENTENCE:", sentence);
 								
 								self.postMessage({
@@ -804,7 +804,7 @@ const result = await pipe(">>jpn<< I love pizza", {
 									
 									// Small fix for BART // Xenova/mbart-large-50-many-to-many-mmt
 									if(hf_model_url.endsWith('mbart-large-50-many-to-many-mmt')){
-										console.log("translation worker: looking up language code in bart_lookup table: " + input_language, bart_lookup);
+										//console.log("translation worker: looking up language code in bart_lookup table: " + input_language, bart_lookup);
 										if(typeof self.bart_lookup[input_language] != 'undefined'){
 											input_language = self.bart_lookup[input_language];
 										}
@@ -902,8 +902,8 @@ const result = await pipe(">>jpn<< I love pizza", {
 								
 								
 								
-								console.log("TRANSLATION_WORKER: hf_model_url: ", hf_model_url);
-								console.log("TRANSLATION_WORKER: translation_settings: ", translation_settings);
+								//console.log("TRANSLATION_WORKER: hf_model_url: ", hf_model_url);
+								//console.log("TRANSLATION_WORKER: translation_settings: ", translation_settings);
 								
 								//translation_settings['src_lang'] = 'en_XX' //input_language;
 								//translation_settings['tgt_lang'] = 'nl_XX' //output_language;
@@ -914,14 +914,14 @@ const result = await pipe(">>jpn<< I love pizza", {
 								//sentence = sentence.trim();
 								//console.log("trimmed sentence: -->" + sentence + "<--");
 								
-								console.log("TRANSLATION WORKER: TRANSLATING: FINAL SENTENCE:", sentence);
+								//console.log("TRANSLATION WORKER: TRANSLATING: FINAL SENTENCE:", sentence);
 								
 								
 								pipelines[hf_model_url].pipe(sentence,translation_settings)
 								.then((translation) => {
-									console.log("\nTRANSLATION WORKER: TRANSLATED! \nfrom: ", sentence, "\n to: ", translation, "\n");
+									//console.log("\nTRANSLATION WORKER: TRANSLATED! \nfrom: ", sentence, "\n to: ", translation, "\n");
 									try{
-										console.log("translation[0].translation_text: ", translation[0].translation_text);
+										//console.log("translation[0].translation_text: ", translation[0].translation_text);
 									}
 									catch(err){
 										console.error("translation result was not an array: ", err);
@@ -929,7 +929,7 @@ const result = await pipe(">>jpn<< I love pizza", {
 									
 									let extra_space = '';
 									if((constructed_text + pre_part).length && !(constructed_text + pre_part).endsWith(' ') && !(constructed_text + pre_part).endsWith('\n') && !translation[0].translation_text.startsWith(' ') && translation[0].translation_text.length && !translation[0].translation_text.startsWith('\n')){
-										console.log("translation worker: injecting an extra space");
+										//console.log("translation worker: injecting an extra space");
 										extra_space = ' ';
 									}
 									
@@ -953,7 +953,7 @@ const result = await pipe(">>jpn<< I love pizza", {
 									constructed_text += pre_part;
 									
 									if(typeof pre_part == 'string' && typeof translation[0].translation_text == 'string'){
-										console.log("TRANSLATION WORKER: JOINING:  ", pre_part + "-XXX-" + translation[0].translation_text.substr(0,10) + "...");
+										//console.log("TRANSLATION WORKER: JOINING:  ", pre_part + "-XXX-" + translation[0].translation_text.substr(0,10) + "...");
 									}
 									
 									
@@ -1020,7 +1020,7 @@ const result = await pipe(">>jpn<< I love pizza", {
 				    //let pipe = await pipeline('translation', 'Xenova/opus-mt-nl-en'); // ,{ dtype: 'fp32' }
 			
 					if(typeof pipelines[hf_model_url] == 'undefined'){
-						console.log("translation worker: creating new pipeline");
+						//console.log("translation worker: creating new pipeline");
 						// Clear any old pipelines
 						// TODO: could allow two recently used pipelines to remain active, or adjust this based on the amound of system ram
 						// Having two pipelines persist might be nice for translating back and forth between two languages
@@ -1044,14 +1044,14 @@ const result = await pipe(">>jpn<< I love pizza", {
 						if( (self.supports_web_gpu16 || self.supports_web_gpu32) && hf_model_url.indexOf('opus-mt-') != -1){
 							
 							dtype_settings = self.supports_web_gpu16 ? 'fp16' : 'fp32'; //'fp16';
-							console.log("translation worker: setting DTYPE to give Opus MT translation a speeed boost.  dtype_settings: ", dtype_settings);
+							//console.log("translation worker: setting DTYPE to give Opus MT translation a speeed boost.  dtype_settings: ", dtype_settings);
 						}
 						
 						let actual_device = self.device;
 						
 						//if(hf_model_url.endsWith('-mul-en') || hf_model_url.endsWith('-en-mul')){
 						if( self.force_webgpu == false && (hf_model_url.endsWith('m2m100_418M') || hf_model_url.endsWith('mbart-large-50-many-to-many-mmt') ) ){
-							console.log("translation worker: forcing WASM pipeline for translation model: ", hf_model_url);
+							//console.log("translation worker: forcing WASM pipeline for translation model: ", hf_model_url);
 							env.backends.onnx.wasm.proxy = true;
 							actual_device = 'wasm';
 							//dtype_settings = 'fp32';
@@ -1061,7 +1061,7 @@ const result = await pipe(">>jpn<< I love pizza", {
 						}
 						
 						
-						console.log("translation worker:  actual_device,hf_model_url: ", actual_device, hf_model_url);
+						//console.log("translation worker:  actual_device,hf_model_url: ", actual_device, hf_model_url);
 						
 						// let pipe = 
 						pipeline(
@@ -1077,8 +1077,8 @@ const result = await pipe(">>jpn<< I love pizza", {
 			    			
 						)
 						.then((pipe) => {
-							console.log("TRANSLATION WORKER: MADE PIPE");
-							console.log("TRANSLATION WORKER: pipeline_constructed.  pipe, sentences: ", pipe, sentences);
+							//console.log("TRANSLATION WORKER: MADE PIPE");
+							//console.log("TRANSLATION WORKER: pipeline_constructed.  pipe, sentences: ", pipe, sentences);
 					
 							self.postMessage({
 								task: message.task,
@@ -1111,13 +1111,13 @@ const result = await pipe(">>jpn<< I love pizza", {
 					}
 			
 					else{
-						console.log("TRANSLATION_WORKER: USING PRE_MADE PIPELINE");
+						//console.log("TRANSLATION_WORKER: USING PRE_MADE PIPELINE");
 						
 						// hf_model_url.endsWith('-mul-en') || hf_model_url.endsWith('-en-mul') || 
 						
 						
 						if(self.force_webgpu == false && (hf_model_url.endsWith('m2m100_418M') || hf_model_url.endsWith('mbart-large-50-many-to-many-mmt') ) ){
-							console.log("translation worker: forcing WASM proxy to true");
+							//console.log("translation worker: forcing WASM proxy to true");
 							env.backends.onnx.wasm.proxy = true;
 						}
 						else{
@@ -1252,7 +1252,7 @@ self.addEventListener('message', async (event) => {
 
 async function clean_up(){
 	for(let p = 0; p < pipelines.length; p++){
-		console.log("translation worker: should unload this translation pipeline: ", p, pipelines[p]);
+		//console.log("translation worker: should unload this translation pipeline: ", p, pipelines[p]);
 		if(typeof pipelines[p].dispose == 'function'){
 			await pipelines[p].dispose();
 		}
@@ -1268,7 +1268,7 @@ async function clean_up(){
 
 
 addEventListener('message', async (event) => {
-	console.log("TRANSLATION WORKER: received non-promise message?  event.data: ", event.data);
+	//console.log("TRANSLATION WORKER: received non-promise message?  event.data: ", event.data);
 	
     const message = event.data;
 	
@@ -1276,13 +1276,13 @@ addEventListener('message', async (event) => {
 		
 		// Interrupt
 		if(message.action == 'interrupt' && self.running){
-			console.log("translation worker: setting interrupt to true");
+			//console.log("translation worker: setting interrupt to true");
 			self.interrupt = true;
 		}
 		
 		// Stop
 		else if(typeof message.action == 'stop'){
-			console.log("translation worker: action was STOP");
+			//console.log("translation worker: action was STOP");
 			if(self.running){
 				self.stop = true;
 				self.interrupt = true;

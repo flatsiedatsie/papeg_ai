@@ -11,7 +11,7 @@ catch(e){
 }
 
 
-console.log("HELLO FROM MUSICGEN WORKER");
+//console.log("HELLO FROM MUSICGEN WORKER");
 
 
 // Do local model checks
@@ -24,6 +24,8 @@ self.device = 'wasm';
 self.supports_web_gpu16 = false;
 self.supports_web_gpu32 = false;
 
+self.task = null;
+self.busy_generating = false;
 
 
 
@@ -48,7 +50,7 @@ class InterruptableStoppingCriteria extends StoppingCriteria {
 
 const stopping_criteria = new InterruptableStoppingCriteria();
 
-self.task = null;
+
 
 function minFramesForTargetMS(targetDuration, frameSamples, sr = 16e3) {
   return Math.ceil(targetDuration * sr / 1e3 / frameSamples);
@@ -230,7 +232,7 @@ self.guidance_scale = 3;
 self.temperature = 1;
 
 registerPromiseWorker((message) => {
-	//console.log("MUSICGEN WORKER: registerPromiseWorker: RECEIVED MESSAGE: ", message);
+	console.log("MUSICGEN WORKER: registerPromiseWorker: RECEIVED MESSAGE: ", message);
 	
 	try{
 		return new Promise((resolve, reject) => {
@@ -238,13 +240,14 @@ registerPromiseWorker((message) => {
 			self.task = null;
 	
 			const do_musicgen = (sentence) => {
-				//console.log("MUSICGEN WORKER: in do_musicgen. sentence: ", sentence);
+				console.log("MUSICGEN WORKER: in do_musicgen. sentence: ", sentence);
+				
 				self.postMessage({
 					'status':'ready'
 				});
 				
 				if(sentence == 'papegai_preload'){
-					//console.log("MUSICGEN WORKER: prompt was papegai_preload. Stopping here.")
+					console.log("MUSICGEN WORKER: prompt was papegai_preload. Stopping here.")
 					const preload_done_message = {
 						'task':message.task,
 						'status':'preloaded'
@@ -253,7 +256,6 @@ registerPromiseWorker((message) => {
 					resolve(preload_done_message);
 					return
 				}
-				
 				
 				const max_length = Math.min(
 					Math.max(Math.floor(self.duration * 50), 1) + 4,
@@ -318,6 +320,8 @@ registerPromiseWorker((message) => {
 					        wav_blob: new Blob([wav], { type: 'audio/wav' }),
 					    }
 					    self.postMessage(result);
+						self.busy_generating = false;
+						self.task = null;
 						resolve(result);
 					}
 					else{
@@ -329,6 +333,8 @@ registerPromiseWorker((message) => {
 				.catch((err) => {
 					console.error("MUSICGEN_WORKER: caught error generating audio_values: ", err);
 					reject({"status":"error","error":"Caught error generating audio values or wav file","task": message.task});
+					self.busy_generating = false;
+					self.task = null;
 					return err
 				})
 				
@@ -338,7 +344,13 @@ registerPromiseWorker((message) => {
 	
 			let sentence = null;
 			if(typeof message.task == 'object'){
-				//console.log("MUSICGEN WORKER: received a task: ", message.task);
+				console.log("MUSICGEN WORKER: received a task: ", message.task);
+				
+				if(self.busy_generating){
+					reject({"status":"already_busy", "error":"musigen worker already busy"});
+					return false
+				}
+				self.busy_generating = true;
 				
 				self.task = message.task;
 				
@@ -390,32 +402,55 @@ registerPromiseWorker((message) => {
 						AutoTokenizer.from_pretrained('Xenova/musicgen-small')
 						.then((tokenizer) => {
 							self.tokenizer = tokenizer;
-							return MusicgenForConditionalGeneration.from_pretrained('Xenova/musicgen-small', {
-						        progress_callback: (progress_data) => {
-									//console.log("MUSICGEN WORKER: model download progress_callback: progress_data: ", progress_data);
-						          	if (progress_data.status !== 'progress') return;
-									//setLoadProgress(prev => ({ ...prev, [data.file]: data }))
-									///setLoadProgress(data);
-									self.postMessage(progress_data);
-						        },
-						        dtype: {
-						          text_encoder: 'q8',
-						          decoder_model_merged: 'q8',
-						          encodec_decode: 'fp32',
-						        },
-						        device: 'wasm',
-				    		});
+							
+							if(self.device == 'wasm'){
+								return MusicgenForConditionalGeneration.from_pretrained('Xenova/musicgen-small', {
+							        progress_callback: (progress_data) => {
+										//console.log("MUSICGEN WORKER: model download progress_callback: progress_data: ", progress_data);
+							          	if (progress_data.status !== 'progress') return;
+										//setLoadProgress(prev => ({ ...prev, [data.file]: data }))
+										///setLoadProgress(data);
+										self.postMessage(progress_data);
+							        },
+							        dtype: {
+							          text_encoder: 'q8',
+							          decoder_model_merged: 'q8',
+							          encodec_decode: 'fp32',
+							        },
+							        device: 'wasm',
+					    		});
+							}
+							else{
+								return MusicgenForConditionalGeneration.from_pretrained('Xenova/musicgen-small', {
+							        progress_callback: (progress_data) => {
+										//console.log("MUSICGEN WORKER: model download progress_callback: progress_data: ", progress_data);
+							          	if (progress_data.status !== 'progress') return;
+										//setLoadProgress(prev => ({ ...prev, [data.file]: data }))
+										///setLoadProgress(data);
+										self.postMessage(progress_data);
+							        },
+							        dtype: {
+							          text_encoder: 'q8',
+							          decoder_model_merged: 'q8',
+							          encodec_decode: 'fp32',
+							        },
+							        device: 'webgpu',
+					    		});
+							}
+							
+							
 						})
 						.then((model) => {
 							//console.log("MUSICGEN WORKER: created model: ", model);
 							self.model = model;
 							do_musicgen(sentence);
 						
-						
 						})
 						.catch((err) => {
 							console.error("MUSICGEN_WORKER: caught error creating tokenizer: ", err);
 							reject({"status":"error", "error":"Caught error creating MusicGen tokenizer or model: " + err, "task": message.task});
+							self.busy_generating = false;
+							self.task = null;
 							return err
 						})
 					}
@@ -424,14 +459,13 @@ registerPromiseWorker((message) => {
 					}
 					
 				
-					
-					
-				
 				}
 				else{
 					//console.log("MUSICGEN WORKER: PROMPT TO GENERATE MUSIC FROM NOT LONG ENOUGH OR INVALID: ", sentence);
 					//postMessage({"error":"Invalid sentence provided",'task': message.task});
-					reject({"error":"Invalid sentence provided","task": message.task})
+					reject({"error":"Invalid sentence provided","task": message.task});
+					self.busy_generating = false;
+					self.task = null;
 				}
 		
 			}
@@ -439,12 +473,16 @@ registerPromiseWorker((message) => {
 				console.error("MUSICGEN WORKER: no valid task provided");
 				//postMessage({"error":"No valid task object provided"});
 				reject({"error":"No valid task object provided"});
+				self.busy_generating = false;
+				self.task = null;
 			}
 		
 		});
 	}
 	catch(err){
 		console.error("CAUGHT GENERAL MUSICGEN WORKER ERROR:", err);
+		self.busy_generating = false;
+		self.task = null;
 	}
 
 });
@@ -454,6 +492,8 @@ registerPromiseWorker((message) => {
 // Listen for messages from the main thread
 self.addEventListener('message', async (e) => {
     const { action } = e.data;
+	
+	console.log("musicgen_worker: received non-promise-worker message: ", e.data);
 
     switch (action) {
 		/*
@@ -491,9 +531,10 @@ async function check_gpu(){
 	// CHECK WEB GPU SUPPORT
 	
     if (!navigator.gpu) {
-		console.error("MUSICGEN WORKER: WebGPU not supported.");
-    }else{
-		console.error("MUSICGEN WORKER: navigator.gpu exists: ", navigator.gpu);
+		//console.error("MUSICGEN WORKER: WebGPU not supported.");
+    }
+	else{
+		//console.error("MUSICGEN WORKER: navigator.gpu exists: ", navigator.gpu);
 		const adapter = await navigator.gpu.requestAdapter();
 		console.error("MUSICGEN WORKER:  adapter,adapter.features: ", adapter, adapter.features);
 		if (typeof adapter != 'undefined' && adapter != null && typeof adapter.features != 'undefined') {
@@ -518,7 +559,7 @@ async function check_gpu(){
 	
 }
 
-await check_gpu();
+//await check_gpu();
 console.error("MUSICGEN WORKER:  self.supports_web_gpu16, self.supports_web_gpu32: ", self.supports_web_gpu16, self.supports_web_gpu32);
 
 if(self.supports_web_gpu16 || self.supports_web_gpu32){

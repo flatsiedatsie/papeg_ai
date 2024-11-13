@@ -62,61 +62,62 @@ async function doc_settled(){
 							fits = true;
 						}
 						if(fits){
-							document.body.classList.add('document-fits-in-context');
+							add_body_class('document-fits-in-context');
 						}
 						else{
-							document.body.classList.remove('document-fits-in-context');
+							remove_body_class('document-fits-in-context');
 						}
 						
 					}
 					else{
-						document.body.classList.remove('document-fits-in-context');
+						remove_body_class('document-fits-in-context');
 					}
 				}
 				else{
-					document.body.classList.remove('document-fits-in-context');
+					remove_body_class('document-fits-in-context');
 				}
 			}
 			else{
-				document.body.classList.remove('document-fits-in-context');
+				remove_body_class('document-fits-in-context');
 			}
-			
-			
 			
 			if(window.doc_text.length > 20 && window.doc_text.length < 500){
 				//console.log("in doc_settled: window.doc_text.length is more than 10 and less than 500, so going to check language. doc_text.length ", window.doc_text.length);
 				add_script('./js/eld.M60.min.js')
 				.then((value) => {
-					language_detection_result = eld.detect(window.doc_text.substr(0,500));
-					if(language_detection_result.language){
-						//console.log("doc_settled: language_detection_result: ", language_detection_result.language);
-						if(language_detection_result.isReliable()){
-							//console.log("doc_settled: language detected reliably. Resolving true");
-							document.body.classList.remove('unknown-language');
-							resolve(true);
+					if(typeof eld != 'undefined'){
+						language_detection_result = eld.detect(window.doc_text.substr(0,400));
+						if(language_detection_result.language){
+							//console.log("doc_settled: language_detection_result: ", language_detection_result.language);
+							if(language_detection_result.isReliable()){
+								//console.log("doc_settled: language detected reliably. Resolving true");
+								remove_body_class('unknown-language');
+								resolve(true);
+							}
+							else{
+								//console.log("doc_settled: language not detected reliably. Resolving false");
+								add_body_class('unknown-language');
+								reject(false);
+								return
+							}
 						}
 						else{
-							//console.log("doc_settled: language not detected reliably. Resolving false");
-							document.body.classList.add('unknown-language');
+							add_body_class('unknown-language');
 							reject(false);
 							return
 						}
 					}
-					else{
-						document.body.classList.add('unknown-language');
-						reject(false);
-						return
-					}
+					
 				})
 				.catch((err) => {
 					console.error("doc_settled: caught error tring to detect language of text: ", err);
-					document.body.classList.remove('unknown-language');
+					remove_body_class('unknown-language');
 					resolve(true);
 				})
 			}
 			else{
 				//console.log("doc_settled: doc_text is very long, resolving as true");
-				document.body.classList.remove('unknown-language');
+				remove_body_class('unknown-language');
 				resolve(true);
 			}
 			
@@ -125,9 +126,9 @@ async function doc_settled(){
 		}
 		else{
 			//console.warn("doc_settled: doc_text was not a string, or less than 10 characters long, or started with _PLAYGROUND_BINARY_: ", window.doc_text);
-			document.body.classList.add('unknown-language');
+			add_body_class('unknown-language');
 			if(typeof window.doc_text == 'string' && window.doc_text.startsWith('_PLAYGROUND_BINARY_')){
-				document.body.classList.remove('document-fits-in-context');
+				remove_body_class('document-fits-in-context');
 			}
 			reject(false);
 			return
@@ -203,31 +204,31 @@ function doc_updated(){
 			window.doc_length = window.doc_text.length;
 			//console.log("window.doc_length: ", window.doc_length);
 			if(window.doc_length){
-				document.body.classList.remove('doc-empty');
+				remove_body_class('doc-empty');
 			}
 			else{
-				document.body.classList.add('doc-empty');
+				add_body_class('doc-empty');
 			}
 			//console.log("window.doc_text.length: ", window.doc_text.length);
 			if( (window.doc_length > 3 && window.doc_text.indexOf(' ' != -1)) || window.doc_length > 9){ // enough text for continue to work with
-				document.body.classList.add('doc-has-text');
+				add_body_class('doc-has-text');
 			
 				if(window.doc_length > 10 && window.doc_length < 100){
-					document.body.classList.add('doc-has-little-text');
+					add_body_class('doc-has-little-text');
 				}
 				else{
-					document.body.classList.remove('doc-has-little-text');
+					remove_body_class('doc-has-little-text');
 				}
 			
 				if(window.doc_length > 500){
-					document.body.classList.remove('unknown-language');
+					remove_body_class('unknown-language');
 				}
 			
 				if(window.doc_length > 750){
-					document.body.classList.add('doc-is-long');
+					add_body_class('doc-is-long');
 				}
 				else{
-					document.body.classList.remove('doc-is-long');
+					remove_body_class('doc-is-long');
 				}
 				//console.log("window.doc_selected_text: ", window.doc_selected_text);
 				if(typeof window.doc_selected_text == 'string'){
@@ -238,22 +239,22 @@ function doc_updated(){
 					//console.log("adding doc-has-selection to body");
 					//console.log("doc has selection. Length: ", window.doc_selected_text.length);
 				
-					document.body.classList.add('doc-has-selection');
-					document.body.classList.remove('prepare-translate-document');
+					add_body_class('doc-has-selection');
+					remove_body_class('prepare-translate-document');
 				
 
 					if(window.doc_selected_text.length > window.minimum_rewrite_length && window.doc_selected_text.length < window.maximum_rewrite_length){ // 50 chars
-						document.body.classList.add('doc-has-rewrite-selection');
+						add_body_class('doc-has-rewrite-selection');
 					}
 					else{
-						document.body.classList.remove('doc-has-summary-selection');
+						remove_body_class('doc-has-summary-selection');
 					}
 				
 					if(window.doc_selected_text.length > window.minimal_summarize_length ){ // 500 chars
-						document.body.classList.add('doc-has-summary-selection');
+						add_body_class('doc-has-summary-selection');
 					}
 					else{
-						document.body.classList.remove('doc-has-summary-selection');
+						remove_body_class('doc-has-summary-selection');
 					}
 				
 					if(cm_scroller_el == null){
@@ -269,26 +270,26 @@ function doc_updated(){
 				else{
 					//console.log("removing doc-has-selection");
 					hide_doc_selection_hint();
-					document.body.classList.remove('doc-has-selection');
-					document.body.classList.remove('doc-has-short-selection');
-					document.body.classList.remove('doc-has-rewrite-selection');
-					document.body.classList.remove('doc-has-summary-selection');
+					remove_body_class('doc-has-selection');
+					remove_body_class('doc-has-short-selection');
+					remove_body_class('doc-has-rewrite-selection');
+					remove_body_class('doc-has-summary-selection');
 				}
 			
 				return;
 			}
 		}
 		//console.warn("reached end of doc_updated (window.doc_text was not a string)");
-		document.body.classList.remove('doc-has-text');
-		//document.body.classList.remove('doc-empty');
-		document.body.classList.remove('doc-has-little-text');
-		document.body.classList.remove('doc-is-long');
-		document.body.classList.remove('doc-has-selection');
-		document.body.classList.remove('doc-has-summary-selection');
-		document.body.classList.remove('doc-has-rewrite-selection');
-		document.body.classList.remove('doc-has-short-selection');
-		document.body.classList.remove('doc-has-medium-selection');
-		document.body.classList.remove('doc-has-long-selection');
+		remove_body_class('doc-has-text');
+		//remove_body_class('doc-empty');
+		remove_body_class('doc-has-little-text');
+		remove_body_class('doc-is-long');
+		remove_body_class('doc-has-selection');
+		remove_body_class('doc-has-summary-selection');
+		remove_body_class('doc-has-rewrite-selection');
+		remove_body_class('doc-has-short-selection');
+		remove_body_class('doc-has-medium-selection');
+		remove_body_class('doc-has-long-selection');
 		hide_doc_selection_hint();
 		
 	},200);
@@ -641,9 +642,9 @@ function hide_doc_selection_hint(){
 	//console.log("in hide_doc_selection_hint");
 	//doc_selection_hint_el.style.bottom = '-10000px';
 	//doc_selection_hint_el.style.left = '-10000px';
-	//document.body.classList.remove('doc-has-selection');
-	//document.body.classList.remove('doc-has-long-selection');
-	//document.body.classList.remove('working-on-doc-selection');
+	//remove_body_class('doc-has-selection');
+	//remove_body_class('doc-has-long-selection');
+	//remove_body_class('working-on-doc-selection');
 }
 
 
@@ -675,7 +676,7 @@ function prepare_summarize(){
 	
 	model_info_container_el.innerHTML = '';
 	
-	document.body.classList.add('show-rewrite');
+	add_body_class('show-rewrite');
 	//rewrite_dialog_el.showModal();
 	
 	
@@ -713,10 +714,10 @@ function prepare_summarize_document(){
 		}
 	}
 	
-	document.body.classList.add('show-rewrite');
-	document.body.classList.add('prepare-summarize-document');
-	document.body.classList.remove('prepare-translate-document');
-	document.body.classList.remove('chat-shrink');
+	add_body_class('show-rewrite');
+	add_body_class('prepare-summarize-document');
+	remove_body_class('prepare-translate-document');
+	remove_body_class('chat-shrink');
 	
 	
 	
@@ -791,8 +792,8 @@ function prepare_translation(){
 		}
 	}
 	
-	document.body.classList.add('show-rewrite');
-	document.body.classList.remove('chat-shrink');
+	add_body_class('show-rewrite');
+	remove_body_class('chat-shrink');
 	//rewrite_dialog_el.showModal();
 	
 	
@@ -828,11 +829,11 @@ function prepare_translate_document(){
 		}
 	}
 	
-	document.body.classList.add('show-rewrite');
-	document.body.classList.add('prepare-translate-document');
-	document.body.classList.remove('prepare-summarize-document');
-	document.body.classList.remove('chat-shrink');
-	document.body.classList.remove('fairytale');
+	add_body_class('show-rewrite');
+	add_body_class('prepare-translate-document');
+	remove_body_class('prepare-summarize-document');
+	remove_body_class('chat-shrink');
+	remove_body_class('fairytale');
 	if(typeof current_file_name == 'string'){
 		translation_new_file_name_input_el.value = current_file_name;
 	}
@@ -1094,7 +1095,7 @@ async function prepare_proofread(source_text=null){
 	summarize_details_el.removeAttribute('open');
 	rewrite_details_el.removeAttribute('open');
 	translation_details_el.removeAttribute('open');
-	proofread_details_el.setAttribute('open','true');
+	proofread_details_el.setAttribute('open',true);
 	
 	tools_submit_form_container_el.scrollIntoView();
 	
@@ -1104,10 +1105,10 @@ async function prepare_proofread(source_text=null){
 		}
 	}
 	
-	document.body.classList.add('show-rewrite');
-	document.body.classList.remove('sidebar');
-	document.body.classList.remove('chat-shrink');
-	document.body.classList.remove('fairytale');
+	add_body_class('show-rewrite');
+	remove_body_class('sidebar');
+	remove_body_class('chat-shrink');
+	remove_body_class('fairytale');
 	//rewrite_dialog_el.showModal();
 	
 	let detected_language = null;
@@ -1183,7 +1184,7 @@ async function proofread_selection(task=null,text_to_proofread=null,feeling_luck
 	
 	if(typeof text_to_proofread == 'string' && text_to_proofread.length > 5){
 		
-		document.body.classList.add('doing-proofread');
+		add_body_class('doing-proofread');
 		if(text_to_proofread.length < 1000){
 			rewrite_selection("proofread",text_to_proofread,1,null,null,feeling_lucky);
 		}
@@ -1976,9 +1977,9 @@ function prepare_rewrite(){
 		}
 	}
 	
-	document.body.classList.add('show-rewrite');
-	document.body.classList.remove('chat-shrink');
-	document.body.classList.remove('fairytale');
+	add_body_class('show-rewrite');
+	remove_body_class('chat-shrink');
+	remove_body_class('fairytale');
 	//rewrite_dialog_el.showModal();
 	
 	
@@ -2122,7 +2123,7 @@ async function rewrite_selection(type=null,source_text,desired_results=1,parent_
 	if(type=='summarize'){
 		prompt_text = summarize_prompt_el.value; //get_translation('Summarize_the_following_text') + ':';
 		add_chat_message('current','user',prompt_text,'Summarize_the_following_text','<details><summary class="ellipsis">' + source_text.substr(0,100) + '</summary><div>' + source_text + '</div></details>');
-		document.body.classList.remove('show-rewrite');
+		remove_body_class('show-rewrite');
 		if(source_text.indexOf('🕰️ ') != -1){
 			source_text = strip_timestamps(source_text);
 		}
@@ -2337,7 +2338,7 @@ async function rewrite_selection(type=null,source_text,desired_results=1,parent_
 
 	//rewrite_details_el.removeAttribute('open');
 	//translation_details_el.removeAttribute('open');
-	//document.body.classList.remove('show-rewrite');
+	//remove_body_class('show-rewrite');
 
 	//rewrite_dialog_selected_text_el.innerHTML = '';
 	//remove_highlight_selection();
@@ -2361,7 +2362,7 @@ function prepare_question(text=null){
 	rewrite_details_el.removeAttribute('open');
 	translation_details_el.setAttribute('open',true);
 	
-	document.body.classList.add('show-rewrite');
+	add_body_class('show-rewrite');
 	//rewrite_dialog_el.showModal();
 	*/
 	question_prompt_document_title_el.innerHTML = '';
@@ -2459,8 +2460,8 @@ function prepare_question(text=null){
 		}
 	}
 	
-	document.body.classList.add('text-attached');
-	document.body.classList.remove('chat-shrink');
+	add_body_class('text-attached');
+	remove_body_class('chat-shrink');
 	
 	return true
 }
@@ -2682,8 +2683,8 @@ function translate_document(){
 	let original_text = '' + window.doc_text;
 	//console.log("translate_document: original_text: ", original_text);
 	
-	document.body.classList.remove('prepare-translate-document');
-	document.body.classList.remove('prepare-summarize-document');
+	remove_body_class('prepare-translate-document');
+	remove_body_class('prepare-summarize-document');
 	
 	let translation_filename = translation_new_file_name_input_el.value;
 	if(translation_filename == ''){
@@ -2981,8 +2982,8 @@ function summarize_document(source_text=null,use_selection=false,desired_results
 	
 	
 	
-	document.body.classList.remove('prepare-summarize-document');
-	//document.body.classList.remove('show-rewrite');
+	remove_body_class('prepare-summarize-document');
+	//remove_body_class('show-rewrite');
 	
 	let origin = 'summarize_document';
 	
@@ -3710,7 +3711,7 @@ function prepare_do_prompt_at_line(){
 	
 	rewrite_prompt_el.value = window.settings.prompt_at_line;
 	//rewrite_dialog_selected_text_el.textContent = '';
-	//document.body.classList.add('show-prompt-at-line');
+	//add_body_class('show-prompt-at-line');
 	prompt_at_line_dialog_el.showModal();
 	
 	remove_highlight_selection();
@@ -4280,18 +4281,25 @@ function do_blueprint(text){
 //
 
 
-function stop_play_document(){
+function stop_play_document(stop_type='all'){
 	//console.log("in stop_play_document");
-	
+	if(typeof stop_type != 'string'){
+		stop_type = 'all';
+	}
 	//console.warn("clearing audio queues");
-	window.playing_document = false;
-	change_tasks_with_origin('play_document'); // default new state for affected tasks is interrupted
-	change_tasks_with_origin('blueprint');
-	document.body.classList.remove('doing-blueprint');
-	document.body.classList.remove('playing-document');
-	document.body.classList.remove('fairytale');
-	document.getElementById('playground-overlay').innerHTML = '';
-	window.busy_doing_blueprint_task = false;
+	
+	if(stop_type == 'all' || stop_type == 'blueprint'){
+		change_tasks_with_origin('blueprint');
+		remove_body_class('doing-blueprint');
+		window.busy_doing_blueprint_task = false;
+	}
+	if(stop_type != 'blueprint'){
+		window.playing_document = false;
+		change_tasks_with_origin('play_document'); // default new state for affected tasks is interrupted
+		remove_body_class('playing-document');
+		remove_body_class('fairytale');
+		document.getElementById('playground-overlay').innerHTML = '';
+	}
 }
 window.stop_play_document = stop_play_document;
 
@@ -4390,7 +4398,7 @@ function start_play_document(task=null){
 
 	
 	if(window.doc_text.trim().length < 3){
-		console.error("cannot play document that is less than 3 characters long..");
+		console.error("cannot play document that is less than 3 characters long");
 		return false
 	}
 	
@@ -4403,11 +4411,9 @@ function start_play_document(task=null){
 	window.enable_speaker();
 	
 	window.playing_document = true;
-	document.body.classList.add('playing-document');
+	add_body_class('playing-document');
 	
 	let document_style = null;
-	
-	
 	
 	let imager_prompt = null;
 	text = window.strip_timestamps(text);
@@ -4445,15 +4451,15 @@ function start_play_document(task=null){
 			//console.log("Detected a fairytale");
 			document_style = 'fairytale';
 			
-			document.body.classList.add('fairytale');
+			add_body_class('fairytale');
 			setTimeout(() => {
 				if(window.playing_document){
-					document.body.classList.add('fairytale');
+					add_body_class('fairytale');
 				}
 				
 			},1000);
 			if(window.innerWidth > 800){
-				document.body.classList.remove('chat-shrink');
+				remove_body_class('chat-shrink');
 			}
 			
 			
@@ -4590,6 +4596,47 @@ function start_play_document(task=null){
 	
 }
 window.start_play_document = start_play_document;
+
+
+function share_document(text=null, suggested_filename=null){
+	//console.log("in share_document. text, suggested_filename: ", text,suggested_filename);
+	if(typeof suggested_filename != 'string'){
+		suggested_filename = current_file_name;
+	}
+	if(typeof suggested_filename != 'string'){
+		suggested_filename = '';
+	}
+	
+	add_body_class('show-share-document');
+	
+	if(typeof text != 'string'){
+		//console.log("share_document: attempting to get text from playground_live_backups / playground_saved_files");
+		if(typeof playground_live_backups[ folder + '/' + current_file_name ] == 'string'){
+			text = playground_live_backups[ folder + '/' + current_file_name ];
+			//console.log("share_document: got text from playground_live_backups");
+		}
+		else if(typeof playground_saved_files[ folder + '/' + current_file_name ] == 'string'){
+			text = playground_saved_files[ folder + '/' + current_file_name ];
+			//console.log("share_document: got text from playground_saved_files");
+		}
+	}
+	
+	if(typeof text == 'string'){
+		//console.log("share_document: calling show_received_document with suggested_filename: ", suggested_filename);
+		show_received_document(text,suggested_filename);
+	}
+	else{
+		console.error("share_document: no text to share");
+	}
+	update_share_document_url();
+	
+	
+}
+window.share_document = share_document;
+
+
+
+
 
 
 
@@ -4840,79 +4887,6 @@ function get_next_sentence_from_document(task){
 
 
 
-// simpler version
-function split_into_sentences(text){
-	//console.log("in split_into_sentences");
-	//return text.replace(/([.?!\"])[\s\n]*(?=[A-Z])/g, "$1|!0|0!|").split("|!0|0!|"); // splits into sentences without removing the punctuation
-	//return text.replace(/([?!\n]|[a-zA-Z]\n\n(?=[a-zA-Z])|\:\n|\:\*\*|\.\n|\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
-	return text.replace(/([?!\n]|[a-zA-Z]\n\n(?=[a-zA-Z])|[a-zA-Z]\n\n?(?=[\*\-0-9])|\:\n|\:\*\*|\*\*\: |\*\*\:\n|\.\n|\!\n|\?\n|[^0-9]\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
-	
-}
-
-
-// ([?!\n]|:\n|\.\n|\.\s|^-\s)
-function split_into_sentences_and_punctuation_HMM(text){
-	//console.log("in split_into_sentences_and_punctuation");
-	//let pre_lines = text.split(/([?!.:\n])/g);
-	let pre_lines = text.split(/([?!.\n])/g); // removed :
-	//return text.replace(/([?!\n]|:\n|\.\n|\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
-	//return text.replace(/([?!\n]|[a-zA-Z]\n\n(?=[a-zA-Z])|:\n|\.\n|\.\s|^-\s)/gm, "$1|!0|0!|").split("|!0|0!|");
-}
-
-function split_into_sentences_and_punctuation(text){
-	//console.log("in split_into_sentences_and_punctuation");
-	//let pre_lines = text.split(/([?!.:\n])/g);
-	let pre_lines = text.split(/([?!.\n])/g); // removed :
-	//console.log("pre_lines: ", pre_lines);
-	if(pre_lines[0] == ''){
-		pre_lines.splice(0, 1);
-	}
-	if(pre_lines[pre_lines.length - 1] == ''){pre_lines.splice(pre_lines.length - 1, 1);}
-
-	for(let x=pre_lines.length-1;x>=0;x--){
-		//console.log("x: ",x);
-		//console.log("pre_lines[x]: -->" + pre_lines[x] + "<--");
-		if(pre_lines[x] == ''){
-			//console.log("removing empty item in array");
-			pre_lines.splice(x, 1);
-		}
-		else if(pre_lines[x] == '\n'){
-			//console.warn("removing newline item in array");
-			pre_lines.splice(x, 1);
-			//pre_lines[x] = '--newline--';
-		}
-	}
-
-	let new_pre_lines = [];
-	let unpunctuated_sentence = '';
-	//for(let x=pre_lines.length-1;x>=0;x--){
-	for(let y=0;y<pre_lines.length;y++){
-		//console.log("y: ",y);
-		//console.log("pre_lines[y]: -->" + pre_lines[y] + "<--");
-		//if(['?','!','.',':'].indexOf(pre_lines[y].trim()) == -1){
-		if(['?','!','.'].indexOf(pre_lines[y].trim()) == -1){ // removed :
-			unpunctuated_sentence += pre_lines[y];
-			if(y==pre_lines.length-1){
-				new_pre_lines.push(unpunctuated_sentence);
-			}
-		}
-		else{
-			if(unpunctuated_sentence != ''){
-				new_pre_lines.push(unpunctuated_sentence);
-				new_pre_lines.push(pre_lines[y]);
-				unpunctuated_sentence = '';
-			}
-		}
-	}
-
-
-	pre_lines = new_pre_lines;
-
-	//console.log("split_into_sentences_and_punctuation: pre_lines cleaned: ", pre_lines.length, pre_lines);
-	return pre_lines
-}
-
-
 
 
 
@@ -5151,7 +5125,9 @@ function search_and_replace(task,needle,replacement){
 						needle = needle.substr(0,needle.length - sn);
 						needle_cursor = search_in_doc(task,needle);
 						if(needle_cursor != null && typeof needle_cursor.to == 'number'){
-							console.warn("search_and_replace: had to hack continue task by shortening the needle by X characters: ", sn, needle);
+							if(window.settings.settings_complexity == 'developer'){
+								console.warn("search_and_replace: had to hack continue task by shortening the needle by X characters: ", sn, needle);
+							}
 							shortening_needle_worked = true;
 							if(needle_cursor.to >= (window.doc_text.length - 50)){
 								needle_cursor.to = window.doc_text.length;
@@ -5280,92 +5256,6 @@ function set_latest_document_text_from_task(task=null,content=null){
 }
 
 
-
-function create_insert_into_doc_buttons(message){
-	//console.log("in create_insert_into_doc_buttons. message: ", message);
-	
-	let doc_buttons_container_el = document.createElement('div');
-	doc_buttons_container_el.classList.add('bubble-buttons-container');
-	
-	if(typeof message != 'string'){
-		return doc_buttons_container_el;
-	}
-	
-	// Copy to clipboard
-	
-	let copy_to_clipboard_button_el = document.createElement('div');
-	copy_to_clipboard_button_el.classList.add('bubble-copy-to-clipboard-button');
-	copy_to_clipboard_button_el.classList.add('bubble-doc-button');
-	copy_to_clipboard_button_el.innerHTML = '<div class="bubble-copy-to-clipboard-button-icon-wrapper center" title="' + get_translation('Copy') + '"><img class="bubble-copy-to-clipboard-button-icon" src="images/copy_to_clipboard.svg" width="12" height="12" alt="' + get_translation('Copy') + '"></div>';
-	copy_to_clipboard_button_el.addEventListener('click',(event) => {
-		//console.log("add_chat_message: clicked on insert into doc button");
-		copy_to_clipboard_button_el.classList.add('opacity0');
-		copy_to_clipboard_button_el.classList.add('no-click-events');
-		setTimeout(() => {
-			copy_to_clipboard_button_el.classList.remove('opacity0');
-			copy_to_clipboard_button_el.classList.remove('no-click-events');
-		},1000);
-		
-		navigator.clipboard.writeText(message);
-		flash_message(get_translation("Copied_text_to_clipboard"));
-	});
-	doc_buttons_container_el.appendChild(copy_to_clipboard_button_el);
-	
-	
-	// Insert into document
-	
-	if(message.length > 150 || message.split('\n').length > 3){
-		let insert_into_doc_button_el = document.createElement('div');
-		insert_into_doc_button_el.classList.add('bubble-insert-into-doc-button');
-		insert_into_doc_button_el.classList.add('bubble-doc-button');
-		insert_into_doc_button_el.setAttribute('title',get_translation('Insert'));
-		insert_into_doc_button_el.textContent = '📄';
-		insert_into_doc_button_el.addEventListener('click',(event) => {
-			//console.log("add_chat_message: clicked on insert into doc button");
-			insert_into_doc_button_el.classList.add('opacity0');
-			insert_into_doc_button_el.classList.add('no-click-events');
-			setTimeout(() => {
-				insert_into_doc_button_el.classList.remove('opacity0');
-				insert_into_doc_button_el.classList.remove('no-click-events');
-			},4000);
-			if(window.doc_selection){
-				insert_into_document({'file':window.settings.docs.open,'selection':window.doc_selection},'\n' + message + '\n');
-			}
-			else{
-				console.error("insert_into_document_button -> cannot insert, no valid window.doc_selection: ", window.doc_selection)
-			}
-		
-		});
-		doc_buttons_container_el.appendChild(insert_into_doc_button_el);
-	
-	
-		// Create new document
-	
-		let create_new_doc_button_el = document.createElement('div');
-		create_new_doc_button_el.classList.add('bubble-new-doc-button');
-		create_new_doc_button_el.classList.add('bubble-doc-button');
-		create_new_doc_button_el.classList.add('add-icon');
-		create_new_doc_button_el.setAttribute('title',get_translation('New_document'));
-		create_new_doc_button_el.textContent = '📄';
-	
-		create_new_doc_button_el.addEventListener('click',(event) => {
-			//console.log("add_chat_message: clicked on create new doc button");
-			create_new_doc_button_el.classList.add('opacity0');
-			create_new_doc_button_el.classList.add('no-click-events');
-			setTimeout(() => {
-				create_new_doc_button_el.classList.remove('opacity0');
-				create_new_doc_button_el.classList.remove('no-click-events');
-			},4000);
-			window.show_files_tab(); // only shows it if the sidebar is already open
-			create_new_document(message);
-		});
-		doc_buttons_container_el.appendChild(create_new_doc_button_el);
-	}
-	
-	
-	return doc_buttons_container_el;
-}
-window.create_insert_into_doc_buttons = create_insert_into_doc_buttons;
 
 
 
@@ -5810,97 +5700,6 @@ window.is_task_for_currently_open_document = is_task_for_currently_open_document
 
 
 
-// TODO: could do this with words instead of sentences
-function check_if_text_end_is_repeating(text){
-	//console.log("in check_if_text_end_is_repeating. text: ",text);
-	if(typeof text != 'string'){
-		console.error("check_if_text_end_is_repeating:  provided text was not a string: ", text);
-		return true
-	}
-	
-	try{
-			
-		if(text.endsWith(',,,,,,')){
-			return true;
-		}
-		
-		let text_lines = text.split('\n');
-		for(let r = 0; r < text_lines.length; r++){
-			if(text_lines[r].startsWith('0') && text_lines[r].indexOf(' --> ') != -1){
-				// subtitle timestamp line
-			}
-			else{
-				text_lines[r] = text_lines[r].replace(/[0-9]/g, '');
-			}
-		}
-		text = text_lines.join('\n');
-		
-		// Helper function
-		const count_occurence = (array, element) => {
-		    let counter = 0;
-			if(Array.isArray(array) && typeof element == 'string'){
-			    for (let i = 0; i <= array.length; i++) {
-			        if (array[i] == element) {
-			            counter++;
-			        }
-			    }
-			}
-			else{
-				console.error("check_if_text_end_is_repeating: array or element invalid. array,element: ", array, element);
-			}
-		    
-			//console.log("check_if_text_end_is_repeating: sentence repetition count: ", counter);
-		    return counter;
-		};
-		
-		// A quick 'n dirty test that checks if the end of the text occurs multiple times
-		if(text.length > 300){
-			if(text.indexOf( text.substr(text.length - 150) ) < (text.length - 200)){
-				console.warn("check_if_text_is_repeating: quick test detected repeating of: ", text.substr(text.length - 150));
-				return true
-			}
-		}
-		
-		
-		
-		if(text.endsWith('.') || text.endsWith('!') || text.endsWith('?') || text.endsWith('. ') || text.endsWith('! ') || text.endsWith('? ')){
-			//text = text.replaceAll('\n',' ');
-			const sentences = split_into_sentences(text);
-			//console.log("check_if_text_is_repeating:  sentences.length: ", sentences.length);
-			if(sentences.length > 7){
-		
-				let seeing_double = true;
-				let sentences_checked = [];
-		
-				for(let s = sentences.length - 1; s > Math.round(sentences.length/2); s--){
-					if(sentences[s].length > 5){
-						const occurence = count_occurence(sentences,sentences[s]);
-						if(occurence < 2){
-							seeing_double = false;
-						}
-						if(seeing_double){
-							if(sentences_checked.indexOf(sentences[s]) != -1 && sentences_checked.length > 2){
-								console.warn("The end of the text seems to be repeating itself: ", text);
-								return true;
-							}
-							else if(sentences_checked.indexOf(sentences[s]) == -1){
-								sentences_checked.push(sentences[s]);
-							}
-						}
-					}
-				}
-			}
-		}
-		
-	}
-	catch(err){
-		console.error("check_if_text_end_is_repeating: caught error: ", err);
-	}
-	
-	return false;
-}
-
-
 
 
 
@@ -6099,4 +5898,70 @@ window.download_text_as_pdf = async (text) => {
 
 
 
+
+
+// add file to recent documents list
+function update_recent_documents(newly_opened_document=null){
+	//console.log("in update_recent_documents. newly_opened_document: ", newly_opened_document);
+	let force_save = false;
+	if(newly_opened_document == null){
+		newly_opened_document = window.settings.docs.open;
+	}
+	else{
+		force_save = true;
+	}
+	
+	if(newly_opened_document == null && typeof folder == 'string' && typeof current_file_name == 'string'){
+		console.error("update_recent_documents: current_file_name was a string, but window.settings.docs.open was null?  current_file_name,window.settings.docs.open: ", current_file_name, window.settings.docs.open);
+		newly_opened_document = {'folder':folder,'filename':current_file_name}
+	}
+	//console.log("in chatty_ui.js: update_recent_documents. newly_opened_document: ", typeof newly_opened_document, newly_opened_document);
+	
+	if(typeof newly_opened_document == 'object' && newly_opened_document != null && typeof newly_opened_document.folder == 'string' && typeof newly_opened_document.filename == 'string'){
+		
+		if(typeof window.settings.docs.recent == 'undefined'){
+			console.error("update_recent_documents: window.settings.docs.recent was undefined");
+			return
+		}
+		let already_at_the_top = false;
+		for(let r = window.settings.docs.recent.length - 1; r >= 0; --r){
+			if(typeof window.settings.docs.recent[r].filename == 'string' && window.settings.docs.recent[r].filename == newly_opened_document.filename && typeof window.settings.docs.recent[r].folder == 'string' && window.settings.docs.recent[r].folder == newly_opened_document.folder){
+				//console.log("removing newly_opened_document from recent files list first");
+				if(r == 0){
+					//console.log("update_recent_documents: document was already at the number one spot of the recent documents");
+					already_at_the_top = true;
+				}
+				else{
+					window.settings.docs.recent.splice(r,1);
+				}
+			}
+		}
+		
+		if(!already_at_the_top){
+			window.settings.docs.recent.unshift(newly_opened_document);
+		}
+		
+		if(window.settings.docs.recent.length > window.settings.maximum_recent_files){
+			window.settings.docs.recent = window.settings.docs.recent.splice(0,window.settings.maximum_recent_files);
+			//save_settings();
+		}
+		else if(!already_at_the_top){
+			//save_settings();
+		}
+		/*
+		else if(force_save){
+			save_settings();
+		}
+		*/
+		
+		save_settings();
+		
+		window.generate_recent_documents_list();
+			
+	}
+	else{
+		console.error("newly_opened_document was invalid?   newly_opened_document,window.settings.docs.open: ", newly_opened_document, window.settings.docs.open);
+	}
+}
+window.update_recent_documents = update_recent_documents;
 

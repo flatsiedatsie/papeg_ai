@@ -7,8 +7,6 @@ window.supported_ui_languages = ['en','nl'];
 window.translations = {
 	
 	"Privacy":{
-		"en":"Privacy",
-		"nl":"Privacy",
 	},
 	"chat":{
 		"en":"Chat",
@@ -78,22 +76,12 @@ window.translations = {
 	
 	
 	"Media":{
-		"en":"Media",
-		"nl":"Media"
 	},
 	"Camera":{
-		"en":"Camera",
-		"nl":"Camera"
 	},
 	
-	
-	
-	
-	
-	
 	"page_title":{
-		"en":"Papeg.ai",
-		"nl":"Papeg.ai",
+		"all":"Papeg.ai",
 	},
 	"intro_text":{
 		"en":"100% privacy friendly; the AI in this webpage runs completely on your own device. Downloading it does take a while (it's 1.2 gigabytes), but fortunately you only need to do this once. Your browser will keep the AI model in it's cache for next time.",
@@ -166,11 +154,9 @@ window.translations = {
 		"nl":"💬 Start stembediening",
 	},
 	"Hello":{
-		"en":"Hello",
 		"nl":"Hallo",
 	},
 	"OK":{
-		"en":"OK",
 		"nl":"OK",
 	},
 	
@@ -179,7 +165,6 @@ window.translations = {
 		"nl":"Annuleren",
 	},
 	"Copy":{
-		"en":"Copy",
 		"nl":"Kopiëren",
 	},
 	"result":{
@@ -188,7 +173,7 @@ window.translations = {
 	},
 	"English":{
 		"en":"🇬🇧 English",
-		"nl":"🇬🇧 English",
+		"nl":"🇬🇧 Engels",
 	},
 	"Dutch":{
 		"en":"🇳🇱 Dutch",
@@ -204,10 +189,9 @@ window.translations = {
 	},
 	"Memory":{
 		"en":"Memory (context)",
-		"nl":"Memory (context)",
+		"nl":"Geheugen (context)",
 	},
 	"Icon":{
-		"en":"Icon",
 		"nl":"Icoon",
 	},
 	
@@ -220,81 +204,72 @@ window.translations = {
 		"nl":"Taken",
 	},
 	"Settings":{
-		"en":"Settings",
 		"nl":"Instellingen",
 	},
 	"Settings_imported":{
-		"en":"Settings imported",
 		"nl":"Instellingen geïmporteerd",
 	},
 	"Could_not_import_conversation":{
-		"en":"Could not import conversation",
 		"nl":"Conversatie importeren is niet gelukt",
 	},
 	"AI_settings":{
-		"en":"AI settings",
 		"nl":"AI instellingen",
 	},
-	"Options":{
-		"en":"Options",
-		"nl":"Opties",
+	"Preview":{
+		"nl":"Voorbeeld",
 	},
-	"Seconds":{
-		"en":"Seconds",
-		"nl":"Seconden",
+	"Options":{
+		"nl":"Opties",
 	},
 	"completed":{
 		"en":"Completed",
 		"nl":"Klaar",
 	},
-	"restart":{ 
+	"restart":{
 		"en":"Restart",
 		"nl":"Herstart",
 	},
 	"Continue":{
-		"en":"Continue",
 		"nl":"Schrijf verder",
 	},
-	"Rewrite":{ 
-		"en":"Rewrite",
+	"Rewrite":{
 		"nl":"Herschrijf",
 	},
-	"rewrite":{ 
+	"rewrite":{
 		"en":"Rewrite",
 		"nl":"Herschrijf",
 	},
 	"Summarize":{
+		"nl":"Samenvatten",
+	},
+	"summarize":{
 		"en":"Summarize",
 		"nl":"Samenvatten",
 	},
-	"Transcribe":{ 
-		"en":"Transcribe",
+	"Transcribe":{
 		"nl":"Notuleer",
 	},
-	"Transcribe_to_JSON":{ 
-		"en":"Transcribe to JSON",
+	"Transcribe_to_JSON":{
 		"nl":"Notuleer naar JSON",
 	},
 	
-	"About":{ 
-		"en":"About",
+	"About":{
 		"nl":"Over Papeg.ai",
 	},
-	
-	"Speak":{ 
-		"en":"Speak",
+	"Notifications":{
+		"nl":"Notificaties",
+	},
+	"Speak":{
 		"nl":"Zeg hardop",
 	},
-	"speak":{ 
+	"speak":{
 		"en":"Speaking",
 		"nl":"Spreken",
 	},
 	"Done":{
-		"en":"Done",
 		"nl":"Klaar",
 	},
 	"Insert":{
-		"en":"Insert",
 		"nl":"Toevoegen",
 	},
 	"image":{
@@ -306,7 +281,6 @@ window.translations = {
 		"nl":"Plaatje",
 	},
 	"Scan":{
-		"en":"Scan",
 		"nl":"Scan",
 	},
 	"run":{
@@ -314,10 +288,9 @@ window.translations = {
 		"nl":"Gaan met die banaan",
 	},
 	"Automatic":{
-		"en":"Automatic",
 		"nl":"Automatisch",
 	},
-	"undetermined":{ // TODO: improve this
+	"undetermined":{// TODO: improve this
 		"en":"Audio recording",
 		"nl":"Audio opname",
 	},
@@ -334,15 +307,12 @@ window.translations = {
 		"nl":"Taal",
 	},
 	"Updating":{
-		"en":"Updating",
 		"nl":"Momentje",
 	},
 	"Reload":{
-		"en":"Reload",
 		"nl":"Herlaad",
 	},
 	"Details":{
-		"en":"Details",
 		"nl":"Details",
 	},
 	
@@ -352,20 +322,15 @@ window.translations = {
 	},
 	
 	"Light":{
-		"en":"Light",
 		"nl":"Licht",
 	},
 	"Dark":{
-		"en":"Dark",
 		"nl":"Donker",
 	},
 	"Filter":{
-		"en":"Filter",
-		"nl":"Filter",
 	},
 	
 	"Share_a_link":{
-		"en":"Share a link",
 		"nl":"Deel een link",
 	},
 	"Share_this_AI_model":{
@@ -374,8 +339,7 @@ window.translations = {
 	},
 	
 	"The_link_is_too_long_to_share":{
-		"en":"The link is too long to share",
-		"en":"De link is te lang om te delen",
+		"nl":"De link is te lang om te delen",
 	},
 
 	"Write_a_paragraph_about":{
@@ -383,22 +347,18 @@ window.translations = {
 		"nl":"Schrijf een paragraaf over ...",
 	},
 	"I_feel_lucky":{
-		"en":"I feel lucky",
 		"nl":"Ik gok 't",
 	},
 	
 	"Total":{
-		"en":"Total",
 		"nl":"Totaal",
 	},
 	
 	"Research":{
-		"en":"Research",
 		"nl":"Onderzoeken",
 	},
 	
 	"Memory_use":{
-		"en":"Memory use",
 		"nl":"Geheugen gebruik",
 	},
 	
@@ -407,11 +367,9 @@ window.translations = {
 		"nl":"Er is een update beschikbaar",
 	},
 	"Running_in_offline_mode":{
-		"en":"Running in offline mode",
 		"nl":"Er is geen internet verbinding",
 	},
 	"No_internet_connection":{
-		"en":"No internet connection",
 		"nl":"Er is geen internet verbinding",
 	},
 	
@@ -424,15 +382,14 @@ window.translations = {
 		"nl":"Gigabyte",
 	},
 	"Cannot_scan":{
-		"en":"Cannot scan",
 		"nl":"Kan niet scannen",
 	},
 	
-	"role_playing":{ 
+	"role_playing":{
 		"en":"Role playing",
 		"nl":"Rollenspel",
 	},
-	"creativity":{ 
+	"creativity":{
 		"en":"Unpredictability",
 		"nl":"Onvoorspelbaarheid",
 	},
@@ -441,33 +398,27 @@ window.translations = {
 		"nl":"Bezig...",
 	},
 	"homepage_url":{
-		"en":"homepage_url",
-		"nl":"homepage_url",
+		"en":"Website",
+		"nl":"Website",
 	},
 	
-	"Days":{ // e.g. minutes to go
-		"en":"Days",
+	"Days":{// e.g. minutes to go
 		"nl":"Dagen",
 	},
-	"Hours":{ // e.g. minutes to go
-		"en":"Hours",
+	"Hours":{
 		"nl":"Uren",
 	},
-	"Minutes":{ // e.g. minutes to go
-		"en":"Minutes",
+	"Minutes":{
 		"nl":"Minuten",
 	},
-	"Seconds":{ // e.g. minutes to go
-		"en":"Seconds",
+	"Seconds":{
 		"nl":"Seconden",
 	},
-	"to_go":{ // e.g. minutes to go
-		"en":"to go",
+	"to_go":{
 		"nl":"te gaan",
 	},
 	
 	"Minutes_elapsed":{
-		"en":"Minutes elapsed",
 		"nl":"Minuten verlopen",
 	},
 	"Minutes_and_minutes_elapsed":{
@@ -475,11 +426,9 @@ window.translations = {
 		"nl":"Minuten & verlopen",
 	},
 	"Detailed":{
-		"en":"Detailed",
 		"nl":"Gedetailleerd",
 	},
 	"Precise":{
-		"en":"Precise",
 		"nl":"Precies",
 	},
 	/*
@@ -490,7 +439,6 @@ window.translations = {
 	*/
 	
 	"Voice_recordings":{
-		"en":"Voice recordings",
 		"nl":"Stem opnames",
 	},
 	
@@ -517,7 +465,6 @@ window.translations = {
 		"nl":"Detecteer stem traag",
 	},
 	"Continuous_recording":{
-		"en":"Continous recording",
 		"nl":"Continu opnemen",
 	},
 	
@@ -534,15 +481,15 @@ window.translations = {
 		"en":"🫸..Speech-To-Text",
 		"nl":"🫸..Spraak-Naar-Text",
 	},
-	"should_assistant":{ 
+	"should_assistant":{
 		"en":"🫸..AI",
 		"nl":"🫸..AI",
 	},
-	"should_translation":{ 
+	"should_translation":{
 		"en":"🫸..Translation",
 		"nl":"🫸..Vertaling",
 	},
-	"should_tts":{ 
+	"should_tts":{
 		"en":"🫸..Text-To-Speech",
 		"nl":"🫸..Text-Naar-Spraak",
 	},
@@ -592,8 +539,7 @@ window.translations = {
 		"nl":"🫸..Corrigeren",
 	},
 	
-	"not_loaded_yet":{ // shown in top status bar
-		"en":"not loaded yet",
+	"not_loaded_yet":{// shown in top status bar
 		"nl":"nog niet ingeladen",
 	},
 	"loading_progress":{
@@ -605,29 +551,23 @@ window.translations = {
 		"nl":"AI download voortgang",
 	},
 	"Download_complete":{
-		"en":"Download complete",
 		"nl":"Download klaar",
 	},
 	
 	"View_subtitles":{
-		"en":"View subtitles",
 		"nl":"Bekijk ondertiteling",
 	},
 	"Edit_subtitles":{
-		"en":"Edit subtitles",
 		"nl":"Bewerk ondertiteling",
 	},
 	"Download_subtitles":{
-		"en":"Download subtitles",
 		"nl":"Download ondertiteling",
 	},
 	"Generate_subtitles":{
-		"en":"Generate subtitles",
 		"nl":"Genereer ondertiteling",
 	},
 	
 	"There_are_no_tasks_to_process":{
-		"en":"There are no tasks to process",
 		"nl":"Er zijn geen taken om te verwerken",
 	},
 	
@@ -640,7 +580,6 @@ window.translations = {
 		"nl":"Geen bestanden geselecteerd?",
 	},
 	"Delete_selected":{
-		"en":"Delete selected",
 		"nl":"Verwijder geselecteerde bestanden",
 	},
 	
@@ -651,8 +590,11 @@ window.translations = {
 		"nl":"Ongeldige bestandsnaam",
 	},
 	
+	"Invalid_value":{
+		"nl":"Ongeldige waarde",
+	},
+	
 	"Invalid_model_url_provided":{
-		"en":"Invalid model url provided",
 		"nl":"Er is iets mis met de URL van het AI model",
 	},
 	
@@ -662,8 +604,12 @@ window.translations = {
 		"nl":"Dit is een zogenaamd 'base' (basis) AI model, wat betekent dat het alleen tekst kan verder schrijven. Het kan geen vragen beantwoorden or instructies uitvoeren.",
 	},
 	
-	
-	
+	"Downloading_update":{
+		"nl":"Update downloaden",
+	},
+	"Maximum_file_size_is_10MB":{
+		"nl":"Maximale bestandsgrootte die gedownload mag worden is 10MB",
+	},
 	/*
 	"Auto_detect":{
 		"en":"Auto-detect",
@@ -682,7 +628,6 @@ window.translations = {
 	
 	
 	"Too_short":{
-		"en":"Too short",
 		"nl":"Te kort",
 	},
 	
@@ -760,11 +705,9 @@ window.translations = {
 	},
 	
 	"Select_an_emoji":{
-		"en":"Select an emoji",
 		"nl":"Kies een emoji",
 	},
 	"Select_emoji":{
-		"en":"Select emoji",
 		"nl":"Kies emoji",
 	},
 	
@@ -774,32 +717,25 @@ window.translations = {
 	},
 	
 	"Import":{
-		"en":"Import",
 		"nl":"Importeer"
 	},
 	
 	"Cancel":{
-		"en":"Cancel",
 		"nl":"Annuleren",
 	},
 	"Clone":{
-		"en":"Clone",
 		"nl":"Kloon",
 	},
 	"Clone_of":{
-		"en":"Clone of",
 		"nl":"Kloon van",
 	},
 	"Name":{
-		"en":"Name",
 		"nl":"Naam",
 	},
 	"Description":{
-		"en":"Description",
 		"nl":"Beschrijving",
 	},
 	"license":{
-		"en":"License",
 		"nl":"Licentie",
 	},
 	"cache_type_k":{
@@ -811,8 +747,7 @@ window.translations = {
 		"nl":"Sommige AI modellen zullen minder geheugen gebruiken als je hier 'q4_0' selecteert. Als het AI model vervolgens telkens crasht, kies dan f16.",
 	},
 	"huggingface_id":{
-		"en":"Huggingface ID",
-		"nl":"Huggingface ID",
+		"all":"HuggingFace ID",
 	},
 	"huggingface_id_explanation":{
 		"en":"Every model on www.huggingface.co has a unique ID. You can change the model ID here.",
@@ -833,44 +768,44 @@ window.translations = {
 		"en":"predictable",
 		"nl":"voorspelbaar",
 	},
-	"artistic":{ 
+	"artistic":{
 		"en":"random",
 		"nl":"willekeurig",
 	},
-	"model_examples":{ 
+	"model_examples":{
 		"en":"Would you like to try an example?",
 		"nl":"Wil je een voorbeeld proberen?",
 	},
-	"role_name":{ 
+	"role_name":{
 		"en":"Role name",
 		"nl":"Rol naam",
 	},
 	
-	"system_prompt":{ 
+	"system_prompt":{
 		"en":"System prompt",
 		"nl":"Systeem prompt",
 	},
-	"first_sentence":{ 
+	"first_sentence":{
 		"en":"First sentence",
 		"nl":"De eerste zin",
 	},
 	
-	"Respond_concisely":{ 
+	"Respond_concisely":{
 		"en":"You are an assistant that responds briefly and concisely.",
 		"nl":"Je bent een assistant die kort en kortbondig reageert.",
 	},
-	"basic_system_prompt":{ 
+	"basic_system_prompt":{
 		"en":"You are a helpful, respectful and honest assistant.",
 		"nl":"Je bent een behulpzame, respectvolle en eerlijke assistant die perfect Nederlands spreekt.",
 	},
 	
-	"Export_conversation_explanation":{ 
+	"Export_conversation_explanation":{
 		"en":"You can choose how many back-and-forths in the conversation will still be available after you refresh this web page.\n\nYou can also export the current conversation, saving it to a file (which you can then also import to restore a previous conversation).",
 		"nl":"Je kunt instellen hoeveel berichten in de conversatiegeschiedenis beschikbaar blijven wanneer je deze webpagina ververst.\n\nJe kunt een huidige conversatie ook exporteren als een bestand (die je dan later ook weer kan importeren).",
 	},
 	
 	
-	"model_role_name_explanation":{ 
+	"model_role_name_explanation":{
 		"en":"For an actor model you can define the name of the person it's 'playing'. This should be a single word without spaces.\n\nFor example: 'Cleopatra'",
 		"nl":"Bij een acterende AI kun je instellen wat de naam is van het personag dat het 'speelt'. Dit moet één woord zijn, dus zonder spaties erin.\n\nBijvoorbeeld: 'Cleopatra'",
 	},
@@ -879,7 +814,7 @@ window.translations = {
 		"en":"Also known as the 'system prompt', this is the hidden first sentence that the AI models loads before it starts loading your commands. Since these AI models do nothing more than predict the next word based on the previous ones, you can imagine the importance of the first sentence it loads.\n\nA classic is: 'You are a helpful, respectful and honest assistant.'",
 		"nl":"De systeem prompt is simpelweg de eerste zin die het AI model inlaadt. Omdat deze modellen telkens een volgend woord proberen te bedenken op basis van de voorgaande woorden kun je je voorstellen hoe belangrijk de eerst ingevoerde zin is.\n\nEen klassieker is: 'Je bent een behulpzame, respectvolle en eerlijke assistent'.",
 	},
-	"second_prompt":{ 
+	"second_prompt":{
 		"en":"Greeting",
 		"nl":"Begroeting",
 	},
@@ -889,26 +824,26 @@ window.translations = {
 		"nl":"Hier kun je een (eveneens optionele) tweede zin instellen die het model inlaadt voordat het aan de conversatie begint. Dat kan bijvoorbeeld handig zijn wanneer je het model als chatbot wilt laten fungeren. Het is namelijk een vak apart om AI modellen tekst te laten genereren in de vorm van conversaties.\n\nBij de acteur AI moet de eerste regel moet de naam van het karakter zijn, en verder niks. Bijvoorbeeld: \n\nLeonardo Da Vinci\n*Leonardo Da Vinci loopt met een glimlach de bibliotheek binnen.* Hallo tijdreiziger! Ik heb er naar uitgekeken je te ontmoeten. Ik kan vast een boel van je leren. *Hij glimlacht, zijn ogen glinsteren vol enthousiastme* Laten we beginnen! ",
 	},
 	
-	"model_create_clone_explanation":{ 
+	"model_create_clone_explanation":{
 		"en":"You can create a copy of this AI. The copy's settings can then be changed or tweaked to your liking.",
 		"nl":"Je kunt een kopie van deze AI maken. Bij die kopie kun je dan bijvoorbeeld andere instellingen proberen.",
 	},
 	
-	"How_many_messages_should_be_saved":{ 
+	"How_many_messages_should_be_saved":{
 		"en":"How many messages should be saved?",
 		"nl":"Hoeveel berichten wil je bewaren?",
 	},
 	
-	"Delete_custom_AI":{ 
+	"Delete_custom_AI":{
 		"en":"Delete this AI",
 		"nl":"Verwijder deze AI",
 	},
 	
-	"Delete_from_browser_cache":{ 
+	"Delete_from_browser_cache":{
 		"en":"Remove from cache",
 		"nl":"Verwijder uit cache",
 	},
-	"Delete_from_cache_explanation":{ 
+	"Delete_from_cache_explanation":{
 		"en":"To guarantee your privacy all the AI models are downloaded to your computer. If there is enough free disk space, your web-browser will keep the files in it's 'browser cache'. This is useful since you won't want to download a huge file again every time you want to interact with an AI on this website. \n\nYour browser should automatically delete these models if your disk is getting full, but you can also delete the files manually here.",
 		"nl":"Om privacy te kunnen garanderen download deze website AI modellen naar je eigen computer. Zolang er genoeg opslagruimte beschikbaar is zal je browser deze bestanden bewaren.\n\nAls je opslag vol begint te raken zal je browser automatisch deze bestanden verwijderen. Je kunt je browser hier ook handmatig de opdracht te geven zo'n opgeslagen bestand te verwijderen.",
 	},
@@ -918,15 +853,15 @@ window.translations = {
 		"nl":"De AI kapte ermee",
 	},
 	
-	"It_seems_the_AI_failed_to_download":{ 
+	"It_seems_the_AI_failed_to_download":{
 		"en":"The AI model failed to download. Please make sure you're connected to the internet.",
 		"nl":"Het lukte niet om het AI model the downloaden. Controleer de internet verbinding.",
 	},
-	"it_seems_the_AI_failed_to_load":{ 
+	"it_seems_the_AI_failed_to_load":{
 		"en":"Yikes, it seems the AI model didn't (down)load properly. You can try restarting it. \n\nIf you believe it failed to download properly you can delete it and try again.",
 		"nl":"Yakkes, de AI is gecrasht. Je kunt het opnieuw proberen te starten. \n\nAls je het net gedownoad hebt dan ligt de fout waarschijnlijk daar. Verwijder dan het AI model en download het opnieuw.",
 	},
-	"it_seems_the_AI_has_crashed":{ 
+	"it_seems_the_AI_has_crashed":{
 		"en":"Yikes, it seems the AI model has crashed. You can try restarting it. \n\nIf you just downloaded the AI, then it could be that it failed to download properly. In that case you can delete it and try again.",
 		"nl":"Yakkes, de AI is gecrasht. Je kunt het opnieuw proberen te starten. \n\nOptie twee is om het AI model te verwijderen en opnieuw te downloaded.",
 	},
@@ -936,60 +871,54 @@ window.translations = {
 	
 	
 	
-	"Please_load_an_AI_first":{ 
-		"en":"Please load an AI first",
+	"Please_load_an_AI_first":{
 		"nl":"Er is nog geen AI geselecteerd",
 	},
-	"A_model_needs_to_be_downloaded_but_there_is_no_internet_connection":{ 
+	"A_model_needs_to_be_downloaded_but_there_is_no_internet_connection":{
 		"en":"An AI model needs to be downloaded from the internet, but there doesn't seem to be an internet connection",
 		"nl":"Het is nodig om een AI model van het internet te downloaden, maar er lijkt geen internet verbinding te zijn",
 	},
 
 
-	"Delete_settings":{ 
+	"Delete_settings":{
 		"en":"Clear settings",
 		"nl":"Wis instellingen",
 	},
-	"Clear":{ 
-		"en":"Clear",
+	"Clear":{
 		"nl":"Wis",
 	},
-	"clear_cache":{ 
+	"clear_cache":{
 		"en":"Delete AI",
 		"nl":"Verwijder AI",
 	},
-	"The_AI_model_was_deleted_from_the_cache":{ 
+	"The_AI_model_was_deleted_from_the_cache":{
 		"en":"The AI model was deleted from the browser's cache. You can try again, or switch to another AI instead.",
 		"nl":"Het AI model is verwijderd. Je kunt 't nog een keer proberen, of een andere AI kiezen.",
 	},
-	"rewrite_the_following_text":{ 
+	"rewrite_the_following_text":{
 		"en":"Rewrite the following text",
 		"nl":"Herschrijf de volgende tekst",
 	},
-	"rewrite_the_following_text_to_be_more":{ 
+	"rewrite_the_following_text_to_be_more":{
 		"en":"Rewrite the following text to be", // more
 		"nl":"Herschrijf de volgende tekst, en maak 'm", // meer
 	},
-	"Command_was_not_long_enough":{ // error flash message if provided prompt is too short
+	"Command_was_not_long_enough":{// error flash message if provided prompt is too short
 		"en":"The command was not long enough",
 		"nl":"De opdracht was te kort",
 	},
 	
 	"The_name_is_already_taken":{
-		"en":"The name is already taken",
 		"nl":"De naam is al in gebruik",
 	},
 	
 	"The_name_is_not_long_enough":{
-		"en":"The name is not long enough",
 		"nl":"De naam is niet lang genoeg",
 	},
 	"The_name_is_too_long":{
-		"en":"The name is too long",
 		"nl":"De naam is te lang",
 	},
 	"The_description_is_too_long":{
-		"en":"The description is too long",
 		"nl":"De beschrijving is te lang",
 	},
 	"Click_here_to_open_files":{
@@ -1001,22 +930,21 @@ window.translations = {
 		"nl":"..of sleep ze hierheen",
 	},
 	
-	"prompt_at_line":{ 
+	"prompt_at_line":{
 		"en":"⊕ Insert",
 		"nl":"⊕ Invoegen",
 	},
 	
-	"Please_provide_the_following_information":{ 
-		"en":"Please provide the following information",
+	"Please_provide_the_following_information":{
 		"nl":"Vul alsjeblieft de volgende informatie aan",
 	},
 	
-	"Papeg_ai_works_better_on_laptop_or_desktop_computers":{ 
+	"Papeg_ai_works_better_on_laptop_or_desktop_computers":{
 		"en":"Papeg.ai works better on laptop or desktop computers",
 		"nl":"Papeg.ai werkt beter op laptops en desktops",
 	},
 	
-	"summarize_the_following_text_to_be_more":{ 
+	"summarize_the_following_text_to_be_more":{
 		"en":"",
 		"nl":"",
 	},
@@ -1024,63 +952,64 @@ window.translations = {
 		"en":"Bullet points",
 		"nl":"Puntsgewijs",
 	},
-	"summarize_bullet_points":{ 
+	"summarize_bullet_points":{
 		"en":"Extract the most important concepts from the following text and show them as bullet points. ",
 		"nl":"Achterhaal de belangrijkste concepten uit de volgende tekst, en toon die puntsgewijs als lijst. ",
 	},
-	"text":{ 
+	"URL":{
+	},
+	"text":{
 		"en":"",
 		"nl":"",
 	},
-	"short":{ 
+	"short":{
 		"en":"Short",
 		"nl":"Kort",
 	},
-	"summarize_short":{ 
+	"summarize_short":{
 		"en":"Write a short summary of the following text. ",
 		"nl":"Schrijf een korte samenvatting van de volgende tekst. ",
 	},
-	"very_short":{ 
+	"very_short":{
 		"en":"Very short",
 		"nl":"Heel kort",
 	},
-	"summarize_very_short":{ 
+	"summarize_very_short":{
 		"en":"Write a very short summary of the following text. ",
 		"nl":"Schrijf een heel erg korte samenvatting van de volgende tekst. ",
 	},
-	"Short_summary":{ 
-		"en":"Short summary",
+	"Short_summary":{
 		"nl":"Korte samenvatting",
 	},
-	"Very_short_summary":{ 
-		"en":"Very short summary",
+	"Very_short_summary":{
 		"nl":"Heel korte samenvatting",
 	},
 	
 	
 	"create_a_new_document_called":{
-		"en":"create a new document called",
 		"nl":"maak een nieuw document genaamd",
 	},
 	
+	"Real_name":{
+		"nl":"Echte naam",
+	},
+	
+	"New_folder_name":{
+		"nl":"Nieuwe foldernaam",
+	},
+	"New_file_name":{
+		"nl":"Nieuwe bestandsnaam",
+	},
 	
 	"Invalid_file_name":{
-		"en":"Invalid file name",
 		"nl":"Ongeldige bestandsnaam",
 	},
 	"Invalid_file_name_length":{
-		"en":"Invalid file name length",
 		"nl":"Ongeldige bestandsnaam lengte",
 	},
 	
 	"Please_open_a_document_first":{
-		"en":"Please open a document first",
 		"nl":"Open alsjeblieft eerst een document",
-	},
-	
-	"summarize":{
-		"en":"Summarize",
-		"nl":"Samenvatten",
 	},
 	"Working_on_summarize":{
 		"en":"Writing a summary...",
@@ -1108,7 +1037,6 @@ window.translations = {
 	},
 	
 	"Your_timer_is_finished":{
-		"en":"Your timer is finished",
 		"nl":"Je wekker is klaar",
 	},
 	
@@ -1117,12 +1045,10 @@ window.translations = {
 		"nl":"Erg klein",
 	},
 	"Too_big":{
-		"en":"Too big",
 		"nl":"Te groot",
 	},
 	
 	"Microphone":{
-		"en":"Microphone",
 		"nl":"Microfoon",
 	},
 	
@@ -1135,11 +1061,8 @@ window.translations = {
 		"nl":"Laat de spreker dit zeggen: *Mijn naam is [naam] en je mag mijn stem opnemen*.",
 	},
 	"Start":{
-		"en":"Start",
-		"nl":"Start",
 	},
 	"Speakers":{
-		"en":"Speakers",
 		"nl":"Sprekers",
 	},
 	"Consent":{
@@ -1147,7 +1070,6 @@ window.translations = {
 		"nl":"Toestemming",
 	},
 	"No_consent":{
-		"en":"No consent",
 		"nl":"Geen toestemming",
 	},
 	"consent_given":{
@@ -1163,11 +1085,9 @@ window.translations = {
 		"nl":"Probeer eens 'Mijn naam is' gevolgd door je naam te zeggen",
 	},
 	"Research_a_topic":{
-		"en":"Research a topic",
 		"nl":"Duik in een onderwerp",
 	},
 	"Voice_chat":{
-		"en":"Voice chat",
 		"nl":"Spreek met een AI",
 	},
 	
@@ -1185,12 +1105,8 @@ window.translations = {
 	},
 
 	"Update":{
-		"en":"Update",
-		"nl":"Update",
 	},
 	"Stop":{
-		"en":"Stop",
-		"nl":"Stop",
 	},
 	"parent":{
 		"en":"Main task",
@@ -1202,7 +1118,6 @@ window.translations = {
 	},
 	
 	"Delete":{
-		"en":"Delete",
 		"nl":"Verwijder",
 	},
 	
@@ -1212,12 +1127,10 @@ window.translations = {
 	},
 	
 	"File_size":{
-		"en":"File size",
 		"nl":"Bestandsgrootte",
 	},
 	
 	"Examples":{
-		"en":"Examples",
 		"nl":"Voorbeelden",
 	},
 	
@@ -1227,21 +1140,17 @@ window.translations = {
 	},
 	
 	"Edit":{
-		"en":"Edit",
 		"nl":"Bewerken",
 	},
 	"Edit_image":{
-		"en":"Edit image",
 		"nl":"Beeld bewerken",
 	},
 	
 	"Summary":{
-		"en":"Summary",
 		"nl":"Samenvatting",
 	},
 	
 	"Summarize":{
-		"en":"Summarize",
 		"nl":"Samenvatten",
 	},
 	
@@ -1259,54 +1168,34 @@ window.translations = {
 		"en":"The summary is longer than the original text..",
 		"nl":"De samenvatting is langer dan de oorspronkelijke tekst..",
 	},
-	
-	
 	"From":{
-		"en":"From",
 		"nl":"Van",
 	},
 	"To":{
-		"en":"To",
 		"nl":"Naar",
 	},
-	
 	"Original":{
-		"en":"Original",
 		"nl":"Origineel",
 	},
-	
-	
 	"Option":{
-		"en":"Option",
 		"nl":"Optie",
 	},
-	
 	"AI":{
-		"en":"AI",
-		"nl":"AI",
 	},
 	"Data":{
-		"en":"Data",
-		"nl":"Data",
 	},
-	
 	"Disk_space":{
 		"en":"Storage",
 		"nl":"Opslag",
 	},
-	
 	"Manage":{
-		"en":"Manage",
 		"nl":"Beheer",
 	},
-	
 	"Drop_here_to_open":{
 		"en":"Drop\nhere\nto\nopen",
 		"nl":"Sleep\nhierheen\nom te\nopenen",
 	},
-	
 	"Chat_with_your_documents":{
-		"en":"Chat with your documents",
 		"nl":"Chat met je documenten",
 	},
 	
@@ -1328,21 +1217,17 @@ window.translations = {
 		"nl":"Zeker weten?",
 	},
 	"An_error_occured":{
-		"en":"Sorry, an error occured",
+		"en":"An error occured",
 		"nl":"Er ging iets mis, sorry",
 	},
 	"An_error_occured_while_reading_documents":{
-		"en":"An error occured while reading documents",
-		"nl":"Er ging iets mis bij het documenten lezen",
+		"en":"Reading document failed",
+		"nl":"document lezen ging mis",
 	},
-	
 	"Here_is_a_shortcut_link_to_this_functionality":{
 		"en":"Here is a direct link to this functionality",
 		"nl":"Hier is een directe link naar deze functionaliteit",
 	},
-	
-	
-	
 	"This_AI_has_not_been_downloaded_yet":{
 		"en":"This AI has not been downloaded yet",
 		"nl":"Deze AI is nog niet gedownload",
@@ -1358,28 +1243,22 @@ window.translations = {
 	},
 	
 	"Loading_files":{
-		"en":"Loading files",
 		"nl":"Bestanden laden",
 	},
 	"Loading_file":{
-		"en":"Loading file",
 		"nl":"Bestand laden",
 	},
 	
 	"Select_the_input_field_below_to_start_downloading_this_AI":{
-		"en":"Select the input field below to start downloading this AI",
 		"nl":"Selecteer het invoerveld onderaan als je deze AI wil downloaden",
 	},
 	"Select_the_input_field_below_to switch_to_this_AI":{
-		"en":"Select the input field below to switch to this AI",
 		"nl":"Selecteer het invoerveld onderaan als je deze AI wil starten",
 	},
 	"Or_click_this_button":{
-		"en":"Or click this button",
 		"nl":"Of druk op deze knop",
 	},
 	"Switch_to_this_AI":{
-		"en":"Switch to this AI",
 		"nl":"Maak deze AI actief",
 	},
 	
@@ -1388,7 +1267,6 @@ window.translations = {
 		"nl":"Een nieuw bestand is aangemaakt. Spreek hardop, en de woorden die je spreekt zullen daarin verschijnen.",
 	},
 	"Transcription":{
-		"en":"Transcription",
 		"nl":"Transcriptie",
 	},
 	"Model_url":{
@@ -1400,17 +1278,14 @@ window.translations = {
 		"nl":"De URL van een AI model ontbreekt",
 	},
 	"Enter_a_command_or_question_here":{
-		"en":"Enter a command or question here",
 		"nl":"Typ hier je vraag of opdracht",
 	},
 	
 	"Please_provide_the_URL_of_an_AI_model":{
-		"en":"Please provide the URL of an AI model.",
 		"nl":"Stel alsjeblieft de URL van het gewenste AI model in.",
 	},
 
 	"Save_received_AI_model":{
-		"en":"Save received AI model",
 		"nl":"Bewaar ontvangen AI model",
 	},
 	"model_save_received_explanation":{
@@ -1423,16 +1298,13 @@ window.translations = {
 		"nl":"AI opdracht uitvoeren?",
 	},
 	"Run_the_command":{
-		"en":"Run the command",
 		"nl":"Opdracht uitvoeren",
 	},
 	
 	"You_clicked_on_a_link_to_add_an_AI":{
-		"en":"You clicked on a link to add an AI",
 		"nl":"Je hebt op een link geklikt om een AI toe te voegen",
 	},
 	"Only_continue_if_you_did_this_on_purpose":{
-		"en":"Only continue if you did this on purpose",
 		"nl":"Ga alleen verder als je bewust op de link geklikt hebt",
 	},
 	"The_AI_came_with_a_command_to_run":{
@@ -1443,7 +1315,36 @@ window.translations = {
 		"en":"You clicked on a link to run an AI command. Please review the command to make sure you're OK with running it.",
 		"nl":"Je hebt op een link geklikt om een AI een opdracht uit te laten voeren. Controleer of de opdracht kosher is en uitgevoerd mag worden.",
 	},
+	"You_clicked_on_a_link_to_add_a_document":{
+		"en":"You clicked on a link to add a document. Please review the document to make sure you're OK with saving it.",
+		"nl":"Je hebt op een link geklikt die een document bevat. Controleer of het document kosher is en bewaard mag worden.",
+	},
 	
+	
+	"Received_document":{
+		"nl":"Ontvangen document",
+	},
+	"Received_blueprint":{
+		"nl":"Ontvangen blauwdruk",
+	},
+	"Share_document":{
+		"nl":"Deel document",
+	},
+	"Share_blueprint":{
+		"nl":"Deel blauwdruk",
+	},
+	"Save_received_document":{
+		"en":"Save document",
+		"nl":"Document opslaan",
+	},
+	"Save_received_blueprint":{
+		"en":"Save blueprint",
+		"nl":"Blauwdruk opslaan",
+	},
+	
+	"Also_share_current_AI":{
+		"nl":"Deel ook de huidige AI",
+	},
 	
 	// RESEARCHER
 	
@@ -1462,16 +1363,13 @@ window.translations = {
 	},
 	
 	"Going_to_search_Wikipedia_for":{
-		"en":"Going to search Wikipedia for",
 		"nl":"Volgende stap: Wikipedia doorzoeken met de volgende termen",
 	},
 	
 	"Downloaded":{
-		"en":"Downloaded",
 		"nl":"Gedownload",
 	},
 	"Downloaded_from_Wikipedia":{
-		"en":"Downloaded from Wikipedia",
 		"nl":"Gedownload van Wikipedia",
 	},
 	
@@ -1502,7 +1400,6 @@ window.translations = {
 		"nl":"Zoeken in documenten",
 	},
 	"Select_all":{
-		"en":"Select all",
 		"nl":"Selecteer alles",
 	},
 	
@@ -1511,7 +1408,6 @@ window.translations = {
 		"nl":"Zoekresultaat",
 	},
 	"Sources":{
-		"en":"Sources",
 		"nl":"Bronnen",
 	},
 	
@@ -1521,11 +1417,9 @@ window.translations = {
 	},
 	
 	"Please_provide_a_command_or_question_first":{
-		"en":"Please provide a command or question first",
 		"nl":"Typ eerst je vraag of opdracht",
 	},
 	"Please_select_at_least_one_document":{
-		"en":"Please select at least one document",
 		"nl":"Selected op zijn minst één document",
 	},
 	"Reading_documents":{
@@ -1534,7 +1428,6 @@ window.translations = {
 	},
 	
 	"Document_search_failed":{
-		"en":"Document search failed",
 		"nl":"Documenten doorzoeken ging mis",
 	},
 	
@@ -1544,21 +1437,17 @@ window.translations = {
 	},
 	
 	"No_search_results":{
-		"en":"No search results",
 		"nl":"Geen zoek resultaten",
 	},
 	
 	"match":{
-		"en":"match",
 		"nl":"relevantie",
 	},
 	
 	"Chat_with_a_document":{
-		"en":"Chat with a document",
 		"nl":"Chat met een document",
 	},
 	"Read_a_document":{
-		"en":"Read a document",
 		"nl":"Een document is gelezen",
 	},
 	"Documents_database_restored":{
@@ -1568,7 +1457,6 @@ window.translations = {
 	
 	
 	"Waiting_to_scan_again":{
-		"en":"Waiting to scan again",
 		"nl":"Aan het wachten tot de volgend scan"
 	},
 	
@@ -1581,7 +1469,6 @@ window.translations = {
 		"nl":"Scan"
 	},
 	"Scan_intensity":{
-		"en":"Scan intensity",
 		"nl":"Scan intensiteit"
 	},
 	
@@ -1593,54 +1480,43 @@ window.translations = {
 		"nl":"Afbeelding beschrijven",
 	},
 	"Describe_images":{
-		"en":"Describe images",
 		"nl":"Afbeeldingen beschrijven",
 	},
 	"Describe_the_image":{
-		"en":"Describe the image",
 		"nl":"Beschrijf de afbeelding",
 	},
 	
 	"Describe":{
-		"en":"Describe",
 		"nl":"Beschrijven",
 	},
 	"Image_description":{
-		"en":"Image description",
 		"nl":"Afbeeldingsbeschrijving",
 	},
 	
 	"Live_camera_description":{
-		"en":"Live camera description",
 		"nl":"Live camera beschrijving",
 	},
 	
 	"Save_to_document":{
-		"en":"Save to document",
 		"nl":"Bewaar in document",
 	},
 	
 	
 	"Please_provide_a_name":{
-		"en":"Please provide a name",
 		"nl":"Voer alsjeblieft een naam in",
 	},
 	"Please_provide_an_image":{
-		"en":"Please provide an image",
 		"nl":"Geef alsjeblieft een afbeelding",
 	},
 	
 	"Create_a_new_custom_character":{
-		"en":"Create a new custom character",
 		"nl":"Ontwerp een nieuw karakter",
 	},
 	
 	"Try_an_image_description_example":{
-		"en":"Try an image description example",
 		"nl":"Probeer een voorbeeld",
 	},
 	"Try_a_document_scanner_example":{
-		"en":"Try a document scanner example",
 		"nl":"Probeer een voorbeeld",
 	},
 	
@@ -1650,16 +1526,13 @@ window.translations = {
 	},
 	
 	"Image_to_text_AI_has_loaded":{
-		"en":"The image description AI has loaded",
 		"nl":"De AI voor het beschrijven van afbeeldingen is ingeladen",
 	},
 	"Text_to_image_AI_has_loaded":{
-		"en":"The image creation AI has loaded",
 		"nl":"De AI voor genereren van afbeeldingen is ingeladen",
 	},
 	
 	"Write_a_detailed_description_of_this_image":{
-		"en":"Write a detailed description of this image",
 		"nl":"Geef een gedetailleerde beschrijving van deze afbeelding",
 	},
 	
@@ -1678,13 +1551,17 @@ window.translations = {
 	},
 	
 	"idle":{
-		"en":"idle",
 		"nl":"zZz",
 	},
 	
+	"Save_and_Play":{
+		"en":"Save & Play",
+		"nl":"Bewaar & Speel af",
+	},
+	
+	
 	
 	"Conversation_history":{
-		"en":"Conversation history",
 		"nl":"Conversatie geschiedenis",
 	},
 	
@@ -1696,11 +1573,9 @@ window.translations = {
 	},
 	
 	"Request":{
-		"en":"Request",
 		"nl":"Verzoek",
 	},
 	"Question":{
-		"en":"Question",
 		"nl":"Bevraag",
 	},
 	
@@ -1721,11 +1596,9 @@ window.translations = {
 		"nl":"Corrigeren",
 	},
 	"Proofread":{
-		"en":"Proofread",
 		"nl":"Corrigeren",
 	},
 	"Proofread_document":{
-		"en":"Proofread document",
 		"nl":"Document corrigeren",
 	},
 
@@ -1738,34 +1611,23 @@ window.translations = {
 		"nl":"Genereer alleen de verbeterde tekst, verder niks. Geef geen uitleg of tips.",
 	},
 	"Not_enough_text":{
-		"en":"Not enough text",
 		"nl":"Niet genoeg tekst",
 	},
 	
 	"No_issues_found":{
-		"en":"No issues found",
 		"nl":"Geen problemen gevonden",
 	},
 	
 	"The_proofread_proposed_too_many_changes":{
-		"en":"The proofread proposed too many changes",
 		"nl":"Het proeflezen gaf teveel correcties",
 	},
 	"Accept_all":{
-		"en":"Accept all",
 		"nl":"Allemaal prima",
 	},
-	/*
-	"The_AI_is_misbehaving":{
-		"en":"The AI might not be doing a good proofread",
-		"nl":"De AI heeft mogelijk moeite met het text corrigeren",
-	},
-	*/
 	"The_proofread_AI_is_misbehaving":{
 		"en":"The AI might not be doing a good proofread",
 		"nl":"De AI heeft mogelijk moeite met het text corrigeren",
 	},
-	
 	
 	"Switching_to_AI_that_speaks_the_language":{
 		"en":"Switched to an AI that speaks the language",
@@ -1778,13 +1640,11 @@ window.translations = {
 		"en":"Writing",
 		"nl":"Aan 't schrijven", // AI status next to the green ball in the chat header
 	},
-	"Writing":{ // funcionalities header
-		"en":"Writing",
+	"Writing":{// functionalities header
 		"nl":"Schrijven",
 	},
 	
 	"Continue_writing_the_following_text":{
-		"en":"Continue writing the following text",
 		"nl":"Schrijf de volgende text verder", // AI status next to the green ball in the chat header
 	},
 	
@@ -1792,7 +1652,6 @@ window.translations = {
 	// REWRITE
 	
 	"Rewriting":{
-		"en":"Rewriting",
 		"nl":"Aan 't herschrijven",
 	},
 	
@@ -1800,11 +1659,9 @@ window.translations = {
 	// SUMMARIZE
 	
 	"Summarizing":{
-		"en":"Summarizing",
 		"nl":"Aan 't Samenvatten",
 	},
 	"Summarize_document":{
-		"en":"Summarize document",
 		"nl":"Document samenvatten",
 	},
 	
@@ -1812,11 +1669,9 @@ window.translations = {
 	
 	
 	"Translating":{
-		"en":"Translating",
 		"nl":"Aan 't vertalen",
 	},
 	"Translate":{
-		"en":"Translate",
 		"nl":"Vertaal",
 	},
 	"translate":{
@@ -1824,11 +1679,9 @@ window.translations = {
 		"nl":"Vertaal",
 	},
 	"Translate_document":{
-		"en":"Translate document",
 		"nl":"Vertaal document",
 	},
 	"Translation_failed":{
-		"en":"Translation failed",
 		"nl":"Vertalen is mislukt",
 	},
 	"Translation_done":{
@@ -1851,13 +1704,11 @@ window.translations = {
 		"nl":"De huidige AI spreekt de taal niet, en er zal dus wat heen-en-terug vertaald moeten worden.",
 	},
 	
-	"Translate_the_following_text":{ 
-		"en":"Translate the following text",
+	"Translate_the_following_text":{
 		"nl":"Vertaal de volgende tekst",
 	},
 	
 	"The_language_of_the_new_text_should_be":{
-		"en":"The language of the new text should be",
 		"nl":"De nieuwe tekst moet geschreven zijn in het",
 	},
 	"Write_only_the_translation_itself":{
@@ -1872,7 +1723,6 @@ window.translations = {
 		"nl":"Engels",
 	},
 	"English":{
-		"en":"English",
 		"nl":"Engels",
 	},
 	"nl":{
@@ -1880,7 +1730,6 @@ window.translations = {
 		"nl":"Nederlands",
 	},
 	"Dutch":{
-		"en":"Dutch",
 		"nl":"Nederlands",
 	},
 	"fi":{
@@ -1888,7 +1737,6 @@ window.translations = {
 		"nl":"Fins",
 	},
 	"Finnish":{
-		"en":"Finnish",
 		"nl":"Fins",
 	},
 	"da":{
@@ -1896,7 +1744,6 @@ window.translations = {
 		"nl":"Deens",
 	},
 	"Danish":{
-		"en":"Danish",
 		"nl":"Deens",
 	},
 	"de":{
@@ -1904,7 +1751,6 @@ window.translations = {
 		"nl":"Duits",
 	},
 	"German":{
-		"en":"German",
 		"nl":"Duits",
 	},
 	"fr":{
@@ -1912,7 +1758,6 @@ window.translations = {
 		"nl":"Frans",
 	},
 	"French":{
-		"en":"French",
 		"nl":"Frans",
 	},
 	"it":{
@@ -1920,7 +1765,6 @@ window.translations = {
 		"nl":"Italiaans",
 	},
 	"Italian":{
-		"en":"Italian",
 		"nl":"Italiaans",
 	},
 	"es":{
@@ -1928,7 +1772,6 @@ window.translations = {
 		"nl":"Spaans",
 	},
 	"Spanish":{
-		"en":"Spanish",
 		"nl":"Spaans",
 	},
 	"pt":{
@@ -1936,7 +1779,6 @@ window.translations = {
 		"nl":"Portugees",
 	},
 	"Portugese":{
-		"en":"Portugese",
 		"nl":"Portugees",
 	},
 	"jap":{
@@ -1944,7 +1786,6 @@ window.translations = {
 		"nl":"japans",
 	},
 	"Japanese":{
-		"en":"Japanese",
 		"nl":"japans",
 	},
 	"ro":{
@@ -1952,7 +1793,6 @@ window.translations = {
 		"nl":"Romeens",
 	},
 	"Romanian":{
-		"en":"Romanian",
 		"nl":"Romeens",
 	},
 	"uk":{
@@ -1960,7 +1800,6 @@ window.translations = {
 		"nl":"Oekraïens",
 	},
 	"Ukranian":{
-		"en":"Ukrainian",
 		"nl":"Oekraïens",
 	},
 	"po":{
@@ -1968,7 +1807,6 @@ window.translations = {
 		"nl":"Pools",
 	},
 	"Polish":{
-		"en":"Polish",
 		"nl":"Pools",
 	},
 	"ar":{
@@ -1976,27 +1814,21 @@ window.translations = {
 		"nl":"Arabisch",
 	},
 	"Arabian":{
-		"en":"Arabian",
 		"nl":"Arabisch",
 	},
 	"xh":{
 		"en":"Xhosa",
-		"nl":"Xhosa",
 	},
 	"Xhosa":{
-		"en":"Xhosa",
-		"nl":"Xhosa",
 	},
 	"af":{
 		"en":"Afrikaans",
-		"nl":"Afrikaans",
 	},
 	"African":{
 		"en":"Afrikaans",
 		"nl":"Afrikaans",
 	},
 	"Afrikaans":{
-		"en":"Afrikaans",
 		"nl":"Afrikaans",
 	},
 	
@@ -2005,16 +1837,14 @@ window.translations = {
 		"nl":"Grieks",
 	},
 	"Greek":{
-		"en":"Greek",
 		"nl":"Grieks",
 	},
 	
 	"hu":{
 		"en":"Hungarian",
-		"nl":"Hongaard",
+		"nl":"Hongaars",
 	},
 	"Hungarian":{
-		"en":"Hungarian",
 		"nl":"Hongaars",
 	},
 	
@@ -2023,7 +1853,6 @@ window.translations = {
 		"nl":"Russisch",
 	},
 	"Russian":{
-		"en":"Russian",
 		"nl":"Russisch",
 	},
 	
@@ -2037,11 +1866,11 @@ window.translations = {
 		"nl":"Het is niet duidelijk waar de paragraaf over moet gaan",
 	},
 	
-	"basic_prompt":{ 
+	"basic_prompt":{
 		"en":"A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.",
 		"nl":"Een conversatie tussen een gebruiker (User) en een AI assistent (Assistant). De assistant spreekt Nederlands en geeft behulpzame en eerlijke antwoorden.",
 	},
-	"Im_not_feeling_great_today":{ 
+	"Im_not_feeling_great_today":{
 		"en":"I'm not feeling great today. It's just not my day.",
 		"nl":"Ik voel me niet zo goed vandaag. Het is gewoon mijn dag niet.",
 	},
@@ -2051,264 +1880,205 @@ window.translations = {
 		"nl":"HANDS FREE\nAls je stembediening gebruikt, zeg dan 'scan' of 'scan het document'",
 	},
 	
-	"Reloading_the_page":{ 
+	"Reloading_the_page":{
 		"en":"Reloading...",
 		"nl":"Aan 't herladen...",
 	},
 	
-	"🍏🍎":{ 
-		"en":"🍎🍏",
-		"nl":"🍎🍏",
+	"🍏🍎":{
 	},
-	"🚁":{ 
-		"en":"🚁",
-		"nl":"🚁",
+	"🚁":{
 	},
-	"🇨🇳":{ 
-		"en":"🇨🇳",
-		"nl":"🇨🇳",
+	"🇨🇳":{
 	},
-	"🍓":{ 
-		"en":"🍓",
-		"nl":"🍓",
+	"🍓":{
 	},
 	
 	
 	
 	// Related to Playground editor / file manager
-	"File_saved":{ 
+	"File_saved":{
 		"en":"💾 File saved",
 		"nl":"💾 Bestand opgeslagen",
 	},
-	"Open_file":{ 
+	"Open_file":{
 		"en":" 📎  Open file",
 		"nl":" 📎  Openen ⁤⁤⁤ ⁤⁤⁤ ⁤",
 	},
-	"notepad":{ 
+	"notepad":{
 		"en":"Notepad",
 		"nl":"Kladblok",
 	},
-	"Save":{ 
-		"en":"Save",
+	"Save":{
 		"nl":"Opslaan",
 	},
-	"Save_all":{ 
-		"en":"Save all",
+	"Save_all":{
 		"nl":"Alles opslaan",
 	},
-	"Download_all":{ 
-		"en":"Download all",
+	"Download_all":{
 		"nl":"Alles downloaden",
 	},
-	
-	
-	"Take_snapshot":{ 
+	"Take_snapshot":{
 		"en":"Save snapshot",
 		"nl":"Maak reservekopie",
 	},
-	"Restore_snapshot":{ 
-		"en":"Restore snapshot",
+	"Restore_snapshot":{
 		"nl":"Reservekopie terugzetten",
 	},
-	"Load_all_files":{ 
+	"Load_all_files":{
 		"en":"Load all files into browser",
 		"nl":"Laad alle bestanden in de browser",
 	},
 	
-	
 	"Custom_AI":{
-		"en":"Custom AI",
 		"nl":"Aangepaste AI",
 	},
 	
 	"New_AI":{
-		"en":"New AI",
 		"nl":"Nieuwe AI",
 	},
 	"Next":{
-		"en":"Next",
 		"nl":"Volgende",
 	},
-	
 	"Tone":{
-		"en":"Tone",
 		"nl":"Toon",
 	},
 	"Style":{
-		"en":"Style",
-		"nl":"Style",
+		"nl":"Stijl",
 	},
-	
 	"Visit":{
-		"en":"Visit",
 		"nl":"Bezoek",
 	},
-	
 	"Improve":{
-		"en":"Improve",
 		"nl":"Verbeter",
 	},
-	
 	"Download":{
-		"en":"Download",
 		"nl":"Download",
 	},
-	
-	"Recent":{ 
-		"en":"Recent",
-		"nl":"Recent",
+	"Recent":{
 	},
-	
-	"order_of_creation":{ 
+	"order_of_creation":{
 		"en":"",
 		"nl":"",
 	},
-	
-	"voice_command":{ 
-		"en":"Voice command",
+	"voice_command":{
 		"nl":"Stem commando",
 	},
-	
-	"Interrupt_speaking":{ 
-		"en":"Interrupt speaking",
+	"Interrupt_speaking":{
 		"nl":"Onderbreek spreken",
 	},
-	
-	"Yes":{ 
-		"en":"Yes",
+	"Yes":{
 		"nl":"Ja",
 	},
-	
-	"No":{ 
-		"en":"No",
+	"No":{
 		"nl":"Nee",
 	},
-	
-	"Language_specialists":{ 
-		"en":"Language specialists",
+	"Language_specialists":{
 		"nl":"Taal specialisten",
 	},
-	"General":{ 
-		"en":"General",
+	"General":{
 		"nl":"Algemeen",
 	},
-	"Bitnet":{ 
-		"en":"Bitnet",
-		"nl":"Bitnet",
+	"Bitnet":{
 	},
-	"Medical":{ 
-		"en":"Medical",
+	"Medical":{
 		"nl":"Medisch",
 	},
-	"Therapy":{ 
-		"en":"Therapy",
+	"Therapy":{
 		"nl":"Therapie",
 	},
-	"Actors":{ 
-		"en":"Actors",
+	"Actors":{
 		"nl":"Acteurs",
 	},
-	"Other":{ 
-		"en":"Other",
+	"Other":{
 		"nl":"Anders",
 	},
-	"Custom":{ 
-		"en":"Custom",
+	"Custom":{
 		"nl":"Aangepast",
 	},
-	
-	"Read":{ 
-		"en":"Read",
+	"Read":{
 		"nl":"Lees",
 	},
-	
-	"Tools":{ 
-		"en":"Tools",
+	"Tools":{
 		"nl":"Gereedschap",
 	},
-	"Translation":{ 
+	"Translation":{
+		"nl":"Vertaling",
+	},
+	"translation":{
 		"en":"Translation",
 		"nl":"Vertaling",
 	},
-	"translation":{ 
-		"en":"Translation",
-		"nl":"Vertaling",
+	"Interrupted":{
+		"nl":"Onderbroken",
 	},
-	
-	"Interrupted":{ 
+	"interrupted":{
 		"en":"Interrupted",
 		"nl":"Onderbroken",
 	},
-	"interrupted":{ 
-		"en":"Interrupted",
-		"nl":"Onderbroken",
-	},
-	"added":{ 
+	"added":{
 		"en":"Added",
 		"nl":"Toegevoegd",
 	},
-	"assistant":{  // used in simple task list
+	"assistant":{ // used in simple task list
 		"en":"AI",
 		"nl":"AI",
 	},
 	"Export":{
-		"en":"Export",
 		"nl":"Exporteren",
 	},
-	
-	"stt":{ 
+	"stt":{
 		"en":"Speech-to-Text",
 		"nl":"Spraak analyse",
 	},
-	"tts":{ 
+	"tts":{
 		"en":"Text-to-Speech",
 		"nl":"Tekst naar spraak",
 	},
-	
-	"audio_player":{ 
+	"audio_player":{
 		"en":"Playing audio",
 		"nl":"Audio afspelen",
 	},
-	"play_document":{ 
+	"Play":{
+		"nl":"Afspelen",
+	},
+	"play_document":{
 		"en":"Playing document",
 		"nl":"Document afspelen",
 	},
-	"doing_mp3":{ 
+	"doing_mp3":{
 		"en":"Making MP3 file",
 		"nl":"MP3 aan 't maken",
 	},
-	"doing_tts":{ 
+	"doing_tts":{
 		"en":"Doing text-to-speech...",
 		"nl":"Audio genereren...",
 	},
-	"doing_rag":{ 
+	"doing_rag":{
 		"en":"Searching...",
 		"nl":"Zoeken...",
 	},
-	
-	"Add_more_AIs":{ 
+	"Add_more_AIs":{
 		"en":"Add more AI's ➜",
 		"nl":"Nog meer AI's ➜",
 	},
-	
-	"Copied_link_to_clipboard":{ 
+	"Copied_link_to_clipboard":{
 		"en":"🔗 Link copied",
 		"nl":"🔗 Link gekopieerd",
 	},
-	"Copied_text_to_clipboard":{ 
+	"Copied_text_to_clipboard":{
 		"en":"📋 Text copied",
 		"nl":"📋 Text gekopieerd",
 	},
-	
-	"Format_your_response_in_markdown":{ 
+	"Format_your_response_in_markdown":{
 		"en":"Format the response in markdown",
 		"nl":"Gebruik markdown",
 	},
-	"Just_provide_the_answer_with_no_explanations":{ 
+	"Just_provide_the_answer_with_no_explanations":{
 		"en":"Just provide the answer with no explanations",
 		"nl":"Geef alleen het antwoord, geef géén uitleg",
 	},
-	"Write_your_answer_short_and_succinct":{ 
+	"Write_your_answer_short_and_succinct":{
 		"en":"Write the answer short and concise",
 		"nl":"Hou het antwoord kort",
 	},
@@ -2316,11 +2086,11 @@ window.translations = {
 	
 	// CHARACTERS TRANSLATIONS
 	
-	"characters":{ 
+	"characters":{
 		"en":"Characters",
 		"nl":"Personages",
 	},
-	"templates":{ 
+	"templates":{
 		"en":"Templates",
 		"nl":"Sjablonen", // Voorzetjes?
 	},
@@ -2334,20 +2104,19 @@ window.translations = {
 		"nl":"Blauwdrukken",
 	},
 	"Create_a_new_blueprint":{
-		"en":"Create a new blueprint",
 		"nl":"Maak een nieuwe blauwdruk",
 	},
 	
-	"You_can_add_create_and_share_characters":{ 
+	"You_can_add_create_and_share_characters":{
 		"en":"You can add, create and share as many characters as you like",
 		"nl":"Je kunt zoveel karakters toevoegen, maken en met anderen delen als je wilt",
 	},
-	"You_can_add_create_and_share_blueprints":{ 
+	"You_can_add_create_and_share_blueprints":{
 		"en":"You can add, create and share as many blueprints as you like",
 		"nl":"Je kunt zoveel blauwdrukken toevoegen, maken en met anderen delen als je wilt",
 	},
 	
-	"Find_and_share_characters_on_Reddit":{ 
+	"Find_and_share_characters_on_Reddit":{
 		"en":"Find and share on Reddit",
 		"nl":"Vind en deel op Reddit",
 	},
@@ -2356,109 +2125,89 @@ window.translations = {
 		"en":"Find and share blueprints on Reddit",
 		"nl":"Vind en deel blauwdrukken op Reddit",
 	},
-	
 	"Words_in_the_current_document":{
-		"en":"Words in the current document",
 		"nl":"Woorden in het huidige document",
 	},
 	"Words_in_the_current_selection":{
-		"en":"Words in the selection",
 		"nl":"Woorden in de selectie",
 	},
-	
 	"More_settings":{
-		"en":"More settings",
 		"nl":"Meer instellingen",
 	},
-	
-	"musicgen":{ 
+	"musicgen":{
 		"en":"Musician",
 		"nl":"Muzikant",
 	},
-	"generate_audio":{ 
+	"generate_audio":{
 		"en":"Making music",
 		"nl":"Muziek maken",
 	},
-	
-	"Loading_complete":{ 
+	"Loading_complete":{
 		"en":"Ready",
 		"nl":"Klaar",
 	},
 	
 	
-	"Would_you_like_to_create_a_new_document":{ 
+	"Would_you_like_to_create_a_new_document":{
 		"en":"Would you like to create a new empty document?",
 		"nl":"Wil je een nieuw leeg document openen?",
 	},
-	"New_document":{ 
-		"en":"New document",
+	"New_document":{
 		"nl":"Nieuw document",
 	},
-	"Meeting":{ 
-		"en":"Meeting",
+	"Meeting":{
 		"nl":"Notulen",
 	},
-	"Subtitles":{ 
-		"en":"Subtitles",
+	"Subtitles":{
 		"nl":"Ondertiteling",
 	},
-	"Generate_a_subtitle":{ 
+	"Generate_a_subtitle":{
 		"en":"Generate subtitles for a video file",
 		"nl":"Genereer ondertiteling voor een video",
 	},
-	"Transcribe_an_audio_file":{ 
+	"Transcribe_an_audio_file":{
 		"en":"New document from audio file",
 		"nl":"Audio bestand naar text",
 	},
-	
-	
-	"Reading_a_document_in_order_to_summarize_it":{ 
+	"Reading_a_document_in_order_to_summarize_it":{
 		"en":"Reading a document in order to summarize it... ",
 		"nl":"Even een document lezen om het te kunnen samenvatten...",
 	},
-	"Because_the_document_is_very_long_this_will_be_done_in_a_number_of_smaller_steps":{ 
+	"Because_the_document_is_very_long_this_will_be_done_in_a_number_of_smaller_steps":{
 		"en":"Because it's very long this will be done in a number of smaller steps",
 		"nl":"Omdat de tekst nogal lang is zal die in kleinere brokken verwerkt worden",
 	},
 	
-	
 	// SCRIBE
 	
-	"What_should_be_shown_until_a_speaker_has_given_their_consent_to_be_recorded":{ 
+	"What_should_be_shown_until_a_speaker_has_given_their_consent_to_be_recorded":{
 		"en":"What may be shown until a speaker has given their consent to be recorded?",
 		"nl":"Wat mag er getoond worden voordat een spreker toestemming geeft om opgenomen te worden?",
 	},
-	
-	"None":{  // not used yet
-		"en":"None",
+	"None":{ // not used yet
 		"nl":"Geen",
 	},
-	"Low":{  // not used yet
-		"en":"Low",
+	"Low":{ // not used yet
 		"nl":"Laag",
 	},
-	"Medium":{ 
-		"en":"Medium",
+	"Medium":{
 		"nl":"Matig",
 	},
-	"High":{ 
-		"en":"High",
+	"High":{
 		"nl":"Hoog",
 	},
-	"Pseudonym":{ 
-		"en":"Pseudonym",
+	"Pseudonym":{
 		"nl":"Pseudoniem",
 	},
 	"Redacted":{
-		"en":"Redacted",
 		"nl":"Verborgen",
 	},
 	
-	"Scribe_medium_privacy_level_explanation":{ 
+	"Scribe_medium_privacy_level_explanation":{
 		"en":"Names of the speakers won't be shown until they've said 'My name is [name] and I consent to recording my voice'. But what they say is always shown.",
 		"nl":"De namen van sprekers worden niet getoond tot ze 'Mijn naam is [naam] en je mag mijn stem opnemen' hebben gezegd. Maar wat ze zeggen wordt altijd getoond.",
 	},
-	"Scribe_high_privacy_level_explanation":{ 
+	"Scribe_high_privacy_level_explanation":{
 		"en":"Names of the speakers and what they say won't be shown until they've said 'My name is [name] and I consent to recording my voice'.",
 		"nl":"De namen en de bijdrages van sprekers worden niet getoond tot ze 'Mijn naam is [naam] en je mag mijn stem opnemen' hebben gezegd.",
 	},
@@ -2473,6 +2222,10 @@ window.translations = {
 		"nl":"Dit voegt regels met tijdsindicatie toe, zoals: 🕰️ 08:55",
 	},
 	
+	"This_prompt_is_designed_to_show_the_limitations_of_AI_models":{
+		"en":"⚠️ This example is designed to showcase the current limitations of AI models. The answer is likely to be wrong or biased, and that's the point.",
+		"nl":"⚠️ Deze voorbeeld toont de limitaties van de huidige generatie AI modellen. Het antwoord zal hoogstwaarschijnlijk verkeerd of cultureel bepaald zijn, en dat is het punt.",
+	},
 	
 	"privacy_level":{
 		"en":"Privacy level",
@@ -2512,6 +2265,14 @@ window.translations = {
 		"nl":"Heb je bij het generen van spraak, als beide opties beschikbaar zijn, een voorkeur voor een mannelijke of vrouwelijke stem?",
 	},
 	
+	"seed":{
+		"en":"Starting seed",
+		"nl":"Start nummer",
+	},
+	"seed_explanation":{
+		"en":"Each time an AI model starts, a random number is also generated. This 'random seed' numer is used to help choose the next word it generates more randomly. However, you can set this seed to a specific number, which will make responses more predictable. If no number is set, and you set the unpredictability slider to zero, then the number 42 will be used.",
+		"nl":"Elke keer dat een AI model wordt opgestart wordt er ook een willekeurig nummer gekozen. Dat vormt de basis voor verdere willekeur in hoe het model telkens het volgende woord kiest. Door hier een nummer in te voeren kun je die willekeur wat verminderen. Als dit invoerveld leeg is, en je de onvoorspelbaarheid op nul zet, dan zal het nummer 42 gebruikt worden.",
+	},
 	"male":{
 		"en":"Male",
 		"nl":"Mannelijk",
@@ -2525,154 +2286,130 @@ window.translations = {
 	// BLUEPRINTS
 	
 	"There_are_no_relevant_files_for_the_blueprint":{
-		"en":"There are no relevant files for the blueprint",
 		"nl":"Er zijn geen voor de blauwdruk relevante bestanden",
 	},
 	"Blueprint_is_looping_over_files":{
-		"en":"Blueprint is looping over files",
 		"nl":"Blauwdruk werkt aan een aantal bestanden",
 	},
-	
 	"Added_command_to_blueprint":{
-		"en":"Added command to blueprint",
 		"nl":"Commando aan blauwdruk toegevoegd",
 	},
-	
 	"A_blueprint_task_cannot_write_to_a_blueprint_document":{
-		"en":"A blueprint task cannot write to a blueprint document",
 		"nl":"Een blauwdruk kan niet in een blauwdruk document schrijven",
 	},
-	
 	"Blueprint_done":{
-		"en":"Blueprint is done",
 		"nl":"Blauwdruk is klaar",
 	},
 	
 	
-	
 	// WARNINGS
 	
-	"This_browser_does_not_support_fast_AI":{ 
-		"en":"This browser does not support fast AI",
+	"This_browser_does_not_support_fast_AI":{
 		"nl":"Deze browser ondersteunt helaas geen snelle AI",
 	},
-	"You_will_have_a_better_experience_with_browsers_such_as":{ 
+	"You_will_have_a_better_experience_with_browsers_such_as":{
 		"en":"You will have a much better experience with a web browser such as",
 		"nl":"Privacy-vriendelijke browsers die dat wel kunnen zijn bijvoorbeeld",
 	},
 	
 	
 	// ERRORS
-	"Your_device_does_not_seem_powerful_enough":{ 
+	"Your_device_cannot_run_this_AI":{
+		"en":"Your device cannot run this AI 🙁",
+		"nl":"Dit apparaat kan deze AI niet gebruiken 🙁",
+	},
+	"Your_device_does_not_seem_powerful_enough":{
 		"en":"Your device does not seem powerful enough, the AI's will likely not work. 🙁",
 		"nl":"Dit apparaat lijkt niet krachtig genoeg, de AI's zullen waarschijnlijk niet werken. 🙁",
 	},
-	"Not_enough_memory":{ 
-		"en":"Not enough memory",
+	"Not_enough_memory":{
 		"nl":"Niet genoeg geheugen",
 	},
-	"Could_not_start_task":{ 
-		"en":"Could not start task",
+	"Could_not_start_task":{
 		"nl":"Kan opdracht niet uitvoeren",
 	},
+	"Could_not_download_file":{
+		"nl":"Kon bestand niet downloaden",
+	},
 	"A_network_connection_error_occured":{
-		"en":"A network connection error occured",
 		"nl":"Er ging iets mis met de netwerk verbinding",
 	},
 	"A_model_has_to_be_downloaded_from_the_internet_but_there_is_no_internet_connection":{
-		"en":"A model has to be downloaded from the internet but there is no internet connection",
 		"nl":"Er moet een nieuw AI model gedownload worden, maar er lijkt geen internetverbinding te zijn",
 	},
 	"Please_describe_how_the_text_should_be_rewritten":{
-		"en":"Please describe how the text should be rewritten",
 		"nl":"Geef aan hoe de tekst moet worden herschreven",
 	},
 	"Please_load_an_AI_first":{
 		"en":"Please activate the AI that should perform the task first",
 		"nl":"Activeer eerst de AI die deze taak uit moet voeren",
 	},
-	"Please_allow_the_AI_to_fully_load_first":{ 
-		"en":"Please allow the AI to fully load first",
+	"Please_allow_the_AI_to_fully_load_first":{
 		"nl":"Wacht alsjeblieft tot de huidige AI klaar is met laden",
 	},
-	
-	"Please_select_some_text_first":{ 
-		"en":"Please select some text first",
+	"Please_select_some_text_first":{
 		"nl":"Selecteer eerst wat tekst",
 	},
-	"Stopped_the_assistant_early":{ 
+	"Stopped_the_assistant_early":{
 		"en":"The AI was blabbering, so it was stopped",
 		"nl":"De AI was aan 't zwammen, dus is gestopt",
 	},
-	
-	"To_use_text_tools_you_will_need_to_load_an_AI_that_can_work_on_text_first":{ 
+	"To_use_text_tools_you_will_need_to_load_an_AI_that_can_work_on_text_first":{
 		"en":"An AI that can work on text must first be (down)loaded",
 		"nl":"Er moet eerst een AI worden inladen die met tekst overweg kan",
 	},
-	"Do_that":{ 
+	"Do_that":{
 		"en":"Make it so",
 		"nl":"Doe dat",
 	},
-	"To_protect_privacy_scribe_is_limited_to_running_one_hour_at_a_time":{ 
-		"en":"To protect privacy scribe is limited to running two hours at a time",
+	"To_protect_privacy_scribe_is_limited_to_running_one_hour_at_a_time":{
+		"en":"To protect privacy Scribe is limited to running two hours at a time",
 		"nl":"Om privacy te beschermen kun je de notulist maximaal twee uur per keer gebruiken",
 	},
-	
-	"The_currently_visible_AI_cannot_handle_text":{ 
-		"en":"The currently visible AI cannot handle text",
+	"The_currently_visible_AI_cannot_handle_text":{
 		"nl":"De huidige geselecteerde AI kan geen text verwerken",
 	},
-	
-	"Loading_the_AI_failed":{ 
+	"Loading_the_AI_failed":{
 		"en":"Sorry, (down)loading the AI failed",
 		"nl":"Sorry, er ging iets mis bij het laden van de AI",
 	},
-	"Error_opening_file":{ 
+	"Error_opening_file":{
 		"en":"Opening a file failed",
 		"nl":"Document openen ging mis",
 	},
-	"Could_not_access_a_camera":{ 
-		"en":"Could not access a camera",
+	"Could_not_access_a_camera":{
 		"nl":"Kon geen camera openen",
 	},
-	"Your_browser_does_not_support_running_this_model":{ 
+	"Your_browser_does_not_support_running_this_model":{
 		"en":"Your current web browser does not support running this AI model (yet). You could try using the Brave, Chrome or Edge web browsers instead.",
 		"nl":"Je huidige web browser kan dit AI model (nog) niet draaien. Je kunt een andere browser proberen, zoals Brave, Chrome of Edge.",
 	},
-	"The_AI_gave_an_empty_response":{  // returned empty string
-		"en":"The AI gave an empty response",
+	"The_AI_gave_an_empty_response":{ // returned empty string
 		"nl":"De AI gaf geen antwoord",
 	},
 	"The_AI_gave_an_unexpected_response":{
-		"en":"The AI gave an unexpected response",
 		"nl":"De AI gaf een onbruikbaar antwoord",
 	},
-	"Select_this_page_to_use_voice_recognition":{ 
+	"Select_this_page_to_use_voice_recognition":{
 		"en":"Click on this page to re-activate voice recognition",
 		"nl":"Klik op deze pagina om stembediening te heractiveren",
 	},
 	"The_file_is_no_longer_available":{
-		"en":"The document is no longer available",
-		"nl":"Het document is niet langer beschikbaar",
+		"nl":"Het bestand is niet langer beschikbaar",
 	},
 	"This_AI_is_currently_unsupported":{
-		"en":"This AI is currently unsupported",
 		"nl":"Dit type AI model wordt (nog) niet ondersteund",
 	},
 	"Could_not_start_the_camera":{
-		"en":"Could not start the camera",
 		"nl":"Kon de camera niet starten",
 	},
 	"An_error_occured_while_restoring_the_chat_history":{
-		"en":"An error occured while restoring the chat history",
 		"nl":"Er ging iets mis bij het teruglezen van de chat geschiedenis",
 	},
 	"Cannot_write_text_in_the_currently_open_file":{
-		"en":"Cannot write text in the currently open file",
 		"nl":"Kan geen tekst toevoegen aan dit bestand",
 	},
 	"Could_not_access_microphone":{
-		"en":"Could not access microphone",
 		"nl":"Kon de microfoon niet starten",
 	},
 	"Could_not_start_voice_recognition":{
@@ -2680,56 +2417,66 @@ window.translations = {
 		"nl":"Kon de stemherkenning AI niet starten",
 	},
 	"Cannot_transcribe":{
-		"en":"Cannot transcribe",
 		"nl":"Transcriberen kan niet",
 	},
 	"The_command_was_too_long":{
-		"en":"The command was too long",
 		"nl":"De opdracht was te lang",
 	},
-	
 	"Musician_failed":{
 		"en":"Musician error",
 		"nl":"Muzikant faalde",
 	},
 	"This_browser_does_not_support_Text-to-Speech":{
-		"en":"This browser does not support Text-to-Speech",
 		"nl":"Deze browser ondersteunt geen Tekst-naar-Spraak",
 	},
 	
+	"Loading_voice_recognition_took_too_long":{
+		"en":"Loading speech recognition took too long",
+		"nl":"Stemherkenning laden duurde te lang",
+	},
 	
+	"Try_closing_the_tab_to_fix_voice_recognition":{
+		"en":"If voice recognition keeps failing, try closing this tab, and re-opening papeg.ai in a new one.",
+		"nl":"Als de stemherkenning blijft falen, probeer dan dit: sluit deze tab en open papeg.ai in een nieuwe tab.",
+	},
 	
 	"Try_updating_or_changing_your_browser":{
 		"en":"Try updating your browser, or switch to a different one",
 		"nl":"Probeer je browser te updaten, of probeer een andere browser",
 	},
 	
+	"AI_download_failed":{
+		"nl":"AI download mislukt",
+	},
+	
+	"Could_not_load_file":{
+		"nl":"Kon bestand niet laden",
+	},
+	
 	
 	// Ollama
 	
 	"Ollama_is_online":{
-		"en":"Ollama is online",
 		"nl":"Ollama is online",
 	},
-	"Ollama_seems_to_be_offline":{ 
-		"en":"Ollama seems to be offline",
+	"Ollama_seems_to_be_offline":{
 		"nl":"Ollama lijkt niet beschikbaar te zijn",
 	},
 	
-	"ollama_model":{ 
+	"ollama_model":{
 		"en":"Ollama AI model",
 		"nl":"Ollama AI model",
 	},
-	"ollama_model_explanation":{ 
+	"ollama_model_explanation":{
 		"en":"Set the model that Ollama should use. For example: 'llama3'.",
 		"nl":"Stel het AI model in dat Ollama moet gebruiken. Bijvoorbeeld: 'llama3'.",
 	},
 
-	"ollama_host":{ 
+	"ollama_host":{
 		"en":"Ollama server URL",
 		"nl":"Ollama server URL",
 	},
-	"ollama_host_explanation":{ 
+	"ollama_host_explanation":{
 		"en":"Set the URL where an Ollama instance is available. For example: 'http://localhost:11434'.\n\nAlso, add https://papeg.ai to your OLLAMA_ORIGINS env variable.",
 		"nl":"Stel een URL is waar Ollama beschikbaar is. Bijvoorbeeld: 'http://localhost:11434'.\n\nVoeg daarnaast ook https://papeg.ai toe aan je OLLAMA_ORIGINS env variabele.",
 	},
@@ -2737,75 +2484,59 @@ window.translations = {
 	
 	
 	// CUSTOM CLONES
-	"Clone_this_AI_model":{ 
+	"Clone_this_AI_model":{
 		"en":"Clone this AI",
 		"nl":"Kloon deze AI",
 	},
-	"create_clone_AI_model":{ 
+	"create_clone_AI_model":{
 		"en":"Create AI clone",
 		"nl":"Kloon AI",
 	},
 	
-	"AI_model_name":{ 
+	"AI_model_name":{
 		"en":"AI name",
 		"nl":"AI naam",
 	},
-	"AI_model_description":{ 
+	"AI_model_description":{
 		"en":"AI description",
 		"nl":"AI beschrijving",
 	},
-	
-	"Example_prompt":{ 
-		"en":"Example prompt",
+	"Example_prompt":{
 		"nl":"Voorbeeld prompt",
 	},
-	
-	"A_new_AI_has_been_created":{ 
-		"en":"A new AI has been created",
+	"A_new_AI_has_been_created":{
 		"nl":"Er is een nieuwe AI gemaakt",
 	},
 	
 	
-	
-	
-	
 	// LOADING AI
-	"Would_you_like_to_download_this_AI":{ 
+	"Would_you_like_to_download_this_AI":{
 		"en":"Would you like to download this AI?",
 		"nl":"Wil je deze AI downloaden?",
 	},
-	"Would_you_like_to_switch_to_this_AI":{ 
+	"Would_you_like_to_switch_to_this_AI":{
 		"en":"Would you like to switch to using this AI instead?",
 		"nl":"Wil je naar deze AI omschakelen?",
 	},
-	"Nice_choice":{ 
-		"en":"Nice choice",
+	"Nice_choice":{
 		"nl":"Goeie keuze",
 	},
-	"A_model_is_already_being_loaded":{ 
+	"A_model_is_already_being_loaded":{
 		"en":"An AI is already in the process of loading",
 		"nl":"Er is al een AI bezig met inladen",
 	},
 	
-	"Settings_complexity":{ 
+	"Settings_complexity":{
 		"en":"Settings",
 		"nl":"Instellingen",
 	},
-	"Options":{ 
-		"en":"Options",
-		"nl":"Opties",
-	},
-	
-	"Normal":{ 
-		"en":"Normal",
+	"Normal":{
 		"nl":"Normaal",
 	},
-	"Advanced":{ 
-		"en":"Advanced",
+	"Advanced":{
 		"nl":"Geavanceerd",
 	},
-	"Developer":{ 
-		"en":"Developer",
+	"Developer":{
 		"nl":"Ontwikkelaar",
 	},
 
@@ -2826,22 +2557,15 @@ window.translations = {
 		"en":"Could not open the camera",
 		"nl":"Kon de camera niet openen",
 	},
-	
 	"Photo_to_Text":{
-		"en":"Photo to Text",
 		"nl":"Foto naar Tekst",
 	},
-	
 	"Photo_to_text_results":{
-		"en":"Photo to text results",
 		"nl":"Foto naar tekst resultaat",
 	},
-	
 	"Take_picture":{
-		"en":"Take picture",
 		"nl":"Maak foto",
 	},
-	
 	"Next_page":{
 		"en":"OK, Next page",
 		"nl":"OK, Volgende pagina",
@@ -2903,63 +2627,18 @@ window.translations = {
 	
 	"mermaid_name":{
 		"en":"Mermaid",
-		"nl":"Mermaid",
 	},
 	"mermaid_description":{
 		"en":"Mermaid",
-		"nl":"Mermaid",
 	},
 	"mermaid_model_info":{
 		"en":"Mermaid",
-		"nl":"Mermaid",
 	},
 	
 	
-	/*
-	"phi_name":{
-		"en":"Homework helper",
-		"nl":"Huiswerk assistent",
-	},
-	"phi_description":{
-		"en":"Trained on school books, it's been called long-winded",
-		"nl":"Getraind op duizenden (Engelstalig) schoolboeken. Soms langdradig",
-	},
-	"phi_model_info":{
-		"en":"This AI model was developed by Microsoft. What's special about it is that it has a very open license - you can do just about anything you want with it. Well done Microsoft!\n\nBecause it was trained on a boat load of school books it's a good choice if, for example, you've got questions relating to math. ",
-		"nl":"Dit AI model is ontwikkeld door Microsoft, en is bijzonder door de licentie: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld wiskunde vragen.",
-	},
-	
-	"phi2_name":{
-		"en":"Small homework tutor",
-		"nl":"Kleine huiswerk hulp",
-	},
-	"phi2_description":{
-		"en":"Trained on school books, I've been called long-winded",
-		"nl":"Getraind op duizenden (Engelstalig) schoolboeken. Soms langdradig",
-	},
-	"phi2_model_info":{
-		"en":"This AI model was developed by Microsoft. What's special about it is that it has a very open license - you can do just about anything you want with it. Well done Microsoft!\n\nBecause it was trained on a boat load of school books it's a good choice if, for example, you've got questions relating to math. ",
-		"nl":"Dit AI model is ontwikkeld door Microsoft, en is bijzonder door de licentie: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld wiskunde vragen.",
-	},
-	
-	
-	"phi3_name":{
-		"en":"Writer",
-		"nl":"Schrijver",
-	},
-	"phi3_description":{
-		"en":"Best size to quality ratio",
-		"nl":"Beste grootte / kwaliteit verhouding",
-	},
-	"phi3_model_info":{
-		"en":"This AI model, which is actually called 'Phi 3 mini', was developed by Microsoft. What's nice about it is that it has a very open license - you can do just about anything you want with it. Well done Microsoft!\n\nBecause it was trained on a boat load of school books it's a good choice if, for example, you've got questions relating to math. ",
-		"nl":"Dit AI model, dat eigenlijk 'Phi 3 mini' heet, is ontwikkeld door Microsoft. De licentie is fijn: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld vragen over biologie.",
-	},
-	*/
 	
 	"phi3_1_mini_4k_name":{
 		"en":"Phi 3.1",
-		"nl":"Phi 3.1",
 	},
 	"phi3_1_mini_4k_description":{
 		"en":"Best size to quality ratio",
@@ -2969,27 +2648,6 @@ window.translations = {
 		"en":"This AI model, which is actually called 'Phi 3 mini', was developed by Microsoft. What's nice about it is that it has a very open license - you can do just about anything you want with it. Well done Microsoft!\n\nBecause it was trained on a boat load of school books it's a good choice if, for example, you've got questions relating to math. ",
 		"nl":"Dit AI model, dat eigenlijk 'Phi 3 mini' heet, is ontwikkeld door Microsoft. De licentie is fijn: je mag er zo'n beetje alles mee doen wat je wilt. \n\nOmdat het onder andere op een hele buslading aan schoolboeken is getraind is het een goeie keus voor bijvoorbeeld vragen over biologie.",
 	},
-	
-	/*
-	"fast_phi3_mini_name":{
-		"en":"Writer",
-		"nl":"Schrijver",
-	},
-	"fast_phi3_mini_description":{
-		"en":"Recommended",
-		"nl":"Aanrader",
-	},
-
-	
-	"fast_phi3_mini_32_name":{
-		"en":"Writer",
-		"nl":"Schrijver",
-	},
-	"fast_phi3_mini_32_description":{
-		"en":"Medium. Recommended.",
-		"nl":"Middel. Aanrader.",
-	},
-	*/
 	
 	"phi3_mini_name":{
 		"en":"Medium writer",
@@ -3007,7 +2665,6 @@ window.translations = {
 	
 	"phi3_1_mini_128k_name":{
 		"en":"Phi 3.1 mini 128k",
-		"nl":"Phi 3.1 mini 128k",
 	},
 	"phi3_1_mini_128k_description":{
 		"en":"Medium. Recommended.",
@@ -3021,7 +2678,6 @@ window.translations = {
 	
 	"phi3_mini_4k_name":{
 		"en":"Phi 3 (4K)",
-		"nl":"Phi 3 (4K)",
 	},
 	"phi3_mini_4k_description":{
 		"en":"Recommended",
@@ -3050,7 +2706,6 @@ window.translations = {
 	
 	"bitnet1_name":{
 		"en":"BitNet 1B",
-		"nl":"BitNet 1B",
 	},
 	"bitnet1_description":{
 		"en":"A brand new AI technology",
@@ -3063,7 +2718,6 @@ window.translations = {
 	
 	"bitnet2_name":{
 		"en":"BitNet 3B",
-		"nl":"BitNet 3B",
 	},
 	"bitnet2_description":{
 		"en":"A brand new AI technology",
@@ -3076,7 +2730,6 @@ window.translations = {
 	
 	"bitnet3_name":{
 		"en":"BitNet 3.9B (TQ1)",
-		"nl":"BitNet 3.9B (TQ1)",
 	},
 	"bitnet3_description":{
 		"en":"A brand new AI technology",
@@ -3089,7 +2742,6 @@ window.translations = {
 	
 	"bitnet4_name":{
 		"en":"BitNet 3.9B (TQ2)",
-		"nl":"BitNet 3.9B (TQ2)",
 	},
 	"bitnet4_description":{
 		"en":"A brand new AI technology",
@@ -3103,7 +2755,6 @@ window.translations = {
 	
 	"bitnet_llama3_8b_name":{
 		"en":"BitNet Llama 3 8B (TQ1)",
-		"nl":"BitNet Llama 3 8B (TQ1)",
 	},
 	"bitnet_llama3_8b_description":{
 		"en":"A brand new AI technology",
@@ -3114,25 +2765,9 @@ window.translations = {
 		"nl":"Bitnet AI modellen zijn een erg toffe, gloednieuwe technologie. Ze hebben minder processorkracht nodig (en dus ook minder electriciteit), waardoor ze goed geschikt lijken voor mobiele en web-browser toepassingen. Ze zijn wel iets lastiger om te bouwen, maar daar hebben we hier geen last van. Wel is het zo dat er nog geen goeie BitNet modellen beschikbaar zijn. Maar dat zal niet lang meer duren. Deze AIis vooral een klein test-model om de technologie te kunnen uitproberen.",
 	},
 	
-	/*
-	"fast_gemma_name":{
-		"en":"Gemma",
-		"nl":"Gemma",
-	},
-	"fast_gemma_description":{
-		"en":"Small and generic, made by Google",
-		"nl":"Niet heel spannend, gemaakt door Google",
-	},
-	"fast_gemma_model_info":{
-		"en":"This AI model was developed by Google. It's not really all that much to write home about to be honest. But it should at least be a little bit fast. Still, Phi is probably more useful. ",
-		"nl":"Dit AI model is ontwikkeld door Google. Het is niet echt om over naar huis te schrijven, maar het zou wel relatief snel moeten zijn. Waarschijnlijk is Phi nuttiger.",
-	},
-	*/
-	
 	
 	"gemma_name":{
 		"en":"Gemma",
-		"nl":"Gemma",
 	},
 	"gemma_description":{
 		"en":"Small and generic, made by Google",
@@ -3161,22 +2796,6 @@ window.translations = {
 	},
 	
 	
-	
-	/*
-	"fast_gemma_2_2b_name":{
-		"en":"Small writer",
-		"nl":"Kleine schrijver",
-	},
-	"fast_gemma_2_2b_description":{
-		"en":"Small. Recommended.",
-		"nl":"Klein. Aanrader.",
-	},
-	"fast_gemma_2_2b_model_info":{
-		"en":"This AI model was developed by Google. It has 2.6 billion parameters, which may sound like a lot, but for an AI model it's tiny.",
-		"nl":"Dit AI model is ontwikkeld door Google. Het heeft 2.6 miljard parameters. Dat klinkt groot, maar voor een AI model is het erg klein.",
-	},
-	*/
-	
 	"gemma_2_2b_name":{
 		"en":"Small writer",
 		"nl":"Kleine schrijver",
@@ -3190,22 +2809,6 @@ window.translations = {
 		"nl":"Dit AI model is ontwikkeld door Google. Het is de minst optimale versie, dus zal veel fouten maken.",
 	},
 	
-	
-	/*
-	"fast_gemma_2_9b_it_name":{
-		"en":"Big Gemma",
-		"nl":"Grote Gemma",
-	},
-	"fast_gemma_2_9b_it_description":{
-		"en":"Very large. Made by Google",
-		"nl":"Zeer groot. Gemaakt door Google",
-	},
-	"fast_gemma_2_9b_it_model_info":{
-		"en":"This AI model was developed by Google. It has 9 billion parameters, which means that you use it you will be loading 9 billion numbers into your device's memory when you use it. In other words: it's relatively big (while still being relatively small compared to the AI models that professionals run on larger cloud servers).",
-		"nl":"Dit AI model is ontwikkeld door Google. Het heeft 9 miljard parameters, wat betekent dat je 9 miljard cijfers in het geheugen van je computer gaat inladen wanneer je het gebruikt. Met andere woorden: het is een (relatief) groot AI model. Er zijn nog veel grotere, maar daar heb je een monster van een computer voor nodig.",
-	},
-	*/
-	
 	"gemma_2_9b_it_name":{
 		"en":"Big Gemma",
 		"nl":"Grote Gemma",
@@ -3218,8 +2821,6 @@ window.translations = {
 		"en":"This AI model was developed by Google. It's the most 'lobotomized' version available, so will make many mistakes.",
 		"nl":"Dit AI model is ontwikkeld door Google. Het is de minst optimale versie, dus zal veel fouten maken.",
 	},
-	
-	
 	
 
 	"rocket_name":{
@@ -3261,9 +2862,6 @@ window.translations = {
 	},
 	
 	
-	
-	
-	
 	"llama160_name":{
 		"en":"Hatchling",
 		"nl":"Kuiken",
@@ -3292,20 +2890,8 @@ window.translations = {
 	
 	
 	
-	/*
-	"fast_incite_chat_name":{
-		"en":"Incite chat",
-		"nl":"Incite chat",
-	},
-	"fast_incite_chat_description":{
-		"en":"A small fast chat bot",
-		"nl":"Een kleine snelle kletsmajoor",
-	},
-	*/
-	
 	"incite_chat_name":{
 		"en":"Incite chat",
-		"nl":"Incite chat",
 	},
 	"incite_chat_description":{
 		"en":"A small chat bot",
@@ -3316,20 +2902,6 @@ window.translations = {
 		"nl":"Een kleine kletsmajoor",
 	},
 	
-	/*
-	"fast_tiny_llama_name":{
-		"en":"Tiny chatter",
-		"nl":"Kleine kletser",
-	},
-	"fast_tiny_llama_description":{
-		"en":"Should run on most mobile phones",
-		"nl":"Zou op mobieltjes kunnen werken",
-	},
-	"fast_tiny_llama_model_info":{
-		"en":"This AI model, which is actually called Tiny Llama, is not that smart. But because it's to tiny it doesn't use a lot of memory either, and as a result it's blazingly fast.",
-		"nl":"Dit AI model, dat eigenlijk 'Tiny llama' heet, is niet zo slim. Het is simpelweg te klein om veel informatie te bevatten. Maar het heeft wel een ander voordeel: het is super snel, juist doordat het klein is en weinig geheugen gebruikt.",
-	},
-	*/
 	
 	"tiny_llama_name":{
 		"en":"Tiny chatter",
@@ -3458,7 +3030,6 @@ window.translations = {
 	
 	"smol_360m_name":{
 		"en":"Smol",
-		"nl":"Smol",
 	},
 	"smol_360m_description":{
 		"en":"Minuscule",
@@ -4033,6 +3604,26 @@ window.translations = {
 	    "nl":"Groot. Aanrader.",
 	    "fr":"Super... si votre ordinateur peut le gérer",
 	    "de":"Großartig... wenn dein Computer es verarbeiten kann",
+	},
+	
+	"ministral_name":{
+	    "en":"Ministral",
+	    "nl":"Ministral",
+	    "fr":"Ministral",
+	    "de":"Ministral",
+	},
+	"ministral_description":{
+	    "en":"Small, made in Europe",
+	    "nl":"Klein. Gemaakt in Europa",
+	    "fr":"Petit, fabriqué en France",
+	    "de":"Klein, hergestellt in Europa",
+	},
+	
+	"ministral_info":{
+	    "en":"This small AI model was made in France by a company called Mistral AI.",
+	    "nl":"Dit kleine AI model is in Frankrijk ontwikkeld door een bedrijf genaamd Mistral.",
+	    "fr":"Ce petit modèle d'IA a été fabriqué en France par une société appelée Mistral AI.",
+	    "de":"Dieses kleine KI-Modell wurde in Frankreich von einer Firma namens Mistral AI hergestellt.",
 	},
 
 	/*
@@ -4661,7 +4252,7 @@ window.translations = {
 
 	"image_to_text_name":{
 		"en":"Image describer",
-		"nl":"Plaatjes beschrijver",
+		"nl":"Afbeeldingen beschrijver",
 	},
 	"image_to_text_description":{
 		"en":"Describes pictures",
@@ -4669,7 +4260,7 @@ window.translations = {
 	},
 	"image_to_text_model_info":{
 		"en":"This AI model can describe the contents of pictures.\n\nYou can actually choose between multiple models here. Each perform the exact same task, but they differ in small ways. For example, 'Moondream 2' is the largest, followed quickly by NanaLlava, while Florence is by far the smallest.\n\nFlorence has some limitation in what you can ask of it - it only responds well to certain specific sentences.",
-		"nl":"Dit AI model kan beschrijven wat er op plaatjes te zien is.\n\nJe kunt kiezen tussen meerdere AI modellen voor deze functionaliteit. 'Moondream 2' (groot), 'NanoLlava' (klein) en 'Florence' (klein).\n\n Florence heft nogal een gebruiksaanwijzing, en is vooral interessant op mobiele telefoons.",
+		"nl":"Dit AI model kan beschrijven wat er op afbeeldingen te zien is.\n\nJe kunt kiezen tussen meerdere AI modellen voor deze functionaliteit. 'Moondream 2' (groot), 'NanoLlava' (klein) en 'Florence' (klein).\n\n Florence heft nogal een gebruiksaanwijzing, en is vooral interessant op mobiele telefoons.",
 	},
 
 
@@ -4966,31 +4557,24 @@ window.translations = {
 	// Rewrite tags
 	
 	"formal":{
-		"en":"formal",
 		"nl":"formeel",
 	},
 	"casual":{
-		"en":"casual",
 		"nl":"informeel",
 	},
 	"rational":{
-		"en":"rational",
 		"nl":"rationeel",
 	},
 	"emotional":{
-		"en":"emotional",
 		"nl":"emotioneel",
 	},
 	"mature":{
-		"en":"mature",
 		"nl":"volwassen",
 	},
 	"youthful":{
-		"en":"youthful",
 		"nl":"jeugdig",
 	},
 	"concise":{
-		"en":"concise",
 		"nl":"kortbondig",
 	},
 	"detailed":{
@@ -4998,35 +4582,27 @@ window.translations = {
 		"nl":"gedetailleerd",
 	},
 	"Detailed":{
-		"en":"Detailed",
 		"nl":"Gedetailleerd",
 	},
 	"readable":{
-		"en":"readable",
 		"nl":"leesbaar",
 	},
 	"persuasive":{
-		"en":"persuasive",
 		"nl":"overtuigend",
 	},
 	"inspiring":{
-		"en":"inspiring",
 		"nl":"inspirerend",
 	},
 	"funny":{
-		"en":"funny",
 		"nl":"grappig",
 	},
 	"romantic":{
-		"en":"romantic",
 		"nl":"romantisch",
 	},
 	"friendly":{
-		"en":"friendly",
 		"nl":"vriendelijk",
 	},
 	"less_repetitive":{
-		"en":"less repetitive",
 		"nl":"minder herhalend",
 	},
 	
@@ -5104,11 +4680,11 @@ window.translations = {
 	
 	// Document tutorial
 	
-	"With_the_aid_of_these_AIs_you_can_write_even_better_documents":{ 
+	"With_the_aid_of_these_AIs_you_can_write_even_better_documents":{
 		"en":"With the aid of these AI's you can write even better documents.",
 		"nl":"Met deze AI's kun je nog betere teksten schrijven.",
 	},
-	"For_this_tutorial_let_me_create_a_new_document_for_you":{ 
+	"For_this_tutorial_let_me_create_a_new_document_for_you":{
 		"en":"For this tutorial let me create a new document for you. One moment.",
 		"nl":"Om beter uit te kunnen leggen hoe je aan documenten kunt werken zal ik eerst een nieuw document aanmaken. Momentje.",
 	},
@@ -5118,7 +4694,7 @@ window.translations = {
 	
 	// Voice control tutorial
 	
-	"You_can_use_voice_control_to_talk_to_an_AI_dictate_into_a_document_and_even_give_voice_commands_like_start_a_new_document":{ 
+	"You_can_use_voice_control_to_talk_to_an_AI_dictate_into_a_document_and_even_give_voice_commands_like_start_a_new_document":{
 		"en":"You can use voice control to talk to an AI, dictate into a document, and even give voice commands like\n\n- Take a picture\n- Set a timer for 5 minutes\n- Start a new document called fairytale",
 		"nl":"Je kunt je stem gebruiken om met een AI te praten of een document te dicteren. Je kunt ook stemcommando's geven zoals 'zet een kookwekker voor 5 minuten' of 'Open een nieuw document genaamd sprookje'.",
 	},
@@ -5176,6 +4752,10 @@ window.translations = {
 		"en":"Is the government of China a repressive regime?",
 		"nl":"Is de Chinese overheid een repressief regime?"
 	},
+	"How_many_Rs_are_there_in_the_word_strawberry":{
+		"en":"How many R's are there in the word strawberry?",
+		"nl":"Hoevaak komt de letter 'R' voor in het woord 'Strawberry'?"
+	},
 	
 	
 	
@@ -5216,23 +4796,18 @@ window.translations = {
 	// Characters
 	
 	"The famous Youtuber":{
-		"en":"The famous Youtuber",
 		"nl":"De beroemde Youtuber"
 	},
 	"The ancient ruler of Egypt":{
-		"en":"The ancient ruler of Egypt",
 		"nl":"Legendarische koninging van Egypte"
 	},
 	"A creative genius":{
-		"en":"A creative genius",
 		"nl":"Creatief genie"
 	},
 	"U.S. President":{
-		"en":"U.S. President",
 		"nl":"Amerikaanse president"
 	},
 	"Conspiracy theorist":{
-		"en":"Conspiracy theorist",
 		"nl":"Complot denker"
 	},
 	"I want to believe":{
@@ -5240,11 +4815,9 @@ window.translations = {
 		"nl":"Fabeltjes fabriek"
 	},
 	"English teacher":{
-		"en":"English teacher",
 		"nl":"Leraar Engels"
 	},
 	"Improve your English":{
-		"en":"Improve your English",
 		"nl":"Verbeter je Engels"
 	},
 	"Let's get fit":{
@@ -5252,68 +4825,24 @@ window.translations = {
 		"nl":"Fit worden, en blijven!"
 	},
 	"Job interviewer":{
-		"en":"Job interviewer",
 		"nl":"Sollicitatie trainer"
 	},
 	"Prepare yourself for a job interview":{
-		"en":"Prepare yourself for a job interview",
 		"nl":"Bereid je voor op een sollicitatie gesprek"
 	},
 	"More characters":{
-		"en":"More characters",
 		"nl":"Meer karakters"
 	},
 	
-}
+};
 
 
-// 32 BIT MODEL TRANSLATIONS (name, description, info)
+//window.translations["fast_phi3_mini_model_info"] = window.translations["phi2_model_info"];
+//window.translations["fast_phi3_mini_32_model_info"] = window.translations["phi2_model_info"];
 
-//window.translations["fast_phi2_model_info"] = window.translations["phi2_model_info"];
-window.translations["fast_phi3_mini_model_info"] = window.translations["phi2_model_info"];
-window.translations["fast_phi3_mini_32_model_info"] = window.translations["phi2_model_info"];
-
-window.translations["mistral2_model_info"] = window.translations["fast_mistral_model_info"];
-window.translations["mistral_local_info"] = window.translations["fast_mistral_model_info"];
-//window.translations["mistral_orca_info"] = window.translations["fast_mistral_model_info"];
-window.translations["mistral_info"] = window.translations["fast_mistral_model_info"];
+//window.translations["mistral2_model_info"] = window.translations["fast_mistral_model_info"];
+//window.translations["mistral_local_info"] = window.translations["fast_mistral_model_info"];
+//window.translations["mistral_info"] = window.translations["fast_mistral_model_info"];
 
 window.translations["custom2_model_info"] = window.translations["custom1_model_info"];
 window.translations["custom3_model_info"] = window.translations["custom1_model_info"];
-
-
-
-// add fast_ translations
-
-/*
-let models_to_copy_translations_for = ['llama3_1b','llama3_3b'];
-
-for(let p = 0; p < models_to_copy_translations_for.length; p++){
-	let model_name = models_to_copy_translations_for[p];
-	if(
-		typeof window.translations[model_name + '_name'] != 'undefined' 
-		&& typeof window.translations[model_name + '_description'] != 'undefined'
-		&& typeof window.translations[model_name + '_model_info'] != 'undefined'
-	){
-		console.log("adding automated model name,description and model_info translation for: ", model_name);
-		if(typeof window.translations['fast_' + model_name + '_name'] == 'undefined' ){
-			//console.log("translations: setting: ", 'fast_' + model_name + '_name');
-			window.translations['fast_' + model_name + '_name'] = window.translations[model_name + '_name'];
-		}
-		if(typeof window.translations['fast_' + model_name + '_description'] == 'undefined' ){
-			//console.log("translations: setting: ", 'fast_' + model_name + '_description');
-			window.translations['fast_' + model_name + '_description'] = window.translations[model_name + '_description'];
-		}
-		if(typeof window.translations['fast_' + model_name + '_model_info'] == 'undefined' ){
-			//console.log("translations: setting: ", 'fast_' + model_name + '_model_info');
-			window.translations['fast_' + model_name + '_model_info'] = window.translations[model_name + '_model_info'];
-		}
-		
-	}
-	else{
-		console.error("translations: name,description and/or model_info missing for: ", model_name);
-	}
-}
-*/
-
-

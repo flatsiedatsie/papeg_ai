@@ -140,6 +140,7 @@ addEventListener('message', async (event) => {
 				console.error("diffusion_worker: invalid prompt. not string, or too short: ", my_task.prompt);
 			}
 			
+			/*
 		    self.postMessage({
 				task: my_task,
 		        status: "complete",
@@ -147,6 +148,7 @@ addEventListener('message', async (event) => {
 		        //task: "automatic-speech-recognition",
 		        //transcript: transcript,
 		    });
+			*/
 			
 		}
 		else{
@@ -158,14 +160,13 @@ addEventListener('message', async (event) => {
 		}
 		
 	}
-	catch(e){
-		console.error("ERROR: diffusion worker: ", e);
+	catch(err){
+		console.error("diffusion worker: caught general error: ", err);
 	    self.postMessage({
 	        status: "error",
 			message: "caught error in diffusion worker"
 	    });
 	}
-    
 
 });
 

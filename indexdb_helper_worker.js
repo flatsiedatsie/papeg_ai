@@ -78,7 +78,7 @@ function registerPromiseWorker (callback) {
         // This is to make errors easier to debug. I think it's important
         // enough to just leave here without giving the user an option
         // to silence it.
-        console.error('Promise worker caught an error:', error)
+		  console.error('Promise worker caught an error:', error);
       }
       postMessage([messageId, {
         message: error.message
@@ -121,8 +121,8 @@ function registerPromiseWorker (callback) {
 		  // message doens't match communication format; ignore
 		  return
       }
-      var messageId = payload[0]
-      var message = payload[1]
+      var messageId = payload[0];
+      var message = payload[1];
 
       if (typeof callback !== 'function') {
         postOutgoingMessage(e, messageId, new Error(

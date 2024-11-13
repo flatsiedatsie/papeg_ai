@@ -119,9 +119,6 @@ async function create_musicgen_worker(){
 					}
 					if(total_bytes > 0){
 						
-						
-						
-						
 						let percentage = (loaded_bytes / total_bytes) * 100;
 						if(musicgen_previous_percentage > percentage){
 							musicgen_previous_percentage = 0;
@@ -223,16 +220,27 @@ async function create_musicgen_worker(){
 				}
 				else if(e.data.status == 'exists'){
 					//console.log("musicgen worker sent exists message");
+					window.musicgen_worker_busy = false;
+					window.musicgen_loaded = false;
 				}
-			
+				else if(e.data.status == 'already_busy'){
+					console.error("musicgen worker sent 'already_busy' message");
+					window.musicgen_worker_busy = true;
+					if(my_task != null){
+						handle_completed_task(my_task,null,{'state':'failed'});
+					}
+					
+				}
 				else if(e.data.status == 'ready'){
 					//console.log("musicgen worker sent ready message. e.data: ", e.data);
-					window.musicgen_worker_busy = false;
+					//window.musicgen_worker_busy = false;
 					window.busy_loading_assistant = false;
 					window.musicgen_loaded == true;
 					window.busy_loading_musicgen == false;
 					window.currently_loaded_assistant = 'musicgen';
-					set_model_loaded(true);
+					if(window.settings.assistant == 'musicgen'){
+						set_model_loaded(true);
+					}
 					add_chat_message('current','developer',get_translation('Musician_AI_has_loaded'));
 					let musicgen_progress_el = document.getElementById('download-progress-musicgen');
 					if(musicgen_progress_el){
@@ -266,6 +274,9 @@ async function create_musicgen_worker(){
 			
 				else if(e.data.status == 'preloaded'){
 					//console.log("musicgen worker sent 'preloaded' message. Seems to be ready to go.");
+					if(window.settings.assistant == 'musicgen'){
+						set_model_loaded(true);
+					}
 					add_chat_message('musicgen','musicgen',get_translation('Loading_complete'),'Loading_complete');
 				}
 				

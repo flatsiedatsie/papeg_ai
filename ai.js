@@ -4,7 +4,7 @@ window.assistants = {
 	"developer":{
 		"name":"Papegai",
 		"description":"",
-		"icon":"",
+		"icon":"developer",
 		"homepage_url":"https://www.tijmenschep.com",
 		"do_not_load":true
 	},
@@ -45,7 +45,7 @@ window.assistants = {
 		"name":"Scribe",
 		"real_name":"Whisper",
 		"description":"",
-		"icon":"",
+		"icon":"scribe",
 		"model_file_name":"/whisper-",
 		"runner":"transformers_js",
 		"license":"MIT",
@@ -67,7 +67,7 @@ window.assistants = {
 		"name":"Speaker",
 		"real_name":"T5",
 		"description":"",
-		"icon":"",
+		"icon":"speaker",
 		"model_file_name":"speecht5_",
 		"runner":"transformers_js",
 		"homepage_url":"",
@@ -82,8 +82,8 @@ window.assistants = {
 		"do_not_load":true,
 		"type":"tts",
 		"media":["audio","special"],
-		"memory":0.5,
-		"size":0.5,
+		"memory":2,
+		"size":0.6,
 		
 	},
 	
@@ -92,7 +92,7 @@ window.assistants = {
 		"name":"Musician",
 		"real_name":"MusicGen",
 		"description":"",
-		"icon":"",
+		"icon":"musicgen",
 		//"model_file_name":"musicgen-small/resolve/main/onnx/decoder_model_merged_quantized.onnx",
 		"model_file_name":"musicgen-small",
 		"runner":"transformers_js",
@@ -241,7 +241,7 @@ window.assistants = {
 		"name":"Image text scanner",
 		"real_name":"Tesseract",
 		"description":"",
-		"icon":"",
+		"icon":"image_to_text_ocr",
 		"license":"Apache 2",
 		"license_url": "https://en.wikipedia.org/wiki/Apache_License",
 		"homepage_url":"https://tesseract.projectnaptha.com/",
@@ -1017,7 +1017,7 @@ window.assistants = {
 		"name":"Zephyr",
 		"real_name":"Zephyr 2 1.6B",
 		"description":"",
-		"icon":"",
+		"icon":"zephyr",
 		"download_url":null,
 		"runner":"web_llm",
 		"web_llm_file_name":"stablelm-2-zephyr-1_6b-q4f16_1-MLC",
@@ -1054,7 +1054,7 @@ window.assistants = {
 		"name":"Zephyr 🇳🇱",
 		"real_name":"Zephyr 2 1.6B",
 		"description":"",
-		"icon":"",
+		"icon":"zephyr",
 		"download_url":"https://huggingface.co/stabilityai/stablelm-2-zephyr-1_6b/resolve/main/stablelm-2-zephyr-1_6b-Q5_K_M.gguf",
 		"model_file_name":"stablelm-2-zephyr-1_6b-Q5_K_M.gguf",
 		"license":"STABILITY AI NON-COMMERCIAL RESEARCH COMMUNITY LICENSE AGREEMENT",
@@ -1676,7 +1676,7 @@ window.assistants = {
 		"name":"Neuralreyna",
 		"real_name":"Neuralreyna mini",
 		"description":"",
-		"icon":"",
+		"icon":"reyna",
 		"download_url":"https://huggingface.co/ngxson/test_gguf_models/resolve/main/neuralreyna-mini-1.8b-v0.3.q4_k_m-00001-of-00005.gguf",
 		"config_url":"M4-ai/NeuralReyna-Mini-1.8B-v0.3",
 		"model_file_name":"neuralreyna-mini-1.8b-v0.3.q4_k_m-00005-of-00005.gguf",
@@ -1723,8 +1723,9 @@ window.assistants = {
 		"type":"writer",
 		"model_type":"base",
 		"media":["text"],
-		"examples":{'en':[{"title":"Fairy tale","action":"continue_text","prompt":"","document":"Raket de Ridder","text":"Once upon a time, in a land far far away, there was a young knight called Rocket. His father wouldn't let him leave the castle because he was worried about the dragons that roamed the country side. \n\nBut one day all that changed when"}],
-					'nl':[{"title":"Sprookje","action":"continue_text","prompt":"","document":"Raket de Ridder","text":"Lang lang geleden, in een land hier ver vandaan, was er eens een jonge ridder genaamd Raket. Zijn vader durfde hem niet buiten het kasteel te laten spelen omdat daar draken leefden. \n\nMaar dat veranderde allemaal toen toen op een dag"}]
+		"examples":
+			{'en':[{"title":"Fairy tale","action":"continue_text","prompt":"","document":"Raket de Ridder","text":"Once upon a time, in a land far far away, there was a young knight called Rocket. His father wouldn't let him leave the castle because he was worried about the dragons that roamed the country side. \n\nBut one day all that changed when"}],
+			'nl':[{"title":"Sprookje","action":"continue_text","prompt":"","document":"Raket de Ridder","text":"Lang lang geleden, in een land hier ver vandaan, was er eens een jonge ridder genaamd Raket. Zijn vader durfde hem niet buiten het kasteel te laten spelen omdat daar draken leefden. \n\nMaar dat veranderde allemaal toen toen op een dag"}]
 		},
 		"size":2,
 		"temperature":1.4,
@@ -1754,7 +1755,7 @@ window.assistants = {
 			"nl":"Wat is de hoofdstad van Spanje?\n\nAntwoord in het Nederlands:"
 		},
 		"examples":{
-			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}, {"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
+			'en':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}, {"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
 			'nl':[	{"title":"Rottweilers","prompt":"Wat zijn de kenmerken van Rottweiler honden? Antwoord in het Nederlands: ","action":"prompt"},{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire soorten autos?\nGeef antwoord in de vorm van een lijst.\nGeef geen uitleg, alleen de lijst.","action":"prompt"}, {"title":"Tiananmen","prompt":"Wat is er gebeurd op het Tiananmen plein?","action":"prompt"}, ],
 		},
 		"show_if_web_gpu":true,
@@ -1786,7 +1787,7 @@ window.assistants = {
 		"runner":"llama_cpp",
 		"license":"Apache",
 		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
-		"homepage_url":"",
+		"homepage_url":"https://mistral.ai/",
 		"type":"generic",
 		"model_type":"instruct",
 		"media":["text"],
@@ -1805,7 +1806,40 @@ window.assistants = {
 		"context_size":32768,
 		"context":4096,
 		"cache_type_k":"q4_0",
-		"template":"s_INST",
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false
+	},
+	
+	
+	"ministral":{
+		"name":"Ministral",
+		"real_name":"Ministral 3B",
+		"description":"",
+		"icon":"ministral",
+		"download_url":"https://huggingface.co/BoscoTheDog/ministral_3b_it_q4_k_m_chunked/resolve/main/ministral_3b_it_q4_k_m-00001-of-00016.gguf",
+		"model_file_name":"ministral_3b_it_q4_k_m-00016-of-00016.gguf",
+		"runner":"llama_cpp",
+		"license":"Apache",
+		"license_url":"https://en.wikipedia.org/wiki/Apache_License",
+		"homepage_url":"https://mistral.ai/news/ministraux/",
+		"type":"generic",
+		"model_type":"instruct",
+		"media":["text"],
+		"initial_example_prompt":{
+			"en":"What is the capital of Morocco?",
+			"nl":"Wat is de hoofdstad van Spanje?\n\nAntwoord in het Nederlands:"
+		},
+		"examples":{
+			'en':[{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"},{"title":"Tiananmen","prompt":"What happened at Tiananmen Square?","action":"prompt"}, ],
+			'nl':[{"title":"Rottweilers","prompt":"Wat zijn de kenmerken van Rottweiler honden? Antwoord in het Nederlands: ","action":"prompt"},{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire soorten autos?\nGeef antwoord in de vorm van een lijst.\nGeef geen uitleg, alleen de lijst.","action":"prompt"},{"title":"Tiananmen","prompt":"Wat is er gebeurd op het Tiananmen plein?","action":"prompt"}, ],
+		},
+		"size":2,
+		"temperature":0.7,
+		"context_size":32768,
+		"context":4096,
+		"cache_type_k":"q4_0",
 		"markdown_supported":true,
 		"markdown_enabled":false,
 		"brevity_supported":true,
@@ -1990,7 +2024,7 @@ window.assistants = {
 			"nl":"Wat is de hoofdstad van Spanje?",
 		},
 		"examples":{
-			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		//"size":1.3,
@@ -2016,6 +2050,7 @@ window.assistants = {
 		"description":"",
 		"icon":"danube",
 		"download_url":"https://huggingface.co/BoscoTheDog/h2o-danube3-4b-chat-Q4_K_M_chunked/resolve/main/h2o-danube3-4b-chat-Q4_K_M-00001-of-00026.gguf",
+		"model_file_name":"h2o-danube3-4b-chat-Q4_K_M-000026-of-00026.gguf",
 		"config_url":"BoscoTheDog/h2o-danube3-4b-chat-Q4_K_M_chunked",
 		"runner":"llama_cpp",
 		"license":"Apache",
@@ -2030,7 +2065,7 @@ window.assistants = {
 		},
 		"examples":{
 			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		"size":2.4,
 		"temperature":0.2,
@@ -2052,11 +2087,12 @@ window.assistants = {
 		"name":"Danube 3 500m",
 		"real_name":"Danube 3 500M",
 		"description":"",
-		"icon":"",
-		//"download_url":"https://huggingface.co/BoscoTheDog/h2o-danube3-500m-chat_chunked/resolve/main/h2o-danube3-500m-chat.Q4_K_M-00001-of-00007.gguf",
-		"download_url":"https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF/resolve/main/h2o-danube3-500m-chat-Q4_K_M.gguf",
+		"icon":"danube_3_500m",
+		"download_url":"https://huggingface.co/BoscoTheDog/h2o-danube3-500m-chat_chunked/resolve/main/h2o-danube3-500m-chat.Q4_K_M-00001-of-00007.gguf",
+		"model_file_name":"h2o-danube3-500m-chat.Q4_K_M-00007-of-00007.gguf",
+		//"download_url":"https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF/resolve/main/h2o-danube3-500m-chat-Q4_K_M.gguf",
 		//"config_url":"BoscoTheDog/h2o-danube3-500m-chat_chunked",
-		"config_url":"h2oai/h2o-danube3-500m-chat",
+		//"config_url":"h2oai/h2o-danube3-500m-chat",
 		
 		//"chat_template":"{% for message in messages %}{% if message['role'] == 'system' %}{{ raise_exception('System role not supported') }}{% endif %}{% if ((message['role'] == 'user') != (loop.index0 % 2 == 0)) or ((message['role'] == 'assistant') != (loop.index0 % 2 == 1)) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if message['role'] == 'user' %}{{ '<|prompt|>' + message['content'].strip() + eos_token }}{% elif message['role'] == 'assistant' %}{{ '<|answer|>' + message['content'].strip() + eos_token }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|answer|>' }}{% endif %}",
 		"runner":"llama_cpp",
@@ -2073,7 +2109,7 @@ window.assistants = {
 		},
 		"examples":{
 			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		//"size":1.3,
 		"size":0.4,
@@ -2258,7 +2294,7 @@ window.assistants = {
 		},
 		"examples":{
 			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		"size":1.6,
 		"temperature":0.2,
@@ -2559,7 +2595,7 @@ window.assistants = {
 		"name":"Dreamer",
 		"real_name":"Oneirogen 1.5b", 
 		"description":"",
-		"icon":"",
+		"icon":"dreamer",
 		"download_url":"https://huggingface.co/BoscoTheDog/oneirogen_1_5b_Q4_0_gguf_chunked/resolve/main/oneirogen-1.5b.Q4_0-00001-of-00005.gguf",
 		"config_url":"BoscoTheDog/oneirogen_1_5b_Q4_0_gguf_chunked",
 		"model_file_name":"oneirogen-1.5b.Q4_0",
@@ -2596,7 +2632,7 @@ window.assistants = {
 	"chef1":{
 		"name":"American Chef",
 		"description":"",
-		"icon":"",
+		"icon":"chef1",
 		"download_url":"https://huggingface.co/BoscoTheDog/cooking/resolve/main/cooking.Q8_0.gguf",
 		"runner":"llama_cpp",
 		"license":"",
@@ -2628,7 +2664,7 @@ window.assistants = {
 	"chef2":{
 		"name":"Fun Cooker",
 		"description":"",
-		"icon":"",
+		"icon":"chef2",
 		"download_url":"/models/gpt2-finetuned-recipes-cooking.fp16.gguf",
 		"config_url":"mrm8488/gpt2-finetuned-recipes-cooking_v2",
 		"runner":"llama_cpp",
@@ -2695,7 +2731,7 @@ window.assistants = {
 		"name":"Llama 160M",
 		"real_name":"Llama 160M",
 		"description":"",
-		"icon":"",
+		"icon":"llama160",
 		"download_url":"https://huggingface.co/Felladrin/gguf-Llama-160M-Chat-v1/resolve/main/Llama-160M-Chat-v1.Q8_0.gguf",
 		"config_url":"Felladrin/Llama-160M-Chat-v1",
 		"model_file_name":"Llama-160M-Chat-v1",
@@ -2712,7 +2748,7 @@ window.assistants = {
 		},
 		"examples":{
 			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		"size":0.2,
 		"temperature":0.7,
@@ -2730,7 +2766,7 @@ window.assistants = {
 		"name":"Tiny Llama Stories 15M",
 		"real_name":"Tiny Llama Stories 15M",
 		"description":"",
-		"icon":"",
+		"icon":"tiny_stories",
 		"download_url":"https://huggingface.co/ngxson/tinyllama_split_test/resolve/main/stories15M-q8_0-00001-of-00003.gguf",
 		"config_url":"Xenova/llama2.c-stories15M",
 		"model_file_name":"stories15M-q8_0-00003-of-00003.gguf",
@@ -2747,7 +2783,7 @@ window.assistants = {
 		},
 		"examples":{
 			'nl':[	{"title":"🚗🛻","prompt":"Wat zijn de 5 meest populaire auto types?\nGeef de lijst als een genummerde lijst.\nGeef geen uitleg, enkel de lijst.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
-			'nl':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[	{"title":"🚗🛻","prompt":"What are the 5 most popular types of vehicles?\nReturn the result as a numbered list.\nDo not add explanations, only the list.","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		"size":0.01,
 		"temperature":0.7,
@@ -2857,9 +2893,6 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"brevity_supported":false,
 		"brevity_enabled":false,
 	},
-	
-	
-	
 	
 	
 	
@@ -3099,7 +3132,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"Mermaid",
 		"real_name":"Llama 3 3B Mermaid",
 		"description":"",
-		"icon":"",
+		"icon":"mermaid",
 		"download_url":[
 			"/models/mermaid/Mermaid-Llama-3-3B-Pruned.Q4_K_M-00001-of-00008.gguf",
 			"/models/mermaid/Mermaid-Llama-3-3B-Pruned.Q4_K_M-00002-of-00008.gguf",
@@ -3143,7 +3176,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"Programming wizard",
 		"real_name":"Wizard Coder 1B",
 		"description":"",
-		"icon":"",
+		"icon":"wizard_coder",
 		"download_url":"https://huggingface.co/patrickbdevaney/WizardLM-1b-GGUF/resolve/main/Wizard-Coder-1B-Q5_K_M.gguf",
 		"config_url":"Xenova/WizardCoder-1B-V1.0",
 		"runner":"llama_cpp",
@@ -3154,7 +3187,9 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"en":"",
 			"nl":""
 		},
-		"examples":{'en':[{"title":"Create a loop","prompt":"Please write a Python for-loop with 7 iterations which prints out the number of the iteration on every loop.","action":"prompt"}]},
+		"examples":{
+			'en':[{"title":"Create a loop","prompt":"Please write a Python for-loop with 7 iterations which prints out the number of the iteration on every loop.","action":"prompt"}]
+		},
 		"size":0.9,
 		"type":"coder",
 		"model_type":"instruct",
@@ -3178,7 +3213,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"name":"CodeQwen 1.5 7B",
 		"real_name":"CodeQwen 1.5 7B",
 		"description":"",
-		"icon":"",
+		"icon":"code_qwen",
 		"download_url":"https://huggingface.co/BoscoTheDog/code_qwen_1_5_7B_chunked/resolve/main/CodeQwen1.5-7B-Chat-Q3_K_S-00001-of-00018.gguf",
 		"config_url":"Qwen/CodeQwen1.5-7B",
 		"runner":"llama_cpp",
@@ -3189,7 +3224,9 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"en":"",
 			"nl":""
 		},
-		"examples":{'en':[{"title":"Create a loop","prompt":"Please write a Python for-loop with 7 iterations which prints out the number of the iteration on every loop.","action":"prompt"}]},
+		"examples":{
+			'en':[{"title":"Create a loop","prompt":"Please write a Python for-loop with 7 iterations which prints out the number of the iteration on every loop.","action":"prompt"}]
+		},
 		"size":3.5,
 		"type":"coder",
 		"model_type":"instruct",
@@ -3235,7 +3272,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"languages":["en","cn","fr","hi","es","ar"], // English, Chinese, French, Hindi, Spanish, Hindi, Arabic
 		"examples":{
 			'en':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}],
-			'nl':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}]
+			'nl':[{"title":"Vitamin D","prompt":"Wat voor effecten heeft vitamine D op je gezondheid?","action":"prompt"},{"title":"Osteomalacia","prompt":"Wat is osteomalacia?","action":"prompt"}]
 		},
 		"type":"medical",
 		"model_type":"instruct", // guess
@@ -3304,7 +3341,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		},
 		"examples":{
 			'en':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}],
-			'nl':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}]
+			'nl':[{"title":"Vitamin D","prompt":"Wat voor effecten heeft vitamine D op je gezondheid?","action":"prompt"},{"title":"Osteomalacia","prompt":"Wat is osteomalacia?","action":"prompt"}]
 		},
 		"type":"medical",
 		"model_type":"chaty",
@@ -3337,7 +3374,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		},
 		"examples":{
 			'en':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}],
-			'nl':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}]
+			'nl':[{"title":"Vitamin D","prompt":"Wat voor effecten heeft vitamine D op je gezondheid?","action":"prompt"},{"title":"Osteomalacia","prompt":"Wat is osteomalacia?","action":"prompt"}]
 		},
 		"type":"medical",
 		"model_type":"instruct", // guess
@@ -3372,7 +3409,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"languages":["en","cn","fr","hi","es","ar"], // English, Chinese, French, Hindi, Spanish, Hindi, Arabic
 		"examples":{
 			'en':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}],
-			'nl':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}]
+			'nl':[{"title":"Vitamin D","prompt":"Wat voor effecten heeft vitamine D op je gezondheid?","action":"prompt"},{"title":"Osteomalacia","prompt":"Wat is osteomalacia?","action":"prompt"}]
 		},
 		"type":"medical",
 		"model_type":"chat", // guess
@@ -3409,7 +3446,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 		"languages":["en","cn","fr","hi","es","ar"], // English, Chinese, French, Hindi, Spanish, Hindi, Arabic
 		"examples":{
 			'en':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}],
-			'nl':[{"title":"Vitamin D","prompt":"Describe the health benefits of vitamin-D.","action":"prompt"},{"title":"Osteomalacia","prompt":"What is osteomalacia?","action":"prompt"}]
+			'nl':[{"title":"Vitamin D","prompt":"Wat voor effecten heeft vitamine D op je gezondheid?","action":"prompt"},{"title":"Osteomalacia","prompt":"Wat is osteomalacia?","action":"prompt"}]
 		},
 		"type":"medical",
 		"model_type":"chat", // guess
@@ -3444,6 +3481,44 @@ Let’s think step by step.`,"action":"prompt"}]},
 	
 	
 	
+	"mental6":{
+		"name":"Gemma 2b Therapy",
+		"real_name":"Gemma 2b Therapy",
+		"description":"",
+		"icon":"therapy",
+		"runner":"llama_cpp",
+		"download_url":"https://huggingface.co/BoscoTheDog/gemma2b_therapy_Q4_0_chunked/resolve/main/gemma2b_therapy_Q4_0-00001-of-00003.gguf",
+		//"config_url":"BoscoTheDog/phi-3-mental-health_Q4_K_M_chunked",
+		"license":"Gemma",
+		"license_url":"https://ai.google.dev/gemma/terms",
+		"homepage_url":"https://huggingface.co/naomipeng/gemma2-2b-therapy",
+		"initial_example_prompt":{
+			"en":"I need a hug", 
+			"nl":"Ik heb een knuffel nodig"
+		},
+		"examples":{
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"🛌","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet. Wat kan ik doen om positief te blijven?","action":"prompt"}]
+		},
+		"type":"mental",
+		"model_type":"instruct",
+		"media":["text"],
+		"size":1.7,
+		"temperature":0.7,
+		"context_size":8192,
+		"context":2048,
+		"cache_type_k":"q4_0",
+		//"template":"s_INST",
+		"chatter":true,
+		"markdown_supported":true,
+		"markdown_enabled":false,
+		"brevity_supported":true,
+		"brevity_enabled":false,
+		"system_prompt":"You are a mental health adviser, talking to an individual who is looking for guidance and advice on managing their emotions, stress, anxiety and other mental health issues. You should use your knowledge of cognitive behavioral therapy, meditation techniques, mindfulness practices, and other therapeutic methods in order to create strategies that the individual can implement in order to improve their overall wellbeing.",
+		"second_prompt":"Hello. How are you?"
+	},
+	
+	
 	"mental1":{
 		"name":"Therapeutic",
 		"real_name":"Tiny Llama Therapy Bot",
@@ -3461,8 +3536,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"nl":"Ik heb een knuffel nodig"
 		},
 		"examples":{
-			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
-			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"🛌","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet. Wat kan ik doen om positief te blijven?" ,"action":"prompt"},{"title":"🛌","prompt":"Waarom is het soms zo moeilijk om uit bed te komen?","action":"prompt"}]
 		},
 		"type":"mental",
 		"model_type":"chat",
@@ -3496,8 +3571,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"nl":"Ik heb een knuffel nodig"
 		},
 		"examples":{
-			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
-			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"🛌","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet. Wat kan ik doen om positief te blijven?" ,"action":"prompt"},{"title":"🛌","prompt":"Waarom is het soms zo moeilijk om uit bed te komen?","action":"prompt"}]
 		},
 		"type":"mental",
 		"model_type":"chat",
@@ -3532,8 +3607,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 		},
 		
 		"examples":{
-			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
-			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"🛌","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet. Wat kan ik doen om positief te blijven?" ,"action":"prompt"},{"title":"🛌","prompt":"Waarom is het soms zo moeilijk om uit bed te komen?","action":"prompt"}]
 		},
 		"type":"mental",
 		"model_type":"chat", // or instruct?
@@ -3570,8 +3645,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"nl":"Ik heb een knuffel nodig"
 		},
 		"examples":{
-			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
-			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"🛌","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet. Wat kan ik doen om positief te blijven?" ,"action":"prompt"},{"title":"🛌","prompt":"Waarom is het soms zo moeilijk om uit bed te komen?","action":"prompt"}]
 		},
 		"type":"mental",
 		"model_type":"chat",
@@ -3606,8 +3681,8 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"nl":"Ik heb een knuffel nodig"
 		},
 		"examples":{
-			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
-			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
+			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"🛌","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
+			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet. Wat kan ik doen om positief te blijven?" ,"action":"prompt"},{"title":"🛌","prompt":"Waarom is het soms zo moeilijk om uit bed te komen?","action":"prompt"}]
 		},
 		"type":"mental",
 		"model_type":"instruct",
@@ -3628,42 +3703,7 @@ Let’s think step by step.`,"action":"prompt"}]},
 	},
 	
 	
-	"mental6":{
-		"name":"Gemma 2b Therapy",
-		"real_name":"Gemma 2b Therapy",
-		"description":"",
-		"icon":"therapy",
-		"runner":"llama_cpp",
-		"download_url":"https://huggingface.co/BoscoTheDog/gemma2b_therapy_Q4_0_chunked/resolve/main/gemma2b_therapy_Q4_0-00001-of-00003.gguf",
-		//"config_url":"BoscoTheDog/phi-3-mental-health_Q4_K_M_chunked",
-		"license":"Gemma",
-		"license_url":"https://ai.google.dev/gemma/terms",
-		"homepage_url":"https://huggingface.co/naomipeng/gemma2-2b-therapy",
-		"initial_example_prompt":{
-			"en":"I need a hug", 
-			"nl":"Ik heb een knuffel nodig"
-		},
-		"examples":{
-			'en':[{"title":"Not my day","prompt":"I'm not feeling great today. It's just not my day.","action":"prompt"},{"title":"Bed","prompt":"Why do I never want to leave my bed?","action":"prompt"}],
-			'nl':[{"title":"Niet mijn dag","prompt":"Ik voel me niet fantastisch vandaag. Het is gewoon mijn dag niet.","action":"prompt"}]
-		},
-		"type":"mental",
-		"model_type":"instruct",
-		"media":["text"],
-		"size":1.7,
-		"temperature":0.7,
-		"context_size":8192,
-		"context":2048,
-		"cache_type_k":"q4_0",
-		//"template":"s_INST",
-		"chatter":true,
-		"markdown_supported":true,
-		"markdown_enabled":false,
-		"brevity_supported":true,
-		"brevity_enabled":false,
-		"system_prompt":"You are a mental health adviser, talking to an individual who is looking for guidance and advice on managing their emotions, stress, anxiety and other mental health issues. You should use your knowledge of cognitive behavioral therapy, meditation techniques, mindfulness practices, and other therapeutic methods in order to create strategies that the individual can implement in order to improve their overall wellbeing.",
-		"second_prompt":"Hello. How are you?"
-	},
+	
 	
 	
 	// Could place this under 'other' instead
@@ -3690,8 +3730,9 @@ Let’s think step by step.`,"action":"prompt"}]},
 			"en":"Lovely to meet you!",
 			"nl":"Leuk je te ontmoeten!"
 		},
-		"examples":{'en':[{"title":"Tutorial","action":"chat_messages","prompt":"","chat_messages":["This AI is designed to impersonate people","To set up it's 'personality', click on the profile picture above","There you can modify the first and second sentence that the models loads, which will provide it with it's personality"]}],
-					'nl':[{"title":"Uitleg","action":"chat_messages","prompt":"","chat_messages":["Dit AI model is ontworpen om mensen te imiteren","Klik op de het profielfoto icoontje bovenaan om de 'persoonlijkheid' in te stellen.","Pas daar de eerste en tweede zin die het model inlaadt naar wens aan."]}]
+		"examples":{
+			'en':[{"title":"Tutorial","action":"chat_messages","prompt":"","chat_messages":["This AI is designed to impersonate people","To set up it's 'personality', click on the profile picture above","There you can modify the first and second sentence that the models loads, which will provide it with it's personality"]}],
+			'nl':[{"title":"Uitleg","action":"chat_messages","prompt":"","chat_messages":["Dit AI model is ontworpen om mensen te imiteren","Klik op de het profielfoto icoontje bovenaan om de 'persoonlijkheid' in te stellen.","Pas daar de eerste en tweede zin die het model inlaadt naar wens aan."]}]
 		},
 		"type":"actor",
 		"model_type":"chat",
@@ -3733,8 +3774,9 @@ Chiharu is a young, computer engineer-nerd with a knack for problem solving and 
 			"en":"Lovely to meet you!",
 			"nl":"Leuk je te ontmoeten!"
 		},
-		"examples":{'en':[{"title":"Tutorial","action":"chat_messages","prompt":"","chat_messages":["This AI is designed to impersonate people","To set up it's 'personality', click on the profile picture above","There you can modify the first and second sentence that the models loads, which will provide it with it's personality"]}],
-					'nl':[{"title":"Uitleg","action":"chat_messages","prompt":"","chat_messages":["Dit AI model is ontworpen om mensen te imiteren","Klik op de het profielfoto icoontje bovenaan om de 'persoonlijkheid' in te stellen.","Pas daar de eerste en tweede zin die het model inlaadt naar wens aan."]}]
+		"examples":{
+			'en':[{"title":"Tutorial","action":"chat_messages","prompt":"","chat_messages":["This AI is designed to impersonate people","To set up it's 'personality', click on the profile picture above","There you can modify the first and second sentence that the models loads, which will provide it with it's personality"]}],
+			'nl':[{"title":"Uitleg","action":"chat_messages","prompt":"","chat_messages":["Dit AI model is ontworpen om mensen te imiteren","Klik op de het profielfoto icoontje bovenaan om de 'persoonlijkheid' in te stellen.","Pas daar de eerste en tweede zin die het model inlaadt naar wens aan."]}]
 		},
 		"type":"actor",
 		"model_type":"chat",
@@ -3780,7 +3822,7 @@ Chiharu is a young, computer engineer-nerd with a knack for problem solving and 
 		"model_type":"chat", // guess
 		"media":["text"],
 		"examples":{
-			'en':[	{"title":"Secret of life","prompt":"What is the answer to the question of life, the universe and everything?","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
+			'en':[{"title":"Secret of life","prompt":"What is the answer to the question of life, the universe and everything?","action":"prompt"}, {"title":"The Matrix","prompt":"Which philosophers and philosophical questions does the movie The Matrix refer to?","action":"prompt"}],
 		},
 		"size":2,
 		"context_size":4096,
@@ -3912,7 +3954,7 @@ Chiharu is a young, computer engineer-nerd with a knack for problem solving and 
 	"custom_received":{
 		"name":"",
 		"description":"",
-		"icon":"custom_received",
+		"icon":"",
 		"license":"",
 		"license_url":"",
 		"download_url":"",
@@ -3982,7 +4024,7 @@ Chiharu is a young, computer engineer-nerd with a knack for problem solving and 
 		"second_prompt":"",
 	},
 		
-}
+};
 
 
 // automatically add the clone-original value for the originals themselves
@@ -3994,6 +4036,7 @@ for (const key of Object.keys(window.assistants)) {
 
 // Add some 32 bit GPU options if WebGPU is only supported in 32 bit (e.g. on LINUX)
 // TODO: add Mistral 7B
+// TODO: could generate this automatically based on the 16 bit veriant.
 function add_web_gpu32_models(){
 	window.assistants["fast_llama3_8B_32bit"] = JSON.parse(JSON.stringify(window.assistants["fast_llama3_8B"]));
 	window.assistants["fast_llama3_8B_32bit"]["model_id"] = "Llama-3.1-8B-Instruct-q4f32_1-MLC";

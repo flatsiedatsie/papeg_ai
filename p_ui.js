@@ -1,6 +1,6 @@
 let simple_tasks_ordering = 'index';
 let first_ui_generation_done = false;
-
+let previous_selected_assistant = null;
 
 
 
@@ -15,18 +15,21 @@ let first_ui_generation_done = false;
 	function add_chat_message(pane,participant,message,i18n_code=null,task_output=null,task_index=null){  //,save_to_conversations=false){
 		//save_to_conversations = false;
 		let message_to_be_filled_later = false;
-		/*
-		//console.log("in add_chat_message.");
-		//console.log("- pane: ", pane);
-		//console.log("- participant: ", participant);
-		//console.log("- message: ", message);
-		//console.log("- i18n_code: ", i18n_code);
-		//console.log("- task_output: ", task_output);
-		//console.log("- task_index: ", task_index);
-		*/
-		//console.log("add_chat_message: message: ", message);
+		if(window.settings.settings_complexity == 'developer'){
+			
+			//console.log("in add_chat_message.");
+			//console.log("- pane: ", pane);
+			//console.log("- participant: ", participant);
+			//console.log("- message: ", message);
+			//console.log("- i18n_code: ", i18n_code);
+			//console.log("- task_output: ", task_output);
+			//console.log("- task_index: ", task_index);
 		
-		//console.log("add_chat_message: message:  -->" +  message + "<--");
+			//console.log("add_chat_message: message: ", message);
+		
+			//console.log("add_chat_message: message:  -->" +  message + "<--");
+		}
+		
 		
 		
 		
@@ -89,7 +92,10 @@ let first_ui_generation_done = false;
 		
 			// They can't both be null. Eithe there's a text message, of there's an element/html to place in the output div (which will then be filled in later)
 			if(message.trim() == '' && (typeof task_output == 'undefined' || task_output == null || (typeof task_output == 'string' && task_output == ''))){
-				console.error("add_chat_message: message was empty string, not adding it.");
+				if(pane != 'developer'){
+					console.error("add_chat_message: message was empty string, not adding it.");
+				}
+				
 				return false
 			}
 			if(message.trim() == '......'){
@@ -127,7 +133,7 @@ let first_ui_generation_done = false;
 			if(typeof task_index == 'number' && original_participant != 'developer' && original_participant != 'user' && pane != 'developer'){
 				const message_el_id = 'chat-message-' + pane + '-' + original_participant + task_index;
 				const already_existing_message_el = document.querySelector('#' + message_el_id);
-				if(already_existing_message_el){
+				if(already_existing_message_el != null){
 					console.error("add_chat_message: the chat message seems to already exist!  ID:  #" + message_el_id);
 				}
 				else if(typeof message == 'string' && !message.endsWith('#setting---')){
@@ -852,7 +858,7 @@ let first_ui_generation_done = false;
 				
 				
 				else if(special_type == 'model_examples'){
-					//console.log("add_chat_message: adding model examples chat message (and setting participant to developer)");
+					//console.log("add_chat_message: adding model examples chat message.  pane: ", pane);
 					
 					
 					if(typeof window.intro_explanations_given[pane] == 'undefined'){
@@ -925,7 +931,7 @@ let first_ui_generation_done = false;
 							//return
 						}
 						
-						for(let q=0;q<examples.length;q++){
+						for(let q=0; q<examples.length; q++){
 							const example = examples[q];
 							//console.log("add_chat_message: looping over example: ", examples[q]);
 							if(typeof example.title == 'string' && typeof example.prompt == 'string'){
@@ -953,11 +959,11 @@ let first_ui_generation_done = false;
 						}
 						
 						let ai_type = 'generic';
-						if(typeof window.assistants[assistant_to_load_examples_for].type == 'string'){
+						if(typeof window.assistants[assistant_to_load_examples_for] != 'undefined' && typeof window.assistants[assistant_to_load_examples_for].type == 'string'){
 							ai_type = window.assistants[assistant_to_load_examples_for].type;
 						}
 						
-						if( typeof window.assistants[assistant_to_load_examples_for]['languages'] == 'undefined' || (typeof window.assistants[assistant_to_load_examples_for]['languages'] != 'undefined' && window.assistants[assistant_to_load_examples_for]['languages'].indexOf('en') != -1)){
+						if( typeof window.assistants[assistant_to_load_examples_for] != 'undefined' && typeof window.assistants[assistant_to_load_examples_for]['languages'] == 'undefined' || (typeof window.assistants[assistant_to_load_examples_for]['languages'] != 'undefined' && window.assistants[assistant_to_load_examples_for]['languages'].indexOf('en') != -1)){
 							//console.log("adding extra default examples.  ai_type: ", ai_type);
 							for(let qq=0; qq < window.examples.length; qq++){
 								if(window.examples[qq].types.indexOf(ai_type) != -1){
@@ -1022,7 +1028,7 @@ let first_ui_generation_done = false;
 						message.innerHTML = '<p>' + get_translation("With_the_aid_of_these_AIs_you_can_write_even_better_documents") + '</p>';
 					}
 					else if(special_type == 'voice_tutorial'){
-						message.innerHTML = '<p>' + get_translation("You_can_use_voice_control_to_talk_to_an_AI_dictate_into_a_document_and_even_give_voice_commands_like_start_a_new_document") + '</p><img src="./images/voice_ankeiler.svg">';
+						message.innerHTML = '<img src="./images/voice_ankeiler.svg"><p style="margin-bottom:1rem">' + get_translation("You_can_use_voice_control_to_talk_to_an_AI_dictate_into_a_document_and_even_give_voice_commands_like_start_a_new_document") + '</p>';
 					}
 					
 					message.classList.add('padding25');
@@ -1451,10 +1457,13 @@ let first_ui_generation_done = false;
 				}
 				
 				// simple text message by the developer will fade away after a while
+				
 				if(participant == 'developer' && pane != 'developer'){
+					/*
 					setTimeout(() => {
 						chat_message_el.classList.add('fade-out-chat-message');
 					},60000);
+					*/
 					setTimeout(() => {
 						chat_message_el.remove();
 					},62000);
@@ -1476,7 +1485,7 @@ let first_ui_generation_done = false;
 					icon_name = window.assistants[participant].icon;
 				}
 				
-				chat_profile_pic_el.innerHTML = '<img src="images/' + icon_name + '_thumb.png" class="chat-bubble-assistant-icon"/>';
+				chat_profile_pic_el.innerHTML = '<img src="images/' + icon_name + '_thumb.png" class="chat-bubble-assistant-icon" width="25" height="25" alt="' + icon_name.replaceAll('_','') + '">';
 				bubble_wrap_el.appendChild(chat_profile_pic_el);
 			}
 			
@@ -1570,7 +1579,7 @@ let first_ui_generation_done = false;
 			*/
 		
 			let chat_pane_el = document.getElementById(pane_id);
-			if(chat_pane_el){
+			if(chat_pane_el != null){
 				chat_pane_el.appendChild(chat_message_el);
 				
 				
@@ -1614,7 +1623,7 @@ let first_ui_generation_done = false;
 			else{
 				console.error("add_chat_message: had to fall back to finding chat page based on window.settings.assistant as this pane was missing: ", pane_id);
 				chat_pane_el = document.getElementById('pane-content-' + window.settings.assistant + '-chats');
-				if(chat_pane_el){
+				if(chat_pane_el != null){
 					chat_pane_el.appendChild(chat_message_el);
 					chat_pane_el.scrollTop = chat_pane_el.scrollHeight;
 					window.chat_message_counter++;
@@ -1646,9 +1655,18 @@ let first_ui_generation_done = false;
 				real_pane = window.settings.assistant;
 			}
 		}
+		else{
+			console.error("add_chat_message_once: provided 'pane' was not a string?: ", typeof pane, pane, participant, message);
+		}
+		
+		if(typeof real_pane != 'string' && window.assistants[real_pane] != 'undefined' && typeof window.settings.assistants[real_pane] == 'undefined'){
+			window.settings.assistants[real_pane] = {'selected':true}
+			really_generate_ui();
+		}
 		
 		if(task_output != null){
 			add_chat_message(real_pane,participant,message,i18n_code,task_output,task_index);
+			return
 		}
 		else if(typeof real_pane == 'string'){
 			if(typeof window.intro_explanations_given[real_pane] == 'undefined'){
@@ -1672,7 +1690,7 @@ let first_ui_generation_done = false;
 			}
 		}
 		else{
-			console.error("add_chat_message_once: pane was not a string");
+			console.error("add_chat_message_once: real_pane was not a string.  real_pane,pane,participant,message:", real_pane,pane,participant,message);
 		}
 		
 	}
@@ -1810,7 +1828,7 @@ let first_ui_generation_done = false;
 	
 	
 	function scroll_a_bit(element='document',direction='down',amount='page'){
-		//console.log("in scroll_a_bit.  element, direction, amount: ", element, direction, amount);
+		console.log("in scroll_a_bit.  element, direction, amount: ", element, direction, amount);
 		
 		let target_el = null;
 		let pixels = 300;
@@ -2459,11 +2477,20 @@ let first_ui_generation_done = false;
 	//
 	
 	
-	let generate_ui_timeout = null;
+	window.generate_ui_timeout = null;
 	let last_time_ui_generated = 0;
 	let already_added_panes = [];
+	let last_generated_assistants_list = [];
+	let current_contact_list_els = [];
 	
-	function generate_ui(){
+	for(let t = 0; t < message_container_el.children.length; t++){
+		already_added_panes.push(message_container_el.children[t].getAttribute('id').replace('pane-content-',''));
+	}
+	//console.log("initial already_added_panes: ", already_added_panes);
+	
+	
+	
+	function generate_ui(fresh=false,generate_all=false){
 		/*
 		if(last_time_ui_generated < Date.now() - 1000){
 			//console.log("generate_ui: generating immediately");
@@ -2473,17 +2500,29 @@ let first_ui_generation_done = false;
 			
 		}
 		*/
-		if(generate_ui_timeout != null){
-			clearTimeout(generate_ui_timeout);
+		if(window.generate_ui_timeout != null){
+			clearTimeout(window.generate_ui_timeout);
 			//console.warn("generate_ui: a timer was already set");
 		}
-		generate_ui_timeout = setTimeout(really_generate_ui,300);
+		window.generate_ui_timeout = setTimeout(() => {
+			really_generate_ui(fresh,generate_all);
+		},300);
 		
 	}
 	window.generate_ui = generate_ui;
 	
-	function really_generate_ui(){
-		//console.log("in really_generate_ui");
+	function really_generate_ui(fresh=false,generate_all=false){
+		//console.log("in really_generate_ui. fresh,generate_all: ", fresh,generate_all);
+		/*
+		if(window.settings.settings_complexity == 'developer'){
+			generate_all = true;
+		}
+		*/
+		
+		if(document.body.classList.contains('busy-selecting-assistants') && current_contact_list_els.length != keyz(window.assistants).length){
+			generate_all = true;
+		}
+		
 		last_time_ui_generated = Date.now();
 		if(generate_ui_timeout != null){
 			clearTimeout(generate_ui_timeout);
@@ -2500,16 +2539,37 @@ let first_ui_generation_done = false;
 		
 		let custom_saved_assistant_counter = 0;
 		
+		let fresh_list_of_assistants = [];
+		
 		// TODO: this is very messy. Perhaps there should be a third source of truth that is a merger of window.assistants and window.settings.assistants, 
 		// and that is updated when window.settings.assistants is updated/saved.
-		for (const [assistant_id, details] of Object.entries(window.settings.assistants)) {
+		for (const assistant_id of Object.keys(window.settings.assistants)) {
 			if(assistant_id.startsWith('custom_saved_') && typeof window.assistants[assistant_id] == 'undefined'){
-				//console.log("really_generate_ui: adding empty custom assistant to window.assistants: ", assistant_id, details);
-				//window.assistants[assistant_id] = details;
 				window.assistants[assistant_id] = {};
 			}
 		}
 		
+		for (const assistant_id of Object.keys(window.assistants)) {
+			if(generate_all){
+				fresh_list_of_assistants.push(assistant_id);
+			}
+			else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].selected == 'boolean' && window.settings.assistants[assistant_id].selected == true){
+				fresh_list_of_assistants.push(assistant_id);
+			}
+		}
+		
+		if(
+			last_generated_assistants_list.length == 0 
+			|| JSON.stringify(fresh_list_of_assistants) != JSON.stringify(last_generated_assistants_list) 
+			|| current_contact_list_els.length != fresh_list_of_assistants.length
+		){
+			last_generated_assistants_list = fresh_list_of_assistants;
+			current_contact_list_els = [];
+			fresh = true;
+		}
+		
+		
+		//console.log("F R E S H ? ", fresh);
 		
 		chat_header_emoji_icon_container_el.innerHTML = '';
 		
@@ -2548,601 +2608,777 @@ let first_ui_generation_done = false;
 		}
 		
 		
-		let new_pane_els = [];
-		let new_contant_list_els = [];
-		let extra_contacts_wrapper = document.createElement('ul');
 		
-		for (let [assistant_id, details] of Object.entries(window.assistants)) {
-			//console.log("-------")
-		  	//console.log(`${assistant_id} -> ${details}`);
+		
+		
+		
+		if(fresh){
 			
+			let new_pane_els = [];
 			
-			if(assistant_id.startsWith('divider_')){
-				let divider_el = document.createElement('div');
-				divider_el.classList.add('show-if-busy-selecting-assistants');
-				if(typeof details.i18n == 'string'){
-					divider_el.textContent = get_translation(details.i18n);
-					if(typeof details.css_class == 'string' && details.css_class.length){
-						divider_el.classList.add(details.css_class);
+			//console.log("Generating fresh contacts list");
+			
+			let extra_contacts_wrapper = document.createElement('div');
+			
+			for (let [assistant_id, details] of Object.entries(window.assistants)) {
+				//console.log("-------")
+			  	//console.log(`${assistant_id} -> ${details}`);
+				
+			
+				if(assistant_id.startsWith('divider_')){
+					let divider_el = document.createElement('div');
+					divider_el.classList.add('show-if-busy-selecting-assistants');
+					if(typeof details.i18n == 'string'){
+						divider_el.textContent = get_translation(details.i18n);
+						if(typeof details.css_class == 'string' && details.css_class.length){
+							divider_el.classList.add(details.css_class);
+						}
+						extra_contacts_wrapper.appendChild(divider_el);
+						//current_contact_list_els.push(divider_el);
 					}
-					extra_contacts_wrapper.appendChild(divider_el);
-					//new_contant_list_els.push(divider_el);
+					continue
 				}
-				continue
-			}
 			
 			
 			
+				//
+				//  CHAT PANES
+				//
 			
-			
-			
-			
-			//
-			//  CHAT PANES
-			//
-			
-			
-			// Custom model's details are stored in settings, and need to quickly be copied as if it was present in the main assistants dictionary
-			if(keyz(details).length == 0){
-				if(typeof window.settings.assistants[assistant_id] != 'undefined'){
-					details = window.settings.assistants[assistant_id];
+				// Custom model's details are stored in settings, and need to quickly be copied as if it was present in the main assistants dictionary
+				if(keyz(details).length == 0){
+					if(typeof window.settings.assistants[assistant_id] != 'undefined'){
+						details = window.settings.assistants[assistant_id];
+					}
 				}
-			}
 			
-			let clone_original_assistant_id = assistant_id;
-			if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && !window.settings.assistants[assistant_id]['clone_original'].startsWith('custom')){
-				clone_original_assistant_id = window.settings.assistants[assistant_id]['clone_original'];
-			}
+				let clone_original_assistant_id = assistant_id;
+				if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && !window.settings.assistants[assistant_id]['clone_original'].startsWith('custom')){
+					clone_original_assistant_id = window.settings.assistants[assistant_id]['clone_original'];
+				}
 			
-			let skip_it = false;
-			if(assistant_id == 'custom_received' && !(window.settings.settings_complexity == 'developer')){ // window.settings.received_an_ai == true || 
-				//console.log("generate_ui: not adding 'received' AI to contacts list");
-				skip_it = true;
-			}
-			
-			if(typeof window.conversations[assistant_id] == 'undefined'){
-				window.conversations[assistant_id] = [];
-			}
-			if(typeof window.unread_messages[assistant_id] != 'number'){
-				window.unread_messages[assistant_id] = 0;
-			}
-			
-			if(already_added_panes.indexOf(assistant_id) == -1){
+				let skip_it = false;
+				//let chat_pane_id = 'pane-content-' + assistant_id + '-chats';
+				let chat_pane_el = document.querySelector('#pane-content-' + assistant_id);
 				
-				if(typeof window.settings.assistants[assistant_id] == 'undefined'){
-					skip_it = true
+				
+				//let pane_id = 'pane-content-' + assistant_id + '-reverser';
+				
+				
+				if(assistant_id == 'custom_received' && !(window.settings.settings_complexity == 'developer')){ // window.settings.received_an_ai == true || 
+					//console.log("generate_ui: not adding 'received' AI to contacts list");
+					skip_it = true;
 				}
-				else if(typeof window.settings.assistants[assistant_id].selected == 'undefined'){
-					skip_it = true
+			
+				if(typeof window.conversations[assistant_id] == 'undefined'){
+					window.conversations[assistant_id] = [];
 				}
-				else if(window.settings.assistants[assistant_id].selected == false){
-					skip_it = true
+				if(typeof window.unread_messages[assistant_id] != 'number'){
+					window.unread_messages[assistant_id] = 0;
 				}
 				
-				if(skip_it == false){
-					let chat_pane_id = 'pane-content-' + assistant_id;
-				
-					chat_pane_el = document.createElement('div');
-					chat_pane_el.setAttribute('id',chat_pane_id);
-					chat_pane_el.classList.add('message-content-wrapper');
-				
-					// The chat messages are in an extra 'reverser' wrapper that lets CSS keep the latest added message in view automatically.
-					chats_reverser_el = document.createElement('div');
-					chats_reverser_el.setAttribute('id',chat_pane_id + '-reverser');
-					chats_reverser_el.classList.add('message-content-reverser');
-				
-						chats_el = document.createElement('div');
-						chats_el.setAttribute('id',chat_pane_id + '-chats');
-						chats_el.classList.add('message-content');
-				
-						chats_reverser_el.appendChild(chats_el);
-				
-					chat_pane_el.appendChild(chats_reverser_el);
-				
-					// The status element shows hint about message being generated or audio being processed
-					let chat_status_el = document.createElement('div');
-					chat_status_el.setAttribute('id',chat_pane_id + '-status');
-					chat_status_el.classList.add('message-status-container');
-				
-						let chat_status_div_el = document.createElement('div');
-						chat_status_div_el.classList.add('message-status1');
-						chat_status_el.appendChild(chat_status_div_el);
-						let chat_status_div_el2 = document.createElement('div');
-						chat_status_div_el2.classList.add('message-status2');
-						chat_status_el.appendChild(chat_status_div_el2);
-				
-					chat_pane_el.appendChild(chat_status_el);
-				
-				
-					new_pane_els.push(chat_pane_el);
-					already_added_panes.push(assistant_id);
-				}
-				
-			}
-			
-			
-			
-			
-			//
-			//  ASSISTANTS LIST IN SIDEBAR
-			//
-			
-			
-			
-			// item in chat partners list sidebar
-			let assistant_el = document.createElement('li');
-			assistant_el.classList.add('contact-item');
-			assistant_el.setAttribute('id','contact-item-' + assistant_id);
-			
-			if(assistant_id == 'developer'){
-				assistant_el.classList.add('developer-ai');
-			}
-			
-			if(assistant_id == window.settings.assistant){
-				//console.log("this is the selected assistant");
-				assistant_el.classList.add('selected-ai');
-				chat_pane_el.classList.add('selected-pane');
-				//if(typeof window.translations[assistant_id + '_name'] != 'undefined'){
-				chat_header_name_el.textContent = get_translation(assistant_id + '_name');
-				//}
-				
-			}
-			else{
-				chat_pane_el.classList.remove('selected-pane');
-			}
-			
-			
-			
-			if(assistant_id == window.currently_loaded_assistant || assistant_id == window.currently_loaded_web_llm_assistant || assistant_id == window.currently_loaded_llama_cpp_assistant){
-				assistant_el.classList.add('loaded-ai');
-			}
-			// Show all clones of the same model as loaded if one of them is
-			
-			if(typeof loaded_clone_original == 'string' && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && window.settings.assistants[assistant_id]['clone_original'] != ''){
-				//console.log("generate_ui: clone sibling loaded? ", window.settings.assistants[assistant_id]['clone_original'] , " =?= ", loaded_clone_original);
-				
-				// TODO: Show all of the clones as green (loaded) too. However, switching to a clone currently still reloads it.
-				if(window.settings.assistants[assistant_id]['clone_original'] == loaded_clone_original){
-					//assistant_el.classList.add('loaded-ai');
+				if(already_added_panes.indexOf(assistant_id) == -1 || chat_pane_el == null){
 					
-					window.settings.assistants[assistant_id]['clone_original']
-				}
+					if(typeof window.settings.assistants[assistant_id] == 'undefined'){
+						skip_it = true
+					}
+					else if(typeof window.settings.assistants[assistant_id].selected == 'undefined'){
+						skip_it = true
+					}
+					else if(window.settings.assistants[assistant_id].selected == false){
+						skip_it = true
+					}
+					
+					if(skip_it == false){
+						//let chat_pane_id = 'pane-content-' + assistant_id;
+						//console.log("assistant ID was not in already_added_panes: ", assistant_id);
+						
 				
-			}
-			
-			// Also the the clone's original as loaded
-			if(typeof loaded_clone_original == 'string' && assistant_id == loaded_clone_original){
-				assistant_el.classList.add('loaded-ai');
-			}
-			if(assistant_id.startsWith('ollama') && window.ollama_online == true){
-				assistant_el.classList.add('loaded-ai');
-			}
-			
-			
-			
-			if(assistant_id == 'custom_received' && window.settings.received_an_ai == true){
-				//assistant_el.classList.add('cached-ai');
-			}
-			
-			let is_cached = check_if_cached(clone_original_assistant_id); // this also checks for clones, as clone_original_assistant_id
-			//console.log("generate_ui: is_cached: ", assistant_id, is_cached);
-			if(is_cached){
-				assistant_el.classList.add('cached-ai');
-			}
-			
-
-			if(typeof details.availability == 'string'){
-				//console.log("details.availability: ", assistant_id, details.availability);
-				assistant_el.classList.add('availability-' + details.availability);
-			}
-			else{
-				//console.log("No availability data for: ", assistant_id);
-			}
-			
-			
-			if(typeof details.show_if_web_gpu == 'boolean' ){ // || ( typeof details.runner == 'string')
-				if(details.show_if_web_gpu == true){
-					assistant_el.classList.add('show-if-web-gpu');
+						chat_pane_el = document.createElement('div');
+						chat_pane_el.setAttribute('id','pane-content-' + assistant_id);
+						chat_pane_el.classList.add('message-content-wrapper');
+				
+						// The chat messages are in an extra 'reverser' wrapper that lets CSS keep the latest added message in view automatically.
+						chats_reverser_el = document.createElement('div');
+						chats_reverser_el.setAttribute('id','pane-content-' + assistant_id + '-reverser');
+						chats_reverser_el.classList.add('message-content-reverser');
+				
+							chats_el = document.createElement('div');
+							chats_el.setAttribute('id','pane-content-' + assistant_id + '-chats');
+							chats_el.classList.add('message-content');
+				
+							chats_reverser_el.appendChild(chats_el);
+				
+						chat_pane_el.appendChild(chats_reverser_el);
+				
+						// The status element shows hint about message being generated or audio being processed
+						let chat_status_el = document.createElement('div');
+						chat_status_el.setAttribute('id','pane-content-' + assistant_id + '-status');
+						chat_status_el.classList.add('message-status-container');
+				
+							let chat_status_div_el = document.createElement('div');
+							chat_status_div_el.classList.add('message-status1');
+							chat_status_el.appendChild(chat_status_div_el);
+							let chat_status_div_el2 = document.createElement('div');
+							chat_status_div_el2.classList.add('message-status2');
+							chat_status_el.appendChild(chat_status_div_el2);
+				
+						chat_pane_el.appendChild(chat_status_el);
+				
+				
+						new_pane_els.push(chat_pane_el);
+						already_added_panes.push(assistant_id);
+					}
+				
 				}
-				else if(typeof details.show_if_web_gpu32 == 'boolean' && details.show_if_web_gpu32 == true){
-					assistant_el.classList.add('show-if-web-gpu32');
+			
+			
+			
+			
+				//
+				//  GENERATE FRESH ASSISTANTS LIST IN SIDEBAR
+				//
+			
+				
+				if(generate_all == false && fresh_list_of_assistants.indexOf(assistant_id) == -1){
+					continue
+				}
+				//console.log("generating contact: ", assistant_id, details);
+			
+			
+				// item in chat partners list sidebar
+				let assistant_el = document.createElement('div');
+				assistant_el.classList.add('contact-item');
+				assistant_el.setAttribute('id','contact-item-' + assistant_id);
+				//assistant_el.setAttribute('data-assistant_id',assistant_id);
+			
+				if(assistant_id == 'developer'){
+					assistant_el.classList.add('developer-ai');
+				}
+			
+				if(assistant_id == window.settings.assistant){
+					//console.log("this is the selected assistant: ", window.settings.assistant);
+					assistant_el.classList.add('selected-ai');
+					chat_pane_el.classList.add('selected-pane');
+					//if(typeof window.translations[assistant_id + '_name'] != 'undefined'){
+					chat_header_name_el.textContent = get_translation(assistant_id + '_name');
+					//}
+				
 				}
 				else{
-					assistant_el.classList.add('hide-if-web-gpu');
+					if(chat_pane_el){
+						chat_pane_el.classList.remove('selected-pane');
+					}
+					
 				}
-			}
-			if(typeof details.runner == 'string'){
-				assistant_el.classList.add('runner-' + details.runner);
-			}
 			
 			
-			if(busy_assistants.indexOf(assistant_id) != -1){
-				//console.log("adding busy-doing class to assistant");
-				assistant_el.classList.add('busy-doing');
-			}
 			
-			
-			if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['champion'] != 'undefined' && !assistant_id.startsWith('custom')){
-				assistant_el.classList.add('champion');
-			}
-			
-			
-			if(typeof details.runner == 'string' && details.runner == 'web_llm'){
-				if(window.web_llm_assistants.indexOf(assistant_id) == -1){
-					window.web_llm_assistants.push(assistant_id);
-					//console.log("window.web_llm_assistants list is now: ", window.web_llm_assistants);
+				if(assistant_id == window.currently_loaded_assistant || assistant_id == window.currently_loaded_web_llm_assistant || assistant_id == window.currently_loaded_llama_cpp_assistant){
+					assistant_el.classList.add('loaded-ai');
 				}
-			}
+				// Show all clones of the same model as loaded if one of them is
 			
-			
-			if(typeof window.settings.assistants[assistant_id] == 'undefined' 
-				|| (typeof window.settings.assistants[assistant_id] != 'undefined' 
-					&& typeof window.settings.assistants[assistant_id].selected == 'boolean' 
-					&& window.settings.assistants[assistant_id].selected == false
-				)
-			){
-				// not selected
-			}else{
-				assistant_el.classList.add('selected');
-			}
-			
-			
-			assistant_el.addEventListener('click', (event) => {
-				//console.log("clicked on assistant in sidebar. assistant_id: ", assistant_id);
-				clicked_on_assistant(assistant_el,assistant_id,details);
-			});
-			
-			
-			
-			
-			// Add image
-			
-			
-			let assistant_icon_wrapper_el = document.createElement('div');
-			assistant_icon_wrapper_el.classList.add('sidebar-model-icon-container');
-			
-			let assistant_icon_inner_wrapper_el = document.createElement('div');
-			assistant_icon_inner_wrapper_el.classList.add('sidebar-model-icon-inner-container');
-			assistant_icon_inner_wrapper_el.classList.add('center');
-			
-			let assistant_icon_el = document.createElement('img');
-			let image_src = assistant_id.replace('_32bit','');
-			
-			if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].real_name == 'string'){
-				assistant_icon_el.setAttribute('title',window.assistants[image_src].real_name);
-			}
-			if(typeof window.settings.assistants[assistant_id] != 'undefined' && window.settings.assistants[assistant_id].icon == 'string' && window.settings.assistants[assistant_id].icon.length){
-				image_src = window.settings.assistants[assistant_id].icon;
-			}
-			else if(typeof window.assistants[assistant_id] != 'undefined' && window.assistants[assistant_id].icon == 'string' && window.assistants[assistant_id].icon.length){
-				image_src = window.assistants[assistant_id].icon;
-			}
-			
-			// If an emoji is set, use that
-			if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['emoji'] == 'string'){
-				//console.log("adding emoji as icon");
-				let emoji_icon_el = document.createElement('div');
-				emoji_icon_el.classList.add('emoji-icon-container');
-				emoji_icon_el.classList.add('center');
-				emoji_icon_el.innerText = window.settings.assistants[assistant_id]['emoji'];
+				if(typeof loaded_clone_original == 'string' && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && window.settings.assistants[assistant_id]['clone_original'] != ''){
+					//console.log("generate_ui: clone sibling loaded? ", window.settings.assistants[assistant_id]['clone_original'] , " =?= ", loaded_clone_original);
 				
-				if(typeof window.settings.assistants[assistant_id]['emoji_bg'] == 'string' && window.settings.assistants[assistant_id]['emoji_bg'].length == 7 && window.settings.assistants[assistant_id]['emoji_bg'].startsWith('#')){
-					emoji_icon_el.style['background-color'] = window.settings.assistants[assistant_id]['emoji_bg'];
-				}
+					/*
+					// TODO: Show all of the clones as green (loaded) too. However, switching to a clone currently still reloads it.
+					if(window.settings.assistants[assistant_id]['clone_original'] == loaded_clone_original){
+						//assistant_el.classList.add('loaded-ai');
+					
+						window.settings.assistants[assistant_id]['clone_original']
+					}
+					*/
 				
-				if(assistant_id == window.settings.assistant){
-					chat_header_emoji_icon_container_el.innerHTML = '';
-					chat_header_emoji_icon_container_el.appendChild(emoji_icon_el.cloneNode(true));
 				}
+			
+				// Also the clone's original as loaded
+				if(typeof loaded_clone_original == 'string' && assistant_id == loaded_clone_original){
+					assistant_el.classList.add('loaded-ai');
+				}
+				if(assistant_id.startsWith('ollama') && window.ollama_online == true){
+					assistant_el.classList.add('loaded-ai');
+				}
+			
+			
+			
+				if(assistant_id == 'custom_received' && window.settings.received_an_ai == true){
+					//assistant_el.classList.add('cached-ai');
+				}
+			
+				let is_cached = check_if_cached(clone_original_assistant_id); // this also checks for clones, as clone_original_assistant_id
+				//console.log("generate_ui: is_cached: ", assistant_id, is_cached);
+				if(is_cached){
+					assistant_el.classList.add('cached-ai');
+				}
+			
+
+				if(typeof details.availability == 'string'){
+					//console.log("details.availability: ", assistant_id, details.availability);
+					assistant_el.classList.add('availability-' + details.availability);
+				}
+				else{
+					//console.log("No availability data for: ", assistant_id);
+				}
+			
+			
+				if(typeof details.show_if_web_gpu == 'boolean' ){ // || ( typeof details.runner == 'string')
+					if(details.show_if_web_gpu == true){
+						assistant_el.classList.add('show-if-web-gpu');
+					}
+					else if(typeof details.show_if_web_gpu32 == 'boolean' && details.show_if_web_gpu32 == true){
+						assistant_el.classList.add('show-if-web-gpu32');
+					}
+					else{
+						assistant_el.classList.add('hide-if-web-gpu');
+					}
+				}
+				if(typeof details.runner == 'string'){
+					assistant_el.classList.add('runner-' + details.runner);
+				}
+			
+			
+				if(busy_assistants.indexOf(assistant_id) != -1){
+					//console.log("adding busy-doing class to assistant");
+					assistant_el.classList.add('busy-doing');
+				}
+			
+			
+				if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['champion'] != 'undefined' && !assistant_id.startsWith('custom')){
+					assistant_el.classList.add('champion');
+				}
+			
+			
+				if(typeof details.runner == 'string' && details.runner == 'web_llm'){
+					if(window.web_llm_assistants.indexOf(assistant_id) == -1){
+						window.web_llm_assistants.push(assistant_id);
+						//console.log("window.web_llm_assistants list is now: ", window.web_llm_assistants);
+					}
+				}
+			
+			
+				if(typeof window.settings.assistants[assistant_id] == 'undefined' 
+					|| (typeof window.settings.assistants[assistant_id] != 'undefined' 
+						&& typeof window.settings.assistants[assistant_id].selected == 'boolean' 
+						&& window.settings.assistants[assistant_id].selected == false
+					)
+				){
+					// not selected
+				}else{
+					assistant_el.classList.add('selected');
+				}
+			
+			
+				assistant_el.addEventListener('click', (event) => {
+					//console.log("clicked on assistant in sidebar. assistant_id: ", assistant_id);
+					clicked_on_assistant(assistant_el,assistant_id,details);
+				});
+			
+			
+			
+			
+				// Add image
+			
+				let assistant_icon_wrapper_el = document.createElement('div');
+				assistant_icon_wrapper_el.classList.add('sidebar-model-icon-container');
+			
+				let assistant_icon_inner_wrapper_el = document.createElement('div');
+				assistant_icon_inner_wrapper_el.classList.add('sidebar-model-icon-inner-container');
+				assistant_icon_inner_wrapper_el.classList.add('center');
+			
+				let assistant_icon_el = document.createElement('img');
+				let image_src = assistant_id.replace('_32bit','');
+			
+				if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].real_name == 'string'){
+					assistant_icon_el.setAttribute('title',window.assistants[image_src].real_name);
+				}
+				if(typeof window.settings.assistants[assistant_id] != 'undefined' && window.settings.assistants[assistant_id].icon == 'string' && window.settings.assistants[assistant_id].icon.length){
+					image_src = window.settings.assistants[assistant_id].icon;
+				}
+				else if(typeof window.assistants[assistant_id] != 'undefined' && window.assistants[assistant_id].icon == 'string' && window.assistants[assistant_id].icon.length){
+					image_src = window.assistants[assistant_id].icon;
+				}
+			
+				// If an emoji is set, use that
+				if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['emoji'] == 'string' && window.settings.assistants[assistant_id]['emoji'].length){
+					//console.log("adding emoji as icon");
+					let emoji_icon_el = document.createElement('div');
+					emoji_icon_el.classList.add('emoji-icon-container');
+					emoji_icon_el.classList.add('center');
+					emoji_icon_el.innerText = window.settings.assistants[assistant_id]['emoji'];
 				
-				assistant_icon_inner_wrapper_el.appendChild(emoji_icon_el);
-				image_src = null;
-			}
-			
-			else if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].icon == 'string' && window.assistants[image_src].icon.length){
-				image_src = window.assistants[image_src].icon;
-			}
-			
-			// deprecated, custom assistants should use emojis as icons
-			else if(assistant_id.startsWith('custom_saved')){
-				custom_saved_assistant_counter++;
-				if(custom_saved_assistant_counter > 20){
-					custom_saved_assistant_counter = 1;
+					if(typeof window.settings.assistants[assistant_id]['emoji_bg'] == 'string' && window.settings.assistants[assistant_id]['emoji_bg'].length == 7 && window.settings.assistants[assistant_id]['emoji_bg'].startsWith('#')){
+						emoji_icon_el.style['background-color'] = window.settings.assistants[assistant_id]['emoji_bg'];
+					}
+				
+					if(assistant_id == window.settings.assistant){
+						chat_header_emoji_icon_container_el.innerHTML = '';
+						chat_header_emoji_icon_container_el.appendChild(emoji_icon_el.cloneNode(true));
+					}
+				
+					assistant_icon_inner_wrapper_el.appendChild(emoji_icon_el);
+					image_src = null;
 				}
-				image_src = 'custom_saved' + custom_saved_assistant_counter;
-			}
 			
-			//assistant_icon_el.srcset = 'images/' + image_src + '.png 50w';
-			//assistant_icon_el.src = 'images/generic.png';
-			if(image_src != null){
-				assistant_icon_el.src = 'images/' + image_src + '_thumb.png';
-				assistant_icon_el.alt = assistant_id.replace('custom_saved_','') + ' icon';
-				assistant_icon_el.setAttribute('data-assistant_id', assistant_id);
-				assistant_icon_el.width = "30";
-				assistant_icon_el.height = "30";
-				assistant_icon_inner_wrapper_el.appendChild(assistant_icon_el);
-			}
-			
-			assistant_icon_wrapper_el.appendChild(assistant_icon_inner_wrapper_el);
-			
-			
-			
-			// Small circle to indicate which of the models is currently loaded
-			let assistant_loaded_indicator_el = document.createElement('div');
-			assistant_loaded_indicator_el.classList.add('assistant-loaded-indicator');
-			assistant_icon_wrapper_el.appendChild(assistant_loaded_indicator_el);
-			
-			assistant_el.appendChild(assistant_icon_wrapper_el);
-			
-			if(assistant_id == window.settings.assistant){
-				window.unread_messages[assistant_id] = 0;
-			}
-			
-			// Unread messages indicator
-			if(assistant_id != 'developer' && assistant_id != window.settings.assistant && typeof window.unread_messages[assistant_id] == 'number' && window.unread_messages[assistant_id] > 0){
-				let assistant_unread_indicator_el = document.createElement('div');
-				assistant_unread_indicator_el.classList.add('assistant-unread-indicator');
-				assistant_unread_indicator_el.classList.add('center');
-				if(window.unread_messages[assistant_id] > 99){
-					window.unread_messages[assistant_id] = 99;
+				else if(typeof window.assistants[image_src] != 'undefined' && typeof window.assistants[image_src].icon == 'string' && window.assistants[image_src].icon.length){
+					image_src = window.assistants[image_src].icon;
 				}
-				assistant_unread_indicator_el.textContent = window.unread_messages[assistant_id]
-				assistant_icon_wrapper_el.appendChild(assistant_unread_indicator_el);
+				else if(!assistant_id.startsWith('custom')){
+					console.error("creating icon for model fell through. assistant_id: ", assistant_id);
+					if(typeof window.settings.assistants[assistant_id] != 'undefined'){
+						console.error("- assistant with missing icon data in settings: ", window.settings.assistants[assistant_id]);
+					}
+					else if(typeof window.assistants[assistant_id] != 'undefined'){
+						console.error("- assistant with missing icon data in assistants dict: ", window.assistants[assistant_id]);
+					}
+					else{
+						console.error("the assistant_id does NOT exist in assistants dict or in settings: ", assistant_id);
+					}
+				}
+			
+			
+			
+				// deprecated, custom assistants should use emojis as icons
+				/*
+				else if(assistant_id.startsWith('custom_saved')){
+					custom_saved_assistant_counter++;
+					if(custom_saved_assistant_counter > 20){
+						custom_saved_assistant_counter = 1;
+					}
+					image_src = 'custom_saved' + custom_saved_assistant_counter;
+				}
+				*/
+			
+				//assistant_icon_el.srcset = 'images/' + image_src + '.png 50w';
+				//assistant_icon_el.src = 'images/generic.png';
+				if(image_src != null){
+					assistant_icon_el.src = 'images/' + image_src + '_thumb.png';
+					assistant_icon_el.alt = assistant_id.replace('custom_saved_','') + ' icon';
+					assistant_icon_el.setAttribute('data-assistant_id', assistant_id);
+					assistant_icon_el.width = "30";
+					assistant_icon_el.height = "30";
+					assistant_icon_inner_wrapper_el.appendChild(assistant_icon_el);
+				}
+			
+				assistant_icon_wrapper_el.appendChild(assistant_icon_inner_wrapper_el);
+			
+			
+			
+				// Small circle to indicate which of the models is currently loaded
+				let assistant_loaded_indicator_el = document.createElement('div');
+				assistant_loaded_indicator_el.classList.add('assistant-loaded-indicator');
+				assistant_icon_wrapper_el.appendChild(assistant_loaded_indicator_el);
+			
 				assistant_el.appendChild(assistant_icon_wrapper_el);
-			}
 			
-			
-			
-			
-			// add contact details div
-			let contact_el = document.createElement('div');
-			contact_el.classList.add('contact');
-			
-			
-			
-			// Add more general details
-			//let details_copy = JSON.parse(JSON.stringify(details));
-			
-			//console.log("details_copy: ", details_copy);
-			//for (const details_key of Object.keys(details_copy)) {
-			for (let de = 0; de < contact_details.length; de++){
-				const details_key = contact_details[de];
-				
-				const i18n_code = assistant_id + '_' + details_key;
-				//console.log("i18n_code: ", i18n_code);
-				/*
-				if(typeof window.translations[ i18n_code] != 'undefined'){
-					details_copy[details_key] = get_translation(i18n_code);
+				if(assistant_id == window.settings.assistant){
+					window.unread_messages[assistant_id] = 0;
 				}
-				*/
-				let el = document.createElement('div');
-				el.classList.add(details_key);
-				
-				el.setAttribute('id',assistant_id + '-contacts-' + details_key); // TODO not really used? Though it should be..
-				//el.setAttribute('data-i18n',i18n_code);
-				//el.classList.add('sidebar-assistant-' + details_key);
-				/*
-				let value = details_copy[details_key];
-				if(details_key == 'size'){
-					value = value + ' ' + translations['gigabytes'][window.settings.language];
-					el.classList.add('show-if-developer');
+			
+				// Unread messages indicator
+				if(assistant_id != 'developer' && assistant_id != window.settings.assistant && typeof window.unread_messages[assistant_id] == 'number' && window.unread_messages[assistant_id] > 0){
+					let assistant_unread_indicator_el = document.createElement('div');
+					assistant_unread_indicator_el.classList.add('assistant-unread-indicator');
+					assistant_unread_indicator_el.classList.add('center');
+					if(window.unread_messages[assistant_id] > 99){
+						window.unread_messages[assistant_id] = 99;
+					}
+					assistant_unread_indicator_el.textContent = window.unread_messages[assistant_id]
+					assistant_icon_wrapper_el.appendChild(assistant_unread_indicator_el);
+					assistant_el.appendChild(assistant_icon_wrapper_el);
 				}
-				*/
+			
+			
+			
+			
+				// add contact details div
+				let contact_el = document.createElement('div');
+				contact_el.classList.add('contact');
+			
+			
+			
+				// Add more general details
+				//let details_copy = JSON.parse(JSON.stringify(details));
+			
+				//console.log("details_copy: ", details_copy);
+				//for (const details_key of Object.keys(details_copy)) {
+				for (let de = 0; de < contact_details.length; de++){
+					const details_key = contact_details[de];
 				
-				let advanced_details = '';
-				if(details_key == 'name'){
+					const i18n_code = assistant_id + '_' + details_key;
+					//console.log("i18n_code: ", i18n_code);
+					/*
+					if(typeof window.translations[ i18n_code] != 'undefined'){
+						details_copy[details_key] = get_translation(i18n_code);
+					}
+					*/
+					let el = document.createElement('div');
+					el.classList.add(details_key);
+				
+					el.setAttribute('id',assistant_id + '-contacts-' + details_key); // TODO not really used? Though it should be..
+					//el.setAttribute('data-i18n',i18n_code);
+					//el.classList.add('sidebar-assistant-' + details_key);
+					/*
+					let value = details_copy[details_key];
+					if(details_key == 'size'){
+						value = value + ' ' + translations['gigabytes'][window.settings.language];
+						el.classList.add('show-if-developer');
+					}
+					*/
+				
+					let advanced_details = '';
+					if(details_key == 'name'){
 					
-					let advanced_details_name_el = document.createElement('span');
-					advanced_details_name_el.classList.add('nice-name');
-					if(typeof details.custom_name == 'string'){
-						//console.log("details.custom_name exists: ", details.custom_name);
-						advanced_details_name_el.textContent = details.custom_name;
+						let advanced_details_name_el = document.createElement('span');
+						advanced_details_name_el.classList.add('nice-name');
+						if(typeof details.custom_name == 'string'){
+							//console.log("details.custom_name exists: ", details.custom_name);
+							advanced_details_name_el.textContent = details.custom_name;
 						
-						if(assistant_id == window.settings.assistant){
-							chat_header_name_el.textContent = details.custom_name;
+							if(assistant_id == window.settings.assistant){
+								chat_header_name_el.textContent = details.custom_name;
+							}
+						
 						}
+						else if(
+							typeof window.settings.assistants[assistant_id] != 'undefined' 
+							&& typeof window.settings.assistants[assistant_id]['custom_name'] == 'string' 
+						){
+							//console.log("window.settings.assistants[assistant_id]['custom_name'] exists: ", window.settings.assistants[assistant_id]['custom_name']);
+							advanced_details_name_el.textContent = window.settings.assistants[assistant_id]['custom_name'];
+						}
+						else if(
+							!assistant_id.startsWith('custom_saved_') 
+							&& typeof i18n_code == 'string' 
+							&& (
+								typeof window.translations[i18n_code] != 'undefined' 
+								|| (i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined') 
+							)
+						){
+							advanced_details_name_el.setAttribute('data-i18n',i18n_code);
+							advanced_details_name_el.textContent = get_translation(i18n_code);
+						}
+						else {
+							console.error("generate_ui: creating contact list name fell through (missing translation?). Details: ", assistant_id, details);
+							advanced_details_name_el.textContent = '?';
+						}
+					
+						el.appendChild(advanced_details_name_el);
+					
+						let advanced_details_real_name_el = null;
+						if(typeof details.real_name == 'string'){
+							advanced_details_real_name_el = document.createElement('span');
+							advanced_details_real_name_el.classList.add('real-name');
+							advanced_details_real_name_el.classList.add('show-if-advanced');
+							advanced_details_real_name_el.textContent = details['real_name'];
+							el.appendChild(advanced_details_real_name_el);
+						}
+					
+					}
+					else if(details_key == 'description'){
+					
+						let advanced_details_description_el = document.createElement('span');
+					
+						if(typeof details.custom_description == 'string'){
+							//console.warn("generate_ui: LLM in assistants dict has custom description: ", details.custom_description);
+							advanced_details_description_el.textContent = details.custom_description;
+						}
+						else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_description'] == 'string'){
+							//console.log("generate_ui: spotted custom description: ", window.settings.assistants[assistant_id]['custom_description']);
 						
-					}
-					else if(
-						typeof window.settings.assistants[assistant_id] != 'undefined' 
-						&& typeof window.settings.assistants[assistant_id]['custom_name'] == 'string' 
-					){
-						//console.log("window.settings.assistants[assistant_id]['custom_name'] exists: ", window.settings.assistants[assistant_id]['custom_name']);
-						//flash_message("found it");
-						advanced_details_name_el.textContent = window.settings.assistants[assistant_id]['custom_name'];
-					}
-					else if(
-						!assistant_id.startsWith('custom_saved_') 
-						&& typeof i18n_code == 'string' 
-						&& (
-							typeof window.translations[i18n_code] != 'undefined' 
-							|| (i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined') 
-						)
-					){
-						advanced_details_name_el.setAttribute('data-i18n',i18n_code);
-						advanced_details_name_el.textContent = get_translation(i18n_code);
-						
-					}
-					else {
-						console.error("generate_ui: creating contact list name fell through (missing translation?). Details: ", assistant_id, details);
-						advanced_details_name_el.textContent = '?';
-					}
-					
-					el.appendChild(advanced_details_name_el);
-					
-					let advanced_details_real_name_el = null;
-					if(typeof details.real_name == 'string'){
-						advanced_details_real_name_el = document.createElement('span');
-						advanced_details_real_name_el.classList.add('real-name');
-						advanced_details_real_name_el.classList.add('show-if-advanced');
-						advanced_details_real_name_el.textContent = details['real_name'];
-						el.appendChild(advanced_details_real_name_el);
-					}
-					
-				}
-				else if(details_key == 'description'){
-					
-					let advanced_details_description_el = document.createElement('span');
-					
-					if(typeof details.custom_description == 'string'){
-						//console.warn("generate_ui: LLM in assistants dict has custom description: ", details.custom_description);
-						advanced_details_description_el.textContent = details.custom_description;
-					}
-					else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['custom_description'] == 'string'){
-						//console.log("generate_ui: spotted custom description: ", window.settings.assistants[assistant_id]['custom_description']);
-						
-						advanced_details_description_el.textContent = window.settings.assistants[assistant_id]['custom_description'];
-					}
-					else if(
-						!assistant_id.startsWith('custom_saved_') 
-						&& typeof i18n_code == 'string' 
-						&& (
-							typeof window.translations[i18n_code] != 'undefined' 
-							|| (i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined') 
-						)
-					){
-						advanced_details_description_el.setAttribute('data-i18n',i18n_code);
-						advanced_details_description_el.textContent = get_translation(i18n_code);
-					}
-					else if(assistant_id.startsWith('custom') && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].download_url == 'string' && window.settings.assistants[assistant_id].download_url.indexOf('.gguf') != -1 && window.settings.assistants[assistant_id].download_url.indexOf('/') != -1){
-						if(window.settings.assistants[assistant_id].download_url.endsWith('.gguf') && window.settings.assistants[assistant_id].download_url.indexOf('0000') == -1){
-							let gguf_filename = window.settings.assistants[assistant_id].download_url.substr( window.settings.assistants[assistant_id].download_url.lastIndexOf('/') + 1);
-							gguf_filename = gguf_filename.replaceAll('.gguf','');
-							gguf_filename = gguf_filename.replaceAll('-',' ');
-							gguf_filename = gguf_filename.replaceAll('_',' ');
-							gguf_filename = gguf_filename.replace('.Q',' Q');
-							if(gguf_filename.length > 4){
-								details_text = gguf_filename;
-								el.innerHTML = '<span>' + gguf_filename + '</span>';
-								contact_el.appendChild(el);
-								continue
+							advanced_details_description_el.textContent = window.settings.assistants[assistant_id]['custom_description'];
+						}
+						else if(
+							!assistant_id.startsWith('custom_saved_') 
+							&& typeof i18n_code == 'string' 
+							&& (
+								typeof window.translations[i18n_code] != 'undefined' 
+								|| (i18n_code.startsWith('fast_') && typeof window.translations[i18n_code.replace('fast_','')] != 'undefined') 
+							)
+						){
+							advanced_details_description_el.setAttribute('data-i18n',i18n_code);
+							advanced_details_description_el.textContent = get_translation(i18n_code);
+						}
+						else if(assistant_id.startsWith('custom') && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].download_url == 'string' && window.settings.assistants[assistant_id].download_url.indexOf('.gguf') != -1 && window.settings.assistants[assistant_id].download_url.indexOf('/') != -1){
+							if(window.settings.assistants[assistant_id].download_url.endsWith('.gguf') && window.settings.assistants[assistant_id].download_url.indexOf('0000') == -1){
+								let gguf_filename = window.settings.assistants[assistant_id].download_url.substr( window.settings.assistants[assistant_id].download_url.lastIndexOf('/') + 1);
+								gguf_filename = gguf_filename.replaceAll('.gguf','');
+								gguf_filename = gguf_filename.replaceAll('-',' ');
+								gguf_filename = gguf_filename.replaceAll('_',' ');
+								gguf_filename = gguf_filename.replace('.Q',' Q');
+								if(gguf_filename.length > 4){
+									details_text = gguf_filename;
+									el.innerHTML = '<span>' + gguf_filename + '</span>';
+									contact_el.appendChild(el);
+									continue
+								}
 							}
 						}
-					}
 
-					else {
-						console.error("generate_ui: creating contact list description fell through. Details: ", details);
-						advanced_details_description_el.textContent = '?';
+						else {
+							console.error("generate_ui: creating contact list description fell through. Details: ", details);
+							advanced_details_description_el.textContent = '?';
+						}
+						el.appendChild(advanced_details_description_el);
 					}
-					el.appendChild(advanced_details_description_el);
+				
+					contact_el.appendChild(el);
 				}
-				
-				
-				contact_el.appendChild(el);
-			}
 			
 			
 			
-			// CHECK IF TOO BIG OR TOO SMALL FOR AVAILABLE MEMORY
-			if( window.ram > 0 && !assistant_id.startsWith('custom') ){
-				let required_memory = null; // in gigabytes
-				if(typeof details.memory == 'number'){
-					required_memory = details.memory;
-				}
-				if(typeof details.size == 'number'){
-					required_memory = details.size * 1.2;
-				}
-				
-				if(typeof required_memory == 'number'){
-					required_memory = required_memory * 1000; // in Megabytes
-					//console.log("RAM?: ", assistant_id, required_memory, window.ram);
-					if(required_memory > window.ram){
-						//console.log("too big: ", assistant_id);
-						assistant_el.classList.add('too-big');
-						
-						too_big_el = document.createElement('div');
-						too_big_el.classList.add('poor-memory-match-hint');
-						too_big_el.classList.add('too-big-hint');
-						too_big_el.textContent = get_translation('Too_big');
-						too_big_el.setAttribute('data-i18n','Too_big');
-						contact_el.appendChild(too_big_el);
-						
+				// CHECK IF TOO BIG OR TOO SMALL FOR AVAILABLE MEMORY
+				if( window.ram > 0 && !assistant_id.startsWith('custom') ){
+					let required_memory = null; // in gigabytes
+					if(typeof details.memory == 'number'){
+						required_memory = details.memory;
 					}
-					else if(typeof details.media != 'undefined' && Array.isArray(details.media) && details.media.indexOf('text') != -1 && window.ram > 4000 && required_memory < 1000){
-						//console.log("too small: ", assistant_id);
-						//assistant_el.classList.add('too-small'); // hide AI models for very low memory systems (old phones)
+					if(typeof details.size == 'number'){
+						required_memory = details.size * 1.2;
+					}
+				
+					if(typeof required_memory == 'number'){
+						required_memory = required_memory * 1000; // in Megabytes
+						//console.log("RAM?: ", assistant_id, required_memory, window.ram);
+						if(required_memory > window.ram){
+							//console.log("too big: ", assistant_id);
+							assistant_el.classList.add('too-big');
 						
-						too_small_el = document.createElement('div');
-						too_small_el.classList.add('poor-memory-match-hint');
-						too_small_el.classList.add('too-small-hint');
-						too_small_el.textContent = get_translation('Too_small');
-						too_small_el.setAttribute('data-i18n','Too_small');
-						contact_el.appendChild(too_small_el);
+							too_big_el = document.createElement('div');
+							too_big_el.classList.add('poor-memory-match-hint');
+							too_big_el.classList.add('too-big-hint');
+							too_big_el.textContent = get_translation('Too_big');
+							too_big_el.setAttribute('data-i18n','Too_big');
+							contact_el.appendChild(too_big_el);
+						
+						}
+						else if(typeof details.media != 'undefined' && Array.isArray(details.media) && details.media.indexOf('text') != -1 && window.ram > 4000 && required_memory < 1000){
+							//console.log("too small: ", assistant_id);
+							//assistant_el.classList.add('too-small'); // hide AI models for very low memory systems (old phones)
+						
+							too_small_el = document.createElement('div');
+							too_small_el.classList.add('poor-memory-match-hint');
+							too_small_el.classList.add('too-small-hint');
+							too_small_el.textContent = get_translation('Too_small');
+							too_small_el.setAttribute('data-i18n','Too_small');
+							contact_el.appendChild(too_small_el);
+						}
 					}
 				}
-			}
 			
 			
 			
 			
 			
 			
-			assistant_el.appendChild(contact_el);
+				assistant_el.appendChild(contact_el);
 			
-			// Add checkbox for selecting active models
+				// Add checkbox for selecting active models
 			
-			let checkbox_container_el = document.createElement('div');
-			checkbox_container_el.classList.add('assistants-checkbox-container');
-			checkbox_container_el.innerHTML = `<div class="assistants-checkbox">
-  <span>
-    <svg width="12px" height="9px" viewbox="0 0 12 9">
-      <polyline points="1 5 4 8 11 1"></polyline>
-    </svg>
-  </span>
-</div>`
+				let checkbox_container_el = document.createElement('div');
+				checkbox_container_el.classList.add('assistants-checkbox-container');
+				checkbox_container_el.innerHTML = `<div class="assistants-checkbox">
+	  <span>
+	    <svg width="12px" height="9px" viewbox="0 0 12 9">
+	      <polyline points="1 5 4 8 11 1"></polyline>
+	    </svg>
+	  </span>
+	</div>`
 				
 			
-			assistant_el.appendChild(checkbox_container_el);
+				assistant_el.appendChild(checkbox_container_el);
 			
-			//new_contant_list_els.push(assistant_el);
-			extra_contacts_wrapper.appendChild(assistant_el);
+				current_contact_list_els.push(assistant_el);
+				extra_contacts_wrapper.appendChild(assistant_el);
 			
-			/*
-			if( Date.now() - start_time ){
-				console.warn("generate UI: loop took: ", Date.now() - start_time, assistant_id);
-			}
-			*/
-			
-			
+				/*
+				if( Date.now() - start_time ){
+					console.warn("generate UI: loop took: ", Date.now() - start_time, assistant_id);
+				}
+				*/
 			
 			
-		} // end of loop over all assistants
+			
+			
+			} // end of loop over all assistants
 		
-		//let extra_panes_wrapper = document.createElement('div');
-		for(let d = 0; d < new_pane_els.length; d++){
-			//extra_panes_wrapper.appendChild(new_pane_els[d]);
-			message_container_el.appendChild(new_pane_els[d]);
+			//let extra_panes_wrapper = document.createElement('div');
+			for(let d = 0; d < new_pane_els.length; d++){
+				//console.log("appending new pane to chat message container: ", new_pane_els[d]);
+				//extra_panes_wrapper.appendChild(new_pane_els[d]);
+				message_container_el.appendChild(new_pane_els[d]);
+			}
+		
+			contacts_list_el.innerHTML = '';
+			contacts_list_el.appendChild(extra_contacts_wrapper);
+			//
+			//for(let c = 0; c < current_contact_list_els.length; c++){
+				//extra_contacts_wrapper.appendChild(current_contact_list_els[c]);
+			//	contacts_list_el.appendChild(current_contact_list_els[c]);
+			//}
+			//message_container_el.appendChild(extra_panes_wrapper);
+		
+			//contacts_list_el.appendChild(extra_contacts_wrapper);
+			
+			//console.log("message_container_el.childNodes.length: ", message_container_el.childNodes.length);
+			//console.log("message_container_el.children.length: ", message_container_el.children.length);
+		
+			for(let g = 0; g < message_container_el.children.length; g++){
+				//console.log("message_container_el.children: g: ", g);
+				const pane_child_el = message_container_el.children[g];
+				//console.log("pane_child_el: ", g, pane_child_el);
+				if(pane_child_el){
+					const pane_id = pane_child_el.getAttribute('id');
+					if(typeof pane_id == 'string'){
+						//console.log("selected_pane? pane_id: ", pane_id, " =?= ", window.settings.assistant);
+						if(pane_id.replace('pane-content-','') == window.settings.assistant){
+							//console.error("OK, found selected pane witn ID:  pane-content-" + window.settings.assistant);
+							pane_child_el.classList.add('selected-pane');
+						}
+						else{
+							//console.log("no bingo");
+							pane_child_el.classList.remove('selected-pane');
+						}
+					}
+					else{
+						console.error("generate_ui: pane has no id");
+					}
+				}
+				
+			
+			}
+			
 		}
-		
-		contacts_list_el.innerHTML = '';
-		contacts_list_el.appendChild(extra_contacts_wrapper);
-		//
-		//for(let c = 0; c < new_contant_list_els.length; c++){
-			//extra_contacts_wrapper.appendChild(new_contant_list_els[c]);
-		//	contacts_list_el.appendChild(new_contant_list_els[c]);
-		//}
-		//message_container_el.appendChild(extra_panes_wrapper);
-		
-		//contacts_list_el.appendChild(extra_contacts_wrapper);
-		
-		for(let g = 0; g < message_container_el.childNodes.length; g++){
-			const pane_id = message_container_el.childNodes[g].getAttribute('id');
-			if(typeof pane_id == 'string'){
-				//console.log("selected_pane? pane_id: ", pane_id, " =?= ", window.settings.assistant);
-				if(pane_id.replace('pane-content-','') == window.settings.assistant){
-					//console.error("BINGO");
-					message_container_el.childNodes[g].classList.add('selected-pane');
+		else{
+			//console.log("The assistants list hasn't significantly changed, so only updating the existing one.  current_contact_list_els: ", current_contact_list_els);
+			
+			// Could also loop over fresh_list_of_assistants, that might be faster than extracting the assistant_id from the element. But.. less safe.
+			
+			for(let u = 0; u < current_contact_list_els.length; u++){
+				let assistant_el = current_contact_list_els[u];
+				let assistant_id = '' + current_contact_list_els[u].getAttribute('id').replace('contact-item-','').trim();
+				//console.log("update UI: assistant_id: -->" + assistant_id + "<--");
+				
+				if(typeof window.assistants[assistant_id] == 'undefined'){
+					console.error("really_generate_ui: could not find assistant_id in assistants dict: ", assistant_id);
+					continue
+				}
+				
+				let details = window.assistants[assistant_id];
+				if(keyz(details).length == 0){
+					if(typeof window.settings.assistants[assistant_id] != 'undefined'){
+						details = window.settings.assistants[assistant_id];
+					}
+				}
+				if(keyz(details).length == 0){
+					console.error("really_generate_ui: did not find any meaningful data for assistant_id: ", assistant_id);
+				}
+				
+				
+				// cached
+				let clone_original_assistant_id = assistant_id;
+				if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && !window.settings.assistants[assistant_id]['clone_original'].startsWith('custom')){
+					clone_original_assistant_id = window.settings.assistants[assistant_id]['clone_original'];
+				}
+				
+				let is_cached = check_if_cached(clone_original_assistant_id); // this also checks for clones, as clone_original_assistant_id
+				//console.log("generate_ui: is_cached: ", assistant_id, is_cached);
+				if(is_cached){
+					add_element_class(assistant_el,'cached-ai');
 				}
 				else{
-					//console.log("no bingo");
-					message_container_el.childNodes[g].classList.remove('selected-pane');
+					remove_element_class(assistant_el,'cached-ai');
 				}
-			}
-			else{
-				console.error("pane has no id");
+				
+				
+				// selected
+				if(assistant_id == window.settings.assistant){
+					assistant_el.classList.add('selected-ai');
+					if(typeof details.custom_name == 'string'){
+						chat_header_name_el.textContent = details.custom_name;
+					}
+					else{
+						chat_header_name_el.textContent = get_translation(assistant_id + '_name');
+					}
+					
+					
+					chat_header_emoji_icon_container_el.innerHTML = '';
+					if(typeof window.settings.assistants[assistant_id]['emoji'] == 'string' && window.settings.assistants[assistant_id]['emoji'].length){
+						let emoji_icon_el = document.createElement('div');
+						emoji_icon_el.classList.add('emoji-icon-container');
+						emoji_icon_el.classList.add('center');
+						emoji_icon_el.textContent = window.settings.assistants[assistant_id]['emoji'];
+						if(typeof window.settings.assistants[assistant_id]['emoji_bg'] == 'string' && window.settings.assistants[assistant_id]['emoji_bg'].length == 7 && window.settings.assistants[assistant_id]['emoji_bg'].startsWith('#')){
+							emoji_icon_el.style['background-color'] = window.settings.assistants[assistant_id]['emoji_bg'];
+						}
+						chat_header_emoji_icon_container_el.appendChild(emoji_icon_el);
+					}
+					
+				}
+				else{
+					remove_element_class(assistant_el,'selected-ai');
+				}
+				
+				
+				// loaded
+				if( 
+					(typeof window.currently_loaded_assistant == 'string' && assistant_id == window.currently_loaded_assistant) 
+					|| assistant_id == window.currently_loaded_web_llm_assistant 
+					|| assistant_id == window.currently_loaded_llama_cpp_assistant
+				){
+					add_element_class(assistant_el,'loaded-ai');
+				}
+				
+				// Also set the clone's original as loaded
+				else if(typeof loaded_clone_original == 'string' && assistant_id == loaded_clone_original){
+					add_element_class(assistant_el,'loaded-ai');
+				}
+				else{
+					remove_element_class(assistant_el,'loaded-ai');
+				}
+				
+				
+				if(assistant_id.startsWith('ollama') && window.ollama_online == true){
+					add_element_class(assistant_el,'loaded-ai');
+				}
+				else{
+					remove_element_class(assistant_el,'loaded-ai');
+				}
+				
+				
+				if(busy_assistants.indexOf(assistant_id) != -1){
+					//console.log("adding busy-doing class to assistant");
+					add_element_class(assistant_el,'busy-doing');
+				}
+				else{
+					remove_element_class(assistant_el,'busy-doing');
+				}
+				
 			}
 			
 		}
+		
+		
+		// Update which chat pane is visible
+		if(previous_selected_assistant != window.settings.assistant){
+			//console.log("A NEW ASSISTANT, changing selected chat pane");
+			let all_pane_els = document.querySelectorAll('.message-content-wrapper');
+			for(let pe = 0; pe < all_pane_els.length; pe++){
+				
+				let pane_element_assistant_id = all_pane_els[pe].getAttribute('id').replace('pane-content-','');
+				//console.log("pane_element_assistant_id: ", pane_element_assistant_id);
+				if(pane_element_assistant_id == window.settings.assistant){
+					all_pane_els[pe].classList.add('selected-pane');
+				}
+				else{
+					if(all_pane_els[pe].classList.contains('selected-pane')){
+						all_pane_els[pe].classList.remove('selected-pane');
+					}
+				}
+			}
+		}
+		
 		
 		
 		if( Date.now() - start_time > 50){
@@ -3150,6 +3386,7 @@ let first_ui_generation_done = false;
 		}
 		
 		
+		previous_selected_assistant = window.settings.assistant;
 		
 		// Now that the chat panes exist, they can be filled;
 		if(window.generate_ui_first_run){
@@ -3201,7 +3438,6 @@ let first_ui_generation_done = false;
 	
 	
 	function clicked_on_assistant(assistant_el=null,assistant_id,details){
-		document.body.classList.remove('hide-chat-form'); // show the prompt input area (developer 'assistant' has it hidden)
 		
         try{
 			if(document.body.classList.contains('busy-selecting-assistants')){
@@ -3230,16 +3466,32 @@ let first_ui_generation_done = false;
 			
 			else{
 				
-				if(window.innerWidth < 981 && !document.body.classList.contains('sidebar-shrink')){
+				if(
+					window.innerWidth > 640 
+					&& window.innerWidth < 981 
+					&& document.body.classList.contains('sidebar') 
+					&& document.body.classList.contains('sidebar-chat') 
+					//&& !document.body.classList.contains('sidebar-shrink')
+				){
+					add_body_class('sidebar-shrink');
+					setTimeout(() => {
+						add_body_class('sidebar-shrink');
+					},100);
+					
+				}
+				else{
 					if(typeof close_sidebar == 'function'){
 						close_sidebar();
 					}
-					
 				}
 				window.switch_assistant(assistant_id);
 			}
-
+			
 			really_generate_ui();
+			
+			if(hide_all_context_menus){
+				hide_all_context_menus();
+			}
 			
 		}
 		catch(err){
@@ -3604,7 +3856,7 @@ let first_ui_generation_done = false;
 			const selector_line = '#pane-content-' + assistant_id + '-status .message-status' + nr;
 			let status_el = document.querySelector(selector_line);
 			if(status_el){
-				if(content != '' && !content.startsWith('<div')){
+				if(typeof content == 'string' && content != '' && !content.startsWith('<div')){
 					if(nr == 2){
 						let old_text = status_el.textContent;
 						if(old_text.length > 120){
@@ -3628,7 +3880,7 @@ let first_ui_generation_done = false;
 		}
 		
 		else{
-			console.error("set_chat_status: cannot update status element. Task did not have an assistant property.  task: ", task);
+			//console.error("set_chat_status: cannot update status element. Task did not have an assistant property.  task: ", task);
 		}
 		
 	}
@@ -3640,14 +3892,17 @@ let first_ui_generation_done = false;
 	
 	
 function set_speaker_progress(progress) {
-	speaker_icon_el.style.background =
-    "conic-gradient(var(--button-bg) " +
-    progress +
-    "%,var(--button-warning-bg) " +
-    progress +
-    "%)";
+	if(speaker_icon_el){
+		speaker_icon_el.style.background =
+	    "conic-gradient(var(--button-bg) " +
+	    progress +
+	    "%,var(--button-warning-bg) " +
+	    progress +
+	    "%)";
+	}
+	
 }
-set_speaker_progress(100);
+
 
 
 
@@ -3998,22 +4253,52 @@ function generate_task_overview(){
 		close_button_container_el.classList.add('kill-task-icon');
 		close_button_container_el.textContent = '×';
 		close_button_container_el.addEventListener('click',() => {
-			
-			
-			if(my_task.state.startsWith('should_')){
-				window.change_tasks_with_parent_index(my_task,'interrupted');
-				clean_up_dead_task(my_task,'interrupted');
+			//console.log("clicked on stop task button");
+			if(my_task != null && typeof my_task.state == 'string'){
+				
+				if(my_task.state.startsWith('busy_')){
+					window.stop_assistant(my_task, false); // false =  not called from automation, but from the user
+				}
+				else if(my_task.state.startsWith('should_')){
+					if(my_task != null && typeof my_task.index == 'number'){
+						//console.log("setting a future task to interrupted");
+						
+						clean_up_dead_task(my_task,'interrupted');
+						my_task.state = 'interrupted';
+					}
+				}
+				else{ //  if(window.irrelevant_task_states.indexOf(my_task.state) == -1){
+					
+					if(my_task.state == 'parent'){
+						//console.log("stopping a parent task");
+						window.change_tasks_with_parent_index(my_task.index);
+						window.change_tasks_with_parent(my_task);
+						window.handle_completed_task(my_task,false,{'state':'interrupted'});
+					}
+					else{
+						window.handle_completed_task(my_task,false,{'state':'interrupted'});
+					}
+					
+					setTimeout(do_overviews,200);
+				}
 			}
+			else{
+				console.error("stop task button: my_task was invalid? ", my_task);
+			}
+			
+			/*
 			if(window.current_task != null && typeof window.current_task.index == 'number' && typeof my_task.index == 'number' && my_task.index == window.current_task.index){
 				window.stop_assistant(my_task);
 				handle_completed_task(my_task,false,{'state':'interrupted'});
 			}
+			*/
 			simple_task_summary_el.classList.add('simple-task-results-interrupting');
-			
-			if(typeof my_task.state == 'string' && window.irrelevant_task_states.indexOf(my_task.state) == -1){
+			/*
+			if(typeof my_task.state == 'string'){
 				window.handle_completed_task(my_task,false,{'state':'interrupted'});
 			}
 			change_tasks_with_parent_index(my_task);
+			*/
 			update_task_overview();
 		});
 		simple_state_el.appendChild(close_button_container_el);
@@ -4101,68 +4386,6 @@ function generate_task_overview(){
 			else{
 				sorting_list_els['active'].appendChild(simple_task_el);
 			}
-		}
-		
-		
-		
-		
-		
-		// COMPLEX
-		
-		if(typeof task_overview_el != 'undefined' && task_overview_el != null && do_complex_too){
-			let task_el = document.createElement('ul');
-			task_el.classList.add('task');
-		
-			for (const [key, value] of Object.entries(window.task_queue[t])) {
-			
-				//console.log("value: ", typeof value, value);
-				let property_el = document.createElement('li');
-				property_el.classList.add('task-property');
-				property_el.classList.add('task-property-' + key);
-			
-				let key_el = document.createElement('span');
-				key_el.classList.add('task-key');
-				key_el.textContent = key;
-				property_el.appendChild(key_el);
-		
-				let content = null;
-		
-				if(typeof value == 'string'|| typeof value == 'number'){
-					content = '' + value;
-				}
-				else if(typeof value == 'boolean'){
-					if(value){
-						content = 'TRUE';
-					}else{
-						content = 'FALSE';
-					}
-				}
-				else if(value == null){
-					content = 'null';
-				}
-				else if(Array.isArray(value)){
-					content = 'length: ' + value.length;
-				}
-				else if(typeof value == 'object'){
-					content = JSON.stringify(value,null,4);
-				}
-				else{
-					//console.error("generate_task_overview: spotted something unexpected in a task: ", key, value);
-				}
-				//console.log("final content: ", typeof content, content);
-			
-				if(content == null || typeof content != 'string'){
-					content = 'UNEXPECTED VALUE (OBJECT?)';
-				}
-		
-				let value_el = document.createElement('span');
-				value_el.classList.add('task-value');
-				value_el.textContent = content;
-				property_el.appendChild(value_el);
-		
-				task_el.appendChild(property_el);
-			}
-			task_overview_el.appendChild(task_el);
 		}
 		
 	}
@@ -4761,7 +4984,7 @@ function generate_rewrite_tags(type="rewrite",force=false){
 		window[ type + '_dialog_content_tags_container_el'].innerHTML = '';
 	}
 	
-	if(window[ type + '_dialog_content_toggles_container_el'].innerHTML == '' && window[ type + '_dialog_content_tags_container_el'].innerHTML == ''){
+	if(window[ type + '_dialog_content_toggles_container_el'].innerHTML == '' && window[ type + '_dialog_content_tags_container_el'].innerHTML == '' && typeof window.settings[type +'_tags'][tag_language] != 'undefined'){
 		for(let i = 0; i < window.settings[type +'_tags'][tag_language].length; i++){
 			let tag = window.settings[type +'_tags'][tag_language][i];
 		
@@ -5168,177 +5391,8 @@ function check_if_cached(assistant_id){
 
 
 
-// add file to recent documents list
-function update_recent_documents(newly_opened_document=null){
-	//console.log("in update_recent_documents. newly_opened_document: ", newly_opened_document);
-	let force_save = false;
-	if(newly_opened_document == null){
-		newly_opened_document = window.settings.docs.open;
-	}
-	else{
-		force_save = true;
-	}
-	
-	if(newly_opened_document == null && typeof folder == 'string' && typeof current_file_name == 'string'){
-		console.error("update_recent_documents: current_file_name was a string, but window.settings.docs.open was null?  current_file_name,window.settings.docs.open: ", current_file_name, window.settings.docs.open);
-		newly_opened_document = {'folder':folder,'filename':current_file_name}
-	}
-	//console.log("in chatty_ui.js: update_recent_documents. newly_opened_document: ", typeof newly_opened_document, newly_opened_document);
-	
-	if(typeof newly_opened_document == 'object' && newly_opened_document != null && typeof newly_opened_document.folder == 'string' && typeof newly_opened_document.filename == 'string'){
-		
-		if(typeof window.settings.docs.recent == 'undefined'){
-			console.error("update_recent_documents: window.settings.docs.recent was undefined");
-			return
-		}
-		let already_at_the_top = false;
-		for(let r = window.settings.docs.recent.length - 1; r >= 0; --r){
-			if(typeof window.settings.docs.recent[r].filename == 'string' && window.settings.docs.recent[r].filename == newly_opened_document.filename && typeof window.settings.docs.recent[r].folder == 'string' && window.settings.docs.recent[r].folder == newly_opened_document.folder){
-				//console.log("removing newly_opened_document from recent files list first");
-				if(r == 0){
-					//console.log("update_recent_documents: document was already at the number one spot of the recent documents");
-					already_at_the_top = true;
-				}
-				else{
-					window.settings.docs.recent.splice(r,1);
-				}
-			}
-		}
-		
-		if(!already_at_the_top){
-			window.settings.docs.recent.unshift(newly_opened_document);
-		}
-		
-		if(window.settings.docs.recent.length > window.settings.maximum_recent_files){
-			window.settings.docs.recent = window.settings.docs.recent.splice(0,window.settings.maximum_recent_files);
-			//save_settings();
-		}
-		else if(!already_at_the_top){
-			//save_settings();
-		}
-		/*
-		else if(force_save){
-			save_settings();
-		}
-		*/
-		
-		save_settings();
-		
-		window.generate_recent_documents_list();
-			
-	}
-	else{
-		console.error("newly_opened_document was invalid?   newly_opened_document,window.settings.docs.open: ", newly_opened_document, window.settings.docs.open);
-	}
-}
-window.update_recent_documents = update_recent_documents;
 
 
-
-function generate_recent_documents_list(){
-	//console.log("in generate_recent_documents_list");
-	
-	recently_opened_documents_list_el.innerHTML = '';
-	let added_something = false;
-	if(window.settings.docs.recent && window.settings.docs.recent.length){
-		
-		for(let r = 0; r < window.settings.docs.recent.length; r++){
-			
-			const file_data = window.settings.docs.recent[r];
-			//console.log("generate_recent_documents_list: file_data: ", file_data);
-			
-			if(!filename_is_media(file_data.filename) && typeof playground_live_backups[file_data.folder + '/' + file_data.filename] != 'string' && typeof playground_saved_files[file_data.folder + '/' + file_data.filename] != 'string'){
-				//console.error("generate_recent_documents_list: skipping file item that no longer seems to exist: ", file_data.filename);
-				continue
-			}
-			
-			
-			let recent_li = document.createElement('li');
-			recent_li.classList.add('recent-documents-item');
-			recent_li.classList.add('flex');
-			
-			let recent_file_icon_container_el = document.createElement('div');
-			recent_file_icon_container_el.classList.add('recent-documents-icon-container');
-			
-			let recent_file_icon_el = document.createElement('img');
-			recent_file_icon_el.classList.add('recent-documents-icon');
-			
-			if(file_data.filename.endsWith('.vtt') || file_data.filename.endsWith('.srt') ){
-				recent_file_icon_el.src = './images/subtitle_icon.svg';
-			}
-			else if(file_data.filename.endsWith('.blueprint') ){
-				recent_file_icon_el.src = './images/blueprint_icon.svg';
-			}
-			else if(window.filename_is_image(file_data.filename)){
-				recent_file_icon_el.src = './images/image_icon.svg';
-			}
-			else if(window.filename_is_audio(file_data.filename)){
-				recent_file_icon_el.src = './images/audio_icon.svg';
-			}
-			else if(window.filename_is_video(file_data.filename)){
-				recent_file_icon_el.src = './images/video_icon.svg';
-			}
-			else{
-				recent_file_icon_el.src = './images/document.svg';
-			}
-			recent_file_icon_container_el.appendChild(recent_file_icon_el);
-			
-			let recent_file_info_container_el = document.createElement('div');
-			recent_file_info_container_el.classList.add('recent-documents-info-container');
-			
-			let folder_name_el = document.createElement('span');
-			folder_name_el.classList.add('recent-documents-item-folder');
-			let clean_folder_name = file_data.folder;
-			/*
-			if(clean_folder_name.endsWith('/')){
-				clean_folder_name = clean_folder_name.substr(0,clean_folder_name.length-1);
-			}
-			*/
-			if(clean_folder_name.startsWith('/')){
-				clean_folder_name = clean_folder_name.substr(1);
-			}
-			folder_name_el.textContent = clean_folder_name;
-			
-			let file_name_el = document.createElement('span');
-			file_name_el.classList.add('recent-documents-item-filename');
-			file_name_el.textContent = file_data.filename;
-			
-			
-			
-			
-			recent_file_info_container_el.appendChild(file_name_el);
-			recent_file_info_container_el.appendChild(folder_name_el);
-			
-			recent_li.appendChild(recent_file_icon_container_el);
-			recent_li.appendChild(recent_file_info_container_el);
-			
-			recent_li.addEventListener('click', () => {
-				//console.log("clicked on recent document item: ", file_data);
-				/*
-				if(file_data.filename != current_file_name || file_data.folder != folder){
-					open_file(file_data.filename,null,file_data.folder);
-				}
-				*/
-				open_file(file_data.filename,null,file_data.folder);
-				document.body.classList.add('show-document');
-			});
-			
-			added_something = true;
-			recently_opened_documents_list_el.appendChild(recent_li);
-		
-			
-		}
-	}
-	
-	if(added_something){
-		document.body.classList.add('has-recent-documents');
-	}
-	else{
-		document.body.classList.remove('has-recent-documents');
-	}
-	
-}
-window.generate_recent_documents_list = generate_recent_documents_list;
 
 
 
@@ -5496,15 +5550,26 @@ function add_favourite_language(lang_code){
 
 
 
+function encode_url_component(str){
+	//return new URLSearchParams({ text: text }).toString();
+	//return new URLSearchParams({ encoded: "'@#$%^&" }).toString();
+	return encodeURIComponent(str).replace(/[!'()*]/g, function(c) { return '%' + c.charCodeAt(0).toString(16); });
+	//return encodeURIComponent(text).replace(/[!'()*]/g, escape);
+	//return encodeURIComponent(text);
+}
 
-function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
-	//console.log("in create_share_prompt_link.  initial,assistant_id: ", initial, assistant_id);
+
+function create_share_prompt_link(initial=false,assistant_id=null,prompt=null,additional_parameters=''){
+	//console.log("in create_share_prompt_link.  initial,assistant_id,prompt,additional_parameters: ", initial, assistant_id, prompt, additional_parameters);
 	
 	if(typeof assistant_id != 'string'){
 		assistant_id = window.settings.assistant;
 	}
 	if(typeof prompt != 'string'){
 		prompt = share_prompt_input_el.value;
+	}
+	if(prompt.indexOf('_') == -1){
+		prompt = prompt.replaceAll(' ','_');
 	}
 	
 	//console.log("in create_share_prompt_link. window.settings.assistant,initial: ", window.settings.assistant,initial);
@@ -5514,16 +5579,7 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 		return;
 	}
 	
-	function encode_url_component(str){
-		//return new URLSearchParams({ text: text }).toString();
-		//return new URLSearchParams({ encoded: "'@#$%^&" }).toString();
-		return encodeURIComponent(str).replace(/[!'()*]/g, function(c) { return '%' + c.charCodeAt(0).toString(16); });
-		//return encodeURIComponent(text).replace(/[!'()*]/g, escape);
-		//return encodeURIComponent(text);
-	}
-	
-	
-	let share_name = '?';
+	let share_name = 'X';
 	let custom_name_part = '';
 	
 	let emoji_part = '';
@@ -5534,7 +5590,7 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 		share_prompt_assistant_emoji_el.textContent = window.settings.assistants[assistant_id]['emoji'];
 		emoji_part = '&emoji=' + encode_url_component(window.settings.assistants[assistant_id]['emoji']);
 		
-		if(typeof window.settings.assistants[assistant_id]['emoji_bg'] == 'string' && window.settings.assistants[assistant_id]['emoji_bg'].startsWith('#')){
+		if(typeof window.settings.assistants[assistant_id]['emoji_bg'] == 'string' && window.settings.assistants[assistant_id]['emoji_bg'].startsWith('#') && window.settings.assistants[assistant_id]['emoji_bg'] != '#000000'){
 			share_prompt_assistant_emoji_el.style['background-color'] = window.settings.assistants[assistant_id]['emoji_bg'];
 			emoji_bg_part = '&emoji_bg=' + encode_url_component(window.settings.assistants[assistant_id]['emoji_bg'].replaceAll('#',''));
 		}
@@ -5544,12 +5600,15 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 		share_prompt_assistant_name_el.textContent = window.settings.assistants[assistant_id]['custom_name'];
 		custom_name_part = '&custom_name=' + encode_url_component(window.settings.assistants[assistant_id]['custom_name']);
 	}
-	else if(typeof window.translations[window.settings.assistant + '_name'] != 'undefined'){
-		share_prompt_assistant_name_el.textContent = get_translation(assistant_id + '_name');
+	else if(typeof window.translations[window.settings.assistant.replace('_32bit','') + '_name'] != 'undefined'){
+		share_prompt_assistant_name_el.textContent = get_translation(window.settings.assistant.replace('_32bit','') + '_name');
+	}
+	else if(typeof window.translations[window.settings.assistant.replace('fast_','').replace('_32bit','') + '_name'] != 'undefined'){
+		share_prompt_assistant_name_el.textContent = get_translation(window.settings.assistant.replace('fast_','').replace('_32bit','') + '_name');
 	}
 	else{
-		console.error("create_share_prompt_link: getting assistant name fell through");
-		share_prompt_assistant_name_el.textContent = '?';
+		console.error("create_share_prompt_link: getting assistant name fell through.  window.settings.assistant: " + window.settings.assistant);
+		share_prompt_assistant_name_el.textContent = '';
 	}
 	//share_prompt_assistant_name_el.textContent = get_translation(window.settings.assistant + '_name'); // TODO: set this to more generic type indication instead? As the device of the person who receives the link might not support the current assistant
 	if(chat_header_icon_el.src.indexOf('/custom_saved') == -1){
@@ -5568,29 +5627,48 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 	const origin = window.location.origin;
 	//const host = window.location.host;
 	let origin_part = window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/'));
+	console.log("origin_part: ", origin_part);
+	let seed_part = '';
+	if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['seed'] == 'string' && !isNaN(window.settings.assistants[assistant_id]['seed'])){
+		window.settings.assistants[assistant_id]['seed'] = parseInt(window.settings.assistants[assistant_id]['seed']);
+	}
+	if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['seed'] == 'number' && window.settings.assistants[assistant_id]['seed'] >= 0 && window.settings.assistants[assistant_id]['seed'] < 10000000){
+		seed_part = '&seed=' + encode_url_component(window.settings.assistants[assistant_id]['seed']);
+	}
+	
 	let prompt_part = '';
 	if(prompt != ''){
 		prompt_part = '&prompt=' + encode_url_component(prompt);
 	}
 	let has_clone_original = false;
-	let ai_part = '?ai=';
+	let ai_part = '';
 	if(!assistant_id.startsWith('custom')){
-		ai_part = '?ai=' + encode_url_component(assistant_id);
+		let ai_name = assistant_id;
+		ai_name = ai_name.replace('_32bit','');
+		if(ai_name.startsWith('fast_') && typeof window.assistants[ai_name.replace('fast_','')] != 'undefined'){
+			ai_name = ai_name.replace('fast_','');
+		}
+		ai_part = 'ai=' + encode_url_component(ai_name);
 		has_download_url = true;
 	}
 	else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['clone_original'] == 'string' && !window.settings.assistants[assistant_id]['clone_original'].startsWith('custom')){
-		ai_part = '?ai=' + encode_url_component(window.settings.assistants[assistant_id]['clone_original']);
+		let ai_name = window.settings.assistants[assistant_id]['clone_original'];
+		ai_name = ai_name.replace('_32bit','');
+		if(ai_name.startsWith('fast_') && typeof window.assistants[ai_name.replace('fast_','')] != 'undefined'){
+			ai_name = ai_name.replace('fast_','');
+		}
+		ai_part = 'ai=' + encode_url_component(ai_name);
 		//has_download_url = true;
 		//if(assistant_id.startsWith('custom')){
 		has_clone_original = true;
 		//}
 	}
 	else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].download_url == 'string' && window.settings.assistants[assistant_id].download_url.length){
-		ai_part = '?ai=' + encode_url_component(window.settings.assistants[assistant_id].download_url);
+		ai_part = 'ai=' + encode_url_component(window.settings.assistants[assistant_id].download_url);
 		has_download_url = true;
 	}
 	else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].download_url == 'string' && window.assistants[assistant_id].download_url.length){
-		ai_part = '?ai=' + encode_url_component(window.assistants[assistant_id].download_url);
+		ai_part = 'ai=' + encode_url_component(window.assistants[assistant_id].download_url);
 		has_download_url = true;
 	}
 	else{
@@ -5626,7 +5704,7 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 				if(initial){ // && share_prompt_model_download_url.value == ''){
 					share_prompt_model_download_url_el.value = window.settings.assistants[assistant_id].download_url;
 				}
-				ai_part = '?ai=' + encode_url_component(share_prompt_model_download_url_el.value.replace('https://www.huggingface.co/',''));
+				ai_part = 'ai=' + encode_url_component(share_prompt_model_download_url_el.value.replace('https://www.huggingface.co',''));
 				has_download_url = true;
 			
 				// If a download URL exists, then also add config_url, if it exists
@@ -5777,56 +5855,77 @@ function create_share_prompt_link(initial=false,assistant_id=null,prompt=null){
 		if(config_parts.length > 2){
 			console.warn("create_share_prompt_link: have to simplify config_url: ", config_part);
 			config_part = config_parts[0] + "/" + config_parts[1];
-			
 		}
 	}
 	
 	
-	if( (origin_part.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + custom_name_part.length + custom_description_part.length + system_prompt_part.length + second_prompt_part.length + cache_type_k_part.length + temperature_part.length + context_part.length + chatter_part.length + custom_name_part.length + custom_description_part.length + emoji_part.length + emoji_bg_part.length) < 2000){
-		share_link = origin_part + ai_part + prompt_part + config_part + webllm_id_part + cache_type_k_part + temperature_part + context_part + system_prompt_part + second_prompt_part + chatter_part + custom_name_part + emoji_part + emoji_bg_part + custom_description_part;
+	if(additional_parameters == ''){
+		ai_part = '?' + ai_part;
 	}
-	else if( (origin_part.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + custom_name_part.length + chatter_part.length + custom_description_part.length + system_prompt_part.length + second_prompt_part.length + cache_type_k_part.length + temperature_part.length + context_part.length) < 2000){
-		console.error("Cannot create full share link (1)");
-		share_link = origin_part + ai_part + prompt_part + config_part + webllm_id_part + cache_type_k_part + temperature_part + context_part + chatter_part + system_prompt_part + second_prompt_part;
+	else{
+		ai_part = '&' + ai_part;
+		if(!additional_parameters.startsWith('?')){
+			if(additional_parameters.startsWith('&')){
+				additional_parameters = additional_parameters.substr(1);
+			}
+			additional_parameters = '?' + additional_parameters;
+		}
+		//console.log("create_share_prompt_link: additional_parameters: ", additional_parameters);
 	}
-	else if( (origin_part.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + custom_name_part.length + chatter_part.length + custom_description_part.length + system_prompt_part.length + cache_type_k_part.length + temperature_part.length + context_part.length) < 2000){
-		console.error("Cannot create full share link (2)");
-		share_link = origin_part + ai_part + prompt_part + config_part + webllm_id_part + cache_type_k_part + temperature_part + context_part + chatter_part + system_prompt_part;
+	
+	if( (origin_part.length + additional_parameters.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + custom_name_part.length + custom_description_part.length + system_prompt_part.length + second_prompt_part.length + cache_type_k_part.length + seed_part.length + temperature_part.length + context_part.length + chatter_part.length + custom_name_part.length + custom_description_part.length + emoji_part.length + emoji_bg_part.length) < 2000){
+		share_link = origin_part + additional_parameters + ai_part + prompt_part + config_part + webllm_id_part + cache_type_k_part + seed_part + temperature_part + context_part + system_prompt_part + second_prompt_part + chatter_part + custom_name_part + emoji_part + emoji_bg_part + custom_description_part;
 	}
-	else if( (origin_part.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + system_prompt_part.length + custom_name_part.length + custom_description_part.length ) < 2000){
-		console.error("Cannot create full share link (3)");
-		share_link = origin_part + ai_part + prompt_part + config_part + webllm_id_part + custom_name_part + custom_description_part + system_prompt_part;
+	else if( (origin_part.length + additional_parameters.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + custom_name_part.length + chatter_part.length + custom_description_part.length + system_prompt_part.length + second_prompt_part.length + cache_type_k_part.length + seed_part.length + temperature_part.length + context_part.length) < 2000){
+		console.error("create_share_prompt_link: Cannot create full share link (1)");
+		share_link = origin_part + additional_parameters + ai_part + prompt_part + config_part + webllm_id_part + cache_type_k_part + seed_part + temperature_part + context_part + chatter_part + system_prompt_part + second_prompt_part;
 	}
-	else if( (origin_part.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length) < 2000){
-		console.error("Cannot create full share link (4)");
-		share_link = origin_part + ai_part + prompt_part + config_part + webllm_id_part;
+	else if( (origin_part.length + additional_parameters.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + custom_name_part.length + chatter_part.length + custom_description_part.length + system_prompt_part.length + cache_type_k_part.length + seed_part.length + temperature_part.length + context_part.length) < 2000){
+		console.error("create_share_prompt_link: Cannot create full share link (2)");
+		share_link = origin_part + additional_parameters + ai_part + prompt_part + config_part + webllm_id_part + cache_type_k_part + seed_part + temperature_part + context_part + chatter_part + system_prompt_part;
+	}
+	else if( (origin_part.length + additional_parameters.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length + system_prompt_part.length + custom_name_part.length + custom_description_part.length ) < 2000){
+		console.error("create_share_prompt_link: Cannot create full share link (3)");
+		share_link = origin_part + additional_parameters + ai_part + prompt_part + config_part + webllm_id_part + custom_name_part + custom_description_part + system_prompt_part;
+	}
+	else if( (origin_part.length + additional_parameters.length + prompt_part.length + ai_part.length + config_part.length + webllm_id_part.length) < 2000){
+		console.error("create_share_prompt_link: Cannot create full share link (4)");
+		share_link = origin_part + additional_parameters + ai_part + prompt_part + config_part + webllm_id_part;
 	}
 	
 	
 	//origin_part + config_part + system_prompt_part + second_prompt_part + prompt_part;
 	//console.log("create_share_prompt_link:  share_link, share_link.length: ", share_link,  share_link.length);
-	
-	let model_info_share_link_el = document.getElementById('model-info-share-clone-link-text');
-	if(model_info_share_link_el){
-		model_info_share_link_el.textContent = share_link;
+	if(additional_parameters){
+		
 	}
 	else{
-		share_prompt_link_el.textContent = share_link;
+		let model_info_share_link_el = document.getElementById('model-info-share-clone-link-text');
+		if(model_info_share_link_el){
+			model_info_share_link_el.textContent = share_link;
+		}
+		else{
+			share_prompt_link_el.textContent = share_link;
+		}
 	}
+	
+	//console.log("create_share_prompt_link: final share_link: ", share_link);
+	
+	//let first_part = share_link.substr(0,share_link.indexOf('?'));
+	const fully_encoded_share_link = encode_url_component(share_link);//share_link.replace(first_part,encode_url_component(first_part));
+	//console.log("fully_encoded_share_link: ", fully_encoded_share_link);
+
+	document.getElementById('twitter-share-prompt-link').href = 'https://x.com/intent/post?text=' + fully_encoded_share_link;
+	document.getElementById('facebook-share-prompt-link').href = 'http://www.facebook.com/sharer.php?u=' + fully_encoded_share_link;
+	document.getElementById('linkedin-share-prompt-link').href = 'https://www.linkedin.com/shareArticle?mini=true&amp;url=' + fully_encoded_share_link;
+	document.getElementById('reddit-share-prompt-link').href = 'http://www.reddit.com/submit?url=' + fully_encoded_share_link + '&title=www.papeg.ai';
+	
+	
+	
 	
 	return share_link;
 }
 
-
-
-
-
-/*
-function save_custom_ai(){
-	//console.log("in save_custom_ai");
-}
-
-*/
 
 
 
@@ -6036,7 +6135,6 @@ window.load_voice_chat_example = load_voice_chat_example;
 
 
 function load_write_code_example(){
-	//load_meeting_notes_example('js','// This editor has built-in support for linting, prettyfying and running code.\n');
 	load_meeting_notes_example('js','// ' + get_translation('This_editor_has_built-in_support_for_linting_prettyfying_and_running_code') + '.\n\n');
 }
 window.load_write_code_example = load_write_code_example;
@@ -6053,6 +6151,7 @@ async function load_meeting_notes_example(type='txt',document_content='', filena
 	if(typeof document_content != 'string'){
 		document_content = '';
 	}
+	
 	
 	// Scribe SRT
 	if(window.settings.assistant == 'scribe' && type == 'srt'){
@@ -6086,15 +6185,24 @@ async function load_meeting_notes_example(type='txt',document_content='', filena
 
 	if(typeof filename == 'string'){
 		if(filename == ''){
+			
 			if(type == 'srt'){
 				filename = get_translation('Subtitles') + ' ' + date_string + '.srt';
 			}
-			if(type == 'vtt'){
+			else if(type == 'vtt'){
 				filename = get_translation('Subtitles') + ' ' + date_string + '.vtt';
 			}
 			else if(type == 'json'){
 				filename = get_translation('Transcription') + ' ' + date_string + '.json';
 			}
+			
+			else if(type == 'blueprint'){
+				filename = get_translation('Received_blueprint') + ' ' + date_string + '.blueprint';
+			}
+			else if(type == 'txt'){
+				filename = get_translation('Received_document') + ' ' + date_string + '.txt';
+			}
+			
 			else if(type == 'media_transcription'){
 				type = 'notes';
 				filename = get_translation('Transcription') + ' ' + date_string + '.notes';
@@ -6127,8 +6235,11 @@ async function load_meeting_notes_example(type='txt',document_content='', filena
 	
 	filename = sanitize_filename(filename);
 	
-	
 	try{
+		if(typeof create_new_document == 'undefined'){
+			await load_codemirror();
+			await delay(100);
+		}
 		await create_new_document(document_content, filename);
 		await open_file(filename);
 		scroll_to_end();
@@ -6170,7 +6281,7 @@ function load_generate_a_subtitle_example(){
 // A poor man's promise
 // DO_AFTER - Used to enhance functionalities, parses a window.do_after_command
 function do_after(command=null,command_type='any'){
-	//console.log("in do_after.  command,command_type: ", command, command_type);
+	console.log("in do_after.  command,command_type: ", command, command_type);
 	
 	if(typeof command != 'string' && typeof window.do_after_command == 'string'){
 		command = '' + window.do_after_command;
@@ -6179,7 +6290,7 @@ function do_after(command=null,command_type='any'){
 	
 	
 	if(typeof command == 'string'){
-		//console.log("do_after: got command: ", command);
+		console.log("do_after: got command: ", command);
 		
 		if(command_type == 'any' || command_type == 'media'){
 			if(command == 'start_file_transcription'){
@@ -6215,6 +6326,18 @@ function do_after(command=null,command_type='any'){
 				}
 				
 			}
+			else if(command == 'start_proofread_document'){
+				possibly_hide_sidebar();
+				prepare_proofread();
+				window.do_after_command = null;
+			}
+			
+			
+			
+			
+			
+			
+			
 		}
 		
 		if(command_type == 'any' || command_type == 'file'){
@@ -6236,6 +6359,37 @@ function do_after(command=null,command_type='any'){
 					window.do_after_command = null;
 				}
 			}
+			
+			else if(command == 'play_document_after_upload'){
+				//console.log("do_after: calling prepare_translate_document");
+				window.start_play_document();
+				//window.do_after_command = null;
+				if(command_type == 'file'){
+					//console.log("do_after: setting window.do_after_command back to null after handling a file upload related command: ", window.do_after_command);
+					window.do_after_command = null;
+				}
+			}
+			else if(command == 'describe_after_upload'){
+				setTimeout(() => {
+					let describe_button_el = document.getElementById('overlay-describe-file-button');
+					if(describe_button_el){
+						describe_button_el.click();
+					}
+				},5000);
+				possibly_hide_sidebar();
+				window.do_after_command = null;
+			}
+			else if(command == 'scan_after_upload'){
+				setTimeout(() => {
+					let scan_button_el = document.getElementById('overlay-scan-file-button');
+					if(scan_button_el){
+						scan_button_el.click();
+					}
+				},5000);
+				possibly_hide_sidebar();
+				window.do_after_command = null;
+			}
+			
 			
 			
 		}
@@ -6285,9 +6439,8 @@ function load_live_camera_translation_example(){
 	window.add_script('./camera_module.js',true) // add it as a module
 	.then((value) => {
 		//console.log("load_live_camera_translation_example: camera module loaded? ", value, ", typeof window.start_camera: ", typeof window.start_camera);
-		const start_camera_promise = window.start_camera();
 		//console.log("typeof start_camera_promise: ", start_camera_promise);
-		return start_camera_promise;
+		return window.start_camera();
 	})
 	.then((value) => {
 		//console.log("load_live_camera_translation_example: camera started? ", value);
@@ -6299,8 +6452,6 @@ function load_live_camera_translation_example(){
 		setTimeout(() => {
 			window.do_continuous_image_to_text();
 		},100);
-		
-		
 	})
 	.catch((err) => {
 		console.error("load_live_camera_translation_example: caught error loading camera_module or image_to_text module script: ", err);
@@ -6353,17 +6504,30 @@ function load_live_image_to_text_example(){
 	// not saving this as a setting
 	
 	
+
+	
+	
 	window.add_script('./camera_module.js',true) // add it as a module
-	.then(() => {
+	.then((value) => {
+		//console.log("load_live_image_to_text_example: camera module loaded? ", value, ", typeof window.start_camera: ", typeof window.start_camera);
 		return window.start_camera();
 	})
-	.then(() => {
+	.then((value) => {
+		//console.log("load_live_image_to_text_example: camera started? ", value);
 		return window.add_script('./image_to_text_module.js',true);
 	})
 	.then(() => {
 		document.body.classList.add('doing-image-to-text');
-		window.do_continuous_image_to_text();
-		
+		setTimeout(() => {
+			//console.log("load_live_image_to_text_example: calling do_continuous_image_to_text");
+			if(typeof window.do_continuous_image_to_text == 'function'){
+				window.do_continuous_image_to_text();
+			}
+			else{
+				console.error("window.do_continuous_image_to_text was still missing");
+			}
+			
+		},100);
 	})
 	.catch((err) => {
 		console.error("load_live_image_to_text_example: caught error loading camera_module or image_to_text module script: ", err);
@@ -6470,9 +6634,12 @@ function update_rewrite_results_indicator(){
 
 
 function handle_download_complete(){
-	//console.log("in handle_download_complete")
-	show_models_info(false); // updates the user disk space number in the settings menu
-	document.body.classList.remove('busy-downloading');
+	//console.log("in handle_download_complete");
+	setTimeout(() => {
+		show_models_info(false);
+	},2000);
+	 // updates the user disk space number in the settings menu
+	remove_body_class('busy-downloading');
 }
 window.handle_download_complete = handle_download_complete;
 
@@ -6480,7 +6647,10 @@ window.handle_download_complete = handle_download_complete;
 
 // cleanup dead task cleanup_task
 function clean_up_dead_task(task=null, new_state='failed'){
-	//console.log("in clean_up_dead_task. task,new_state: ", task,new_state);
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("dev: in clean_up_dead_task. task,new_state: ", task,new_state);
+	}
+	
 	if(typeof new_state != 'string'){
 		new_state = 'failed';
 	}
@@ -6504,8 +6674,10 @@ function clean_up_dead_task(task=null, new_state='failed'){
 	}
 	//set_task_state(task,new_state);
 	//handle_completed_task(task,false,{'state':'failed'});
+	if(message_downloads_container_el.innerHTML != ''){
+		message_downloads_container_el.innerHTML = '';
+	}
 	
-	message_downloads_container_el.innerHTML = '';
 	
 	document.body.classList.remove('waiting-for-response');
 	document.body.classList.remove('working-on-doc');
@@ -6516,7 +6688,10 @@ function clean_up_dead_task(task=null, new_state='failed'){
 	document.body.classList.remove('doing-translation');
 	document.body.classList.remove('doing-continue');
 	
-	remove_highlight_selection();
+	if(typeof remove_highlight_selection == 'function'){
+		remove_highlight_selection();
+	}
+	
 	
 }
 window.clean_up_dead_task = clean_up_dead_task;
@@ -6526,7 +6701,8 @@ window.clean_up_dead_task = clean_up_dead_task;
 
 function update_interrupt_button_icon(task=null){
 	//console.log("in update_interrupt_button_icon. window.currently_running_llm, task: ", window.currently_running_llm, task);
-	if(typeof window.currently_running_llm == 'string' || window.idle){
+	
+	if(typeof window.currently_running_llm == 'string' || window.idle || (task != null && typeof task.assistant == 'string')){
 		
 		let icon_name = 'developer';
 		if(typeof window.currently_running_llm == 'string' && !window.currently_running_llm.startsWith('custom_saved')){
@@ -6536,14 +6712,17 @@ function update_interrupt_button_icon(task=null){
 			icon_name = task.assistant;
 		}
 		
-		
 		// stop_assistant_icon_button_el
-		if(icon_name != window.settings.assistant && icon_name != 'developer'){
-			//console.log("currently running AI is different than the one being viewed.  window.currently_running_llm vs window.settings.assistant: ", window.currently_running_llm, window.settings.assistant);
-			document.body.classList.add('other-ai-running');
+		if(icon_name != window.settings.assistant){ //  && icon_name != 'developer'
+			//console.log("currently running AI is different than the one being viewed.  window.currently_running_lflm vs window.settings.assistant: ", window.currently_running_llm, window.settings.assistant);
+			if(!document.body.classList.contains('other-ai-running')){
+				document.body.classList.add('other-ai-running');
+			}
 		}
 		else{
-			document.body.classList.remove('other-ai-running');
+			if(document.body.classList.contains('other-ai-running')){
+				document.body.classList.remove('other-ai-running');
+			}
 			//console.log("currently running AI is the same as the one being viewed: ", window.currently_running_llm);
 		}
 		
@@ -6565,8 +6744,11 @@ function update_interrupt_button_icon(task=null){
 		
 	}
 	else{
-		console.error("update_interrupt_button_icon: window.currently_running_llm was not a string (null)");
-		document.body.classList.remove('other-ai-running');
+		//console.error("update_interrupt_button_icon: window.currently_running_llm was not a string (null)");
+		if(document.body.classList.contains('other-ai-running')){
+			document.body.classList.remove('other-ai-running');
+		}
+		
 	}
 }
 window.update_interrupt_button_icon = update_interrupt_button_icon;
@@ -6824,173 +7006,159 @@ function update_scribe_clock(){
 
 
 
-
-//window.pip_header_canvas_context = window.pip_header_canvas.getContext("2d");
-
-window.pip_video = document.createElement("video");
-
-// Picture in Picture
-window.pip_canvas = document.createElement("canvas");
-window.pip_canvas_context = window.pip_canvas.getContext("2d");
-window.pip_header_canvas = document.createElement("canvas");
-window.pip_canvas.width = 480;
-window.pip_canvas.height = 640;
-window.pip_header_canvas.width = 480;
-window.pip_header_canvas.height = 50;
-//async function load_pip_image(url) {
-//  return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
-//}
-
-const pip_button_el = document.getElementById('do-pip-button');
-pip_button_el.addEventListener('click', async (event) => {
-	//console.log("clicked on do-pip-button");
-	event.preventDefault();
-	event.stopPropagation();
-	window.pip_started = true;
+window.place_generated_image_in_bubble = function(e_data){
+	//console.log("place_generated_image_in_bubble:  e_data: ", e_data);
 	
-	
+	if(typeof e_data.task.index == 'number' && typeof e_data.blob != 'undefined' && typeof e_data.task.assistant == 'string'){
+		const bubble_id = "#chat-message-task-" + e_data.task.assistant + "-" + e_data.task.assistant + e_data.task.index;
+		let task_output_el = document.querySelector(bubble_id);
 
-	
-	window.pip_canvas_context.fillStyle = "white";
-	window.pip_canvas_context.font = "bold 16px Arial";
-	//window.pip_canvas_context.fillText("Zibri", (window.pip_canvas.width / 2) - 17, (window.pip_canvas.height / 2) + 8);
-
-	var img1 = new Image();
-
-    //drawing of the test image - img1
-    img1.onload = function () {
-        //draw background image
-		const pip_header_canvas_context = window.pip_header_canvas.getContext("2d");
-		pip_header_canvas_context.drawImage(img1, 0, 0);
-        //draw a box over the top
-        //ctx.fillStyle = "rgba(200, 0, 0, 0.5)";
-        //ctx.fillRect(0, 0, 500, 500);
-		write_on_pip_canvas(window.get_translation('AI_responses_will_be_shown_here'));
-		window.pip_video.srcObject = window.pip_canvas.captureStream(0);
-    };
-
-    img1.src = './images/pip_header.png';
-	
-	
-	window.pip_video.addEventListener("canplaythrough", () => {
-		window.pip_video.play();
-		window.pip_video.requestPictureInPicture();
-	});
-	
-	window.pip_video.play();
-	
-});
-
-
-async function write_on_pip_canvas(text=null){
-	
-	if(window.pip_started){
-		await window.add_script('./js/canvasTxt.js');
-		// test
-		
-		if(window.canvasTxt && typeof text == 'string'){
-	   		//console.log("write_on_pip_canvas: writing");
-	   		const { drawText, getTextHeight, splitText } = window.canvasTxt; // https://github.com/geongeorge/Canvas-Txt/
-		
-	   		window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
-		
-		
-		
-		
-	   		//window.pip_canvas_context.fillStyle = "white";
-	   		//window.pip_canvas_context.font = "bold 16px Arial";
-		
-	   		if(text.length < 500){
+		if(task_output_el == null && typeof e_data.task.prompt == 'string'){
 			
-	   			window.pip_canvas_context.drawImage(window.pip_header_canvas, 5, 5);
-			
-	   			const { height } = drawText(window.pip_canvas_context, text, {
-	   				x: 20,
-	   				y: 70,
-	   				width: (window.pip_canvas.width - 40),
-	   				height: (window.pip_canvas.height - 90),
-	   				fontSize: 24,
-	   				align:'left',
-	   				vAlign:'top',
-	   				lineHeight:35,
-	   				debug:false,
-	   			});
-		
-			
-			
-	   			//console.log(`write_on_canvas: total height = ${height}`);
-		
-	   			if(height < window.pip_canvas.height - 90){
-	   				window.pip_video.srcObject = window.pip_canvas.captureStream(0);
-	   				return
-	   			}
-	   			else{
-	   				window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
-	   			}
-	   		}
-		
-		
-	   		drawText(window.pip_canvas_context, text, {
-	   			x: 20,
-	   			y: 20,
-	   			width: (window.pip_canvas.width - 40),
-	   			height: (window.pip_canvas.height - 40),
-	   			fontSize: 24,
-	   			align:'left',
-	   			vAlign:'bottom',
-	   			lineHeight:35,
-	   			debug:false,
-	   		});
-		
-		
-	   		window.pip_video.srcObject = window.pip_canvas.captureStream(0);
-		
+			console.warn("adding missing text_to_image chat output bubble"); // for blueprints
+			add_chat_message(e_data.task.assistant,e_data.task.assistant,e_data.task.prompt,null,'<div class="spinner"></div>',e_data.task.index);
+			task_output_el = document.querySelector(bubble_id);
 		}
 		
-
+		if(task_output_el){
+			//console.log("found chat bubble text_to_image task output element");
 			
+			task_output_el.innerHTML = '';
+	
+			// image wrapper
+			let generated_image_container_el = document.createElement('div');
+			generated_image_container_el.classList.add('generated-image-container');
+	
+			// image
+			let generated_image_el = document.createElement('img');
+			const image_blob_url = window.URL.createObjectURL(e_data.blob);
+			generated_image_el.src = window.URL.createObjectURL(e_data.blob);
+			generated_image_el.classList.add('generated-image');
+			generated_image_container_el.appendChild(generated_image_el);
+	
+			// buttons wrapper
+			let generated_image_buttons_container_el = document.createElement('div');
+			generated_image_buttons_container_el.classList.add('generated-image-buttons-container');
+	
+			// Download generated image button
+			let download_generated_image_button_el = document.createElement('div');
+			download_generated_image_button_el.classList.add('generated-image-button');
+			download_generated_image_button_el.classList.add('download-generated-image-button');
+			download_generated_image_button_el.innerHTML = '<span class="unicode-icon">⤓<span>';
+			generated_image_buttons_container_el.appendChild(download_generated_image_button_el);
+			download_generated_image_button_el.addEventListener('click', (event) => {
+				//console.log("downloading generated image");
+		
+				const a = document.createElement("a");
+				a.href = image_blob_url;
+				let download_filename = e_data.task.prompt;
+				if(download_filename.length > 80){
+					download_filename = download_filename.substr(0,80);
+				}
+				//console.log("download_filename: ", download_filename);
+				a.download = download_filename + ".png";
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+		
+			});
+	
+			// Save generated image button
+			let save_generated_image_button_el = document.createElement('div');
+			save_generated_image_button_el.classList.add('generated-image-button');
+			save_generated_image_button_el.classList.add('save-generated-image-button');
+			save_generated_image_button_el.innerHTML = '<span class="unicode-icon">💾</span>';
+			save_generated_image_button_el.addEventListener('click', (event) => {
+				//console.log("saving generated image to current folder");
+		
+				let save_filename = e_data.task.prompt;
+				if(save_filename.length > 62){
+					save_filename = save_filename.substr(0,62);
+				}
+				let final_filename = save_filename + '-' + makeid(4) + '.png';
+				//console.log("final_filename: ", final_filename);
+				//console.log("blob to save: ", image_blob_url);
+				if(valid_new_name(final_filename)){
+					//console.log("new filename is valid");
+				}
+				else{
+					//console.log("new filename is invalid, attempting to add random string");
+					final_filename = save_filename + '-' + window.makeid(4) + '.png';
+				}
+				final_filename = window.sanitize_filename(final_filename);
+				if(valid_new_name(final_filename)){
+					//console.log("calling save_blob with filename: ", final_filename);
+					window.save_blob(e_data.blob, final_filename);
+					window.show_files_tab(); // only shows it if the sidebar is already open
+			
+				}
+				else{
+					console.error("could not create a valid filename for the generated image: ", final_filename);
+					//flash_message(get_translation("invalid_file_name"),3000,'fail');
+				}
+		
+			});
+	
+			generated_image_buttons_container_el.appendChild(save_generated_image_button_el);
+	
+			generated_image_container_el.appendChild(generated_image_buttons_container_el);
+	
+			task_output_el.appendChild(generated_image_container_el);
+	
+			
+	
+		}
+		else{
+			console.error("Could not find chat bubble to place generated image into: #chat-message-task-text_to_image-text_to_image" + e_data.task.index);
+		}
+		
+	
+		if(e_data.status == 'final_image'){
+			
+			handle_completed_task(e_data.task,true);
+			window.text_to_image_worker_busy = false;
+			
+			if(typeof e_data.task != 'undefined' && e_data.task != null && typeof e_data.task.origin == 'string' && e_data.task.origin == 'play_document' && document.body.classList.contains('fairytale')){
+				
+				//console.log("fairytale! special case. placing generated image in playground overlay");
+				
+			   const playground_overlay = document.getElementById('playground-overlay');
+			   if(playground_overlay){
+				   var reader = new FileReader();
+				   reader.readAsDataURL(e_data.blob); 
+				   reader.onloadend = function() {
+					   
+					   const existing_image = playground_overlay.querySelector('img');
+					   if(existing_image){
+						   existing_image.classList.add('fade-out-slow');
+					   }
+					   setTimeout(() => {
+						   playground_overlay.innerHTML = '<img src="' + reader.result + '" class="fade-in-slow"/>'; 
+						   //URL.revokeObjectURL(reader.result);
+					   },2000);
+				   
+					   
+				   }
+			   }
+				   
+				
+			}
+			
+		}
 	}
-	 
 	
 }
+
+
+async function write_on_pip_canvas(text){
+	await add_script('./pip_module.js');
+	if(typeof window.really_write_on_pip_canvas == 'function'){
+		window.really_write_on_pip_canvas(text);
+	}
+}
+
 window.write_on_pip_canvas = write_on_pip_canvas;
 
-
-
-function image_to_pip_canvas(image_blob){
-	//console.log("in image_to_pip_canvas.  window.pip_started,typeof image_blob: ", window.pip_started, typeof image_blob);
-	if(window.pip_started && typeof image_blob != 'undefined'){
-		window.pip_canvas_context.clearRect(0, 0, window.pip_canvas.width, window.pip_canvas.height);
-		window.pip_canvas_context.drawImage(window.pip_header_canvas, 5, 5);
-		//console.log("image_to_pip_canvas: creating image");
-		var img1 = new Image();
-		img1.onload = function(event) {
-			//console.log("image_to_pip_canvas: blob succesfully loaded into image");
-			if(typeof img1.width == 'number' && img1.width > 0){
-				const ratio = window.pip_canvas.width / img1.width;
-				//console.log("image_to_pip_canvas: ratio: ", ratio);
-				const centerShift_y = ( window.pip_canvas.height - img1.height*ratio ) / 2;  
-				var centerShift_x = ( window.pip_canvas.width - img1.width*ratio ) / 2;
-				//console.log("image_to_pip_canvas: centerShift_x: ", centerShift_x);
-				//console.log("image_to_pip_canvas: centerShift_y: ", centerShift_y);
-				window.pip_canvas_context.drawImage(img1, 0,0, img1.width, img1.height, centerShift_x, centerShift_y, img1.width*ratio, img1.height*ratio); 
-				window.pip_video.srcObject = window.pip_canvas.captureStream(0);
-			}
-			else{
-				console.error("image_to_pip_canvas: img did not have valid width: ", typeof img1.width, img1.width);
-			}
-			
-		    //ctx.drawImage(img1, 0, 70);
-			URL.revokeObjectURL(event.target.src);
-		}
-		img1.src = URL.createObjectURL(image_blob);
-	}
-	else{
-		console.warn("image_to_pip_canvas: pip not started, or invalid image blob provided.  window.pip_started,typeof image_blob: ", window.pip_started, typeof image_blob);
-	}
-	
-}
-window.image_to_pip_canvas = image_to_pip_canvas;
 
 
 
@@ -7394,11 +7562,10 @@ function place_cursor_after_element(selected_paragraph=null){
 
 
 function check_if_paragraph_selected(){
-	//console.log("in check_if_paragraph_selected (blocked)");
+	console.warn("in check_if_paragraph_selected (blocked)");
 	return
 	const cm_content_el = document.querySelector('.cm-content');
 	if(cm_content_el){
-		
 		
 		for (var i = 0; i < cm_content_el.children.length; i++) {
 			if(check_if_element_visible(cm_content_el.children[i])){
@@ -7431,6 +7598,105 @@ window.check_if_paragraph_selected = check_if_paragraph_selected;
 
 
 
-if(vex){
-	vex.defaultOptions.className = 'vex-theme-top'
+
+
+function create_insert_into_doc_buttons(message){
+	//console.log("in create_insert_into_doc_buttons. message: ", message);
+	
+	let doc_buttons_container_el = document.createElement('div');
+	doc_buttons_container_el.classList.add('bubble-buttons-container');
+	
+	if(typeof message != 'string'){
+		return doc_buttons_container_el;
+	}
+	
+	// Copy to clipboard
+	
+	let copy_to_clipboard_button_el = document.createElement('div');
+	copy_to_clipboard_button_el.classList.add('bubble-copy-to-clipboard-button');
+	copy_to_clipboard_button_el.classList.add('bubble-doc-button');
+	copy_to_clipboard_button_el.innerHTML = '<div class="bubble-copy-to-clipboard-button-icon-wrapper center" title="' + get_translation('Copy') + '"><img class="bubble-copy-to-clipboard-button-icon" src="images/copy_to_clipboard.svg" width="12" height="12" alt="' + get_translation('Copy') + '"></div>';
+	copy_to_clipboard_button_el.addEventListener('click',(event) => {
+		//console.log("add_chat_message: clicked on insert into doc button");
+		copy_to_clipboard_button_el.classList.add('opacity0');
+		copy_to_clipboard_button_el.classList.add('no-click-events');
+		setTimeout(() => {
+			copy_to_clipboard_button_el.classList.remove('opacity0');
+			copy_to_clipboard_button_el.classList.remove('no-click-events');
+		},1000);
+		
+		navigator.clipboard.writeText(message);
+		flash_message(get_translation("Copied_text_to_clipboard"));
+	});
+	doc_buttons_container_el.appendChild(copy_to_clipboard_button_el);
+	
+	
+	// Insert into document
+	
+	if(message.length > 150 || message.split('\n').length > 3){
+		let insert_into_doc_button_el = document.createElement('div');
+		insert_into_doc_button_el.classList.add('bubble-insert-into-doc-button');
+		insert_into_doc_button_el.classList.add('bubble-doc-button');
+		insert_into_doc_button_el.setAttribute('title',get_translation('Insert'));
+		insert_into_doc_button_el.textContent = '📄';
+		insert_into_doc_button_el.addEventListener('click', async (event) => {
+			//console.log("add_chat_message: clicked on insert into doc button");
+			insert_into_doc_button_el.classList.add('opacity0');
+			insert_into_doc_button_el.classList.add('no-click-events');
+			setTimeout(() => {
+				insert_into_doc_button_el.classList.remove('opacity0');
+				insert_into_doc_button_el.classList.remove('no-click-events');
+			},4000);
+			
+			if(typeof insert_into_document != 'function'){
+				await load_codemirror();
+			}
+			
+			if(typeof insert_into_document == 'function'){
+				if(window.doc_selection){
+					insert_into_document({'file':window.settings.docs.open,'selection':window.doc_selection},'\n' + message + '\n');
+				}
+				else{
+					console.error("insert_into_document_button -> cannot insert, no valid window.doc_selection: ", window.doc_selection)
+				}
+			}
+		
+		});
+		doc_buttons_container_el.appendChild(insert_into_doc_button_el);
+	
+	
+		// Create new document
+	
+		let create_new_doc_button_el = document.createElement('div');
+		create_new_doc_button_el.classList.add('bubble-new-doc-button');
+		create_new_doc_button_el.classList.add('bubble-doc-button');
+		create_new_doc_button_el.classList.add('add-icon');
+		create_new_doc_button_el.setAttribute('title',get_translation('New_document'));
+		create_new_doc_button_el.textContent = '📄';
+	
+		create_new_doc_button_el.addEventListener('click', async (event) => {
+			//console.log("add_chat_message: clicked on create new doc button");
+			create_new_doc_button_el.classList.add('opacity0');
+			create_new_doc_button_el.classList.add('no-click-events');
+			setTimeout(() => {
+				create_new_doc_button_el.classList.remove('opacity0');
+				create_new_doc_button_el.classList.remove('no-click-events');
+			},4000);
+			
+			if(typeof create_new_document != 'function'){
+				await load_codemirror();
+			}
+			
+			if(typeof create_new_document == 'function'){
+				window.show_files_tab(); // only shows it if the sidebar is already open
+				create_new_document(message);
+			}
+		});
+		doc_buttons_container_el.appendChild(create_new_doc_button_el);
+	}
+	
+	
+	return doc_buttons_container_el;
 }
+window.create_insert_into_doc_buttons = create_insert_into_doc_buttons;
+

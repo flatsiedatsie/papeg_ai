@@ -6,9 +6,11 @@
 	<meta name="viewport" content="viewport-fit=cover,initial-scale=1, maximum-scale=1" />-->
 	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,interactive-widget=resizes-content">
 
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light dark">
     <title data-i18n="page_title">Papeg.ai</title>
-	<meta http-equiv="x-dns-prefetch-control" content="off" />
+	<!--
+	<meta http-equiv="x-dns-prefetch-control" content="off">
+	-->
 	<meta name="referrer" content="no-referrer"> <!-- Protecting privacy //-->
     <meta name="keywords" content="AI, chat, privacy, browser, LLM, research, writing, summarize, proofread, translation, story, characters, tools">
 	<meta name="description" content="Chat and write with AI, with 100% privacy">
@@ -41,15 +43,13 @@
 		// For Fleur, Levien, Dirk, Linde and Denise
 
 		// THE CODE IS VERY MESSY. It's an experiment that became a prototype that became a project.. #cargocult
-		
+		// If you'd like to inspect the code, you can also find it on Github: https://www.github.com/flatsiedatsie/papeg_ai
 		
 		
 		
 		
 		// SETTINGS
 
-		var tvmjsGlobalEnv = tvmjsGlobalEnv || {};
-		
 		window.testing = false;
 		window.timers = [];
 		window.timer_index = 0;
@@ -57,10 +57,17 @@
 		window.cached_urls = [];
 		window.first_assistant = 'danube_3_500m';
 
+		window.task_counter = 0;
+		//window.prompt_responded_counter = 0;
+		window.task_queue = [];
+		window.last_chat_response = null;
+		window.current_task = null; // what the selected AI is working on // Deprecated in favour of:
+		window.current_tasks = {}; // what the selected AI is working on
+
 		window.settings = {
 			'for':'papeg.ai',
 			'version':null, // will be set by the service worker
-	
+
 			// Assistants
 			'assistant':'developer',
 			'assistants':{
@@ -77,8 +84,12 @@
 				'fast_phi3_mini':{'selected':false},
 				'phi3_mini':{'selected':false},
 		
+				'fast_llama3_1b':{'selected':true},
+				'llama3_1b':{'selected':true},
+				
 				'fast_llama3_3b':{'selected':true},
 				'llama3_3b':{'selected':true},
+				
 				
 				'fast_gemma_2_2b_it':{'selected':false},
 				'gemma_2_2b_it':{'selected':false},
@@ -108,6 +119,7 @@
 			'brightness':null, // dark or light theme
 			'chat_shrink':true,
 			'received_an_ai':false,
+			'show_notifications':false,
 			'maximum_recent_files':5,
 			'docs':{
 				'open':null,
@@ -356,6 +368,14 @@
 			position:relative;
 		}
 		
+		.hide-if-loading{
+			transition: opacity linear .3s;
+		}
+		body.loading .hide-if-loading{
+			opacity:0.1;
+			pointer-events:none;
+		}
+		
 		.center{
 			display:flex;
 			align-items:center;
@@ -367,6 +387,8 @@
 		}
 		
 		
+		
+		body.update-available .show-if-update-downloading,
 		body:not(.update-available) .show-if-update-available,
 		body:not(.many-files) .show-if-many-files,
 		body.serverless .hide-if-serverless{
@@ -462,37 +484,38 @@
 		
 	</style>
 	
-	
-	<link rel="stylesheet" href="./css/pico.css" />
-	<link rel="stylesheet" href="./css/chat_style.css" />
-	<link rel="stylesheet" href="./style.css" />
-	
+	<link rel="stylesheet" href="./css/early.css">
+	<link rel="stylesheet" href="./css/chat_style.css">
+	<link rel="stylesheet" href="./css/style.css">
+	<!--
     <link rel="stylesheet" href="./codemirror/codemirror.css">
     <link rel="stylesheet" href="./codemirror/codemirror_dialog.css">
+	
 	<link rel="stylesheet" href="./pcss/context_menu_kali_dark.css">
-    <!--
+    
 	<link rel="stylesheet" href="codemirror/dracula.css">
 	-->
 	
-	
+	<!--
     <script src="vex/js/vex.combined.min.js"></script>
     
-    <link rel="stylesheet" href="vex/css/vex.css" />
-    <link rel="stylesheet" href="vex/css/vex-theme-top.css" />
-	<link rel="stylesheet" href="./pcss/playground.css" />
+    <link rel="stylesheet" href="vex/css/vex.css">
+    <link rel="stylesheet" href="vex/css/vex-theme-top.css">
+	-->
+	<link rel="stylesheet" href="./pcss/playground.css">
 	
-	<link rel="stylesheet" href="./combo.css" />
+	<link rel="stylesheet" href="./css/combo.css">
 
 	
     <style id="css-output"></style>
     
 </head>
-<body id="assistant-developer" class="sidebar-chat busy-restoring-files no-files-in-folder web-gpu intro intro-ai hide-chat-form serverless no-text-ai-loaded unknown-language idle chat-shrink chat-message-form-minimum-height first-run">
+<body id="assistant-developer" class="loading sidebar-chat busy-restoring-files no-files-in-folder web-gpu intro serverless no-text-ai-loaded unknown-language idle chat-shrink chat-message-form-minimum-height first-run">
     <div id="flash-message" style="background-color:green"></div>
-	
+	<img src="images/papegai_logo.svg" alt="Logo" height="50" width="50" style="display:none">
 	<div id="bad-browser" class="fixed-hint" data-i18n="sorry_bad_browser" style="display:none">⚠️ Sorry, your browser (or at least the current version) is not supported</div>
 	
-	<button id="open-sidebar-button"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></button><!--<span class="hamburger-icon hamburger-icon-open">&#8801;</span>-->
+	<button id="open-sidebar-button" class="hide-if-loading"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></button><!--<span class="hamburger-icon hamburger-icon-open">&#8801;</span>-->
 	<div id="content-container">
 		<div id="sidebars">
 			<div id="sidebars-header-wrapper">
@@ -519,7 +542,7 @@
 					</div>
 				</div>
 				
-				<div id="select-assistants-button-wrapper">
+				<div id="select-assistants-button-wrapper" class="hide-if-loading">
 					<div id="create-custom-assistant-button-container">
 						<button id="add-custom-assistant-button" ><span data-i18n="Custom_AI">Custom AI</span></button>
 					</div>
@@ -540,23 +563,20 @@
 					<div id="chat-sidebar" class="chat-sidebar">
 						<div class="contacts">
 				          <div id="contacts-list">
-							  <ul id="generated-contacts-list">
-						            <li class="selected-ai">
+							  <div id="generated-contacts-list">
+								  <div class="selected-ai">
 						              <div class="contact-item">
-						                <img src="images/developer.png" alt="The developer">
-						                <div class="contact">
-						                  <div class="name">Loading</div>
-						                  <div class="message" data-i18n="developer_description">One moment..</div>
-						                </div>
+										  <img src="images/developer.png" alt="The developer">
+										  <div class="contact">
+											  <div class="name">Loading</div>
+											  <div class="message" data-i18n="developer_description">One moment..</div>
+										  </div>
 						              </div>
-						            </li>
-						       </ul>
+								  </div>
+						       </div>
 						  </div>
 				        </div>
-						
-						
 					</div>
-					
 				</div>
 			
 			
@@ -588,7 +608,7 @@
 					                Save all
 					            </div>
 					            <div id="download-all-files-button" class="save button center show-if-many-files file-manager-button">
-					                <img src="images/download.svg" class="svg-icon" width="20" height="20" alt="Download" title="Download"> <span data-i18n="Download_all">Download all</span>
+					                <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/download.svg" class="svg-icon" width="20" height="20" alt="Download" title="Download"> <span data-i18n="Download_all">Download all</span>
 					            </div>
 								<div></div>
 				            </div>
@@ -601,7 +621,7 @@
 					            </div>
 								-->
 					            <div id="delete-selected-files-button" class="save button center show-if-many-files file-manager-button">
-					                <img src="images/delete.svg" class="svg-icon" width="20" height="20" alt="Delete selected" title="Delete selected"> <span data-i18n="Delete_selected">Delete selected</span>
+					                <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/delete.svg" class="svg-icon" width="20" height="20" alt="Delete selected" title="Delete selected"> <span data-i18n="Delete_selected">Delete selected</span>
 					            </div>
 								<div></div>
 				            </div>
@@ -646,7 +666,7 @@
 					            </div>
 								
 					            <div id="start-ocr-button" class="new button add-icon"  title="Start the camera to scan text">
-									<img class="" width="26" height="26" alt="Camera icon" src="images/camera.svg">
+									<img class="" width="26" height="26" alt="Camera icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/camera.svg">
 					            </div>
 								
 								<div id="sidebar-upload-container">
@@ -658,7 +678,7 @@
 							</div>
 				            
 							<div id="sidebar-right-container" class="center">
-								<div id="start-rag-search-button" class="start-search-button-container center"><div id="start-rag-search-inner-button" class="center"><img class="submit-prompt-button-image" src="images/submit_rag_search.png" alt="submit"></div></div>
+								<div id="start-rag-search-button" class="start-search-button-container center"><div id="start-rag-search-inner-button" class="center"><img class="submit-prompt-button-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/submit_rag_search.png" alt="submit"></div></div>
 							</div>
 							
 					</div>
@@ -695,7 +715,7 @@
 									<select id="speaker-voice-select" class="settings-dropdown"><option value="default" data-i18n="Automatic" selected>Automatic</option><option value="basic">📢 Basic</option><option value="US female 1">🇺🇸 US female 1</option><option value="US female 2">🇺🇸 US female 2</option><option value="US male 1">🇺🇸 US male 1</option><option value="US male 2">🇺🇸 US male 2</option><option value="Canadian male">🇨🇦 Canadian male</option><option value="Scottish male">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scottish male</option><option value="Indian male">🇮🇳 Indian male</option></select>
 								</li>
 								<li id="interrupt-speaking-select-container" class="flex-space-between flex-align-center settings-select-item">
-									<span><img class="invert-if-light" src="./images/microphone_icon.svg" width="12" height="12"> <span data-i18n='Interrupt_speaking'>Interrupt speaking</span></span>
+									<span><img class="invert-if-light" src="images/microphone_icon.svg" width="12" height="12" alt="🎤"> <span data-i18n='Interrupt_speaking'>Interrupt speaking</span></span>
 									<select id="interrupt-speaking-select" class="settings-dropdown"><option value="Auto" data-i18n="Automatic" selected>Auto</option><option data-i18n="Yes" value="Yes">Yes</option><option value="No" data-i18n="No">No</option></select>
 								</li>
 								
@@ -706,7 +726,7 @@
 								
 								<li id="settings-brightnes-select-container" class="flex-space-between flex-align-center settings-select-item">
 									<span data-i18n="Brightness">Brightness</span>
-									<select id="settings-brightness-select" class="settings-dropdown"><option value="default" data-i18n="Automatic" selected>Automatic</option><option value="dark" data-i18n='Dark'>Dark</option><option value="light" data-i18n='Light'>Light</option></select>
+									<select id="settings-brightness-select" class="settings-dropdown"><option value="default" data-i18n="Automatic" selected>Automatic</option><option value="dark" data-i18n='Dark'>Dark</option><option value="light" data-i18n="Light">Light</option></select>
 								</li>
 								<li id="settings-disk-space-select-container" class="flex-space-between flex-align-center">
 									<span data-i18n="Disk_space">Disk space</span>
@@ -719,7 +739,15 @@
 									<button id="save-settings-backup-button" data-i18n="Save">Save</button>
 								</li>
 								
-								
+								<li id="enable-notifications-container" class="flex-space-between flex-align-center">
+									<span data-i18n="Notifications">Notifications</span>
+									<!--<button id="enable-notifications-button" class="always-blue-button" data-i18n="Enable">Enable</button>-->
+									<div id="enable-notifications-checkbox-container"><input id="enable-notifications-checkbox" class="toggle" type="checkbox"></div>
+								</li>
+								<li id="settings-update-progress-container" class="show-if-update-downloading">
+									<span class="flex-between"><span data-i18n="Downloading_update">Downloading update</span> <span id="update-download-version"></span></span>
+									<progress id="update-download-progress">
+								</li>
 								<li id="settings-update-container" class="flex-space-between flex-align-center show-if-update-available">
 									<span data-i18n="Update">New version</span>
 									<button id="apply-update-button" class="always-blue-button" data-i18n="Update">Update</button>
@@ -799,7 +827,7 @@
 				<div id="message-header-container">
 			        <div class="message-header">
   			          	<div id="back-button-container">
-							<img id="back-button" src="images/left_arrow.svg" alt="Go back button"/>
+							<img id="back-button" src="images/left_arrow.svg" alt="⬅️">
 						</div>
 					  	
 						<div id="user-info-wrapper">
@@ -818,9 +846,9 @@
 					
 						<div id="chat-header-actions" class="actions">
 			                <div class="action-item center" id="clear-assistant-button"><span class="unicode-icon">♻️</span></div>
-			                <div class="action-item" id="stop-assistant-button"><div id="stop-assistant-button-slide-wrapper"><div id="stop-assistant-button-assistant-icon-container" class="center"><img id="stop-assistant-button-assistant-icon" class="assistant-icon-img" src="images/developer.png" alt="AI"></div><div id="stop-assistant-button-translator-icon-container" class="center"><img id="stop-assistant-button-translator-icon" class="assistant-icon-img" src="images/translator.png" alt="Translator"></div><div id="stop-assistant-interrupt-button" class="center"><span class="unicode-icon">🛑<span class="unicode-icon-overlay">✋</span></span></div></div></div>
-							<div class="action-item center" id="mobile-back-to-document-button"><img width="25" height="25" alt="documents icon" src="images/document.svg"></div><!-- 🤏 🤫 🤐 -->
-							<div class="action-item center" id="shrink-assistant-button"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></div><!-- 🤏 🤫 🤐 -->
+			                <div class="action-item" id="stop-assistant-button"><div id="stop-assistant-button-slide-wrapper"><div id="stop-assistant-button-assistant-icon-container" class="center"><img id="stop-assistant-button-assistant-icon" class="assistant-icon-img" src="images/developer.png" alt="AI"></div><div id="stop-assistant-button-translator-icon-container" class="center"><img id="stop-assistant-button-translator-icon" class="assistant-icon-img" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/translator.png" alt="Translator"></div><div id="stop-assistant-interrupt-button" class="center"><span class="unicode-icon">🛑<span class="unicode-icon-overlay">✋</span></span></div></div></div>
+							<div class="action-item center" id="mobile-back-to-document-button"><img width="25" height="25" alt="documents icon" src="images/document.svg"></div>
+							<div class="action-item center" id="shrink-assistant-button"><img class="toggle-secion-chevron" src="images/chat_shrink_arrow.svg" width="22" height="22" alt="Close"></div>
 				        </div>
 
 					</div>
@@ -833,7 +861,21 @@
 				
 				<div id="model-info-container"></div>
 		
-				<div id="message-content-container"></div>
+				<div id="message-content-container">
+					<div id="pane-content-developer" class="message-content-wrapper"><div id="pane-content-developer-reverser" class="message-content-reverser"><div id="pane-content-developer-chats" class="message-content"></div></div><div id="pane-content-developer-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-translator" class="message-content-wrapper"><div id="pane-content-translator-reverser" class="message-content-reverser"><div id="pane-content-translator-chats" class="message-content"></div></div><div id="pane-content-translator-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-scribe" class="message-content-wrapper"><div id="pane-content-scribe-reverser" class="message-content-reverser"><div id="pane-content-scribe-chats" class="message-content"></div></div><div id="pane-content-scribe-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-text_to_image" class="message-content-wrapper"><div id="pane-content-text_to_image-reverser" class="message-content-reverser"><div id="pane-content-text_to_image-chats" class="message-content"></div></div><div id="pane-content-text_to_image-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-fast_llama3_1b" class="message-content-wrapper"><div id="pane-content-fast_llama3_1b-reverser" class="message-content-reverser"><div id="pane-content-fast_llama3_1b-chats" class="message-content"></div></div><div id="pane-content-fast_llama3_1b-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-llama3_1b" class="message-content-wrapper"><div id="pane-content-llama3_1b-reverser" class="message-content-reverser"><div id="pane-content-llama3_1b-chats" class="message-content"></div></div><div id="pane-content-llama3_1b-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-fast_llama3_3b" class="message-content-wrapper selected-pane"><div id="pane-content-fast_llama3_3b-reverser" class="message-content-reverser"><div id="pane-content-fast_llama3_3b-chats" class="message-content"></div></div><div id="pane-content-fast_llama3_3b-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-llama3_3b" class="message-content-wrapper"><div id="pane-content-llama3_3b-reverser" class="message-content-reverser"><div id="pane-content-llama3_3b-chats" class="message-content"></div></div><div id="pane-content-llama3_3b-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-fast_mistral" class="message-content-wrapper"><div id="pane-content-fast_mistral-reverser" class="message-content-reverser"><div id="pane-content-fast_mistral-chats" class="message-content"></div></div><div id="pane-content-fast_mistral-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-mistral" class="message-content-wrapper"><div id="pane-content-mistral-reverser" class="message-content-reverser"><div id="pane-content-mistral-chats" class="message-content"></div></div><div id="pane-content-mistral-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-danube_3_500m" class="message-content-wrapper"><div id="pane-content-danube_3_500m-reverser" class="message-content-reverser"><div id="pane-content-danube_3_500m-chats" class="message-content"></div></div><div id="pane-content-danube_3_500m-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-medical6" class="message-content-wrapper"><div id="pane-content-medical6-reverser" class="message-content-reverser"><div id="pane-content-medical6-chats" class="message-content"></div></div><div id="pane-content-medical6-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+					<div id="pane-content-mental6" class="message-content-wrapper"><div id="pane-content-mental6-reverser" class="message-content-reverser"><div id="pane-content-mental6-chats" class="message-content"></div></div><div id="pane-content-mental6-status" class="message-status-container"><div class="message-status1"></div><div class="message-status2"></div></div></div>
+				</div>
 		
 				<div id="message-downloads-container"></div>
 		
@@ -860,13 +902,13 @@
 								</div>
 								<div id="video-buttons">
 									<button id="camera-take-picture-button" onclick="window.take_picture()"><span class="unicode-icon">📸</span><!-- <span id="live-camera-take-picture-hint" class="hide-if-advanced" data-i18n="Take_picture">Take picture</span>--></button>
-									<button id="camera-ocr-scan-button"><span class="img-icon"><img src="images/image_to_text_ocr.png" width="20" height="20" alt="Document scanner icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Scan">Scan</span> <span id="doing-ocr-scan-counter"></span></button>
-									<button id="camera-image_to_text-describe-button"><span class="img-icon"><img src="images/image_to_text.png" width="20" height="20" alt="Describe image icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Describe">Describe</span></button>
+									<button id="camera-ocr-scan-button"><span class="img-icon"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/image_to_text_ocr_thumb.png" width="20" height="20" alt="Document scanner icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Scan">Scan</span> <span id="doing-ocr-scan-counter"></span></button>
+									<button id="camera-image_to_text-describe-button"><span class="img-icon"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/image_to_text_thumb.png" width="20" height="20" alt="Describe image icon"></span><!--<span class="unicode-icon">🧾</span>--> <span data-i18n="Describe">Describe</span></button>
 								</div>
 								
 								<details id="camera-do-ocr-details" class="tools-details">
 									<summary class="summary-button" id="camera-do-ocr-summary-button">
-										<span class="h3" id="camera-ocr-scan-dialog-title"><span class="img-icon"><img src="images/image_to_text_ocr.png" width="20" height="20" alt="Document scanner icon"></span> <span data-i18n="image_to_text_ocr_name">Document scanner</span></span>
+										<span class="h3" id="camera-ocr-scan-dialog-title"><span class="img-icon"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/image_to_text_ocr_thumb.png" width="20" height="20" alt="Document scanner icon"></span> <span data-i18n="image_to_text_ocr_name">Document scanner</span></span>
 									</summary>
 									<div class="details-content">
 										
@@ -901,7 +943,7 @@
 			
 								<details id="camera-image-to-text-details" class="tools-details">
 									<summary role="button" id="camera-image_to_text-summary-button">
-										<span class="h3"  id="camera-image_to_text-scan-dialog-title"><span class="img-icon"><img src="images/image_to_text.png" width="20" height="20" alt="Describe icon"></span> <span data-i18n="image_to_text_name">Image describer</span></span>
+										<span class="h3"  id="camera-image_to_text-scan-dialog-title"><span class="img-icon"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/image_to_text_thumb.png" width="20" height="20" alt="Describe icon"></span> <span data-i18n="image_to_text_name">Image describer</span></span>
 									</summary>
 									<div class="details-content">
 										<div id="live-image_to_text-prompt-container" class="flex-between">
@@ -961,7 +1003,7 @@
 											<textarea id="proofread-prompt" name="proofread-prompt" class="prompt" placeholder=""></textarea>
 											
 											<div id="proofread-auto-detect-language-container" class="checkbox-setting-container">
-												<input id="proofread-auto-detect-language-input" type="checkbox" checked/><label for="proofread-auto-detect-language-input" class="simple-input-label"><span data-i18n="Auto_detect_language">Auto-detect language</span> <span id="proofread-auto-detected-language"></span></label>
+												<input id="proofread-auto-detect-language-input" type="checkbox" checked><label for="proofread-auto-detect-language-input" class="simple-input-label"><span data-i18n="Auto_detect_language">Auto-detect language</span> <span id="proofread-auto-detected-language"></span></label>
 											</div>
 											
 										</div>
@@ -1071,7 +1113,7 @@
 								  		</div>
 										<div></div>
 										<div class="submit-multi-commands-buttons-wrapper">
-											<div id="dialog-rewrite-submit-prompt-lucky-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/lucky_clover.svg" width="50" height="50" alt="Submit"><span data-i18n="I_feel_lucky">I feel lucky</span></div>
+											<div id="dialog-rewrite-submit-prompt-lucky-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/lucky_clover.svg" width="50" height="50" alt="Submit"><span data-i18n="I_feel_lucky">I feel lucky</span></div>
 										</div>
 									</form>
 								</div>
@@ -1099,9 +1141,9 @@
 					<div id="image-to-text-prompt-settings-container">
 						<img id="image-to-text-prompt-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt="current image">
 						<div id="image-to-text-prompt-settings-buttons">
-							<button id="image-to-text-prompt-settings-take-camera-picture-button" class="center"><span class="unicode-icon show-if-hiding-camera-still">📸</span><img class="hide-if-hiding-camera-still" width="26" height="26" alt="camera icon" src="images/camera.svg"></button> <!--<span class="unicode-icon hide-if-hiding-camera-still">📷</span>    onclick="toggle_image_to_text_camera();"-->
+							<button id="image-to-text-prompt-settings-take-camera-picture-button" class="center"><span class="unicode-icon show-if-hiding-camera-still">📸</span><img class="hide-if-hiding-camera-still" width="26" height="26" alt="camera icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/camera.svg"></button> <!--<span class="unicode-icon hide-if-hiding-camera-still">📷</span>    onclick="toggle_image_to_text_camera();"-->
 							<input id="image-to-text-upload-input" type="file" accept="image/*" hidden >
-							<button id="image-to-text-prompt-settings-upload-button" type="button" onclick="document.getElementById('image-to-text-upload-input').click()" class="file-input-label-container"><!--<img id="image-to-text-prompt-settings-upload-button-image" src="images/upload.svg" width="50" height="50" class="svg-icon"> --></button>
+							<button id="image-to-text-prompt-settings-upload-button" type="button" onclick="document.getElementById('image-to-text-upload-input').click()" class="file-input-label-container"></button>
 						</div>
 					</div>
 				</div>
@@ -1113,10 +1155,10 @@
 			        <div class="message-form">
 			        	<div id="message-form-extra-wrapper">
 	  						<div id="message-form-audio-buttons-container">
-								<div id="message-form-audio-buttons-wrapper">
+								<div id="message-form-audio-buttons-wrapper" class="hide-if-loading">
 									
 									<div id="pip-icon-container">
-										<button id="do-pip-button"><img id="do-pip-button-image" height="12" width="15" class="submit-prompt-button-image" src="images/pip_icon.svg" alt="Picture in Picture"></button>
+										<button id="do-pip-button"><img id="do-pip-button-image" height="12" width="15" class="submit-prompt-button-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/pip_icon.svg" alt="Picture in Picture"></button>
 									</div>
 		  	  		            	<div id="microphone-icon-container">
 										<div id="microphone-meta-hint-container">
@@ -1132,7 +1174,7 @@
 		  	  		            	<div id="speaker-icon-container">
 										
 										<div id="speaker-tasks-counter-container" class="tasks-counter-container center"></div>
-										
+										<div id="speaker-icon-tts-busy"></div>
 		  	  		              		<div id="speaker-icon" class="form-item">
 		  	  		              			<div id="speaker-icon-image" class="centered-audio-icon"></div>
 		  	  		              		</div>
@@ -1205,12 +1247,12 @@
 									
 									<div id="prompt-adjustment-toggles">
 										<div id="brevity-toggle-buttons" class="prompt-adjustment-toggles center">
-											<div id="prompt-brevity-disable-button" class="prompt-adjustment-toggle toggle-button-enabled center"><span class="unicode-icon center">🐁</span><!--<img src="images/brevity_enabled.svg" width="50" height="50" alt="Brevity" title="Brevity">--></div>
-											<div id="prompt-brevity-enable-button" class="prompt-adjustment-toggle center"><span class="unicode-icon center">🐁</span><!--<img src="images/markdown_disabled.svg" width="50" height="50" alt="Brevity" title="Brevity">--></div>
+											<div id="prompt-brevity-disable-button" class="prompt-adjustment-toggle toggle-button-enabled center"><span class="unicode-icon center">🐁</span></div>
+											<div id="prompt-brevity-enable-button" class="prompt-adjustment-toggle center"><span class="unicode-icon center">🐁</span></div>
 										</div>
 										<div id="markdown-toggle-buttons" class="prompt-adjustment-toggles center">
-											<div id="prompt-markdown-disable-button" class="prompt-adjustment-toggle toggle-button-enabled center"><img src="images/markdown_enabled.svg" width="50" height="50" alt="Markdown" title="Markdown"></div>
-											<div id="prompt-markdown-enable-button" class="prompt-adjustment-toggle center"><img src="images/markdown_disabled.svg" width="50" height="50" alt="Markdown" title="Markdown"></div>
+											<div id="prompt-markdown-disable-button" class="prompt-adjustment-toggle toggle-button-enabled center"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/markdown_enabled.svg" width="50" height="50" alt="Markdown" title="Markdown"></div>
+											<div id="prompt-markdown-enable-button" class="prompt-adjustment-toggle center"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/markdown_disabled.svg" width="50" height="50" alt="Markdown" title="Markdown"></div>
 										</div>
 										
 									</div>
@@ -1237,15 +1279,15 @@
 	
 
 		<div id="tutorial">
-			<div id="tutorial-menu">
+			<nav id="tutorial-menu">
 				<div id="tutorial-menu-inner" class="space-between center">
-					<div><img id="papegai-logo" class="flip-horizontalX show-if-developer" src="images/developer.png" alt="Papeg.ai logo" width="50" height="50"></div>
+					<div style="height:50px"><img class="flip-horizontalX show-if-developer" src="images/developer_thumb.png" alt="Papeg.ai developer mode logo" width="50" height="50"></div>
 					<div id="tutorial-menu-links" class="center">
 						<span id="about-link" data-i18n="About">About</span>
 						<span id="privacy-policy-link" data-i18n="Privacy">Privacy</span>
 					</div>
 				</div>
-			</div>
+			</nav>
 			<div id="tutorial-header" class="space-between">
 				<span><!--Privacy + AI = Papeg.ai--></span>
 			</div>
@@ -1274,8 +1316,7 @@
 					</div>
 				</div>
 				
-				<div id="intro-tutorial-welcome-message">
-					<!--<h1>Papeg.ai</h1>-->
+				<header id="intro-tutorial-welcome-message">
 					<img id="papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="50">
 					<div id="intro-tutorial-welcome-ankeilers" class="flex-wrap">
 						<p><span data-i18n="Free_and_easy_to_use_AI_for_chatting_writing_documents_and_more">Free and easy to use AI for chatting, writing documents and more.<!-- You don't need to install anything.--></span></p>
@@ -1283,7 +1324,7 @@
 						
 						<div id="intro-text-privacy-learn-more-explanation" style="display:none">
 							<p><span data-i18n="The_best_way_to_protect_your_privacy_is_to_never_send_your_data_to_an_AI_in_the_cloud_in_the_first_place">The best way to protect your privacy is to never send your data to an AI in the cloud in the first place</span>. <span data-i18n="Instead_Papeg_ai_brings_the_AI_to_you_by_downloading_a_complete_AI_to_your_device_first">Instead, Papeg.ai brings the AI to you, by downloading a complete AI to your device first. This takes a while, but it's worth it!</span></p>
-							<br/>
+							<br>
 							<ul>
 								<li><span data-i18n="You_only_need_to_download_an_AI_once_and_it_will_remain_available">You only need to download an AI once, and it will remain available. Even when the WiFi is switched off.</span></li>
 								<!--<li><span data-i18n="The_more_powerful_your_computer_is_the_more_powerful_AIs_you_can_run">The more powerful your computer is, the more powerful AI's you can run.</span></li>-->
@@ -1293,86 +1334,88 @@
 							</ul>
 						</div>
 					</div>
-				</div>
-				
+				</header>
 				
 				<div id="functionalities-lists" class="functionalities-lists">
 					<div class="functionalities-lists-wrapper">
 						<div>
 							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Chat icon" src="images/chat.svg"> <span data-i18n="chat">Chat</span></h3>
-							<div id="chat-functionalities-list" class="functionalities-list"></div>
+							<div id="chat-functionalities-list" class="functionalities-list"><button class="functionality-button-chat functionality-better-with-web-gpu"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/chat_mini_ankeiler.png" alt="Chat"><div data-i18n="chat">Chat</div></button><button class="functionality-button-homework functionality-better-with-web-gpu"><span data-i18n="help_with_homework">Help with homework</span></button><button class="functionality-button-medical"><span data-i18n="ask_medical_questions">Ask medical questions</span></button><button class="functionality-button-therapy"><span data-i18n="get_a_hug">I need a hug</span></button></div>
 						</div>
 						<div>
 							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Documents icon" src="images/document.svg"> <span data-i18n="Writing">Writing</span></h3>
-							<div id="document-functionalities-list" class="functionalities-list"></div>
+							<div id="document-functionalities-list" class="functionalities-list"><button class="functionality-button-new functionality-better-with-web-gpu"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/new_document_mini_ankeiler.png" alt="New document"><div data-i18n="New_document">New document</div></button><button class="functionality-button-transcribe functionality-better-with-web-gpu"><span data-i18n="Transcribe_an_audio_file">New document from audio file</span></button><button class="functionality-button-rewrite functionality-better-with-web-gpu"><span data-i18n="improve_a_document">Improve a document</span></button><button class="functionality-button-summarize functionality-better-with-web-gpu"><span data-i18n="summarize_a_document">Summarize a document</span></button><button class="functionality-button-translate functionality-better-with-web-gpu"><span data-i18n="translate_a_document">Translate a document</span></button></div>
 						</div>
 					</div>
 					<div class="functionalities-lists-wrapper">
 						<div>
 							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Microphone icon" src="images/microphone_icon_with_shadow.svg"> <span data-i18n="Microphone">Microphone</span></h3>
-							<div id="microphone-functionalities-list" class="functionalities-list"></div>
+							<div id="microphone-functionalities-list" class="functionalities-list"><button class="functionality-button-meeting"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/take_meeting_notes_mini_ankeiler.svg" alt="Transcribe a meeting"><div data-i18n="take_meeting_notes">Transcribe a meeting</div></button><button class="functionality-button-live_audio_translation"><span data-i18n="live_audio_translation">Live audio translation</span></button><button class="functionality-button-voice functionality-better-with-web-gpu"><span data-i18n="Voice_chat">Voice chat</span></button></div>
 						</div>
 						<div>
 							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Camera icon" src="images/camera.svg"> <span data-i18n="Camera">Camera</span></h3>
-							<div id="camera-functionalities-list" class="functionalities-list"></div>
+							<div id="camera-functionalities-list" class="functionalities-list"><button class="functionality-button-scan"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/scan_document_mini_ankeiler.png" alt="Scan a document"><div data-i18n="scan_a_document">Scan a document</div></button><button class="functionality-button-live_camera_description functionality-requires-web-gpu"><span data-i18n="Live_camera_description">Live camera description</span></button><button class="functionality-button-live_camera_translation"><span data-i18n="live_camera_translation">Live camera translation</span></button></div>
 						</div>
 					</div>
 				</div>
 				<div id="functionalities-lists2" class="functionalities-lists">
-					<div class="functionalities-lists-wrapper">
+					<div class="functionalities-lists-wrapper testo">
 						<div>
-							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Media icon" src="images/media.svg"> <span data-i18n="Media">Media</span></h3>
-							<div id="media-functionalities-list" class="functionalities-list"></div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Media icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/media.svg"> <span data-i18n="Media">Media</span></h3>
+							<div id="media-functionalities-list" class="functionalities-list"><button class="functionality-button-pictures functionality-requires-web-gpu"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/make_pictures_mini_ankeiler.png" alt="Generate images"><div data-i18n="make_pictures">Generate images</div></button><button class="functionality-button-describe functionality-requires-web-gpu"><span data-i18n="Describe_images">Describe images</span></button></div>
 						</div>
 						<div>
 							<h3 class="tutorial-sub-title">&nbsp;</h3>
-							<div id="music-functionalities-list" class="functionalities-list"></div>
+							<div id="music-functionalities-list" class="functionalities-list"><button class="functionality-button-music"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/make_music_mini_ankeiler.svg" alt="Make music"><div data-i18n="make_music">Make music</div></button><button class="functionality-button-subtitles functionality-better-with-web-gpu"><span data-i18n="Generate_a_subtitle">Generate subtitles for a video file</span></button></div>
 						</div>
 					</div>
-					<div class="functionalities-lists-wrapper">
+					<div class="functionalities-lists-wrapper tiesto">
 						<div>
-							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="images/learning.svg"> <span data-i18n="Research">Research</span></h3>
-							<div id="learning-functionalities-list" class="functionalities-list"></div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/learning.svg"> <span data-i18n="Research">Research</span></h3>
+							<div id="learning-functionalities-list" class="functionalities-list"><button class="functionality-button-search functionality-better-with-web-gpu"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/search_your_documents_mini_ankeiler.svg" alt="Search in your documents"><div data-i18n="Search_your_documents">Search in your documents</div></button><button class="functionality-button-chat_with_a_document"><span data-i18n="Chat_with_a_document">Chat with a document</span></button><button class="functionality-button-research"><span data-i18n="Research_a_topic">Research a topic</span></button></div>
 						</div>
 						<div>
-							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="images/programming.svg"> <span data-i18n="Programming">Programming</span></h3>
-							<div id="programming-functionalities-list" class="functionalities-list"></div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Learning icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/programming.svg"> <span data-i18n="Programming">Coding</span></h3>
+							<div id="programming-functionalities-list" class="functionalities-list"><button class="functionality-button-code"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/write_code_mini_ankeiler.png" alt="Write computer code"><div data-i18n="write_code">Write computer code</div></button></div>
 						</div>
 					</div>
 				</div>
-				
 				<div id="examples-lists">
 					<div class="functionalities-lists-wrapper" id="tutorial-characters-lists-container">
 						<div>
-							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Characters icon" src="images/characters.svg"> <span data-i18n="characters">Characters</span></h3>
-							<div id="fun-characters-list" class="functionalities-list"></div>
+							<h3 class="tutorial-sub-title"><img loading="lazy" class="tutorial-header-icon" width="26" height="26" alt="Characters icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/characters.svg"> <span data-i18n="characters">Characters</span></h3>
+							<div id="fun-characters-list" class="functionalities-list">
+								<button class="characters-button-Cleopatra"><img loading="lazy" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/characters_mini_ankeiler_cleopatra.png" alt="Cleopatra"><div>Cleopatra</div></button>
+								<button class="characters-button-Leonardo_da_Vinci flex"><div class="icon-container"><div class="center" style="background-color: rgb(62, 50, 202);">✨</div></div><div class="contact flex-column"><div class="name" data-i18n="Leonardo da Vinci">Leonardo da Vinci</div><div class="description" data-i18n="A creative genius">A creative genius</div></div></button>
+								<button class="characters-button-mr_beast flex"><div class="icon-container"><div class="center" style="background-color: rgb(70, 77, 86);">🐨</div></div><div class="contact flex-column"><div class="name" data-i18n="Mr Beast">Mr Beast</div><div class="description" data-i18n="The famous Youtuber">The famous Youtuber</div></div></button>
+								<button class="characters-button-Donald_Trump flex"><div class="icon-container"><div class="center" style="background-color: rgb(235, 255, 153);">💰</div></div><div class="contact flex-column"><div class="name" data-i18n="Donald Trump">Donald Trump</div><div class="description" data-i18n="U.S. President">U.S. President</div></div></button><button class="characters-button-conspiracy_theorist flex"><div class="icon-container"><div class="center" style="background-color: rgb(153, 255, 153);">🛸</div></div><div class="contact flex-column"><div class="name" data-i18n="Conspiracy theorist">Conspiracy theorist</div><div class="description" data-i18n="I want to believe">Birds aren't real</div></div></button></div>
 						</div>
 						<div>
 							<h3 class="tutorial-sub-title">&nbsp;</h3>
-							<div id="serious-characters-list" class="functionalities-list"></div>
+							<div id="serious-characters-list" class="functionalities-list"><button class="characters-button-brainstormer"><img loading="lazy" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/characters_mini_ankeiler_brainstormer.png" alt="Innovator"><div>Innovator</div></button><button class="characters-button-job_interviewer flex"><div class="icon-container"><div class="center" style="background-color: rgb(25, 59, 96);">🧑‍💼</div></div><div class="contact flex-column"><div class="name" data-i18n="Job interviewer">Job interviewer</div><div class="description" data-i18n="Prepare yourself for a job interview">Prepare yourself for a job interview</div></div></button><button class="characters-button-English_teacher flex"><div class="icon-container"><div class="center" style="background-color: rgb(138, 138, 138);">👩🏽‍🏫</div></div><div class="contact flex-column"><div class="name" data-i18n="English teacher">English teacher</div><div class="description" data-i18n="Improve your English">Improve your English</div></div></button><button class="characters-button-personal_trainer flex"><div class="icon-container"><div class="center" style="background-color: rgb(221, 172, 172);">🏋🏽</div></div><div class="contact flex-column"><div class="name" data-i18n="Personal trainer">Personal trainer</div><div class="description" data-i18n="Let's get fit">Let's get fit!</div></div></button><button class="characters-button-more_characters flex"><div class="icon-container"><div class="center" style="background-color: rgb(0, 49, 74);"> </div></div><div class="contact flex-column center"><div class="name" data-i18n="More characters">More characters</div></div></button></div>
 						</div>
 					</div>
 					<div class="functionalities-lists-wrapper">
 						<div>
-							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Blueprints icon" src="images/templates.svg"> <span data-i18n="blueprints">Blueprint</span></h3>
-							<div id="personal-blueprints-list" class="functionalities-list"></div>
+							<h3 class="tutorial-sub-title"><img class="tutorial-header-icon" width="26" height="26" alt="Blueprints icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/templates.svg"> <span data-i18n="blueprints">Blueprints</span></h3>
+							<div id="personal-blueprints-list" class="functionalities-list"><button class="blueprints-button-tell_a_fairytale"><img loading="lazy" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/blueprints_mini_ankeiler_tell_a_fairytale.png" alt="Tell me a fairytale"><div>Tell me a fairytale</div></button><button class="blueprints-button-AI_plays_Shakespeare flex"><div class="icon-container"><div class="center" style="background-color: rgb(212, 210, 84);">🎭</div></div><div class="contact flex-column"><div class="name">AI plays Shakespeare</div><div class="description">You've never heard anything like it</div></div></button><button class="blueprints-button-Decline_a_wedding_invitation flex"><div class="icon-container"><div class="center" style="background-color: rgb(52, 101, 161);">🤧</div></div><div class="contact flex-column"><div class="name">Decline a wedding invitation</div><div class="description">Sincere and polite</div></div></button><button class="blueprints-button-Write_an_essay flex"><div class="icon-container"><div class="center" style="background-color: rgb(109, 213, 79);">🍎</div></div><div class="contact flex-column"><div class="name">Write an essay</div><div class="description">Not for school obviously</div></div></button></div>
 						</div>
 						<div>
 							<h3 class="tutorial-sub-title">&nbsp;</h3>
-							<div id="business-blueprints-list" class="functionalities-list"></div>
+							<div id="business-blueprints-list" class="functionalities-list"><button class="blueprints-button-Blog_post"><img loading="lazy" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="./images/blueprints_mini_ankeiler_blog_post.png" alt="Blog post"><div>Blog post</div></button><button class="blueprints-button-Domain_name_generator flex"><div class="icon-container"><div class="center" style="background-color: rgb(62, 50, 202);">🌐</div></div><div class="contact flex-column"><div class="name">Domain name generator</div><div class="description">Avoid already-taken.com</div></div></button><button class="blueprints-button-Respond_to_a_bad_review flex"><div class="icon-container"><div class="center" style="background-color: rgb(25, 59, 96);">👎</div></div><div class="contact flex-column"><div class="name">Respond to a bad review</div><div class="description">Nobody wins 'em all</div></div></button><button class="blueprints-button-Compare_AIs flex"><div class="icon-container"><div class="center" style="background-color: rgb(59, 25, 96);">🔬</div></div><div class="contact flex-column"><div class="name">Compare AIs</div><div class="description">Which is your favourite?</div></div></button><button class="blueprints-button-Describe_many_images flex"><div class="icon-container"><div class="center" style="background-color: rgb(153, 25, 96);">🔁</div></div><div class="contact flex-column"><div class="name">Describe multiple images</div><div class="description">Automate working with files</div></div></button><button class="blueprints-button-more_blueprints flex"><div class="icon-container"><div class="center" style="background-color: rgb(0, 49, 74);"> </div></div><div class="contact flex-column"><div class="name">More blueprints</div><div class="description"></div></div></button></div>
 						</div>
 					</div>
 				</div>
 				
 				<div id="mobile-warning" class="show-if-mobile">
 					<div class="center">
-						<img src="images/papegai_laptop_hint_ankeiler.svg"><h3 class="small-hint-text"><span data-i18n="Papeg_ai_works_better_on_laptop_or_desktop_computers">Papeg.ai works better on laptop or desktop computers</span></h3>
+						<img loading="lazy" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/papegai_laptop_hint_ankeiler.svg" alt="Laptop"><h3 class="small-hint-text"><span data-i18n="Papeg_ai_works_better_on_laptop_or_desktop_computers">Papeg.ai works better on laptop or desktop computers</span></h3>
 					</div>
 				</div>
 				
 				<div id="no-web-gpu-warning" class="hide-if-web-gpu">
 					<div class="center">
-						<img src="images/no_gpu_hint_ankeiler.svg">
+						<img loading="lazy" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/no_gpu_hint_ankeiler.svg" alt="Slow device">
 						<div class="large-hint-text">
 							<h3><span data-i18n="This_browser_does_not_support_fast_AI">This web browser does not support fast AI</span></h3>
 							<p><span data-i18n="You_will_have_a_better_experience_with_browsers_such_as">You will have a better experience with a browser such as</span>:</p>
@@ -1449,7 +1492,7 @@
 						<div id="current-folder"></div>
 						<div id="current-file-name"></div>
 					</div>
-					<button id="close-document-view" name="close" aria-label="close" type="button" class="center"><div class="bg-icon close-button-cross"></div></button>
+					<button id="close-document-view" name="close" aria-label="close" type="button" class="center"><div class="bg-icon close-button-cross" alt="✕"></div></button>
 				</div>
 				
 				<div id="document-recording-warning" class="warning-section">
@@ -1480,7 +1523,7 @@
 					<div id="full-playground-header">
 						<div class="flex-between">
 							<div class="x50y50"></div>
-							<button id="close-full-playground" class="center x50y50" name="close-full-groundground" aria-label="close" type="button"><img src="images/close_fullscreen2.svg" width="36" height="36" alt="exit full screen"></button>
+							<button id="close-full-playground" class="center x50y50" name="close-full-groundground" aria-label="close" type="button"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/close_fullscreen2.svg" width="36" height="36" alt="exit full screen"></button>
 						</div>
 					</div>
 					
@@ -1545,8 +1588,8 @@
 								<button id="document-proofread-button" class="center"><img class="icon" src="images/glasses.svg" width="20" height="20" alt="👓"><span data-i18n="Proofread">Proofread</span></button>
 								<button id="document-summarize-button" class="center"><img class="svg-icon icon" src="images/summarize_clamp_icon.svg" width="20" height="20" alt="🗜️"><span data-i18n="Summarize">Summarize</span></button> <!-- <span class="unicode-icon icon brighten">🗜️</span> -->
 								<button id="document-continue-button" class="center"><img class="svg-icon icon" src="images/continue_icon.svg" width="20" height="20" alt="✒️"><span data-i18n="Continue">Continue</span></button> <!-- <span class="unicode-icon icon">✒️</span><span data-i18n="Continue">Continue</span> ✒️ -->
-								<button id="document-translate-button" class="center"><img class="svg-icon icon" src="images/translation-icon.svg" width="20" height="20" alt="🇳🇱"></span><span data-i18n="Translate" >Translate</span></button>
-								<button id="import-settings-backup-button" class="center"><img class="svg-icon icon" src="images/import_icon.svg" width="20" height="20" alt="🔺"></span><span data-i18n="Import"></span></button>
+								<button id="document-translate-button" class="center"><img class="svg-icon icon" src="images/translation-icon.svg" width="20" height="20" alt="🇳🇱"><span data-i18n="Translate">Translate</span></button>
+								<button id="import-settings-backup-button" class="center"><img class="svg-icon icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/import_icon.svg" width="20" height="20" alt="🔺"><span data-i18n="Import"></span></button>
 							</div>
 						
 							<div id="undo-redo-buttons-container" class="document-footer-buttons-wrapper">
@@ -1558,15 +1601,15 @@
 								
 								<div id="code-tools-buttons-container" class="document-footer-buttons-wrapper">
 									<button id="line-bookmark-button" onclick="line_bookmark()" class="show-if-advanced"><span class="unicode-icon icon rotate-45">🏷️</span></button>
-									<button id="quick-diff-button" onclick="differ();" title="Differences" class="center"  class="show-if-developer"><span class="unicode-icon icon">👀</span></button> <!-- 🔬 🐫 🕶️ -->
+									<button id="quick-diff-button" onclick="differ();" title="Differences" class="center show-if-developer"><span class="unicode-icon icon">👀</span></button> <!-- 🔬 🐫 🕶️ -->
 									<button id="beautify-button" onclick="beautify();" title="Beautify" class="center"><span class="unicode-icon icon">🌼</span></button><!-- 🛁 🧹 🫧 🌷 🌸 -->
 								</div>
 								<div id="document-footer-mobile-space-saver" class="flex">
 									<div id="save-play-buttons-container" class="document-footer-buttons-wrapper">
-										<button id="save-document-button" title="Save" class="center"><img class="doc-selection-hint-icon unicode-icon icon" src="images/floppy.svg" width="20" height="20" alt="💾"><!--<span class="unicode-icon">💾</span>--></button>
+										<button id="save-document-button" title="Save" class="center"><img class="doc-selection-hint-icon unicode-icon icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/floppy.svg" width="20" height="20" alt="💾"><!--<span class="unicode-icon">💾</span>--></button>
 										<button id="audio-play-document-button" title="Speak" class="center"><img class="doc-selection-hint-icon unicode-icon icon" src="images/mouth.svg" width="20" height="20" alt="👄"><!--<span class="unicode-icon">👄</span>--></button>
 										<button id="play-document-button" title="Play" class="center"><span class="unicode-icon icon">▶</span></button>
-										<button id="stop-play-document-button" title="Stop" class="center"><img class="stop-icon icon" src="images/stop_square.svg" alt="Stop"></button><!-- ⏸ -->
+										<button id="stop-play-document-button" title="Stop" class="center"><img class="stop-icon icon" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/stop_square.svg" alt="Stop"></button><!-- ⏸ -->
 									</div>
 									<div id="download-buttons-container" class="document-footer-buttons-wrapper">
 										<button id="download-document-button" class="center" title="Download document"></button>
@@ -1596,6 +1639,47 @@
     </div>
 	
 	
+	
+	<dialog id="ask-for-name-dialog">
+		<div class="prevent-propagation">
+			<h3 id="ask-for-name-dialog-title" data-i18n="Name">Name</h3>
+			<input id="ask-for-name-dialog-input" type="text" class="prompt">
+			<!--
+			<form method="dialog" class="flex-between">
+	  	    	<button class="grey-button">Cancel</button>
+	  	  	</form>
+			-->
+  			<div id="ask-for-name-dialog-buttons-container" class="flex-between">
+  				<button id="ask-for-name-submit-button" class="submit-prompt-button" data-i18n="Save">Save</button>
+  			</div>
+		</div>
+	</dialog>
+	
+	
+	<dialog id="ask-for-url-dialog">
+		<div class="prevent-propagation">
+			<h3 id="ask-for-url-dialog-title" data-i18n="URL">URL</h3>
+			<p data-i18n="Maximum_file_size_is_10MB" class="opacity05">Maximum file size is 10MB</p>
+			<div class="flex-wrap vertical-margin">
+				<!--<img id="ask-for-url-dialog-image2" crossorigin="anonymous" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="preview" height="100">-->
+				<div id="download-preview-container" class="hidden">
+					<p class="small-text opacity05" data-i18n="Preview">Preview</p>
+					<iframe id="ask-for-url-dialog-iframe" loading="lazy" title="Preview" height="200"></iframe> 
+				</div>
+				<!--  srcdoc="<html><body>Preview</body></html>"  crossorigin="anonymous" src="data:text/html;charset=utf-8,%3Chtml%3E%3Cbody%3Efoo%3C/body%3E%3C/html%3E" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" -->
+				<textarea id="ask-for-url-dialog-input" type="text" class="prompt" placeholder="https://..."></textarea>
+			</div>
+			<form method="dialog" class="flex-between">
+	  	    	<button class="grey-button">Cancel</button>
+				<div class="flex-wrap">
+					<button id="ask-for-url-submit-button" class="submit-prompt-button"><span data-i18n="Download">Download</span><span id="ask-for-url-submit-button-action"></button>
+					<div id="ask-for-url-dialog-action-button-container"></div>
+				</div>
+	  	  	</form>
+		</div>
+	</dialog>
+	
+	
 	<dialog id="prompt-at-line-dialog">
 		<div class="prevent-propagation">
 			<h3 id="prompt-at-line-dialog-hint" data-i18n="Insert">Insert</h3>
@@ -1603,7 +1687,7 @@
 			<form method="dialog" class="flex-between">
 	  	    	<button class="grey-button">Cancel</button>
 	  			<div class="submit-multi-commands-buttons-wrapper">
-	  				<button id="prompt-at-line-submit-button" class="submit-prompt-button" autofocus><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" width="36" height="36" alt="submit"></button>
+	  				<button id="prompt-at-line-submit-button" class="submit-prompt-button"><img class="dialog-prompt-button-image submit-prompt-button-image" src="images/submit_prompt.svg" width="36" height="36" alt="submit"></button>
 	  			</div>
 	  	  	</form>
 		</div>
@@ -1616,8 +1700,8 @@
 			<h3 id="more-characters-dialog-hint"><span data-i18n="You_can_add_create_and_share_characters">You can add, create and share as many characters as you like</span></h3>
 		
 			<div class="dialog-big-buttons-container">
-				<div id="more-characters-dialog-new-button"><img class="dialog-big-buttons-image" src="images/new_character.svg" alt="New custom character"><p class="dialog-big-buttons-text" data-i18n="Create_a_new_custom_character">Create a new custom character</p></div>
-				<a id="more-characters-reddit-button" href="https://www.reddit.com/r/PapegAI/" target="_blank" rel="noreferrer"><div><img class="dialog-big-buttons-image" src="images/visit_reddit.png" alt="Visit Reddit"><p class="dialog-big-buttons-text" data-i18n="Find_and_share_characters_on_Reddit">Find and share characters on Reddit.com</p></div></a>
+				<div id="more-characters-dialog-new-button"><img class="dialog-big-buttons-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/new_character.svg" alt="New custom character"><p class="dialog-big-buttons-text" data-i18n="Create_a_new_custom_character">Create a new custom character</p></div>
+				<a id="more-characters-reddit-button" href="https://www.reddit.com/r/PapegAI/" target="_blank" rel="noreferrer"><div><img class="dialog-big-buttons-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/visit_reddit.png" alt="Visit Reddit"><p class="dialog-big-buttons-text" data-i18n="Find_and_share_characters_on_Reddit">Find and share characters on Reddit.com</p></div></a>
 			</div>
 		
 			<div id="more-characters-dialog-content-container"></div>
@@ -1635,8 +1719,8 @@
 			<h3 id="more-blueprints-dialog-hint"><span data-i18n="You_can_add_create_and_share_blueprints">You can add, create and share as many blueprints as you like</span></h3>
 		
 			<div class="dialog-big-buttons-container">
-				<div id="more-blueprints-dialog-new-button"><img class="dialog-big-buttons-image" src="images/new_blueprint.png" alt="New blueprint"><p class="dialog-big-buttons-text" data-i18n="Create_a_new_blueprint">Create a new blueprint</p></div>
-				<a id="more-blueprints-reddit-button" href="https://www.reddit.com/r/PapegAI/" target="_blank" rel="noreferrer"><div><img class="dialog-big-buttons-image" src="images/visit_reddit.png" alt="Visit Reddit"><p class="dialog-big-buttons-text" data-i18n="Find_and_share_blueprints_on_Reddit">Find and share blueprints on Reddit.com</p></div></a>
+				<div id="more-blueprints-dialog-new-button"><img class="dialog-big-buttons-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/new_blueprint.png" alt="New blueprint"><p class="dialog-big-buttons-text" data-i18n="Create_a_new_blueprint">Create a new blueprint</p></div>
+				<a id="more-blueprints-reddit-button" href="https://www.reddit.com/r/PapegAI/" target="_blank" rel="noreferrer"><div><img class="dialog-big-buttons-image" src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/visit_reddit.png" alt="Visit Reddit"><p class="dialog-big-buttons-text" data-i18n="Find_and_share_blueprints_on_Reddit">Find and share blueprints on Reddit.com</p></div></a>
 			</div>
 		
 			<div id="more-blueprints-dialog-content-container"></div>
@@ -1647,6 +1731,8 @@
 		</div>
 	</dialog>
 	
+	
+
 	
 	
 	<dialog id="blueprint-fields-dialog">
@@ -1744,9 +1830,14 @@
 				<button id="share-prompt-show-more-options-button" class="small-button show-if-advanced" data-i18n="More_settings">More settings</button>
 			</div>
 	  
-			<div id="share-prompt-link-container">
-				<div id="share-prompt-link"></div>
-				<div id="share-prompt-copy-to-clipboard-button" class="svg-icon center share-prompt-copy-to-clipboard-button" title="Copy"><img src="images/copy_to_clipboard.svg" width="25" height="25" alt="Copy"></div><!-- 📋 ✂️ //-->
+	  	  	<div>
+				<div id="share-prompt-link-container">
+					<textarea id="share-prompt-link"></textarea>
+					<div id="share-prompt-copy-to-clipboard-button" class="svg-icon center share-prompt-copy-to-clipboard-button" title="Copy"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/copy_to_clipboard.svg" width="25" height="25" alt="Copy"></div><!-- 📋 ✂️ //-->
+				</div>
+				<div class="sharing-buttons-container">
+					<a id="twitter-share-prompt-link" href="http://twitter.com/intent/tweet?text=" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/twitter-icon.png" alt="Twitter"></a> <a id="facebook-share-prompt-link" href="http://www.facebook.com/sharer.php?u=" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/facebook-icon.png" alt="Facebook"></a> <a id="linkedin-share-prompt-link" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/linkedin-icon.png" alt="LinkedIn"></a> <a id="reddit-share-prompt-link" href="http://www.reddit.com/submit" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/reddit_icon.svg" alt="Reddit"></a>
+				</div>
 			</div>
 	  
 			<form method="dialog" class="flex-between">
@@ -1756,10 +1847,10 @@
 		</div>  
 	</dialog>
 	
-	<dialog id="received-prompt-dialog">
+	<dialog id="received-prompt-dialog" class="received-dialog">
 		<div class="prevent-propagation">
 			<img class="dialog-papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="25">
-			<h1 id="received-prompt-dialog-hint"><span data-i18n="Run_received_command">Run received command?</span></h1>
+			<h1 id="received-prompt-dialog-hint" class="received-dialog-hint"><span data-i18n="Run_received_command">Run received command?</span></h1>
 			<p data-i18n="You_clicked_on_a_link_to_run_an_AI_command">You clicked on a link to run an AI command. Please review the command to make sure you're OK with running it.</p>
 			<div id="received-prompt-textarea-container">
 				<div id="received-prompt-assistant-name-wrapper" class="flex">
@@ -1769,7 +1860,7 @@
 					</div>
 					<div id="received-prompt-assistant-name" class="capitalize-first-letter"></div>
 				</div>
-				<textarea id="received-prompt-textarea" class="prompt"></textarea>
+				<textarea id="received-prompt-textarea" class="prompt received-textarea"></textarea>
 			</div>
 			
 			<form method="dialog" class="flex-between">
@@ -1779,62 +1870,178 @@
 		</div>
 	</dialog>
 	
+	
+	
+	<dialog id="received-document-dialog" class="received-dialog">
+		<div class="prevent-propagation">
+			<img class="dialog-papegai-logo" src="images/papegai_logo.svg" alt="Papeg.ai" height="25">
+			
+			<div class="hide-if-share-document">
+				<h1 id="received-blueprint-dialog-hint" class="received-dialog-hint show-if-for-blueprint"><span data-i18n="Save_received_blueprint">Save received blueprint?</span></h1>
+				<h1 id="received-document-dialog-hint" class="received-dialog-hint hide-if-for-blueprint"><span data-i18n="Save_received_document">Save received document?</span></h1>
+				<p data-i18n="You_clicked_on_a_link_to_add_a_document">You clicked on a link that contains a document. Please review it to make sure you're OK with saving it.</p>
+			</div>
+			<div class="show-if-share-document">
+				<h1 id="share-blueprint-dialog-hint" class="received-dialog-hint show-if-for-blueprint"><span data-i18n="Share_blueprint">Share blueprint</span></h1>
+				<h1 id="share-document-dialog-hint" class="received-dialog-hint hide-if-for-blueprint"><span data-i18n="Share_document">Share document</span></h1>
+			</div>
+			
+			
+			
+			
+			<div id="received-document-textarea-container">
+				<!--
+				<div id="received-document-assistant-name-wrapper" class="flex">
+					<div id="received-document-assistant-icon-container">
+						<div id="received-document-assistant-emoji" class="center"></div>
+						<img id="received-document-assistant-name-icon" src="images/developer.png" alt="Current AI icon">
+					</div>
+					<div id="received-document-assistant-name" class="capitalize-first-letter"></div>
+				</div>
+				-->
+				<input id="received-document-filename" class="prompt received-input">
+				<textarea id="received-document-textarea" class="prompt received-textarea"></textarea>
+				
+				<div class="show-if-share-document">
+					<div class="vertical-margin align-right">
+						 <label for="share-document-also-share-ai-checkbox" data-i18n="Also_share_current_AI">Also share current AI</label> <input type="checkbox" id="share-document-also-share-ai-checkbox">
+					</div>
+					<div>
+						<div class="share-prompt-link-container flex"><textarea class="share-prompt-link" id="share-document-link-text"></textarea><div id="share-document-copy-to-clipboard-button" class="share-prompt-copy-to-clipboard-button center" title="copy"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/copy_to_clipboard.svg" width="25" height="25" alt="Copy"></div></div>
+						<div class="sharing-buttons-container">
+							<a id="twitter-share-document-link" href="http://twitter.com/intent/tweet?text=" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/twitter-icon.png" alt="Twitter"></a> <a id="facebook-share-document-link" href="http://www.facebook.com/sharer.php?u=" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/facebook-icon.png" alt="Facebook"></a> <a id="linkedin-share-document-link" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/linkedin-icon.png" alt="LinkedIn"></a> <a id="reddit-share-document-link" href="http://www.reddit.com/submit" target="_blank" rel="noreferrer"><img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="images/reddit_icon.svg" alt="Reddit"></a>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+			
+			<form method="dialog" class="flex-between">
+				<button data-i18n="Cancel">Cancel</button><span></span><span class="hide-if-share-document"><button id="save-the-received-document-button"><span class="unicode-icon icon">💾</span> <span data-i18n="Save">Save</span></button> <button id="run-the-received-document-button" class="show-if-for-blueprint"><span class="unicode-icon icon">💾</span> <span data-i18n="Save">Save</span> & <!--<span class="unicode-icon icon">▶</span>--><span data-i18n="Play">Play</span></button></span>
+			</form>
+			
+		</div>
+	</dialog>
+	
+	
 	<div id="overlay-container" class="show-if-overlay">
 		<div id="overlay-window">
 			<div id="overlay-header" class="space-between"><span></span><span id="close-overlay-button" class="button" onclick="close_overlay()">✕</span></div>
 			<div id="overlay-content"></div>
 		</div>
 	</div>
-	
+
+<!--
 </div>
-
-
-
+-->
+	<script src="./pjs/utils.js"></script>	
 	<script src="./early.js"></script>
-	<script src="./service_module.js" type="module"></script>
+	
+	
+	<!--
+	'ai.js',
+	'translations.js',
+	'p_translation.js',
+	'p_init.js',
+	'js/various_utils.js',
+	'p_ui.js',
+	'p_audio.js',
+	'p_main.js',
+	'p_docs.js',	
+	-->
+	
+	
 	<script src="./ai.js"></script>
 	<script src="./translations.js"></script>
 	<script src="./p_translation.js"></script>
+	
+	<!--
+	<script src="./merged.js"></script>
+	-->
 	<script src="./p_init.js"></script>
 	<script src="./js/various_utils.js"></script>
-	<script src="./js/promise-worker.js"></script>
 	<script src="./p_ui.js"></script>
-    <script src="./llama_cpp.js" type="module"></script>
 	<script src="./p_audio.js"></script>
 	<script src="./p_main.js"></script>
-	<script src="./p_audio_module.js" type="module"></script>
+	<!-- -->
 	<script src="./p_docs.js"></script>
-	<script src="./main_module.js" type="module"></script>
-	<script src="./pjs/first.js"></script>	
+	
+	
+	
+	
+	
+	
+	<script src="./pjs/first.js"></script>
+	<!--
+	<script src="./js/promise-worker.js"></script>
+	//-->
 	<script src="./pjs/data.js"></script>
+	
+	
+	<script src="./p_audio_module.js" type="module"></script>
+	
+	
 	<!--
 	<script defer src="./about.js"></script>
 	<script defer src="./privacy_policy.js"></script>
+	
+
+	<script async src="./service_module.js" type="module"></script>
 	//-->
-	<script src="./t2i_module.js" type="module"></script>
-	<script src="./web_llm_module.js" type="module"></script>
-	<script defer src="./js/chrono.js"></script>
-	<script defer="" src="./pjs/context_menu.js"></script>
-	<script defer="" src="./pjs/codemirror.js"></script>
-    <script defer="" src="./pjs/codemirror-indentation-markers.js"></script>
-	<script defer="" src="./pjs/utils.js"></script>	
-	<script defer="" src="./pjs/ui.js"></script>
-	<script defer="" src="./pjs/editor.js"></script>	
-    <script defer="" src="./pjs/main.js"></script>
+	
+	<!--
+	<script defer="" src="./t2i_module.js" type="module"></script>
+	
+	
+	<script defer src="./pjs/context_menu.js"></script>
+	
+	<script src="./pjs/context_menu.js"></script>
+	-->
+	<!--
+	<script src="./pjs/codemirror.js"></script>
+    <script src="./pjs/codemirror-indentation-markers.js"></script>
+	-->
+	<script src="./pjs/ui.js"></script>
+	<!--
+	<script src="./pjs/editor.js"></script>	
+	-->
+    <script src="./pjs/main.js"></script>
 	<script defer="" src="./pjs/jszip.min.js"></script>
+	<!--
 	<script defer="" src="./pjs/crypto-js.min.js"></script>
+	
 	<script defer="" src="./p_constants.js"></script>
-	<script defer src="./last.js"></script>
-	<script defer src="./counter.php"></script>
+	-->
+	<script defer="" src="./last.js"></script>
+	<!--
+	<script defer="" src="./counter.php"></script>
 	
+	<script defer="" src="./llama_cpp.js" type="module"></script>
+	<script defer="" src="./web_llm_module.js" type="module"></script>
 	
+	<script src="./main_module.js" type="module"></script>
+	-->
 	<!-- 
+	<script defer="" src="./js/chrono.js"></script>
+	
 	<script defer src="./js/canvasTxt.js"></script>
 	<script defer src="./tts_worker.js" type="module"></script>
 	<script defer src="./whisper_worker.js" type="module"></script>
 	//-->
 	
+	<!--
+	<script defer="" src="office_parser/officeParserBundle.js"></script>
+	<script defer="" src="./tjs/transformers.min.js" type="module"></script>
+	-->
+			
+	
+		
 	<script>
+	
+	
+	
+	
+	
 	
 let en_about_doc = `**ABOUT PAPEG.AI**
 
@@ -2041,6 +2248,33 @@ Je documenten worden ook allemaal lokaal, in de cache van je browser, opgeslagen
 	
 	
 	</script>
+	
+	
+	<!-- load last.css -->
+	<script>
+	(function() {
+		
+		document.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="css/late.css">');
+		
+		/*
+	    var css_late_el = document.createElement('link');
+	    css_late_el.href = 'late.css';
+	    css_late_el.rel = 'stylesheet';
+	    css_late_el.type = 'text/css';
+	    document.getElementsByTagName('head')[0].appendChild(cssFa);
+		*/
+	})();
+	</script>
+	
+	
+	<noscript>
+		<link rel="stylesheet" type="text/css" href="css/late.css">
+	</noscript>
+	
+	<!--
+		<script defer src="./t2i/t2i_worker.js" type="module"></script>
+	//-->
+	
 	
 </body>
 </html>

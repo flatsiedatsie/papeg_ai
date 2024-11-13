@@ -102,7 +102,7 @@ window.web_llm_model_being_loaded = null;
 
 // DO WEB_LLM 
 window.load_web_llm = async function (task){ 
-	//console.log("in load_web_llm. task: ", task);
+	console.log("in load_web_llm. task: ", task);
 	//my_task = task;
 	
 	let assistant_id = null;
@@ -139,14 +139,14 @@ window.load_web_llm = async function (task){
 		*/
 		if(typeof window.web_llm_model_being_loaded == 'string'){
 			window.busy_loading_assistant = window.web_llm_model_being_loaded;
-			console.error("load_web_llm: a model is already being loaded. window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
+			console.error("load_web_llm: a WebLLM model is already being loaded. window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
 			window.flash_message(window.get_translation("A_model_is_already_being_loaded"),3000,'error');
 			return
 		}
 	
 		//if(window.my_webllm){
 		if(webllm){
-			//console.log("load_web_llm: webllm: ", webllm);
+			console.log("load_web_llm: webllm.  assistant_id: ", assistant_id);
 			
 			
 			/*
@@ -307,18 +307,22 @@ export interface ChatConfig {
 		
 		window.flash_message(window.get_translation("Loading_the_AI_failed"),3000,'error');
 		message_downloads_container_el.innerHTML = '';
-		window.web_llm_model_being_loaded = null;
-		window.web_llm_busy = false;
+		
 		if(window.currently_loaded_assistant == window.currently_loaded_web_llm_assistant){
 			window.currently_loaded_assistant = null;
 		}
+		if(window.busy_loading_assistant == window.web_llm_model_being_loaded){
+			window.busy_loading_assistant = null;
+		}
 		window.currently_loaded_web_llm_assistant = null;
-		window.busy_loading_assistant = null;
+		window.web_llm_model_being_loaded = null;
 		
 		if(window.web_llm_worker != null){
 			window.web_llm_worker.terminate();
 			window.web_llm_worker = null;
 		}
+		
+		window.web_llm_busy = false;
 		
 		window.clean_up_dead_task(task);
 		//my_task = null;
@@ -496,11 +500,14 @@ window.really_do_web_llm = async (task) => {
 			
 			
 				// ensure complete predictability at temperature 0
-				if(request.temperature == 0){
+				
+				if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].seed == 'number'){
+					request['seed'] = window.settings.assistants[assistant_id].seed;
+					console.log("web_llm: spotted seed preference, it is now: ", window.settings.assistants[assistant_id].seed);
+				}
+				else if(request.temperature == 0){
 					request['seed'] = 42;
 				}
-				
-			
 			
 				//console.log("web_llm: calling doChat with: ", request);
 			
@@ -671,7 +678,7 @@ window.web_llm_logger = function (message){
 
 window.web_llm_load_complete = async function (){ 
 	//console.log("web_llm_load_complete: LOAD COMPLETE");
-	set_model_loaded(true);
+	window.set_model_loaded(true);
 }
 
 
@@ -712,87 +719,92 @@ window.handle_web_llm_init_progress = async function (message){
 	//console.log("window.handle_web_llm_init_progress: progress message: ", message);
 	//console.log("window.handle_web_llm_init_progress: web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
 	try{
-		if(window.web_llm_model_being_loaded != null){
-			let web_llm_progress_el = document.getElementById('download-progress-' + window.web_llm_model_being_loaded);
-			if(web_llm_progress_el == null){
-				//console.log("window.handle_web_llm_init_progress: web_llm (down)load progress element is missing, adding it now: ", window.web_llm_model_being_loaded);
-				window.add_chat_message(window.web_llm_model_being_loaded,window.web_llm_model_being_loaded,'download_progress#setting---');
+		
+		if(typeof message.progress == 'number'){
+			let percentage = Math.floor(message.progress * 100);
+			
+			if(typeof message.text == 'string' && message.text.startsWith('Loading model from cache[') && message.text.indexOf(']') != -1){
+				let cache_progress_part = message.text.replace('Loading model from cache[','');
+				cache_progress_part = cache_progress_part.split(']')[0];
+				if(cache_progress_part.indexOf('/') != -1){
+					let cache_progress_parts = cache_progress_part.split('/');
+					console.log("cache_progress_parts: ", cache_progress_parts);
+					
+					percentage = Math.floor((parseInt(cache_progress_parts[0]) / parseInt(cache_progress_parts[1])) * 100);
+					//return
+					
+					
+				}
 			}
 			else{
-				//console.log("window.handle_web_llm_init_progress: updating web_llm (down)load progress: ",  message.progress);
-				
-				if(typeof message.progress == 'number'){
-					let percentage = Math.floor(message.progress * 100);
-					if(typeof message.text == 'string' && message.text.startsWith('Loading model from cache[') && message.text.indexOf(']') != -1){
-						let cache_progress_part = message.text.replace('Loading model from cache[','');
-						cache_progress_part = cache_progress_part.split(']')[0];
-						if(cache_progress_part.indexOf('/') != -1){
-							let cache_progress_parts = cache_progress_part.split('/');
-							//console.log("cache_progress_parts: ", cache_progress_parts);
-							web_llm_progress_el.value = parseInt(cache_progress_parts[0]) / parseInt(cache_progress_parts[1]);
-							//percentage = Math.floor((parseInt(cache_progress_parts[0]) / parseInt(cache_progress_parts[1])) * 100);
-							return
-						}
-					}
-					else{
-						web_llm_progress_el.value = message.progress;
-					}
-					
-					if(message.progress == 1){
-						//console.log("handle_web_llm_init_progress: load complete");
-						web_llm_progress_el.closest('.download-progress-chat-message').classList.add('download-complete-chat-message'); // superfluous, also handled when 'Finish loading' is spotted in the log output
-						setTimeout(() => {
-							web_llm_progress_el.closest('.download-progress-chat-message').remove();
-						},1000);
-					}
-					else{
-						
-						//console.log("window.handle_web_llm_init_progress: percentage: ", percentage);
-			  		  	if(percentage > previous_percentage){
-							//console.log("doing remaining download time estimation. percent: ", percentage);
-			  			 	const now_time = Date.now() / 1000;
-			  			    if(previous_time == 0){
-
-			  				    previous_time = now_time;
-			  				    //console.log("diffusion download: changed previous time to: ", previous_time);
-			  			    }
-			  			    else{
-							
-								if(typeof message.text == 'string' && message.text.startsWith('Fetching param cache[') && message.text.indexOf(']') != -1){
-									let cache_time_part = message.text.split(' secs elapsed')[0];
-									cache_time_part = parseInt(cache_time_part.substr(cache_time_part.lastIndexOf(' ')));
-									const percent_to_go = 100 - percentage;
-									const time_remaining = percent_to_go * (cache_time_part/percentage);
-				  				    let time_remaining_el = web_llm_progress_el.parentNode.querySelector('.time-remaining'); // #download-progress-' + window.settings.assistant + ' + 
-				  				    if(time_remaining_el != null){
-				  					    time_remaining_el.innerHTML = window.create_time_remaining_html(time_remaining);
-				  				    }
-				  				    else{
-				  				  	    console.error("diffusion: count not find time-remaining element");
-				  				    }
-								
-								}
-							
-								
-			  			  	}
-
-			  			  	previous_percentage = percentage;
-			  		  	}
+				//web_llm_progress_el.value = message.progress;
+			}
 			
-					}
+			
+			
+			if(message.progress == 1){
+				//console.log("handle_web_llm_init_progress: load complete");
+				web_llm_progress_el.closest('.download-progress-chat-message').classList.add('download-complete-chat-message'); // superfluous, also handled when 'Finish loading' is spotted in the log output
+				setTimeout(() => {
+					web_llm_progress_el.closest('.download-progress-chat-message').remove();
+				},1000);
+			}
+			else{
+				
+				if(previous_percentage > percentage){
+					previous_percentage = 0;
+					previous_time = 0;
 				}
 				
-				
+				//console.log("window.handle_web_llm_init_progress: percentage: ", percentage);
+	  		  	if(percentage > previous_percentage){
+					//console.log("doing remaining download time estimation. percent: ", percentage);
+	  			 	const now_time = Date.now() / 1000;
+	  			    if(previous_time == 0){
+
+	  				    previous_time = now_time;
+	  				    //console.log("diffusion download: changed previous time to: ", previous_time);
+	  			    }
+	  			    else{
+					
+						
+						if(typeof message.text == 'string' && message.text.startsWith('Fetching param cache[') && message.text.indexOf(']') != -1){
+							let cache_time_part = message.text.split(' secs elapsed')[0];
+							cache_time_part = parseInt(cache_time_part.substr(cache_time_part.lastIndexOf(' ')));
+							const percent_to_go = 100 - percentage;
+							const time_remaining = percent_to_go * (cache_time_part/percentage);
+							
+							let web_llm_progress_el = document.getElementById('download-progress-' + window.web_llm_model_being_loaded);
+							if(web_llm_progress_el == null){
+								console.log("window.handle_web_llm_init_progress: web_llm (down)load progress element is missing, adding it now.  window.web_llm_model_being_loaded: ", window.web_llm_model_being_loaded);
+								window.add_chat_message(window.web_llm_model_being_loaded,window.web_llm_model_being_loaded,'download_progress#setting---');
+								web_llm_progress_el = document.getElementById('download-progress-' + window.web_llm_model_being_loaded);
+							}
+							
+							if(web_llm_progress_el != null){
+		  				    	let time_remaining_el = web_llm_progress_el.parentNode.querySelector('.time-remaining'); // #download-progress-' + window.settings.assistant + ' + 
+			  				    if(time_remaining_el != null){
+			  					    time_remaining_el.innerHTML = window.create_time_remaining_html(time_remaining);
+			  				    }
+			  				    else{
+			  				  	    console.error("diffusion: count not find time-remaining element");
+			  				    }
+							}
+						
+						}
+					
+	  			  	}
+	  			  	previous_percentage = percentage;
+	  		  	}
+	
 			}
 		}
-		else{
-			console.error("web_llm: received load progress message, but window.web_llm_model_being_loaded is not a string: ", window.web_llm_model_being_loaded);
-		}
+		
+		
 	}
 	catch(e){
 		console.error("window.handle_web_llm_init_progress: caught error");
 	}
-	
 	
 }
 
@@ -973,6 +985,9 @@ window.create_diffusion_worker = async function (task){ // task is not used for 
 		
 		if(typeof e.data.status == 'string'){
 			
+			if(e.data.status != 'progress'){
+				console.log("received message from diffusion_worker: ", e.data.status);
+			}
 			
 			if(e.data.status == 'interrupt' || e.data.status == 'stop'){
 				
@@ -999,57 +1014,72 @@ window.create_diffusion_worker = async function (task){ // task is not used for 
 			else if(e.data.status == 'init_progress' && typeof e.data.progress == 'number'){
 				//console.log("diffusion init progress message: ", e.data.progress);
 				
-				let diffusion_progress_el = document.getElementById('download-progress-imager');
-				if(diffusion_progress_el == null){
-					console.error("diffusion (down)load progress element is missing, adding it now");
-					window.add_chat_message('imager','imager','download_progress#setting---');
+				if(e.data.progress == 1){
+					//console.log("imager AI seems to be loaded");
+					if(window.settings.assistant == 'imager'){
+						window.add_body_class('model-loaded');
+					}
+					
+					let diffusion_progress_el = document.getElementById('download-progress-imager');
+					diffusion_progress_el.value = 1;
+					if(diffusion_progress_el){
+						diffusion_progress_el.closest('.download-progress-chat-message').classList.add('download-complete-chat-message');
+						setTimeout(() => {
+							diffusion_progress_el.closest('.download-progress-chat-message').remove();
+						})
+					}
+					window.currently_loaded_assistant = 'imager';
+					window.set_model_loaded(true);
+					window.handle_download_complete(false); // do not show the models list, but do update the total disk space used
+					
+				}
+				else{
+					let imager_percentage = Math.floor(e.data.progress * 100);
+					//console.log("diffusion (down)load  percentage: ", imager_percentage);
+					
+					if(previous_imager_percentage > imager_percentage){
+						previous_imager_percentage = 0;
+					}
+		  		  	if(imager_percentage > previous_imager_percentage){
+						
+						//console.log("doing remaining download time estimation. percent: ", imager_percentage);
+		  			 	const now_time = Date.now();
+
+		  			    if(imager_percentage > 2){
+							
+							let diffusion_progress_el = document.getElementById('download-progress-imager');
+							if(diffusion_progress_el == null){
+								console.error("diffusion (down)load progress element is missing, adding it now");
+								window.add_chat_message('imager','imager','download_progress#setting---');
+								diffusion_progress_el = document.getElementById('download-progress-imager');
+							}
+				
+							if(diffusion_progress_el){
+								console.log("updating diffusion (down)load progress");
+								diffusion_progress_el.value = e.data.progress;
+							}
+							
+		  				    let delta = Date.now() - previous_imager_time;
+		  				    previous_imager_time = now_time;
+		  				    //console.log("it took this long to download the last percent: ", delta);
+							let percent_remaining = (100 - imager_percentage);
+		  			  	    let time_remaining = percent_remaining * (delta/1000);
+		  				    let time_remaining_el = diffusion_progress_el.parentNode.querySelector('.time-remaining'); // #download-progress-' + window.settings.assistant + ' + 
+		  				    if(time_remaining_el != null){
+								time_remaining_el.innerHTML = window.create_time_remaining_html(time_remaining);
+		  				    }
+		  				    else{
+		  				  	    console.error("count not find imager progress time-remaining element");
+		  				    }
+		  			  	}
+
+		  			  	previous_imager_percentage = imager_percentage;
+						previous_imager_time = Date.now();
+		  		  	}
 				}
 				
-				if(diffusion_progress_el){
-					//console.log("updating diffusion (down)load progress");
-					diffusion_progress_el.value = e.data.progress;
-					
-					if(e.data.progress == 1){
-						//console.log("imager AI seems to be loaded");
-						if(window.settings.assistant == 'imager'){
-							document.body.classList.add('model-loaded');
-						}
-						
-						diffusion_progress_el.closest('.download-progress-chat-message').classList.add('download-complete-chat-message');
-						window.currently_loaded_assistant = 'imager';
-						set_model_loaded(true);
-						handle_download_complete(false); // do not show the models list, but do update the total disk space used
-						
-					}
-					else{
-						let imager_percentage = Math.floor(e.data.progress * 100);
-						//console.log("diffusion (down)load  percentage: ", imager_percentage);
-						
-			  		  	if(imager_percentage > previous_imager_percentage){
-							
-							//console.log("doing remaining download time estimation. percent: ", imager_percentage);
-			  			 	const now_time = Date.now();
-
-			  			    if(imager_percentage > 2){
-			  				    let delta = Date.now() - previous_imager_time;
-			  				    previous_imager_time = now_time;
-			  				    //console.log("it took this long to download the last percent: ", delta);
-								let percent_remaining = (100 - imager_percentage);
-			  			  	    let time_remaining = percent_remaining * (delta/1000);
-			  				    let time_remaining_el = diffusion_progress_el.parentNode.querySelector('.time-remaining'); // #download-progress-' + window.settings.assistant + ' + 
-			  				    if(time_remaining_el != null){
-									time_remaining_el.innerHTML = window.create_time_remaining_html(time_remaining);
-			  				    }
-			  				    else{
-			  				  	    console.error("count not find imager progress time-remaining element");
-			  				    }
-			  			  	}
-
-			  			  	previous_imager_percentage = imager_percentage;
-							previous_imager_time = Date.now();
-			  		  	}
-					}
-				}
+				
+				
 				
 				
 				
@@ -1099,11 +1129,11 @@ window.create_diffusion_worker = async function (task){ // task is not used for 
 			
 			// Append generated image to task output element of chat bubble
 			else if( (e.data.status == 'image' || e.data.status == 'preview_image' || e.data.status == 'final_image') && typeof e.data.blob != 'undefined' && typeof e.data.task == 'object' && e.data.task != null && typeof e.data.task.index == 'number'){
-				//console.warn("\n\n\n\n\nIMAGE!\n\n\n\n");
+				console.warn("\n\n\n\n\nIMAGE!\n\n\n\n");
 				//console.log("diffusion blob: ", e.data.blob);
 				
 				if(e.data.status == 'final_image'){
-					document.body.classList.remove('doing-imager');
+					window.remove_body_class('doing-imager');
 					
 					// Keep track of unread messages
 					if(window.settings.assistant != 'imager'){
@@ -1116,7 +1146,7 @@ window.create_diffusion_worker = async function (task){ // task is not used for 
 					}
 				}
 				else{
-					document.body.classList.add('doing-imager');
+					add_body_class('doing-imager');
 				}
 				
 				window.place_generated_image_in_bubble(e.data);

@@ -4,8 +4,12 @@ let s = new Date().toLocaleString();
 //console.log("local time: ", s); // not really used for anything?
 
 window.deferreds = []; // not used?
-window.language_names = {};
+window.language_names = {}; // lookup table po pulated with data from browser
+window.current_service_worker = null; // current active registration
 
+window.clone_prefill = null;
+
+window.audio_module_loaded = true;
 window.main_audio_context = null;
 window.main_audio_context_sample_rate = null;
 window.mediaStream = null;
@@ -16,11 +20,11 @@ window.last_vad_recording_length = 0;
 window.simple_vad_worklet_added = false;
 window.busy_recording_simple_vad = false;
 window.vad_paused = false;
-window.stopped_whisper_because_of_low_memory = false;
 
 window.idle = true; // If no AI tasks are being executed this becomes false;
 window.internet = true; // Set to false if there is no internet connection
 window.skip_a_beat = false; // let the interval wait one more beat
+window.task_started = 0; // counts down from 10 to 0 to add a delay to the main interval
 window.page_focus_loss_counter = 0; // increases by 1 every second the page doesn't have focus. When it reached 120 seconds all AI's are unloaded
 window.page_has_focus = true;
 window.chat_footer_transition_threshold_height = 130; // 190
@@ -30,6 +34,7 @@ window.last_time_ai_responded = {}; // data about when the last interaction occu
 window.only_allow_voice_commands = false;
 window.last_selected_paragraph = null; // used when selecting previous/next paragraphs via voice control
 window.last_selected_paragraph_text = null; // used when selecting previous/next paragraphs via voice control
+window.files_loaded = false;
 
 window.unread_messages = {};
 //window.last_time_context_menu_clicked = 0; // for some reason the file manager menu keeps getting bubbled-up clicks, even though it shouldn't. Horrible hack to fix it.
@@ -59,8 +64,7 @@ window.document_tasks = [
 ];
 
 window.irrelevant_task_states = ['completed','interrupted','failed','reviewing','reviewed','hidden'];
-
-window.best_models = ['phi3_mini','mistral','llama3_8B']; // these models will get a special champion icon in the contacts list
+const allowed_share_url_parameters = ['ai','prompt','custom_name','custom_description','emoji','emoji_bg','download_url','config_url','context','temperature','system_prompt','second_prompt','cache_type_k','seed','chatter','model_type','size','markdown_supported','brevity_supported','license','add_timestamps','privacy_level','voice_gender'];
 
 window.sidebar_shrink_timer = null;
 
@@ -77,7 +81,7 @@ window.stt_tasks_left = 0; // used by handle_task_complete
 //window.stt_recordings_in_buffer = 0;
 window.tts_tasks_left = 0; // used by handle_task_complete
 //window.tts_sentences_in_buffer = 0;
-
+window.doing_low_memory_tts_chat_response = false;
 
 window.chat_messages_to_answer = 0;
 window.music_to_generate = 0;
@@ -97,7 +101,7 @@ window.doing_tasks_left = 0;
 
 
 window.audio_files_in_buffer = 0;
-window.audio_files_to_buffer = 3;
+window.audio_files_to_buffer = 3; // maximum to buffer before playing
 
 window.interrupt_speaking_task_index = null; // only tasks with a bigger index are allowed to generate TTS
 window.recording_to_listening_ratio = 0; // is the VAD more in listening mode (1) or in recording mode (0)? Between 0 and 1.
@@ -105,8 +109,10 @@ window.tts_counter = 0;
 window.browser_tts_voices_raw = [];
 window.browser_tts_voices = {};
 window.tts_worker = null;
+window.tts_worker_exists = false;
 window.tts_worker_busy = false;
 window.busy_loading_tts = false;
+window.tts_worker_loaded = false;
 window.easy_speech_loaded = false; // library that simplifies browser voice synth
 window.translate_stt = false;
 //let tts_worker_error_count = 0; // not implemented yet
@@ -122,11 +128,13 @@ window.scribe_clock_progress_el = null;
 
 window.whisper_worker = null;
 window.whisper_worker_busy = false;
-//window.stt_worker_busy = false;
 window.whisper_loaded = false;
 window.whisper_saw_exclamation_marks = false; // can indicate an issue with sample rate
 window.busy_loading_whisper = false; // messy..
+window.preloading_whisper = false; // also messy
 window.whisper_loading = false; // messy..
+window.stopped_whisper_because_of_low_memory = false;
+
 window.last_verified_speaker = null; // e.g. "Speaker1"
 window.previous_note_time = null;
 window.last_subtitle_relative_end_time = 0;
@@ -304,6 +312,11 @@ window.pip_started = false;
 window.pip_canvas = null;
 window.pip_canvas_context = null;
 window.pip_header_canvas = null;
+
+
+
+
+
 
 
 
@@ -740,11 +753,9 @@ const setting_language_dropdown_el = document.getElementById('settings-tab-langu
 const setting_brightness_dropdown_el = document.getElementById('settings-brightness-select');
 const speaker_voice_select_el = document.getElementById('speaker-voice-select');
 const interrupt_speaking_select_el = document.getElementById('interrupt-speaking-select');
-
-
+const enable_notifications_checkbox_el = document.getElementById('enable-notifications-checkbox');
 const show_models_list_button_el = document.getElementById('show-models-list-button');
 const total_disk_space_used_el = document.getElementById('total-disk-space-used');
-
 
 const clear_site_cache_button_el = document.querySelector("#clear-site-cache-button");
 const clear_local_storage_button_el = document.querySelector("#clear-local-storage-button");
@@ -983,7 +994,6 @@ const live_translation_new_document_button_el = document.getElementById("live-tr
 
 // TUTORIAL
 const tutorial_el = document.getElementById("tutorial");
-const recently_opened_documents_list_el = document.getElementById("recently-opened-documents-list");
 /*
 const chat_functionalities_list_el = document.getElementById("chat-functionalities-list");
 const document_functionalities_list_el = document.getElementById("document-functionalities-list");
@@ -1082,9 +1092,13 @@ const share_prompt_dialog_done_button_el = document.getElementById('share-prompt
 
 const run_the_received_prompt_button_el = document.getElementById('run-the-received-prompt-button');
 
+const save_the_received_document_button_el = document.getElementById('save-the-received-document-button');
+const run_the_received_document_button_el = document.getElementById('run-the-received-document-button');
 
 
 
+
+const new_custom_ai_model_emoji_editor_container_el = document.getElementById('new-custom-ai-model-emoji-editor-container');
 
 const emoji_picker_dialog_el = document.getElementById('emoji-picker-dialog');
 const emoji_picker_container_el = document.getElementById('emoji-picker-container');
@@ -1110,8 +1124,15 @@ const task_overview_update_toggle_button_el = document.getElementById('task-over
 // Web LLM
 const chatui_select_el = document.getElementById("chatui-select");
 
+// Filename input dialog
+const ask_for_name_dialog_el = document.getElementById("ask-for-name-dialog");
+const ask_for_name_dialog_title_el = document.getElementById("ask-for-name-dialog-title");
+const ask_for_name_dialog_input_el = document.getElementById("ask-for-name-dialog-input");
+const ask_for_name_dialog_buttons_container_el = document.getElementById("ask-for-name-dialog-buttons-container");
 
-
+// URL input dialog
+const url_to_download_dialog_el = document.getElementById('ask-for-url-dialog');
+const url_to_download_input_el = document.getElementById('ask-for-url-dialog-input');
 
 
 
@@ -1132,10 +1153,10 @@ window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
     //console.error("\nYIKES\nAn error occured: ", errorMsg, "\nYIKES AT:", url, lineNumber);//or any message
 	if(url.endsWith('llama-mt/main.js') && errorMsg.indexOf('Uncaught') != -1){
 		console.error("It seems the AI model crashed");
-		document.body.classList.remove('waiting-for-response');
-		document.body.classList.remove('working-on-doc');
-		document.body.classList.remove('doing-assistant');
-		window.stop_assistant();
+		remove_body_class('waiting-for-response');
+		remove_body_class('working-on-doc');
+		remove_body_class('doing-assistant');
+		window.stop_assistant(null,false);
 		add_chat_message(window.settings.assistant,'developer','it_seems_the_AI_has_crashed#setting---');
 		if(window.state == DOING_ASSISTANT){
 			window.set_state(LISTENING);
@@ -1151,9 +1172,6 @@ setTimeout(() => {
 	}
 },1200000)
 
-
-// Create list of functionalities in tutorial pane
-generate_functionalities_list();
 
 
 
@@ -1175,7 +1193,7 @@ editor_el.addEventListener('click', (event) => {
 	
 	if(event.target.type == 'button' && event.target.name == 'close'){
 		//console.log("clicked on a close button");
-		document.body.classList.remove('showing-text-search');
+		remove_body_class('showing-text-search');
 	}
 	
 	
@@ -1283,7 +1301,8 @@ function touchStart(element) {
 //
 // This is mostly for handling audio
 function set_state(new_state){
-	//console.log("in set_state. new_state: ", new_state);
+	//console.log("in set_state.  new_state: BLOCKED! ", new_state);
+	return
 	if(new_state != window.state){
 		//console.log("\n.\n..\n...\nNEW STATE: ");
 		//console.log(window.state, ' ==> ', new_state);
@@ -1307,15 +1326,15 @@ function set_state(new_state){
 	if(new_state == UNLOADED){
 		//window.sentences_parsed = [];
 		//window.tts_queue = [];
-		//document.body.classList.remove('state-recording');
-		document.body.classList.remove('state-listening');
+		//remove_body_class('state-recording');
+		remove_body_class('state-listening');
 		
 	}
 	else if(new_state == LISTENING){
 		//window.sentences_parsed = [];
 		//window.tts_queue = [];
-		//document.body.classList.remove('state-recording');
-		document.body.classList.add('state-listening');
+		//remove_body_class('state-recording');
+		add_body_class('state-listening');
 		
 	  	if(window.myvad){
 			//console.log("set_state: re-enabling VAD");
@@ -1324,7 +1343,7 @@ function set_state(new_state){
 	}
 	else if(new_state == RECORDING){
 		if(window.stt_warmup_complete){
-			document.body.classList.add('state-recording');
+			add_body_class('state-recording');
 		}
 		
 	}
@@ -1332,9 +1351,9 @@ function set_state(new_state){
 		
 		if(window.stt_warmup_complete){
 			window.stt_heard = '#STT_in_progress';
-			//document.body.classList.add('doing-stt');
-			document.body.classList.remove('state-listening');
-			//document.body.classList.remove('state-recording');
+			//add_body_class('doing-stt');
+			remove_body_class('state-listening');
+			//remove_body_class('state-recording');
 		}
 		else{
 			//console.log("setting window.stt_warmup_complete to true");
@@ -1343,7 +1362,7 @@ function set_state(new_state){
 		
 	}
 	else if(new_state == DOING_ASSISTANT){
-		document.body.classList.add('doing-assistant');
+		add_body_class('doing-assistant');
 	} 
 }
 window.set_state = set_state;
@@ -1356,16 +1375,14 @@ const audio_source_el = document.getElementById('source');
 
 
 
-function keyz(object){
-	return Object.keys(object);
-}
+
 
 // TUTORIAL
 
 let intro_waiting_for_user = false;
 let intro_user_made_first_query = false;
 let intro_user_got_first_response = false;
-let intro_step = 1; // intro now always plays, as the chat with the developer also acts as a quasi-settings page
+let intro_step = 0; // intro now always plays, as the chat with the developer also acts as a quasi-settings page
 let tutorial_step = localStorage.getItem("tutorial_step");
 if(tutorial_step == null){
 	//console.log("should play intro");
@@ -1374,7 +1391,7 @@ if(tutorial_step == null){
 }
 else{
 	//console.log("not playing intro");
-	document.body.classList.remove('intro');
+	remove_body_class('intro');
 }
 
 function set_tutorial_step(step=0){
@@ -1392,11 +1409,10 @@ function set_tutorial_step(step=0){
 	}
 	
 	if(tutorial_step > 1){
-		document.body.classList.remove('intro');
-		document.body.classList.remove('hide-chat-form');
+		remove_body_class('intro');
 	}
 	if(tutorial_step > 2){
-		document.body.classList.add('show-sub-menu');
+		add_body_class('show-sub-menu');
 	}
 }
 
@@ -1413,10 +1429,10 @@ set_tutorial_step(tutorial_step);
 
 if(window.settings.docs.open != null){
 	//console.log("adding css to show document");
-	document.body.classList.add('show-document');
-	document.body.classList.add('document-active');
-	window.active_destination = 'document';
-	window.active_section = 'document';
+	add_body_class('show-document');
+	//add_body_class('document-active');
+	//window.active_destination = 'document';
+	//window.active_section = 'document';
 	/*
 	setTimeout(() => {
 		if(editor){
@@ -1432,12 +1448,12 @@ if(window.settings.left_sidebar_open == true){
 
 if(window.settings.left_sidebar == 'docs'){
 	//console.log("the sidebar is initially showing the file browser");
-	document.body.classList.remove('sidebar-chat');
+	remove_body_class('sidebar-chat');
 }
 else if(window.settings.left_sidebar == 'settings'){
 	//console.log("the sidebar is initially showing the settings tab");
-	document.body.classList.remove('sidebar-chat');
-	document.body.classList.add('sidebar-settings');
+	remove_body_class('sidebar-chat');
+	add_body_class('sidebar-settings');
 }
 else{
 	//console.log("the sidebar is initially showing the assistants tab");
@@ -1445,30 +1461,30 @@ else{
 
 
 if(window.settings.left_sidebar_open == true){
-	document.body.classList.add('sidebar');
+	add_body_class('sidebar');
 }
 else{
-	document.body.classList.remove('sidebar');
+	remove_body_class('sidebar');
 }
 
 
 if(window.settings.chat_shrink == true){
-	document.body.classList.add('chat-shrink');
+	add_body_class('chat-shrink');
 }
 else{
-	document.body.classList.remove('chat-shrink');
+	remove_body_class('chat-shrink');
 }
 
 
 
 if(window.settings.left_sidebar_settings_tab == 'tasks'){ // && window.settings.settings_complexity != 'normal'){
-	document.body.classList.add('sidebar-settings-show-tasks');
+	add_body_class('sidebar-settings-show-tasks');
 }
 
 
 if(typeof window.settings.interrupt_speaking == 'string'){ // && window.settings.settings_complexity != 'normal'){
 	if(window.settings.interrupt_speaking == 'Yes' || window.settings.interrupt_speaking == 'Auto'){
-		document.body.classList.add('interrupt-speaking-allowed');
+		add_body_class('interrupt-speaking-allowed');
 	}
 	interrupt_speaking_select_el.value = window.settings.interrupt_speaking;
 }
@@ -1534,20 +1550,20 @@ function update_settings_complexity(complexity){
 	}
 	
 	if(complexity == 'normal'){
-		document.body.classList.remove('settings-complexity-advanced');
-		document.body.classList.remove('developer');
+		remove_body_class('settings-complexity-advanced');
+		remove_body_class('developer');
 		window.settings.maximum_recent_files = 5;
 		save_settings();
 	}
 	else if(complexity == 'advanced'){
-		document.body.classList.add('settings-complexity-advanced');
-		document.body.classList.remove('developer');
+		add_body_class('settings-complexity-advanced');
+		remove_body_class('developer');
 		window.settings.maximum_recent_files = 8;
 		save_settings();
 	}
 	else if(complexity == 'developer'){
-		document.body.classList.add('settings-complexity-advanced');
-		document.body.classList.add('developer');
+		add_body_class('settings-complexity-advanced');
+		add_body_class('developer');
 		window.settings.maximum_recent_files = 7;
 		save_settings();
 	}
@@ -1567,9 +1583,23 @@ if (!window.Worker) {
 	console.error("ERROR, this browser does not support webworkers!");
 }
 
-
 window.onload = init;
 function init() {
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("DEV: IN INIT");
+	}
+	
+	if(window.location.hostname.indexOf('papegai.eu') != -1 && window.settings.settings_complexity == 'developer' && window.innerWidth < 800){
+		add_script('eruda.js')
+		.then(() => {
+			console.log("starting mobile console");
+			eruda.init();
+		})
+		.catch((err) => {
+			console.error("failed to load mobile console: ", err);
+		})
+	}
+	
 	//console.log("in init (everything loaded, in theory)");
 	if(typeof window.settings.language == 'undefined'){
 		set_language('en');
@@ -1584,15 +1614,32 @@ function init() {
 	}
 	
     if(window.location.href.indexOf('debug') != -1 || window.location.search.indexOf('debug') != -1){
-		//console.log("window.location.search: ", window.location.search);
-		document.body.classList.add('developer');
+		//console.log("window.location.search contains debug: ", window.location.search);
+		add_body_class('developer');
+		/*
+		setTimeout(() => {
+			add_script('./mobile_console/hnl.mobileconsole.min.js');
+		},2000)
+		*/
+		
+		
     }
+	
+	remove_body_class('intro'); // TODO originally was removed after the initial developer chat messages were shown, or on the second visit to the site.
+	remove_body_class('loading');
+	
+	
+	const delayed_image_els = document.querySelectorAll('img[data-src]');
+	for(let di = 0; di < delayed_image_els.length; di++){
+		delayed_image_els[di].src = delayed_image_els[di].getAttribute('data-src');
+	}
+	
 	
 	// AUDIO SUPPORT?
 	if (!window.AudioContext) {
 		if (!window.webkitAudioContext) {
 			console.warn("Your browser does not support any AudioContext and cannot play back audio."); // but perhaps browser-TTS is still possible?
-			document.body.classList.add("no-audio");
+			add_body_class("no-audio");
 			window.audio_supported = false;
 			//return;
 		}
@@ -1600,43 +1647,180 @@ function init() {
 			window.AudioContext = window.webkitAudioContext;
 		}
 	}
+	set_speaker_progress(100);
 	
+    if ('serviceWorker' in navigator) {
 	
+		const controlling = navigator.serviceWorker && navigator.serviceWorker.controller;
+		if (controlling && !window.crossOriginIsolated) {
+			console.error(" There is a service worker, but the page is not cross-origin isolated");
+		}
+		
+		if (!window.isSecureContext) {
+			console.error("COOP/COEP Service Worker not registered, a secure context is required.");
+		}
+
+        // In some environments (e.g. Firefox private mode) this won't be available
+        if (!navigator.serviceWorker) {
+            console.error("COOP/COEP Service Worker not registered, perhaps due to private mode.");
+			if(window.settings.settings_complexity != 'normal'){
+				flash_message(get_translation('Your_browser_does_not_support_offline_mode'),2000,'warn');
+			}
+        }
+		
+		n.serviceWorker.register('./coi-serviceworker.js')
+		.then(
+			(registration) => {
+				console.log("init.js: COOP/COEP Service Worker registered succesfully.  registration.scope: ", registration.scope);
+                
+				registration.addEventListener("updatefound", () => {
+                    console.log("An update is available");
+					
+					
+		          	const installingWorker = registration.installing
+		          	installingWorker.onstatechange = () => {
+						console.log("installingWorker.state changed: ", installingWorker.state);
+		            	if (installingWorker.state === 'installed') {
+						   
+		             	   if (navigator.serviceWorker.controller) {
+							   if(typeof window.notify_user_of_available_update == 'function'){
+								   window.notify_user_of_available_update();
+							   }
+		              	 	} else {
+								console.log("service worker: everything is pre-cached");
+		              		}
+		            	}
+		          	}
+					
+                });
+		        
+                // If the registration is active, but it's not controlling the page
+                if (registration.active && !navigator.serviceWorker.controller) {
+                    console.warn("Service worker is active, but is not controlling the page (yet)");
+                }
+				
+				// A function in updater.js
+				if(typeof window.service_worker_registered != 'undefined'){
+					//console.log('Service manager: calling window.service_worker_registered');
+					window.service_worker_registered(registration);
+				}
+				else{
+					console.error("service_module.js: window.service_worker_registered did not exist (yet)");
+					setTimeout(() => {
+						if(typeof window.service_worker_registered != 'undefined'){
+							window.service_worker_registered(registration);
+						}
+						else{
+							console.error("init.js: ten seconds later window.service_worker_registered still did not exist (no internet?)");
+						}
+					},10000);
+			
+				}
+				
+			},
+			(err) => {
+				console.error("COOP/COEP Service Worker failed to register:", err);
+			}
+		);
+		
+    }
+	
+
 	check_cache()
 	.then((value) => {
-		console.log("CHECK CACHE DONE");
+		//console.log("CHECK CACHE DONE");
+		
 		if(typeof really_generate_ui != 'undefined'){
 			really_generate_ui();
 		}
+		
+		load_runners();
+		
 		
 		
 		if(typeof url_parameter_ai == 'string'){ //  && typeof url_parameter_prompt == 'string'
 			parse_ai_from_url();
 		}
+		else{
+			if(typeof url_parameter_file == 'string'){ //  && typeof url_parameter_prompt == 'string'
+				parse_file_from_url();
+			}
+			// If no AI is received, then jump straigth to a received prompt or document
+			// documents get preference over prompts
+			else if(typeof window.received_document == 'string'){ //  && window.received_document.length > 2 // it's now allowed to send an empty document
+			    console.warn("received a document: ", window.received_document, window.received_document_extension);
+			    show_received_document();
+			}
+			else if(typeof window.received_prompt == 'string' && window.received_prompt.length > 2){
+			    console.warn("received a prompt, but without an AI? Is that even possible/allowed?: ", window.received_prompt);
+			    show_received_prompt();
+			}
+			
+			// ?DO= RECEIVED URL PARAMETER SHORTCUTS (and nothing else)
+			else if(typeof window.url_parameter_functionality == 'string' && window.url_parameter_functionality.length > 2 ){
+				if(typeof url_parameter_file != 'string' && typeof window.functionality[window.url_parameter_functionality] != 'undefined'){
+					console.log("a functionality shortcut was present in the URL:  ", window.url_parameter_functionality);
+					window.do_functionality(window.functionality[url_parameter_functionality]);
+				}
+				// TODO This should be routed to ?ai= instead of ?do=
+				/*
+				else if(window.url_parameter_functionality.toLowerCase().startsWith('http') && window.url_parameter_functionality.toLowerCase().indexOf('.gguf') != -1){
+					window.url_parameter_functionality = window.url_parameter_functionality.replaceAll('?download=true','');
+					parse_ai_from_url({'ai':window.url_parameter_functionality});
+				}
+				*/
+				else if(keyz(window.blueprints).indexOf(window.url_parameter_functionality.toLowerCase()) != -1){
+					for (let [key, details] of Object.entries(window.blueprints)) {
+						if(key.toLowerCase() == window.url_parameter_functionality.toLowerCase()){
+							console.log("found the matching blueprint for URL parameter: ", key, details);
+							add_blueprint(details);
+							break
+						}
+					}
+				}
+				
+			}
+				
+			
+		}
+		
+			
 		
 		if(window.settings.assistant == 'developer'){
-			window.switch_assistant(window.first_assistant,true); // true: called from an automated process, and not a user interaction
+			window.switch_assistant(window.first_assistant); // true: called from an automated process, and not a user interaction
 		}
 		else{
-			window.switch_assistant(window.settings.assistant,true); 
+			window.switch_assistant(window.settings.assistant); 
 		}
 		
 		
 		//generate_ui();
 		
 		setTimeout(() => {
-			doc_settled()
-			.then((value) => {
-				//console.log("init: doc_settled tested for language and resolved: ", value);
-				document.body.classList.remove('unknown-language');
-			})
-			.catch((err) => {
-				// detecting language of text in document failed
-				//console.log("init: doc_settled tested for language and rejected: ", err);
-				//document.body.add('unknown-language');
-			})
+			if(typeof doc_settled == 'function'){
+				doc_settled()
+				.then((value) => {
+					//console.log("init: doc_settled tested for language and resolved: ", value);
+					remove_body_class('unknown-language');
+					//console.log("cached_urls.length: ", window.cached_urls.length);
+				})
+				.catch((err) => {
+					// detecting language of text in document failed
+					//console.log("init: doc_settled tested for language and rejected: ", err);
+					//document.body.add('unknown-language');
+				})
+			}
+			
 
 		},5000);
+		
+
+		if(window.location.hostname.endsWith('papeg.ai')){
+			window.add_script('./counter.php?' + makeid(16),false,true); // not a module, and load async
+		}
+		
+		
+		
 	})
 	.catch((err) => {
 		console.error("CHECK CACHE FAILED: ", err);
@@ -1650,34 +1834,776 @@ function init() {
 		//generate_ui();
 	})
 	
-	
-	
 	window.manage_prompt();
-	
- 	
 }
 
 
-function parse_ai_from_url(){
-	//console.log("in parse_ai_from_url. url_parameter_ai: ", url_parameter_ai);
-	//console.log("parse_ai_from_url: received_url_parameters: ", received_url_parameters);
-	//console.log("parse_ai_from_url: window.url_parameters: ", window.url_parameters);
+
+
+
+
+
+async function parse_file_from_url(received_parameters=null){
+	console.log("in parse_file_from_url.  received_parameters: ", received_parameters);
+	if(received_parameters == null){
+		received_parameters = received_url_parameters;
+	}
+	if(received_parameters == null){
+		console.error("parse_file_from_url: no received_parameters to work with");
+		return false
+	}
+	const received_url_keys = keyz(received_parameters);
+	console.log(" parse_file_from_url: received_url_keys: ", received_url_keys);
+	
+	if(
+		received_url_keys.indexOf('file') != -1 
+		&& received_parameters['file'].toLowerCase().startsWith('http')  // || received_parameters['file'].toLowerCase().startsWith('file:')
+		&& received_parameters['file'].length > 10
+		&& received_parameters['file'].indexOf('.') != -1
+		//&& received_parameters['file'].toLowerCase().indexOf('.') != -1
+	){
+		console.warn("parse_file_from_url: preview: file path provided in URL: ", received_parameters['file']);
+		let file_path = received_parameters['file'].trim();
+		
+		
+		/*
+		if( 
+			window.settings.settings_complexity == 'developer' 
+			|| received_parameters['file'].endsWith('.svg') 
+			|| filename_is_image(received_parameters['file'].substr(url_parameter_file.length - 6))
+		){
+			ask_for_url_dialog_iframe_el.src = './cors_fetch.php?preview=true&url=' + encode_base64url(file_path);
+			document.getElementById('download-preview-container').classList.remove('hidden');
+			
+		}
+		*/
+		
+		ask_for_url_dialog_iframe_el.src = './cors_fetch.php?preview=true&url=' + encode_base64url(file_path);
+		document.getElementById('download-preview-container').classList.remove('hidden');
+		
+		/*
+		if( received_parameters['file'].endsWith('.svg') || filename_is_image(received_parameters['file'].substr(url_parameter_file.length - 6))){
+			console.log("provided file URL seems to be for an image. Attempting to show a preview image: ", url_parameter_file);
+			//ask_for_url_dialog_iframe_el.src = url_parameter_file;
+			// ask_for_url_dialog_iframe_el.src = received_parameters['file'];
+			ask_for_url_dialog_iframe_el.src = '<html><body style="width:100%;height:100%;background-color:black;background-size:contain;background-position:center;background-repeat:no-repeat;background-image:url(' + received_parameters['file'] + ')"></body></html>';
+			document.getElementById('ask-for-url-dialog-image2').src = url_parameter_file; //received_parameters['file'];
+			
+			var canvas = document.createElement("canvas");
+			var ctx = canvas.getContext("2d");
+			var img = new Image();
+			img.crossOrigin = "anonymous";
+			img.onload = function() {
+				console.log("CROSS ORIGIN IMAGE PREVIEW LOADED!  img.width: ", img.width);
+			  canvas.width = img.width;
+			  canvas.height = img.height;
+			  ctx.drawImage(img, 0, 0);
+			  originalImageData = ctx.canvas.toDataURL();
+			  console.log("preview  originalImageData: ", originalImageData);
+			  
+			}
+			img.src = received_parameters['file'];
+		
+		}else{
+			console.log("preview: not an image? ", received_parameters['file'].substr(url_parameter_file.length - 6));
+		}
+		*/
+		
+		//console.log("received_parameters: ", received_parameters);
+		
+		if(
+			typeof received_parameters['do'] == 'string' 
+			&& received_parameters['do'].length > 2
+		){
+			
+			const action = received_parameters['do'].toLowerCase();
+			console.log("parse_file_from_url: there is also a 'do' action in the received parameters: ", action);
+			
+			let do_after = null;
+			// Summarize
+			if(action == 'summarize' || action == window.get_translation('summarize').toLowerCase()){
+				do_after = 'summarize_document_after_upload';
+			}
+			if(action == 'proofread' || action == window.get_translation('Proofread').toLowerCase()){
+				do_after = 'proofread_document_after_upload';
+			}
+			else if(
+				action == 'translate' || action == window.get_translation('Translate').toLowerCase()
+				|| action == 'translation' || action == window.get_translation('Translation').toLowerCase()
+			){
+				do_after = 'translate_document_after_upload';
+			}
+			
+			else if(action == 'transcribe' || action == window.get_translation('transcribe').toLowerCase()){
+				do_after = 'start_file_transcription';
+			}
+			else if(action == 'subtitle' || action == window.get_translation('subtitle').toLowerCase()){
+				do_after = 'start_subtitle_file_transcription';
+			}
+			else if(
+				action == 'speak' || action == window.get_translation('Speak').toLowerCase()
+				|| action == 'play' || action == window.get_translation('Play').toLowerCase()
+			
+			){
+				do_after = 'play_document_after_upload';
+			}
+			else if(
+				action == 'describe' || action == window.get_translation('Describe').toLowerCase()
+			){
+				if(window.web_gpu_supported){
+					if(typeof received_parameters['ai'] != 'string'){
+						switch_assistant('image_to_text');
+					}
+					do_after = 'describe_after_upload';
+				}
+				else{
+					flash_message(get_translation('Your_device_cannot_run_this_AI'),3000,'warn');
+				}
+			}
+			else if(
+				action == 'scan' || action == window.get_translation('Scan').toLowerCase()
+			){
+				if(typeof received_parameters['ai'] != 'string'){
+					switch_assistant('image_to_text_ocr');
+				}
+				do_after = 'scan_after_upload';
+			}
+			
+			
+			if(do_after != null){
+				console.log("file to download, AND there is also a valid action to do afterwards: ", do_after);
+				
+				const action_button_container_el = document.getElementById('ask-for-url-dialog-action-button-container');
+				let action_button_el = document.createElement('button');
+				action_button_el.classList.add('ask-for-url-dialog-action-button');
+				action_button_el.textContent = get_translation('Download') + ' & ' + received_parameters['do'];
+				
+				action_button_el.addEventListener('click', (event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					
+					if(download_url_from_input()){
+						window.do_after_command = do_after;
+					}
+				});
+				
+				action_button_container_el.appendChild(action_button_el);
+			}
+			
+		}
+		
+		
+		
+		url_to_download_input_el.value = file_path;
+		url_to_download_dialog_el.showModal();
+		url_parameter_file = null;
+		//download_file_from_url(received_parameters['file']);
+	}
+	else{
+		console.error("parse_file_from_url: no file in received_parameters?");
+	}
+}
+
+function download_file_from_url(file_path=null){
+	console.log("in download_file_from_url.  file_path: ", file_path);
+	if(typeof file_path != 'string'){
+		console.error("download_file_from_url: invalid url provided: ", file_path);
+		return false
+	}
+	file_path = file_path.trim();
+	
+	if(!file_path.toLowerCase().startsWith('http')){
+		console.error("download_file_from_url: aborting, provided URL did not start with http: ", file_path);
+		return false
+	}
+	
+	let filename = file_path;
+	let found_filename = false;
+	let missing_extension = false
+	
+	if(filename.indexOf('?') != -1){
+		filename = filename.substr(0,filename.indexOf('?') - 1);
+		filename = filename.trim();
+	}
+	while(filename.endsWith('/')){
+		filename = filename.substr(0,filename.length - 1);
+	}
+	filename = filename.trim();
+	if(filename.length){
+		if(filename.indexOf('/') != -1){
+			let filename_parts = filename.split('/');
+			for(let f = (filename_parts.length - 1); f > 0; --f){
+				if(filename_parts[f].trim().length > 5){
+					let tail_length = 11;
+					if(filename_parts[f].length < 11){
+						tail_length = filename_parts[f].trim().length;
+					}
+					if(filename_parts[f].substr(filename_parts[f].length - tail_length).indexOf('.') != -1){ // there is a dot in the last few letters of the potential filename
+						filename = filename_parts[f].trim();
+						found_filename = true;
+						console.log("download_file_from_url: found likely filename: ", filename);
+						break
+					}
+				}
+			}
+		}
+	}
+	console.log("download_file_from_url: found_filename: ", found_filename);
 	
 	
-	const received_url_keys = keyz(received_url_parameters);
+	if(found_filename == false){
+		filename = makeId(8);
+		missing_extension = true;
+	}
 	
-	if(received_url_keys.length == 1 && received_url_keys.indexOf('ai') != -1 && received_url_parameters['ai'].indexOf('.gguf') == -1 && !received_url_parameters['ai'].startsWith('custom') && typeof window.assistants[received_url_parameters['ai']] != 'undefined'){
-		//console.log("The received URL only has an assistant ID");
-		switch_assistant(received_url_parameters['ai']);
+	if(found_filename){
+		filename = sanitize_filename(filename);
+		
+		if(filename.toLowerCase().endsWith('.gguf')){
+			console.warn("download_file_from_url: file path provided in URL was a .gguf file");
+			// TODO route this to parse_ai_from_url?
+			/*
+			if(typeof received_url_parameters['ai'] != 'string' && received_url_parameters['file'].toLowerCase().startsWith('http')){
+				received_url_parameters['ai'] = received_url_parameters['file'];
+				delete received_url_parameters['file'];
+				parse_ai_from_url();
+			}
+			*/
+			return;
+		}
+		else{
+			try{
+				
+				
+				
+				
+				
+				
+				/*
+				function decode_base64url(input) {
+		        	input = input
+		            .replace(/-/g, '+')
+		            .replace(/_/g, '/');
+
+			        var pad = input.length % 4;
+			        if(pad) {
+						if(pad === 1) {
+							throw new Error('InvalidLengthError: Input base64url string is the wrong length to determine padding');
+						}
+						input += new Array(5-pad).join('=');
+			        }
+			        return input;
+				}
+				*/
+				/*
+				function base64URLencode(str) {
+					const utf8Arr = new TextEncoder().encode(str);
+					const base64Encoded = btoa(utf8Arr);
+					return base64Encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+				}
+				*/
+				
+				
+				
+				
+				/*
+				function encode_base64url(str) {
+					//console.log("encode_base64url: input: ", typeof str, str);
+					const utf8Arr = new TextEncoder().encode(str);
+					const base64Encoded = btoa(utf8Arr);
+					//console.log("encode_base64url: base64Encoded: ", base64Encoded);
+					return base64Encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+				}
+				*/
+				
+				const base_encoded_url = encode_base64url(file_path); //encode_base64url(file_path);
+				
+				//console.log("base_encoded_url: ", file_path, " ---> ", base_encoded_url);
+				
+				//let url_base = window.location.href;
+				let url_base = window.location.protocol + "//" + window.location.host;
+				if(window.location.host.indexOf('papeg') == -1){
+					url_base += '/wasm4';
+				}
+				
+				url_base += '/cors_fetch.php?url=' + base_encoded_url;
+				console.error("CORS FETCH url_base: \n\n", url_base, "\n\n");
+				
+				var xhr = new XMLHttpRequest();
+				xhr.open('OPTIONS', file_path, true);                                                                                                                            
+				//xhr.setRequestHeader('Content-Type', 'application/json');
+				//xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+				//xhr.setRequestHeader('Origin', window.location.host);
+				
+				xhr.onreadystatechange = function () {
+					console.log("xhr.onreadystatechange: ", this);
+					
+					if (this.readyState == 4) {
+						if(this.status == 200){
+							console.log('Pre-flight OK response: ' + this.responseText);
+							// TODO: get the file directly
+							
+							fetch(file_path, {
+							      headers: {
+									  'Access-Control-Allow-Origin': '*',
+							      },
+								  //mode: 'no-cors', 
+							      //credentials: 'include'
+							})
+						   	.then(res => {
+						 		console.log("parse_file_from_url: res.status: ", res.status, res);
+	
+						 		if (res.status === 200) {
+						 			return res.blob();
+						 		}
+						 		else{
+						 			//return '';
+									return res.blob();
+						 		}
+	
+						   	})
+						   	.then(blob => {
+								//const blob = new Blob([byte_array], {type: json_response.mime_type});
+				
+								
+	
+								blob.lastModified = new Date();
+		
+								if(missing_extension && typeof blob.type == 'string'){
+									filename = filename + '_' + blob.type.replaceAll('/','.');
+								}
+								console.log("parse_file_from_url: got blob. final filename from URL: ", filename);
+				
+								try{
+									var file_object = new File([blob],filename);
+									file_upload(null,[file_object]);
+									remove_body_class('sidebar-shrink');
+									remove_body_class('sidebar-chat');
+									remove_body_class('sidebar-settings');
+								}
+								catch(err){
+									console.error("download_file_from_url: caught error trying to turn blob into File object: ", err);
+								}
+								
+						 	})
+						 	.catch((err) => {
+						 		console.error("download_file_from_url: caught error trying to fetch blob from file path that was provided in the URL: ", file_path, err);
+						 	})
+							
+						}
+						else{
+							console.error('\n\n\n\n\n++\n++  ==>CORS_FETCH\n++\n\ndownload_file_from_url: pre-flight response status was not 200, it was: ', this.status);
+							console.log("url_base,filename,missing_extension: ", url_base,filename,missing_extension);
+							do_cors_fetch(url_base,filename,missing_extension);
+						}
+					}
+				};
+
+				xhr.send();
+				
+			}
+			catch(err){
+				console.error("download_file_from_url: caught general error trying to download file from URL: ", err);
+			}
+			
+		}
+	}
+}
+
+function encode_base64url(aStr) { return btoa(aStr).replace(/\+/g,'-').replace(/\//g,'_').replace(/\=+$/m,'') }
+
+
+function base64ToArrayBuffer( base64 ) {
+    var raw = window.atob( base64 );
+    var rawLength = raw.length;
+    var array = new Uint8Array( new ArrayBuffer(rawLength) );
+    for( i = 0; i < rawLength; i++ ) {
+        array[ i ] = raw.charCodeAt( i );
+    }
+    return( array.buffer );
+}
+
+
+function do_cors_fetch(url_base=null, filename=null, missing_extension=false){
+	console.log("in do_cors_fetch");
+	if(typeof url_base != 'string' || typeof filename != 'string'){
+		console.error("do_cors_fetch: no valid url_base or filename provided");
 		return
 	}
 	
+	fetch(url_base)
+  	
 	
-	if(received_url_keys.length == 2 && received_url_keys.indexOf('ai') != -1 && received_url_keys.indexOf('prompt') != -1 && received_url_parameters['ai'].indexOf('.gguf') == -1 && typeof window.assistants[received_url_parameters['ai']] != 'undefined'){
+	/*
+	const testURL = file_path;
+	
+		const myInit = {
+			method: 'HEAD',
+			mode: 'no-cors',
+		};
+
+		const myRequest = new Request(testURL, myInit);
+
+		fetch(myRequest).then(function(response) {
+			return response;
+		}).then(function(response) {
+			console.log("HEAD NO CORS RESPONSE: ", response);
+		}).catch(function(err){
+			console.error("HEAD NO CORS ERROR: ", err);
+		});
+	
+	
+	
+	
+	
+	
+	fetch(file_path, {
+	      headers: {
+			  
+			'Access-Control-Allow-Origin': '*',
+	        "Content-Type": "application/octet-stream",
+	      },
+		  //mode: 'no-cors', 
+	      credentials: 'include'
+	 })
+	 */
+	 /*
+	 if (response.status === 200) {
+    	const data = await response.json();
+    	this.listApp = data;
+    	this.listApp.forEach(app => {
+        	if (app.status === "DISCONNECTED") {
+	 			this.listDecApp.push(app);
+        	}
+    	});
+    	this.nbr = this.listDecApp.length;
+	} else {
+    	if (response.status === 400) this.errors = ['Invalid app_permissions value. (err.400)'];
+   		if (response.status === 401) this.errors = ['Acces denied. (err.401)'];
+	}
+		
+	 */
+	 
+  	.then(res => {
+		console.log("parse_file_from_url: res.status: ", res.status, res);
+		
+		if (res.status === 200) {
+			return res.text();
+		}
+		else{
+			return '';
+		}
+		
+  	})
+  	.then(text => {
+		//console.log("parse_file_from_url: fetch got json with base64 data: ", text);
+		if(typeof text != 'string'){
+			console.error("text as not a string");
+		}
+		else if(text.length && text.startsWith('{')){
+			
+			try{
+				let json_response = JSON.parse(text);
+				//console.log("json_response: ", json_response);
+			
+				if(typeof json_response.error == 'string'){
+					flash_message(get_translation('Could_not_download_file'),2000,'fail');
+				}
+				else if(typeof json_response.base64_data == 'string' && json_response.base64_data.length && typeof json_response.mime_type == 'string'){
+					console.log("cors_fetch response seems valid");
+					
+					if(missing_extension){
+						let extension = json_response.mime_type;
+					
+						if(json_response.mime_type.startsWith('text/plain')){
+							filename += '.txt';
+							missing_extension = false;
+						}
+						else if(json_response.mime_type.startsWith('image/jpeg')){
+							filename += '.jpg';
+							missing_extension = false;
+						}
+						else{
+							if(extension.indexOf(';') != -1){
+								extension = extension.split(';')[0];
+							}
+							extension = extension.trim();
+							if(extension.indexOf('/') != -1){
+								extension = extension.split('/')[1];
+							}
+							extension = extension.trim();
+							if(typeof extension == 'string' && extension.length < 6){
+								filename = filename + '.' + extension;
+								console.warn("added extension to filename based on mime-type: ", filename);
+								missing_extension = false;
+							}
+						}
+						
+					}
+					
+					
+					// data:image/png;base64,
+					
+					//json_response.data
+				
+					//let raw_result = decode_base64url(text);
+			
+					//text_file_extensions
+			
+					//let byte_array = atob(json_response.base64_data);
+					let byte_array = base64ToArrayBuffer(json_response.base64_data);
+					//console.log("byte_array: ", typeof byte_array, byte_array, json_response.mime_type);
+					
+					const blob = new Blob([byte_array], {type: json_response.mime_type});
+					
+					//filename = sanitize_filename(filename);
+		
+					blob.lastModified = new Date();
+			
+					if(missing_extension && typeof blob.type == 'string'){
+						filename = filename + '_' + blob.type.replaceAll('/','.');
+					}
+					//console.log("parse_file_from_url: final filename from URL: ", filename);
+					
+					try{
+						var file_object = new File([blob],filename);
+						file_upload(null,[file_object]);
+						remove_body_class('sidebar-shrink');
+						remove_body_class('sidebar-chat');
+						remove_body_class('sidebar-settings');
+					}
+					catch(err){
+						console.error("parse_file_from_url: caught error trying to turn blob into File object: ", err);
+					}
+					
+			
+			
+					/*
+					if(filename_is_binary_image){
+	  				    let objectURL = URL.createObjectURL(blob);
+	  				    let myImage = new Image();
+	  				    myImage.src = objectURL;
+	  				    document.body.appendChild(myImage);
+					}
+					*/
+				
+				}
+			}
+			catch(err){
+				console.error("caught error decoding JSON response from cors_fetch: ", err);
+				flash_message(get_translation('Could_not_download_file'),1500,'fail');
+				window.do_after_command = null;
+			}
+			
+		}
+		else{
+			console.error("cors_fetch returned invalid JSON: ", text);
+			flash_message(get_translation('Could_not_download_file'),1500,'fail');
+			window.do_after_command = null;
+		}
+		
+	    
+	})
+	.catch((err) => {
+		console.error("caught error trying to fetch blob from file path that was provided in the URL: ", file_path, err);
+	})
+}
+
+
+
+function parse_ai_from_url(received_parameters=null){
+	console.log("in parse_ai_from_url. url_parameter_ai: ", url_parameter_ai);
+	console.log("parse_ai_from_url: received_parameters: ", received_parameters);
+	console.log("parse_ai_from_url: window.url_parameters: ", window.url_parameters);
+	
+	if(received_parameters == null){
+		received_parameters = received_url_parameters;
+	}
+	const received_url_keys = keyz(received_parameters);
+	
+	if(received_url_keys.indexOf('ai') != -1 && received_parameters['ai'].toLowerCase().indexOf('.gguf') == -1 && !received_parameters['ai'].startsWith('custom') && typeof window.assistants[received_parameters['ai']] != 'undefined'){
+		//console.log("The received URL only has an assistant ID");
+		let ai_name = received_parameters['ai'];
+		
+		if(
+			!ai_name.startsWith('fast_') 
+			&& (window.web_gpu_supported || window.web_gpu32_supported) 
+			&& typeof window.assistants['fast_' + ai_name] != 'undefined'
+		){
+			ai_name = 'fast_' + ai_name;
+			if(window.web_gpu32_supported && typeof window.assistants[ai_name += '_32bit'] != 'undefined'){
+				ai_name += '_32bit';
+			}
+			//console.log("modified received AI to WebGPU version: ", ai_name);
+		}
+			
+		else if(
+			ai_name.startsWith('fast_') 
+			&& typeof window.assistants[ai_name.replace('fast_','')] != 'undefined' 
+			&& window.web_gpu_supported == false && window.web_gpu32_supported == false
+		){
+			ai_name = ai_name.replace('fast_','');
+			ai_name = ai_name.replace('_32bit','');
+			//console.log("modified received AI to non-WebGPU version: ", ai_name);
+		}
+		
+		else if(ai_name.startsWith('fast_') && window.web_gpu_supported == true && window.web_gpu32_supported == false){
+			ai_name = ai_name.replace('_32bit','');
+			//console.log("modified received AI to 16 bit WebGPU version: ", ai_name);
+		}
+		
+		else if(ai_name.startsWith('fast_') && window.web_gpu16_supported == false && window.web_gpu32_supported == true){
+			ai_name += '_32bit';
+			//console.log("modified received AI to 32 bit WebGPU version: ", ai_name);
+		}
+		if(typeof window.assistants[ai_name] != 'undefined'){
+			received_parameters['ai'] = ai_name;
+		}
+		
+		if(received_url_keys.length == 1){
+			switch_assistant(received_parameters['ai']);
+			return
+		}
+		
+	}
+	
+	
+	// expand URL that starts with a slash to add huggingface to it
+	// TODO also check if current url is papeg.ai?
+	if(
+		received_url_keys.indexOf('ai') != -1 
+		&& received_parameters['ai'].toLowerCase().indexOf('.gguf') != -1
+		&& received_parameters['ai'].startsWith('/')
+	){
+		received_parameters['ai'] = 'https://www.huggingface.co' + received_parameters['ai'];
+	}
+	
+	
+	// A RAW URL PROVIDED
+	if(
+		received_url_keys.indexOf('ai') != -1 
+		&& (received_parameters['ai'].toLowerCase().startsWith('http') || received_parameters['ai'].startsWith('/'))
+		&& received_parameters['ai'].indexOf('/') != -1
+		&& received_parameters['ai'].toLowerCase().indexOf('.gguf') != -1
+	){
+		
+		received_parameters['ai'] = received_parameters['ai'].replaceAll('?download=true','');
+		received_parameters['ai'] = received_parameters['ai'].replace('https:/huggingface.co','https://huggingface.co');
+		received_parameters['ai'] = received_parameters['ai'].trim();
+
+		if(received_parameters['ai'].startsWith('/')){
+			received_parameters['ai'] = 'https://www.huggingface.co' + received_parameters['ai'];
+		}
+		//console.log("The received AI is a .gguf model URL: ", received_parameters['ai']);
+		
+			
+			
+		//received_url_keys.length == 1 
+		
+		function getRandomColor() {
+		  var letters = '0123456789ABCDEF';
+		  var color = '';
+		  for (var i = 0; i < 6; i++) {
+		    color += letters[Math.floor(Math.random() * 16)];
+		  }
+		  return color;
+		}
+		
+		
+		
+		if(typeof received_parameters['emoji'] != 'string'){
+			received_parameters['emoji'] = '🦜';
+		}
+		if(typeof received_parameters['emoji_bg'] != 'string'){
+			received_parameters['emoji_bg'] = getRandomColor();
+		}
+		
+		// derive custom name from model URL
+		if(typeof received_parameters['custom_name'] != 'string' || (typeof received_parameters['custom_name'] == 'string' && received_parameters['custom_name'] == '')){
+			let raw_url = received_parameters['ai'];
+			raw_url = raw_url.replace('https:/huggingface.co','https://huggingface.co');
+			let received_url_chunks = received_parameters['ai'].split('/');
+			//console.log("received_url_chunks: ", received_url_chunks);
+			
+			let new_description = null;
+			
+			if(received_parameters['ai'].indexOf('huggingface.co') != -1){
+				if(received_url_chunks[1].indexOf('huggingface.co') != -1){
+					if(received_url_chunks.length > 2){
+						received_parameters['custom_name'] = received_url_chunks[3];
+						new_description = received_url_chunks[2] + ' ' + received_url_chunks[3];
+					}
+				}
+				if(received_url_chunks[2].indexOf('huggingface.co') != -1){
+					if(received_url_chunks.length > 3){
+						received_parameters['custom_name'] = received_url_chunks[3] + ' ' + received_url_chunks[4];
+						new_description = received_url_chunks[4];
+					}
+				}
+			
+			}
+			else{
+				received_parameters['custom_name'] = 'Custom';
+			}
+		
+			for(let x = 0; x < received_url_chunks.length; x++){
+				//console.log("received_url_chunks[x]: ", x, received_url_chunks[x]);
+				if(typeof received_url_chunks[x] == 'string' && received_url_chunks[x].length > 5 && received_url_chunks[x].toLowerCase().indexOf('.gguf') != -1){
+					new_description = received_url_chunks[x].replaceAll('.gguf','').replaceAll('.GGUF','');
+				}
+			}
+		
+			// Cleaning up the strings
+		
+			received_parameters['custom_name'] = received_parameters['custom_name'].replaceAll('gguf','');
+			received_parameters['custom_name'] = received_parameters['custom_name'].replaceAll('GGUF','');
+			received_parameters['custom_name'] = received_parameters['custom_name'].replaceAll('-',' ');
+			received_parameters['custom_name'] = received_parameters['custom_name'].replaceAll('_',' ');
+			received_parameters['custom_name'] = received_parameters['custom_name'].trim();
+			if(received_parameters['custom_name'].length > 25){
+				received_parameters['custom_name'] = received_parameters['custom_name'].substr(0,25);
+			}
+		
+			if(typeof new_description == 'string' && new_description.length && typeof received_parameters['custom_description'] != 'string' || (typeof received_parameters['custom_description'] == 'string' && received_parameters['custom_description'] == '')){
+				new_description = new_description.replaceAll('_',' ');
+				received_parameters['custom_description'] = new_description.replaceAll('-',' ');
+				if(received_parameters['custom_description'].length > 60){
+					received_parameters['custom_description'] = received_parameters['custom_name'].substr(0,60);
+				}
+			}
+			
+		}
+		//console.log("Upgraded a raw received URL to these parameters: ", received_parameters);
+	}
+	
+	
+	if(typeof received_parameters['custom_name'] == 'string'){
+		console.warn('received parameters: custom name: ', received_parameters['custom_name']);
+	}
+	
+	if(received_url_keys.length == 2 && received_url_keys.indexOf('ai') != -1 && received_url_keys.indexOf('prompt') != -1 && received_parameters['ai'].indexOf('.gguf') == -1 && typeof window.assistants[received_parameters['ai']] != 'undefined'){
 		//console.log("The received URL was a very basic one, for a built-in AI. We only have to show the dialog to validate the prompt");
+		switch_assistant(received_parameters['ai']);
 		show_received_prompt();
 		return
 	}
+	
+	if(received_url_keys.length == 2 && received_url_keys.indexOf('ai') != -1 && received_url_keys.indexOf('document') != -1 && received_parameters['ai'].indexOf('.gguf') == -1 && typeof window.assistants[received_parameters['ai']] != 'undefined'){
+		//console.log("The received URL was a very basic one, for a document + built-in AI. We only have to show the dialog to validate the document");
+		switch_assistant(received_parameters['ai']);
+		show_received_document();
+		return
+	}
+	
+	if(received_url_keys.length == 3 && received_url_keys.indexOf('ai') != -1 && received_url_keys.indexOf('document') != -1 && received_url_keys.indexOf('filename') != -1 && received_parameters['ai'].indexOf('.gguf') == -1 && typeof window.assistants[received_parameters['ai']] != 'undefined'){
+		//console.log("The received URL was a very basic one, for a document + built-in AI. We only have to show the dialog to validate the document");
+		switch_assistant(received_parameters['ai']);
+		show_received_document();
+		return
+	}
+	
+	
+	
 	
 	let new_ai_settings = {};
 	
@@ -1690,22 +2616,22 @@ function parse_ai_from_url(){
 			new_ai_settings = {...new_ai_settings,...window.settings.assistants[url_parameter_ai]};
 		}
 	}
-	console.log("parse_ai_from_url: initial new_ai_settings: ", new_ai_settings);
+	//console.log("parse_ai_from_url: initial new_ai_settings: ", new_ai_settings);
 	
-	for (let [key, value] of Object.entries(received_url_parameters)) {
+	for (let [key, value] of Object.entries(received_parameters)) {
 		console.log("___parse_ai_from_url: KEY VALUE:\n", key, typeof value, value);
 		if(value == null){
 			console.warn("parse_ai_from_url: skipping key that had null as value: ", key);
 			continue
 		}
-		if( ['ai','prompt','custom_name','custom_description','emoji','emoji_bg','download_url','config_url','context','temperature','system_prompt','second_prompt','cache_type_k','chatter','model_type','size','markdown_supported','brevity_supported','license','add_timestamps','privacy_level','voice_gender'].indexOf(key) == -1){
+		if( allowed_share_url_parameters.indexOf(key) == -1){
 			console.error("invalid parameter in provided URL: ", key);
 			continue
 		}
 		
 		if(key == 'prompt'){
-			console.log("A prompt was also provided: ", value);
-			console.log("Should be the same as: ", window.received_prompt);
+			//console.log("A prompt was also provided: ", value);
+			//console.log("Should be the same as: ", window.received_prompt);
 		}
 		
 		if(key == 'ai'){
@@ -1726,19 +2652,62 @@ function parse_ai_from_url(){
 			// Make sure the context parameter is an number, and isn't bigger than what's possible
 			if(key == 'context'){
 				if(isNaN(value)){
-					value = '1024';
+					value = 1024;
 				}
-				if(typeof value == 'string' && typeof window.settings.assistants[url_parameter_ai] != 'undefined' && typeof window.settings.assistants[url_parameter_ai]['context_size'] == 'number' && parseInt(value) > window.settings.assistants[url_parameter_ai]['context_size'] ){
-					console.error("context was larger that possible");
-					value = window.settings.assistants[url_parameter_ai]['context_size'];
+				if(typeof value == 'string'){
+					value = parseInt(value);
 				}
-				if(typeof value == 'string' && parseInt(value) < 512){
-					value = 512;
+				if(typeof value == 'number'){
+					if(value < 512){
+						value = 512;
+					}
+					else if(typeof window.settings.assistants[url_parameter_ai] != 'undefined' && typeof window.settings.assistants[url_parameter_ai]['context_size'] == 'number' && value > window.settings.assistants[url_parameter_ai]['context_size']){
+						console.error("context was larger than maximum possible");
+						value = window.settings.assistants[url_parameter_ai]['context_size'];
+					}
 				}
+				else{
+					continue
+				}
+				 
+				
 			}
 			else if(key == 'temperature'){
-				if(isNaN(value) || (typeof value == 'string' && (parseInt(value) < 0 || parseInt(value) > 0 ))){
+				if(isNaN(value) ){
 					value = 0.7;
+				}
+				else if(typeof value == 'string' && value.length){
+					value = parseFloat(value);
+				}
+				if(typeof value == 'number' && value >= 0 && value <= 2){
+					// ok
+					console.log("received a valid temperature from URL");
+				}
+				else{
+					console.error("temperature must be between (and including) 0 and 2");
+					continue
+				}
+				
+			}
+			else if(key == 'seed'){
+				if(isNaN(value)){
+					//value = 42;
+					console.error("seed provided in URL was NaN: ", typeof value, value);
+					continue
+				}
+				if(typeof value == 'string'){
+					value = parseInt(value);
+				}
+				if(typeof value == 'number'){
+					value = Math.round(value);
+					if(value < 0 || value > 1000000){
+						console.error("seed value must be between 0 and 1000000");
+						continue
+					}
+					console.log("valid seed provided in URL: ", typeof value, value);
+				}
+				else{
+					console.error("seed was unexpected variable type.  typeof value, value: ", typeof value, value);
 				}
 			}
 			else if(key.endsWith('prompt') && key != 'prompt'){
@@ -1751,7 +2720,11 @@ function parse_ai_from_url(){
 			else if(typeof value == 'string'){
 				value = strip_html(value);
 			}
+			else if(typeof value == 'number'){
+				// ok
+			}
 			else{
+				console.error("skipping a parameter that was provided in a url.  key, value: ", key, typeof value, value);
 				continue
 			}
 			new_ai_settings[key] = value;
@@ -1771,61 +2744,37 @@ function parse_ai_from_url(){
 	}
 	
 	
-	document.body.classList.add('busy-editing-received-ai');
-	document.body.classList.add('busy-editing-assistant');
-	window.assistants['custom_received'] = new_ai_settings;
+	add_body_class('busy-editing-received-ai');
+	add_body_class('busy-editing-assistant');
+	//window.assistants['custom_received'] = new_ai_settings;
 	//window.settings.assistants['custom_received']['custom_name'] = 'custom_received_papegai';
 	
-	do_clone_prefill('custom_received');
-	
-}
-
-
-
-
-
-
-async function check_gpu(){
-	//console.log("in check_gpu");
-	// CHECK WEB GPU SUPPORT
-    if (!navigator.gpu) {
-		console.error("WebGPU not supported.");
-		document.body.classList.remove('web-gpu');
-		document.body.classList.remove('web-gpu32');
-    }
-	else{
-		//console.log("navigator.gpu exists: ", navigator.gpu);
-		const adapter = await navigator.gpu.requestAdapter();
-		if (typeof adapter != 'undefined' && adapter != null && typeof adapter.features != 'undefined') {
-			if(adapter.features.has("shader-f16")){
-				//console.log(`Web GPU: 16 bit is available`);
-				window.web_gpu_supported = true;
-				document.body.classList.add('web-gpu');
-				
-				if (navigator.gpu.wgslLanguageFeatures && !navigator.gpu.wgslLanguageFeatures.has("packed_4x8_integer_dot_product")) {
-					//console.log(`webgpu DP4a built-in functions are not available`);
-				}
-			}
-			else{
-				console.warn("Web GPU: only 32-bit floating-point value support is available");
-				window.web_gpu32_supported = true;
-				document.body.classList.remove('web-gpu');
-				document.body.classList.add('web-gpu32');
-				
-				add_web_gpu32_models();
-			}
-			
+	if(typeof new_ai_settings.clone_original == 'undefined'){
+		
+		if(typeof new_ai_settings.download_url == 'string' && new_ai_settings.download_url.toLowerCase().indexOf('.gguf') != -1){
+			//console.log("basing received AI of off custom_received");
+			do_clone_prefill('custom_received', new_ai_settings);
 		}
 		else{
-			console.error("querying WebGPU failed, invalid adapter: ", adapter);
-			document.body.classList.remove('web-gpu');
-			document.body.classList.remove('web-gpu32');
+			const optimal_ai = pick_optimal_text_ai();
+			//console.log("basing received AI of off pick_optimal_text_ai: ", optimal_ai);
+			do_clone_prefill(optimal_ai, new_ai_settings);
 		}
-    }
+		//new_ai_settings = {...new_ai_settings,...window.settings.assistants[url_parameter_ai]};
+		
+	}
+	else{
+		//console.log("basing received AI of off clone_original: ", new_ai_settings.clone_original);
+		// TODO: strip or add 'fast_' ?
+		// window.web_gpu_supported
+		do_clone_prefill(new_ai_settings.clone_original, new_ai_settings);
+	}
 	
 }
 
-check_gpu();
+
+
+
 
 
 
@@ -1892,32 +2841,32 @@ document.getElementById('privacy-policy-link').addEventListener("click", () => {
 
 
 document.getElementById('sidebar-header-chat-button').addEventListener("click", (event) => {
-	document.body.classList.add('sidebar-chat');
-	document.body.classList.remove('sidebar-settings');
-	document.body.classList.remove('show-rewrite');
-	document.body.classList.remove('busy-selecting-assistants');
+	add_body_class('sidebar-chat');
+	remove_body_class('sidebar-settings');
+	remove_body_class('show-rewrite');
+	remove_body_class('busy-selecting-assistants');
 	window.settings.left_sidebar = 'chat';
 	save_settings();
 });
 
 document.getElementById('sidebar-header-docs-button').addEventListener("click", () => {
-	document.body.classList.remove('sidebar-chat');
-	document.body.classList.remove('sidebar-settings');
-	//document.body.classList.add('show-rewrite'); // TODO: only add this is there are rewrites available for inspection
-	document.body.classList.remove('busy-selecting-assistants');
+	remove_body_class('sidebar-chat');
+	remove_body_class('sidebar-settings');
+	//add_body_class('show-rewrite'); // TODO: only add this is there are rewrites available for inspection
+	remove_body_class('busy-selecting-assistants');
 	model_info_container_el.innerHTML = '';
 	update_ui();
 	window.settings.left_sidebar = 'docs';
 	if(window.innerWidth > 900 && document.body.classList.contains('show-rewrite-results')){
-		document.body.classList.add('show-rewrite');
+		add_body_class('show-rewrite');
 	}
 	save_settings();
 });
 
 document.getElementById('sidebar-header-settings-button').addEventListener("click", () => {
-	document.body.classList.remove('sidebar-chat');
-	document.body.classList.remove('busy-selecting-assistants');
-	document.body.classList.add('sidebar-settings');
+	remove_body_class('sidebar-chat');
+	remove_body_class('busy-selecting-assistants');
+	add_body_class('sidebar-settings');
 	window.settings.left_sidebar = 'settings';
 	save_settings();
 	check_memory({},true);
@@ -1926,7 +2875,7 @@ document.getElementById('sidebar-header-settings-button').addEventListener("clic
 
 
 document.getElementById('settings-sidebar-settings-button').addEventListener("click", () => {
-	document.body.classList.remove('sidebar-settings-show-tasks');
+	remove_body_class('sidebar-settings-show-tasks');
 	window.settings.left_sidebar_settings_tab = 'settings';
 	save_settings();
 });
@@ -1934,7 +2883,7 @@ document.getElementById('settings-sidebar-settings-button').addEventListener("cl
 
 document.getElementById('settings-sidebar-tasks-button').addEventListener("click", () => {
 	//console.log("clicked on tasks button");
-	document.body.classList.add('sidebar-settings-show-tasks');
+	add_body_class('sidebar-settings-show-tasks');
 	window.settings.left_sidebar_settings_tab = 'tasks';
 	save_settings();
 	generate_task_overview();
@@ -1942,7 +2891,7 @@ document.getElementById('settings-sidebar-tasks-button').addEventListener("click
 
 
 document.getElementById('clear-tasks-button').addEventListener("click", () => {
-	console.log("clicked on clear tasks button");
+	//console.log("clicked on clear tasks button");
 	window.location.reload(false);
 });
 
@@ -1950,9 +2899,9 @@ document.getElementById('clear-tasks-button').addEventListener("click", () => {
 
 /*
 document.getElementById('simple-task-list-play-button').addEventListener("click", (event) => {
-	console.log("in chatty_main");
+	//console.log("in chatty_main");
 	window.update_simple_task_list = true;
-	document.body.classList.remove('simple-task-list-paused');
+	remove_body_class('simple-task-list-paused');
 });
 */
 
@@ -1962,7 +2911,7 @@ sidebar_filter_input_el.addEventListener('input', () => {
 	if(sidebar_filter_input_el.value.length > 10){
 		sidebar_filter_input_el.value = sidebar_filter_input_el.value.substr(0,10);
 	}
-	document.body.classList.remove('shrink-sidebar');
+	remove_body_class('shrink-sidebar');
 	
 	if(window.settings.left_sidebar = 'chat'){
 		let sidebar_contact_els = document.querySelectorAll('#contacts-list > ul > .contact-item');
@@ -2016,7 +2965,7 @@ sidebars_el.addEventListener("click", (event) => {
 });
 
 function reset_sidebar_shrink_timer(){
-	document.body.classList.remove('sidebar-shrink');
+	remove_body_class('sidebar-shrink');
 	if(window.sidebar_shrink_timer != null){
 		clearTimeout(window.sidebar_shrink_timer);
 	}
@@ -2026,7 +2975,7 @@ function reset_sidebar_shrink_timer(){
 			reset_sidebar_shrink_timer();
 		}
 		else{
-			document.body.classList.add('sidebar-shrink');
+			add_body_class('sidebar-shrink');
 		}
 		
 	}, 10000);
@@ -2047,19 +2996,29 @@ sidebars_el.addEventListener("mouseover", function (event) {
 
 
 // general listener on the chat section
-chat_content_el.addEventListener("click", (event) => {
+chat_content_el.addEventListener("mousedown", (event) => {
 	//console.log("clicked on chat content section");
 	window.active_destination = 'chat';
 	window.active_section = 'chat';
-	document.body.classList.remove('document-active');
+	remove_body_class('document-active');
 	if(typeof hide_doc_selection_hint === 'function'){
 		hide_doc_selection_hint();
 	}
 	
-	
 	if(window.innerWidth < 981 ){ // && document.body.classList.contains('show-document')
+		/*
 		if(typeof close_sidebar == 'function'){
 			close_sidebar();
+		}
+		*/
+		if(window.innerWidth > 640 && window.innerWidth < 981 && document.body.classList.contains('sidebar') && document.body.classList.contains('sidebar-chat') && document.body.classList.contains('sidebar-shrink')){
+			// Do nothing, so the shrunken chat sidebar remains visible
+		}
+		else{
+			if(typeof close_sidebar == 'function'){
+				close_sidebar();
+			}
+			
 		}
 		
 	}
@@ -2074,16 +3033,18 @@ tools_el.addEventListener("click", (event) => {
 	//console.log("clicked on tools section");
 	window.active_destination = 'document';
 	window.active_section = 'tools';
-	document.body.classList.add('document-active');
+	add_body_class('document-active');
 	
-	if(window.innerWidth < 980 && document.body.classList.contains('show-document')){
-		close_sidebar();
-	}
-	else if(window.innerWidth < 641){
-		close_sidebar();
+	if(typeof close_sidebar != 'undefined'){
+		if(window.innerWidth < 980 && document.body.classList.contains('show-document')){
+			close_sidebar();
+		}
+		else if(window.innerWidth < 641){
+			close_sidebar();
+		}
 	}
 	window.last_user_activity_time = Math.floor(Date.now()/1000);
-	if(hide_all_context_menus){
+	if(typeof hide_all_context_menus != 'undefined'){
 		hide_all_context_menus();
 	}
 });
@@ -2092,19 +3053,21 @@ tools_el.addEventListener("click", (event) => {
 
 
 // general listener on the document viewer section
-main_view_el.addEventListener("click", (event) => {
-	console.log("clicked on document viewer section");
+main_view_el.addEventListener("mousedown", (event) => {
+	//console.log("clicked on document viewer section");
 	window.active_destination = 'document';
 	window.active_section = 'document';
-	document.body.classList.add('document-active');
-	document.body.classList.remove('busy-selecting-assistants');
+	add_body_class('document-active');
+	remove_body_class('busy-selecting-assistants');
 	
 	if(window.innerWidth < 641){
-		close_sidebar();
+		if(typeof close_sidebar != 'undefined'){
+			close_sidebar();
+		}
 	}
 	else if(window.innerWidth < 980 && document.body.classList.contains('sidebar') && document.body.classList.contains('sidebar-chat') && !document.body.classList.contains('sidebar-shrink')){
-		console.log("adding sidebar shrink");
-		document.body.classList.add('sidebar-shrink');
+		//console.log("adding sidebar shrink");
+		add_body_class('sidebar-shrink');
 	}
 	
 	if(event.target.classList.contains('cm-activeLineGutter')){
@@ -2112,20 +3075,25 @@ main_view_el.addEventListener("click", (event) => {
 		prepare_do_prompt_at_line();
 	}
 	
-	if(hide_all_context_menus){
+	if(typeof hide_all_context_menus != 'undefined'){
 		hide_all_context_menus();
 	}
 });
 
 // general listener on the document viewer section
-tutorial_el.addEventListener("click", (event) => {
-	document.body.classList.remove('busy-selecting-assistants');
+tutorial_el.addEventListener("mousedown", (event) => {
+	remove_body_class('busy-selecting-assistants');
+	window.active_destination = 'chat';
+	remove_body_class('document-active');
 	
 	if(window.innerWidth < 981){
-		close_sidebar();
+		if(typeof close_sidebar != 'undefined'){
+			close_sidebar();
+		}
+		
 	}
 	
-	if(hide_all_context_menus){
+	if(typeof hide_all_context_menus != 'undefined'){
 		hide_all_context_menus();
 	}
 });
@@ -2191,10 +3159,10 @@ sidebar_rag_select_all_button_el.addEventListener("click", (event) => {
 
 function show_rag_search(){
 	//console.log('in show_rag_search');
-	document.body.classList.add('show-documents-search');
+	add_body_class('show-documents-search');
 	open_sidebar();
-	document.body.classList.remove('sidebar-chat');
-	document.body.classList.remove('sidebar-settings');
+	remove_body_class('sidebar-chat');
+	remove_body_class('sidebar-settings');
 	model_info_container_el.innerHTML = '';
 	codeOutput.innerHTML = '';
 	window.selected_rag_documents = {};
@@ -2217,8 +3185,8 @@ function clear_rag_search(){
 
 function end_rag_search(){
 	//console.log("in end_rag_search");
-	document.body.classList.remove('show-documents-search');
-	document.body.classList.remove('show-rag-result');
+	remove_body_class('show-documents-search');
+	remove_body_class('show-rag-result');
 	codeOutput.innerHTML = '';
 	window.selected_rag_documents = {};
 	
@@ -2231,7 +3199,6 @@ start_rag_search_button_el.addEventListener("click", (event) => {
 	//console.log("clicked on start rag search button");
 	
 	if(!document.body.classList.contains('show-documents-search')){
-		
 		
 		window.add_script('./rag_module.js',true) // add it as a module
 		.then(() => {
@@ -2255,8 +3222,8 @@ start_rag_search_button_el.addEventListener("click", (event) => {
 		
 		create_rag_task({'prompt':window.rag_search_prompt_el.value});
 		
-		document.body.classList.remove('show-camera');
-		document.body.classList.remove('show-rewrite');
+		remove_body_class('show-camera');
+		remove_body_class('show-rewrite');
 	}
 	else{
 		flash_message(get_translation("Please_provide_a_command_or_question_first"),4000,'warn');
@@ -2266,7 +3233,7 @@ start_rag_search_button_el.addEventListener("click", (event) => {
 function ensure_text_ai(){
 	console.error('in ensure_text_ai');
 	if(typeof window.settings.assistant == 'string' && typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant].media != 'undefined' && Array.isArray(window.assistants[window.settings.assistant].media) && window.assistants[window.settings.assistant].media.indexOf('text') == -1 && typeof window.settings.last_loaded_text_ai == 'string'){
-		console.log("switching to last loaded text AI: ", window.settings.last_loaded_text_ai);
+		//console.log("switching to last loaded text AI: ", window.settings.last_loaded_text_ai);
 		switch_assistant(window.settings.last_loaded_text_ai);
 	}
 	else{
@@ -2326,7 +3293,7 @@ async function create_rag_task(task=null){
 		// Check if there are any images selected, and if so, do image_to_text on them first
 		
 		function create_image_description_tasks(list_of_undescribed_image_files){
-			console.log("in create_image_description_tasks. list_of_undescribed_image_files: ", list_of_undescribed_image_files);
+			//console.log("in create_image_description_tasks. list_of_undescribed_image_files: ", list_of_undescribed_image_files);
 			for(let p = 0; p < list_of_undescribed_image_files.length; p++){
 				if(list_of_undescribed_image_files[p] == null || typeof list_of_undescribed_image_files[p].filename != 'string'){
 					console.error("create_rag_task: invalid image file");
@@ -2744,7 +3711,7 @@ back_button_container_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on back button");
 	open_sidebar();
-	//document.body.classList.add('sidebar-overlay');
+	//add_body_class('sidebar-overlay');
 });
 
 
@@ -2759,79 +3726,7 @@ back_button_container_el.addEventListener("click", (event) => {
 //  CREATE CUSTOM AI
 //
 
-add_custom_assistant_button_el.addEventListener("click", (event) => {
-	event.stopPropagation();
-	//console.log("clicked on add-custom-assistant-button");
-	window.ai_being_edited = null;
-	start_making_custom_ai();
-});
 
-const new_custom_ai_model_emoji_editor_container_el = document.getElementById('new-custom-ai-model-emoji-editor-container');
-
-
-function start_making_custom_ai(prefill=null,assistant_id=null){
-	//console.log("in start_making_custom_ai.  prefill,assistant_id: ", prefill,assistant_id);
-	
-	// clean up first
-	model_info_container_el.innerHTML = ''; // avoid having two emoji editors open at the same time
-	share_prompt_assistant_emoji_el.innerHTML = '';
-	share_prompt_input_el.value = '';
-	
-	if(typeof prefill == 'object' && prefill != null){
-		for (const [prefill_key, prefill_value] of Object.entries(prefill)){
-			//console.log("start_making_custom_ai:  prefill_key, prefill_value: ", prefill_key, prefill_value);
-			let prefill_el = document.getElementById('new-custom-ai-model-' + prefill_key);
-			if(prefill_el){
-				try{
-					prefill_el.value = prefill_value;
-				}
-				catch(err){
-					console.error("start_making_custom_ai: caught error going over prefill values (not an input element?): ", err);
-				}
-			}
-			prefill_el = document.getElementById('share-prompt-model-' + prefill_key);
-			if(prefill_el){
-				try{
-					prefill_el.value = prefill_value;
-				}
-				catch(err){
-					console.error("start_making_custom_ai: caught error going over prefill values (not an input element?): ", err);
-				}
-			}
-			
-		}
-		
-		
-	}
-	
-	document.body.classList.add('busy-editing-assistant');
-	
-	let emoji_editor_el = null;
-	if(typeof assistant_id == 'string' && assistant_id.length && (assistant_id.startsWith('custom_saved') || assistant_id == 'custom_received')){
-		//console.log("start_making_custom_ai: assistant_id was provided, creating emoji editor for: ", assistant_id);
-		emoji_editor_el = create_emoji_editor(assistant_id);
-	}
-	else if(typeof prefill == 'object' && prefill != null && typeof prefill.assistant_id == 'string' && prefill.assistant_id.length && prefill.assistant_id.startsWith('custom_saved')){
-		//console.log("start_making_custom_ai: assistant_id was provided in prefill dictionary, creating emoji editor for:  prefill.assistant_id: ", prefill.assistant_id);
-		emoji_editor_el = create_emoji_editor(prefill.assistant_id);
-	}
-	else{
-		//console.log("start_making_custom_ai: creating emoji editor for a brand new AI");
-		emoji_editor_el = create_emoji_editor();
-	}
-	new_custom_ai_model_emoji_editor_container_el.innerHTML = '';
-	if(emoji_editor_el){
-		new_custom_ai_model_emoji_editor_container_el.appendChild(emoji_editor_el);
-	}
-	else{
-		console.error("failed to create emoji editor element?");
-	}
-	
-	
-	//create_share_prompt_link(true); // true == initial creation of share dialog, which populates the textareas for
-	//share_prompt_dialog_el.showModal();
-	new_custom_ai_dialog_el.showModal();
-}
 
 
 
@@ -2843,18 +3738,26 @@ select_assistants_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on select-assistants-button");
 	
-	busy_selecting_assistants = !busy_selecting_assistants;
+
+	//busy_selecting_assistants = !busy_selecting_assistants;
+	busy_selecting_assistants = (document.body.classList.contains('busy-selecting-assistants') === false);
 	//console.log("busy_selecting_assistants is now: ", busy_selecting_assistants);
 	if(busy_selecting_assistants){
-		document.body.classList.add('busy-selecting-assistants');
+		//really_generate_ui(true,true); // generate a fresh list, and generate the entire list of assistants
+		add_body_class('busy-selecting-assistants');
 	}
 	else{
-		document.body.classList.remove('busy-selecting-assistants');
+		remove_body_class('busy-selecting-assistants');
+		 // generate a normal fresh list
 	}
 	
 	window.settings.tutorial['add_assistants_hint_shown'] = true;
 	save_settings();
-	select_assistants_hint_container_el.style.display = 'none';
+	if(select_assistants_hint_container_el.style.display != 'none'){
+		select_assistants_hint_container_el.style.display = 'none';
+	}
+	really_generate_ui(true);
+	
 });
 
 
@@ -2872,6 +3775,50 @@ chat_header_icon_container_el.addEventListener("click", () => {
 
 
 
+
+// PIP button - Picture-in-Picture button
+const pip_button_el = document.getElementById('do-pip-button');
+pip_button_el.addEventListener('click', async (event) => {
+	//console.log("clicked on do-pip-button");
+	event.preventDefault();
+	event.stopPropagation();
+	
+	await add_script('./pip_module.js');
+	if(typeof window.really_write_on_pip_canvas == 'function' && typeof window.pip_video != 'undefined'){
+		window.pip_started = true;
+
+		window.pip_canvas_context.fillStyle = "white";
+		window.pip_canvas_context.font = "bold 16px Arial";
+		//window.pip_canvas_context.fillText("Zibri", (window.pip_canvas.width / 2) - 17, (window.pip_canvas.height / 2) + 8);
+
+		var img1 = new Image();
+
+	    //drawing of the test image - img1
+	    img1.onload = function () {
+	        //draw background image
+			const pip_header_canvas_context = window.pip_header_canvas.getContext("2d");
+			pip_header_canvas_context.drawImage(img1, 0, 0);
+	        //draw a box over the top
+	        //ctx.fillStyle = "rgba(200, 0, 0, 0.5)";
+	        //ctx.fillRect(0, 0, 500, 500);
+			really_write_on_pip_canvas(window.get_translation('AI_responses_will_be_shown_here'));
+			window.pip_video.srcObject = window.pip_canvas.captureStream(0);
+	    };
+
+	    img1.src = './images/pip_header.png';
+	
+		window.pip_video.addEventListener("canplaythrough", () => {
+			window.pip_video.play();
+			window.pip_video.requestPictureInPicture();
+		});
+	
+		window.pip_video.play();
+	}
+	else{
+		console.error("failed to load PIP script");
+		flash_message(get_translation('Could_not_load_file'),'2000','fail');
+	}
+});
 
 
 // Microphone button
@@ -2895,7 +3842,7 @@ microphone_icon_el.addEventListener("click", (event) => {
 	}
 	
 	if(document.body.classList.contains('chat-shrink') && !document.body.classList.contains('show-document') ){
-		document.body.classList.remove('chat-shrink');
+		remove_body_class('chat-shrink');
 		window.active_destination = 'chat';
 	}
 	if(window.innerWidth < 641){
@@ -2934,12 +3881,12 @@ speaker_icon_el.addEventListener("click", (event) => {
 //   PROMPT INPUT FORM
 //
 
-prompt_el.addEventListener("focus", (e) => {
+prompt_el.addEventListener("focus", async (e) => {
 	prompt_el.style.opacity = 0;
 	setTimeout(() => prompt_el.style.opacity = 1);
 	//console.log("prompt input got focus");
 	try{
-		
+		await load_runners();
 		//console.log("chat prompt input got focus. Calling load_model_from_focus");
 		window.load_model_from_focus();
 		
@@ -2994,7 +3941,7 @@ document.body.addEventListener("keyup", (event) => {
 		//sidebar_filter_input.value += key;
 		//e.which <= 90 && e.which >= 48
 		if(event.which >= 48 && event.which <= 90 && sidebar_filter_input_el.value == ''){
-			document.body.classList.remove('shrink-sidebar');
+			remove_body_class('shrink-sidebar');
 			sidebar_filter_input_el.value = event.key;
 			sidebar_filter_input_el.focus();
 		}
@@ -3063,74 +4010,63 @@ function update_prompt_adjustments(assistant_id=null){
 			)
 			
 			&& typeof window.settings.assistants[assistant_id] != 'undefined' 
-			&& typeof window.settings.assistants[assistant_id]['brevity_enabled'] == 'boolean'){
+			&& typeof window.settings.assistants[assistant_id]['brevity_enabled'] == 'boolean'
+		){
 			//console.log("update_prompt_adjustment:  window.settings.assistants[assistant_id].brevity_enabled: ", window.settings.assistants[assistant_id].brevity_enabled);
-			if(window.settings.assistants[assistant_id]['brevity_enabled']){
+			if(typeof window.settings.assistants[assistant_id] != 'undefined' && window.settings.assistants[assistant_id]['brevity_enabled']){
 				new_adjustment_prompt += get_translation('Write_your_answer_short_and_succinct') + '. ';
-				document.body.classList.add('brevity-enabled');
+				add_body_class('brevity-enabled');
 			}
 			else{
-				if(document.body.classList.contains('brevity-enabled')){
-					document.body.classList.remove('brevity-enabled');
-				}
+				remove_body_class('brevity-enabled');
 			}
 		}
-		else if(typeof window.assistants[assistant_id]['brevity_enabled'] == 'boolean' && window.assistants[assistant_id]['brevity_enabled'] == true){
+		else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['brevity_enabled'] == 'boolean' && window.assistants[assistant_id]['brevity_enabled'] == true){
 			//console.log("update_prompt_adjustment: falling back to brevity in assistants dict, which is set to true as the default");
 			new_adjustment_prompt += get_translation('Write_your_answer_short_and_succinct') + '. ';
-			document.body.classList.add('brevity-enabled');
+			add_body_class('brevity-enabled');
 		}
 		else{
 			//console.log("update_prompt_adjustment:  brevity fell through (not enabled in setting or in assistants dict)");
-			if(document.body.classList.contains('brevity-enabled')){
-				document.body.classList.remove('brevity-enabled');
-			}
+			remove_body_class('brevity-enabled');
 		}
 	
 		// No explanations (not used, has been merged into brevity)
-		if(typeof window.assistants[assistant_id]['no_explanations_supported'] == 'boolean' && window.assistants[assistant_id]['no_explanations_supported'] == true && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['no_explanations'] == 'boolean' && window.settings.assistants[assistant_id]['no_explanations']){
+		if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['no_explanations_supported'] == 'boolean' && window.assistants[assistant_id]['no_explanations_supported'] == true && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['no_explanations'] == 'boolean' && window.settings.assistants[assistant_id]['no_explanations']){
 			if(window.settings.assistants[assistant_id]['no_explanations']){
 				new_adjustment_prompt += ' ' + get_translation('Just_provide_the_answer_with_no_explanations') + '. ';
-				document.body.classList.add('no-explanations-enabled');
+				add_body_class('no-explanations-enabled');
 			}
 			else{
-				if(document.body.classList.contains('no-explanations-enabled')){
-					document.body.classList.remove('no-explanations-enabled');
-				}
+				remove_body_class('no-explanations-enabled');
 				
 			}
 		
 		}
-		else if(typeof window.assistants[assistant_id]['no_explanations'] == 'boolean' && window.assistants[assistant_id]['no_explanations']){
+		else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['no_explanations'] == 'boolean' && window.assistants[assistant_id]['no_explanations']){
 			new_adjustment_prompt += ' ' + get_translation('Just_provide_the_answer_with_no_explanations') + '. ';
-			document.body.classList.add('no-explanations-enabled');
+			add_body_class('no-explanations-enabled');
 		}
 		else{
-			if(document.body.classList.contains('no-explanations-enabled')){
-				document.body.classList.remove('no-explanations-enabled');
-			}
+			remove_body_class('no-explanations-enabled');
 		}
 	
 		// Markdown
-		if(typeof window.assistants[assistant_id]['markdown_supported'] == 'boolean' && window.assistants[assistant_id]['markdown_supported'] == true && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['markdown_enabled'] == 'boolean'){
+		if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['markdown_supported'] == 'boolean' && window.assistants[assistant_id]['markdown_supported'] == true && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id]['markdown_enabled'] == 'boolean'){
 			if(window.settings.assistants[assistant_id]['markdown_enabled']){
 				new_adjustment_prompt += ' ' + get_translation('Format_your_response_in_markdown') + '.';
-				document.body.classList.add('markdown-enabled');
+				add_body_class('markdown-enabled');
 			}
 			else{
-				if(document.body.classList.contains('markdown-enabled')){
-					document.body.classList.remove('markdown-enabled');
-				}
+				remove_body_class('markdown-enabled');
 			}
 		}
-		else if(typeof window.assistants[assistant_id]['markdown_enabled'] == 'boolean' && window.assistants[assistant_id]['markdown_enabled']){
+		else if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id]['markdown_enabled'] == 'boolean' && window.assistants[assistant_id]['markdown_enabled']){
 			new_adjustment_prompt += ' ' + get_translation('Format_your_response_in_markdown') + '.';
-			document.body.classList.add('markdown-enabled');
+			add_body_class('markdown-enabled');
 		}
 		else{
-			if(document.body.classList.contains('markdown-enabled')){
-				document.body.classList.remove('markdown-enabled');
-			}
+			remove_body_class('markdown-enabled');
 		}
 		
 	}
@@ -3179,6 +4115,7 @@ chat_prompt_textarea_eraser_el.addEventListener("click", (event) => {
 	clear_prompt_input();
 	prompt_el.focus();
 });
+
 function clear_prompt_input(){
 	//console.log("in clear_prompt_input");
 	prompt_el.value = '';
@@ -3215,7 +4152,7 @@ function prompt_submit_button_clicked(){
 	
 	model_info_container_el.innerHTML = '';
 	
-	document.body.classList.remove('show-rewrite');
+	remove_body_class('show-rewrite');
 	
 	submit_prompt_button_el.classList.add('no-pointer-events');
 	submit_prompt_button_el.classList.add('fly-the-plane');
@@ -3244,7 +4181,7 @@ function prompt_submit_button_clicked(){
 		do_prompt(null,'OCR'); // {'state':'should_ocr'}
 	}
 	else if(prompt_el.value != ''){
-		console.log('prompt_submit_button_clicked: prompt_el.value: ', prompt_el.value);
+		//console.log('prompt_submit_button_clicked: prompt_el.value: ', prompt_el.value);
 		do_prompt(null,prompt_el.value);
 	}
 	else{
@@ -3255,7 +4192,7 @@ function prompt_submit_button_clicked(){
 
 
 async function do_prompt(task=null,prompt=null,negative_prompt=null){
-	console.log("in do_prompt.  task,prompt,negative_prompt: ", task,prompt,negative_prompt);
+	//console.log("in do_prompt.  task,prompt,negative_prompt: ", task,prompt,negative_prompt);
 	
 	let new_prompt_task = {
 		'prompt':null,
@@ -3270,7 +4207,7 @@ async function do_prompt(task=null,prompt=null,negative_prompt=null){
 	if(task != null){
 		if(typeof task.index == 'number'){
 			console.error("do_prompt: provided task already had an index: ", task);
-			task = await add_prompt_to_task(task,prompt);
+			task = await add_prompt_to_task(task,prompt,negative_prompt);
 			return task;
 			
 		}
@@ -3289,7 +4226,7 @@ window.do_prompt = do_prompt;
 
 
 async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
-	console.log("in  add_prompt_to_task.  task,prompt: ", task, prompt);
+	//console.log("in  add_prompt_to_task.  task,prompt: ", task, prompt);
 	if(typeof prompt != 'string'){
 		if(task != null && typeof task.prompt == 'string'){
 			prompt = task.prompt;
@@ -3300,7 +4237,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	}
 	
 	if(typeof prompt != 'string'){
-		console.error("do_prompt: no valid prompt provided");
+		console.error("add_prompt_to_task: no valid prompt provided");
 	}
 	window.last_user_query = prompt;
 	manage_prompt(prompt);
@@ -3308,17 +4245,17 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	let assistant_id = null;
 	if(task != null && typeof task.assistant == 'string'){
 		assistant_id = task.assistant;
-		console.log("do_prompt: a task with an assistant was provided.  assistant_id is now: ", assistant_id);
+		//console.log("do_prompt: a task with an assistant was provided.  assistant_id is now: ", assistant_id);
 		//manage_prompt(prompt);
 	}
 	else{
 		assistant_id = window.settings.assistant;
-		console.log("do_prompt: no task with an assistant was provided, so using window.settings.assistant.  assistant_id is now: ", assistant_id);
+		//console.log("add_prompt_to_task: no task with an assistant was provided, so using window.settings.assistant.  assistant_id is now: ", assistant_id);
 		//manage_prompt(prompt);
 	}
 	
 	if(typeof assistant_id != 'string'){
-		console.error("do_prompt:  aborting, assistant_id was still null. prompt: ", prompt);
+		console.error("add_prompt_to_task:  aborting, assistant_id was still null.  prompt: ", prompt);
 		return null
 	}
 	
@@ -3437,7 +4374,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 		}
 		
 		
-		document.body.classList.add('doing-translation'); // this can run parallel to other LLM's, so starts immediately.
+		add_body_class('doing-translation'); // this can run parallel to other LLM's, so starts immediately.
 		
 		do_prompt_task = {
 			'prompt':null,
@@ -3466,7 +4403,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	// M U S I C I A N
 	// Interactions with the special assistant that speaks text out loud
 	else if(assistant_id == 'musicgen'){
-		console.log("do_prompt: adding musicgen task");
+		//console.log("do_prompt: adding musicgen task");
 		
 		//window.currently_loaded_assistant = 'musicgen';
 		//window.enable_speaker();
@@ -3540,6 +4477,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 		if(typeof negative_prompt != 'string' ){
 			negative_prompt = '';
 		}
+		
 		if(typeof negative_prompt == 'string' && negative_prompt != ''){
 			do_prompt_task['negative_prompt'] = negative_prompt;
 		}
@@ -3555,7 +4493,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	// TEXT TO IMAGE
 	// Interactions with the special assistant that creates images
 	else if(assistant_id == 'text_to_image'){
-		console.log("do_prompt: adding text_to_image task. assistant_id: ", assistant_id);
+		//console.log("do_prompt: adding text_to_image task. assistant_id: ", assistant_id);
 		
 		//window.add_chat_message('text_to_image','user',prompt);
 		
@@ -3595,9 +4533,9 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	// I M A G E   T O   T E X T
 	// Interactions with the special assistant that describes images
 	else if(assistant_id.startsWith('image_to_text')){
-		console.log("do_prompt: adding image to text task.  assistant_id: ", assistant_id);
+		//console.log("do_prompt: adding image to text task.  assistant_id, prompt: ", assistant_id, prompt);
 		
-		let do_prompt_task = {
+		do_prompt_task = {
 			'assistant':assistant_id,
 			'state':'should_image_to_text',
 			'origin':'chat',
@@ -3608,7 +4546,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 		
 		if(assistant_id == 'image_to_text_ocr'){
 			do_prompt_task['state'] = 'should_ocr';
-			console.log("do_prompt: state is now 'should_ocr'");
+			//console.log("do_prompt: state is now 'should_ocr'");
 			if(typeof task != 'undefined' && task != null && typeof task.index == 'number'){
 				add_chat_message('image_to_text_ocr', 'image_to_text_ocr', '', null, '<div id="image-to-text-result-output' + task.index + '"><div class="spinner"></div></div>', task.index);
 			}
@@ -3625,7 +4563,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 		if(typeof task != 'undefined' && task != null){
 			do_prompt_task = {...task,...do_prompt_task}
 		}
-		console.log("image_to_text: merged do_prompt_task: ", do_prompt_task);
+		//console.log("image_to_text: merged do_prompt_task: ", do_prompt_task);
 		
 		if(document.body.classList.contains('show-camera') ){ // && document.body.classList.contains('hide-camera-still')
 			const fresh_camera_blob = await window.get_camera_jpeg_blob();
@@ -3635,6 +4573,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 				do_prompt_task['image_blob'] = window.last_image_to_text_blob;
 				
 				do_prompt_task = window.create_image_to_text_task(do_prompt_task);
+				//console.log("do_prompt_task after create_image_to_text_task: ", do_prompt_task.state, do_prompt_task);
 			}
 			else{
 				flash_message(get_translation('Please_provide_an_image'),3000,'warn');
@@ -3651,7 +4590,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 			*/
 		}
 		else if(window.last_image_to_text_blob != null){
-				
+			
 			do_prompt_task['image_blob'] = window.last_image_to_text_blob;
 			
 			if(assistant_id != 'image_to_text_ocr'){
@@ -3669,6 +4608,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 			//task = {...do_prompt_task, ...task}
 			return do_prompt_task;
 		}
+		return do_prompt_task;
 		
 	}
 	// END OF IMAGE-TO-TEXT SPECIAL ASSISTANT
@@ -3684,7 +4624,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 		setTimeout(() => {
 			window.developer_response_count++;
 			window.add_chat_message('developer','developer', window.get_translation('developer_response' + window.developer_response_count),false);
-			document.body.classList.remove('waiting-for-response');
+			remove_body_class('waiting-for-response');
 		},900);
 		
 		// Deprecated
@@ -3692,7 +4632,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 			prompt_el.focus();
 		}
 		else{
-			document.body.classList.add('hide-developer-prompt');
+			add_body_class('hide-developer-prompt');
 		}
 		return task;
 	}
@@ -3729,11 +4669,8 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	}
 	
 	
-	
-	
-	
 	else{
-		console.log("do_prompt: did not have to handle a special assistant");
+		//console.log("do_prompt: did not have to handle a special assistant.  assistant_id:  ", assistant_id);
 		//prompt_el.focus();
 	}
 	
@@ -3742,31 +4679,34 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 	
 	// If a special assistant already generated a prompt task, handle that early
 	if(do_prompt_task != null){
+		//console.log("do_prompt: halfway there is already a task for a 'special' assistant.  do_prompt_task: ", do_prompt_task);
 		if(typeof task != 'undefined' && task != null){
 			if(typeof task.assistant == 'string'){
 				add_chat_message(task.assistant,task.assistant, prompt, null, '<div class="spinner"></div>');
 			}
 			if(typeof task.index == 'number'){
 				task = {...task,...do_prompt_task}
-				console.log("do_prompt: UPDATED TASK TO: ", JSON.stringify(task,null,2));
+				//console.log("do_prompt: UPDATED TASK TO: ", JSON.stringify(task,null,2));
 				
 				return task;
 			}
 			else{
 				do_prompt_task = {...do_prompt_task,...task}
+				//console.log("do_prompt: SENDING IMAGE DESCRIPTION TASK TO ADD_TASK: ", JSON.stringify(do_prompt_task,null,2));
 				return window.add_task(do_prompt_task);
 			}
 		}
 		else{
-			console.log("do_prompt:  no valid task provided, but do_prompt_task exists: ", do_prompt_task);
+			//console.log("do_prompt:  no valid task provided, but do_prompt_task exists: ", do_prompt_task);
 			if(typeof do_prompt_task.assistant == 'string'){
 				add_chat_message(do_prompt_task.assistant,do_prompt_task.assistant, prompt, null, '<div class="spinner"></div>');
 			}
+			//console.log("do_prompt: SENDING BRAND NEW IMAGE DESCRIPTION TASK TO ADD_TASK: ", JSON.stringify(do_prompt_task,null,2));
 			return window.add_task(do_prompt_task);
 		}
 	}
 	else{
-		console.warn("do_prompt: did not handle a special AI, continuing with 'normal' text-AI prompt");
+		//console.warn("do_prompt: did not handle a special AI, continuing with 'normal' text-AI prompt.  assistant_id: ", assistant_id);
 	}
 	
 	
@@ -3885,7 +4825,7 @@ async function add_prompt_to_task(task=null,prompt=null,negative_prompt=null){
 		// experiment: wait until the user clears the attachment manually
 		//window.question_document = null;
 		//window.question_selection = null;
-		//document.body.classList.remove('text-attached');
+		//remove_body_class('text-attached');
 		
 		if(task != null){
 			//console.log("do_prompt: overwriting question_task with initialy provided task: ", task);
@@ -4003,7 +4943,7 @@ question_prompt_clear_button_el.addEventListener("click", (event) => {
 	window.question_text = null;
 	window.question_document = null;
 	window.question_selection = null;
-	document.body.classList.remove('text-attached');
+	remove_body_class('text-attached');
 	window.manage_prompt();
 });
 
@@ -4046,7 +4986,7 @@ for(let de = 0; de < all_dialog_els.length; de++){
 	},{passive: true});
 	this_dialog.addEventListener('mouseUp', (event) => {
 		event.stopPropagation();
-		dialogClickHandler(event);
+		//dialogClickHandler(event);
 		//this_dialog.removeAttribute('open');
 	},{passive: true});
 	this_dialog.addEventListener('click', (event) => {
@@ -4061,17 +5001,17 @@ for(let de = 0; de < all_dialog_els.length; de++){
 	},{passive: true});
 	this_dialog.addEventListener('touchend', (event) => {
 		event.stopPropagation();
-		dialogClickHandler(event);
+		//dialogClickHandler(event);
 		//this_dialog.removeAttribute('open');
 	},{passive: true});
 	this_dialog.addEventListener('touchmove', (event) => {
 		event.stopPropagation();
-		dialogClickHandler(event);
+		//dialogClickHandler(event);
 		//this_dialog.removeAttribute('open');
 	},{passive: true});
 	this_dialog.addEventListener('touchcancel', (event) => {
 		event.stopPropagation();
-		dialogClickHandler(event);
+		//dialogClickHandler(event);
 		//this_dialog.removeAttribute('open');
 	},{passive: true});
 }
@@ -4091,12 +5031,38 @@ function dialogClickHandler(e) {
 
     if (clickedInDialog === false){
 		e.target.close();
-    	document.body.classList.remove('busy-editing-assistant');
-		document.body.classList.remove('busy-editing-received-ai');
+    	remove_body_class('busy-editing-assistant');
+		remove_body_class('busy-editing-received-ai');
     }
         
 }
 
+document.getElementById('ask-for-url-submit-button').addEventListener("click", (event) => {
+	event.preventDefault();
+	event.stopPropagation();
+	download_url_from_input();
+});
+
+function download_url_from_input(){
+	const url_to_download = url_to_download_input_el.value;
+	console.log("url_to_download: ", url_to_download);
+	document.getElementById('ask-for-url-dialog-iframe').src = 'about:blank';
+	if(url_to_download.startsWith('http') && url_to_download.length > 10){
+		download_file_from_url(url_to_download);
+		url_to_download_input_el.value = '';
+		url_to_download_dialog_el.close();
+		
+		if(typeof window.received_prompt == 'string' && window.received_prompt.length > 2){
+		    console.warn("received a prompt, but without an AI? Is that even possible/allowed?: ", window.received_prompt);
+		    setTimeout(show_received_prompt,1000);
+		}
+		return true
+	}
+	else{
+		flash_message(get_translation('Invalid_value'),1000,'warn');
+		return false
+	}
+}
 
 
 //
@@ -4141,17 +5107,17 @@ document.getElementById('close-document-view').addEventListener("click", (event)
 
 function close_document_view(){
 	//console.log("clicked on close document view button");
-	document.body.classList.remove('show-document');
-	document.body.classList.remove('working-on-doc');
-	document.body.classList.remove('blueprint');
-	document.body.classList.remove('zip-file');
-	document.body.classList.remove("viewing-image");
-	document.body.classList.remove('image-editor');
-	document.body.classList.remove('javascript-document');
+	remove_body_class('show-document');
+	remove_body_class('working-on-doc');
+	remove_body_class('blueprint');
+	remove_body_class('zip-file');
+	remove_body_class("viewing-image");
+	remove_body_class('image-editor');
+	remove_body_class('javascript-document');
 	
-	document.body.classList.remove('show-rewrite');
-	document.body.classList.remove('prepare-translate-document');
-	document.body.classList.remove('prepare-summarize-document');
+	remove_body_class('show-rewrite');
+	remove_body_class('prepare-translate-document');
+	remove_body_class('prepare-summarize-document');
 	
 	playground_overlay_el.innerHTML = '';
 	current_file_name = unsaved_file_name;
@@ -4171,7 +5137,7 @@ function close_document_view(){
 close_full_playground_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on close fullscreen playground overlay button");
-	document.body.classList.remove('full-playground-overlay');
+	remove_body_class('full-playground-overlay');
 });
 
 
@@ -4182,7 +5148,7 @@ proofread_selection_button_el.addEventListener("mousedown", (event) => {
 	//hide_doc_selection_hint();
 	prepare_proofread();
 	//proofread_selection();
-	document.body.classList.add('show-rewrite');
+	add_body_class('show-rewrite');
 });
 
 rewrite_selection_button_el.addEventListener("mousedown", (event) => {
@@ -4218,7 +5184,7 @@ question_selection_button_el.addEventListener("mousedown", (event) => {
 	prompt_el.focus();
 	prompt_el.click();
 	if(window.innerWidth < 641){
-		document.body.classList.remove('show-document');
+		remove_body_class('show-document');
 	}
 });
 
@@ -4245,8 +5211,8 @@ document_search_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on document-search button");
 	open_sidebar();
-	document.body.classList.remove('sidebar-chat');
-	document.body.classList.remove('sidebar-settings');
+	remove_body_class('sidebar-chat');
+	remove_body_class('sidebar-settings');
 	clear_rag_search();
 	show_rag_search();
 	rag_search_prompt_el.focus();
@@ -4272,7 +5238,7 @@ document_question_button_el.addEventListener("click", (event) => {
 	possibly_hide_sidebar();
 	
 	if(window.innerWidth < 641){
-		document.body.classList.remove('show-document');
+		remove_body_class('show-document');
 	}
 	else{
 		window.unshrink_chat();
@@ -4353,11 +5319,11 @@ document_translate_button_el.addEventListener("click", (event) => {
 
 
 function possibly_hide_sidebar(){
-	document.body.classList.remove('prepare-translate-document');
-	document.body.classList.remove('prepare-summarize-document');
+	remove_body_class('prepare-translate-document');
+	remove_body_class('prepare-summarize-document');
 	if(window.innerWidth < 980){
 		close_sidebar();
-		document.body.classList.remove('sidebar-shrink');
+		remove_body_class('sidebar-shrink');
 	}
 }
 
@@ -4366,13 +5332,13 @@ function possibly_hide_sidebar(){
 summarize_new_file_container_close_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on close document-summarize button");
-	document.body.classList.remove('prepare-summarize-document');
+	remove_body_class('prepare-summarize-document');
 });
 
 translation_new_file_container_close_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on close document-translate button");
-	document.body.classList.remove('prepare-translate-document');
+	remove_body_class('prepare-translate-document');
 });
 
 
@@ -4414,13 +5380,13 @@ window.shrink_chat = function(){
 	if(window.innerWidth < 641 && document.body.classList.contains('show-document')){
 		close_document_view();
 	}
-	document.body.classList.add('chat-shrink');
+	add_body_class('chat-shrink');
 	window.settings.chat_shrink = true;
 	save_settings();
 }
 window.unshrink_chat = function(){
 	//console.log("in unshrink_chat");
-	document.body.classList.remove('chat-shrink');
+	remove_body_class('chat-shrink');
 	window.settings.chat_shrink = false;
 	save_settings();
 }
@@ -4429,7 +5395,7 @@ window.unshrink_chat = function(){
 mobile_back_to_document_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on mobile back to document button");
-	document.body.classList.add('show-document');
+	add_body_class('show-document');
 	if(window.settings.docs.open == null){
 		
 		let latest_file = null;
@@ -4477,12 +5443,12 @@ stop_assistant_icon_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	event.preventDefault();
 	//console.log("clicked on stop assistant button");
-	console.log("clicked on stop assistant - assistant icon");
+	//console.log("clicked on stop assistant - assistant icon");
 	
 	// TODO this was never a good idea, but now that icons are set separately, it's even worse
 	let assistant_id = stop_assistant_button_assistant_icon_el.src.replace('_thumb.png','');
 	assistant_id = assistant_id.substr(assistant_id.lastIndexOf('/') + 1);
-	console.log("clicked on stop assistant assistant icon. Switch to that AI?: extracted assistant_id: ", assistant_id);
+	//console.log("clicked on stop assistant assistant icon. Switch to that AI?: extracted assistant_id: ", assistant_id);
 	if(typeof window.assistants[assistant_id] != 'undefined' || typeof window.settings.assistants[assistant_id] != 'undefined'){
 		switch_assistant(assistant_id);
 	}
@@ -4496,7 +5462,7 @@ stop_assistant_icon_button_el.addEventListener("click", (event) => {
 stop_assistant_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on stop assistant button");
-	window.stop_assistant();
+	window.stop_assistant(null,true); // true indicates it was initiated by the user
 });
 
 clear_assistant_button_el.addEventListener("click", (event) => {
@@ -4522,11 +5488,11 @@ code_output_close_button_el.addEventListener("click", (event) => {
 close_tools_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on close tools button");
-	document.body.classList.remove('show-rewrite');
-	document.body.classList.remove('prepare-summarize-document');
-	document.body.classList.remove('prepare-translate-document');
+	remove_body_class('show-rewrite');
+	remove_body_class('prepare-summarize-document');
+	remove_body_class('prepare-translate-document');
 	window.only_allow_voice_commands = false;
-	document.body.classList.remove('show-camera');
+	remove_body_class('show-camera');
 	remove_highlight_selection();
 });
 
@@ -4549,8 +5515,8 @@ proofread_details_el.addEventListener("click", (event) => {
 	summarize_details_el.removeAttribute('open');
 	rewrite_details_el.removeAttribute('open');
 	translation_details_el.removeAttribute('open');
-	document.body.classList.remove('prepare-summarize-document');
-	document.body.classList.remove('prepare-translate-document');
+	remove_body_class('prepare-summarize-document');
+	remove_body_class('prepare-translate-document');
 });
 translation_details_el.addEventListener("click", (event) => {
 	proofread_details_el.removeAttribute('open');
@@ -4565,8 +5531,9 @@ rewrite_results_ready_container_el.addEventListener("click", (event) => {
 	summarize_details_el.removeAttribute('open');
 	translation_details_el.removeAttribute('open');
 	model_info_container_el.innerHTML = '';
-	document.body.classList.add('show-rewrite');
-	//document.body.classList.remove('show-rewrite-results');
+	add_body_class('show-document');
+	add_body_class('show-rewrite');
+	//remove_body_class('show-rewrite-results');
 	remove_highlight_selection();
 	if(window.innerWidth < 981){
 		close_sidebar();
@@ -4577,8 +5544,8 @@ rewrite_results_ready_container_el.addEventListener("click", (event) => {
 close_rewrite_dialog_button_el.addEventListener("click", (event) => {
 	event.stopPropagation();
 	//console.log("clicked on close rewrite dialog button");
-	document.body.classList.remove('show-rewrite');
-	//document.body.classList.remove('show-rewrite-results');
+	remove_body_class('show-rewrite');
+	//remove_body_class('show-rewrite-results');
 	remove_highlight_selection();
 	doc_updated();
 });
@@ -4653,7 +5620,7 @@ function submit_rewrite_task(desired_rewrite_count=1,feeling_lucky=false){
 			/*
 			if(window.currently_loaded_assistant == null){
 				flash_message(get_translation('Please_load_an_AI_first'),4000,'warn');
-				document.body.classList.add('sidebar-chat');
+				add_body_class('sidebar-chat');
 				if(window.innerWidth > 900){
 					open_sidebar();
 				}
@@ -4764,182 +5731,7 @@ new_custom_ai_model_description_el.addEventListener('input', () => {
 
 
 
-function custom_ai_next(){
-	//console.log("in custom_ai_next");
-	
-	let updated_ai_details = {
-		'emoji': '🦜',
-		'emoji_bg':'#000000'
-	}
-	
-	if(new_custom_ai_model_name_el.value == ''){
-		const custom_ai_error_hint_el = document.getElementById('new-custom-ai-error-hint');
-		if(custom_ai_error_hint_el){
-			custom_ai_error_hint_el.textContent = get_translation("Please_provide_a_name");
-			setTimeout(() => {
-				custom_ai_error_hint_el.textContent = '';
-			},5000);
-		}
-		//flash_message(get_translation("Please_provide_a_name"),3000,'fail');
-		return false
-	}
-	
-	
-	let existing_assistant_id = null;
-	for (const [assistant_id, details] of Object.entries(window.settings.assistants)) {
-		if(typeof details.custom_name == 'string' && new_custom_ai_model_name_el.value.toLowerCase() == details.custom_name.toLowerCase()){
-			//console.log("the AI custom_name already exists: ", details.custom_name, " -> ", assistant_id);
-			existing_assistant_id = assistant_id;
-			break
-		}
-		if(typeof details.custom_name == 'string' && get_translation(assistant_id + "_name").toLowerCase() == details.custom_name.toLowerCase()){
-			existing_assistant_id = assistant_id;
-			//console.log("the AI name already exists as a translation: ", details.custom_name, " -> ", assistant_id);
-			break
-		}
-	}
-	
-	let is_new_ai = false;
-	// Establish a base assistant dictionary first
-	if(typeof existing_assistant_id != 'string'){
-		//console.log("custom_ai_next: existing_assistant_id was not a string");
-		//console.log("custom_ai_next: window.ai_being_edited: ", window.ai_being_edited);
-		is_new_ai = true;
-		
-		// Creating a brand new AI / Clone
-		existing_assistant_id = 'custom_saved_' + makeid(8) + '_' + new_custom_ai_model_name_el.value.trim().replaceAll(' ','_');
-		
-		if(typeof window.ai_being_edited == 'string' && window.ai_being_edited.length && typeof window.assistants[window.ai_being_edited] != 'undefined'){
-			//console.log("custom_ai_next:  window.ai_being_edited: ", window.ai_being_edited);
-			updated_ai_details = JSON.parse(JSON.stringify(window.assistants[window.ai_being_edited]));
-			
-			if(typeof updated_ai_details['clone_original'] == 'undefined'){
-				updated_ai_details['clone_original'] = window.ai_being_edited;
-			}
-			if(window.ai_being_edited != 'custom_received' && typeof window.settings.assistants[window.ai_being_edited] != 'undefined'){
-				updated_ai_details = {...updated_ai_details, ...window.settings.assistants[window.ai_being_edited]} // use the AI that was being edited as the base for the new AI
-				updated_ai_details['clone'] = true;
-			}
-			if(typeof updated_ai_details['clone'] == 'undefined'){
-				updated_ai_details['clone'] = true;
-			}
-			if(typeof updated_ai_details['clone_original'] == 'undefined'){
-				updated_ai_details['clone_original'] = window.ai_being_edited;
-			}
-		}
-		else{
-			const optimal_assistant_id = pick_optimal_text_ai();
-			//console.log("custom_ai_next: picked this optimal_assistant_id as the basis for the new AI: ", optimal_assistant_id);
-			
-			if(typeof window.assistants[optimal_assistant_id] != 'undefined'){
-				updated_ai_details = JSON.parse(JSON.stringify(window.assistants[optimal_assistant_id]));
-			}
-			
-			if(typeof window.settings.assistants[optimal_assistant_id] != 'undefined'){
-				updated_ai_details = {...updated_ai_details, ...window.settings.assistants[optimal_assistant_id]} // use the AI that was being edited as the base for the new AI
-			}
-			if(typeof updated_ai_details['clone'] == 'undefined'){
-				updated_ai_details['clone'] = true;
-			}
-			if(typeof updated_ai_details['clone_original'] == 'undefined'){
-				updated_ai_details['clone_original'] = optimal_assistant_id;
-			}
-		}
-		
-	}
-	else{
-		// editing an existing AI
-		//console.log("custom_ai_next: editing an existing AI");
-		updated_ai_details = window.assistants[existing_assistant_id];
-		if(typeof window.settings.assistants[existing_assistant_id] != 'undefined'){
-			updated_ai_details = {...updated_ai_details, ...window.settings.assistants[existing_assistant_id]} // The name is the same as an existing AI, so assuming that one is being edited
-		}
-	}
-	
-	// The (new) AI exists now, so set the (new) ID as the one being edited
-	window.ai_being_edited = existing_assistant_id;
-	
-	
-	// Add the info from the first dialog (name, description, icon)
-	updated_ai_details['custom_name'] = new_custom_ai_model_name_el.value;
-	updated_ai_details['custom_description'] = new_custom_ai_model_description_el.value;
-	
-	let emoji_editor_input_el = document.getElementById('new-custom-ai-model-emoji');
-	let emoji_editor_bg_el = document.getElementById('new-custom-ai-model-emoji_bg');
-	if(emoji_editor_input_el){
-		if(typeof emoji_editor_input_el.textContent == 'string' && emoji_editor_input_el.textContent != ''){
-			updated_ai_details['emoji'] = emoji_editor_input_el.textContent.substr(0,4);
-		}
-		if(emoji_editor_bg_el){
-			updated_ai_details['emoji_bg'] = emoji_editor_bg_el.value;
-		}
-	}
-	
-	//console.log("custom_ai_next: about to save this assistant: ", existing_assistant_id, updated_ai_details);
-	if(save_edited_ai(updated_ai_details,existing_assistant_id)){
-		if(is_new_ai){
-			//flash_message(get_translation('A_new_AI_has_been_created')); // can't be seen behind dialog blur
-			switch_assistant(existing_assistant_id);
-		}
-	}
-	else{
-		flash_message(get_translation('An_error_occured'),2000,'fail');
-	}
-	
-	// TODO: Why bring this over to the next dialog manually? Should the next dialog load based on the newly created assistant? Then again, it might come with some existing system_prompt or second_prompt
-	if(emoji_editor_input_el){
-		share_prompt_assistant_emoji_el.textContent = emoji_editor_input_el.textContent;
-	}
-	if(emoji_editor_bg_el){
-		share_prompt_assistant_emoji_el.style['background-color'] = emoji_editor_bg_el.value;
-	}
-	
-	share_prompt_assistant_name_el.textContent = new_custom_ai_model_name_el.value;
-	
-	let runner = get_task_runner({'assistant':existing_assistant_id});
-	share_prompt_dialog_el.classList.add('runner-' + runner.replaceAll(' ','_'));
-	
-	new_custom_ai_dialog_el.close();
-	
-	share_prompt_dialog_el.showModal();
-}
 
-
-function save_edited_ai(details=null,assistant_id=null){
-	if(typeof details != 'object' || details == null){
-		console.error("save_edited_ai: no valid details to save provided");
-		return false
-	}
-	if(typeof assistant_id != 'string' && typeof window.ai_being_edited == 'string'){
-		console.error("save_edited_ai:  no assistant_id provided, falling back to window.ai_being_edited: ", window.ai_being_edited);
-		assistant_id = window.ai_being_edited;
-	}
-	//console.log("in save_edited_ai.  assistant_id,details: ", assistant_id, details);
-	if(typeof assistant_id == 'string'){
-		if(typeof window.settings.assistants[assistant_id] == 'undefined'){
-			console.warn("save_edited_ai:  had to create empty dict in window.settings.assistants first");
-			window.settings.assistants[assistant_id] = {};
-			really_generate_ui(); // this should generate the missing chat pane
-		}
-		window.settings.assistants[assistant_id] = {...window.settings.assistants[assistant_id], ...details};
-		save_settings();
-		
-		if(assistant_id != window.settings.assistant){
-			switch_assistant(assistant_id,true);
-		}
-		
-		if(typeof window.received_prompt == 'string'){
-			show_received_prompt();
-		}
-		
-		//console.log("save_edited_ai:  OK, SAVED");
-		return true
-	}
-	else{
-		console.error("save_edited_ai: no valid assistant_id, cannot save. details: ", details);
-	}
-	return false
-}
 
 
 
@@ -4949,30 +5741,94 @@ function save_edited_ai(details=null,assistant_id=null){
 
 share_prompt_show_more_options_button_el.addEventListener("click", () => {
 	//console.log("clicked on share_prompt_show_more_options_button_el");
-	document.body.classList.add('show-more-share-options');
+	add_body_class('show-more-share-options');
 	//update_assistant_property('example_prompt', share_prompt_input_el.value); // on assistants with example_input it's always a dictionary with language options. Could perhaps change the current language one.. why though.
 });
 
 share_prompt_dialog_done_button_el.addEventListener("click", () => {
-	console.log("clicked on share prompt done button");
-	document.body.classList.remove('busy-editing-assistant');
-	document.body.classList.remove('busy-editing-received-ai');
+	//console.log("clicked on share prompt done button");
+	remove_body_class('busy-editing-assistant');
+	remove_body_class('busy-editing-received-ai');
 	
+	
+	if(typeof window.received_document == 'string'){
+		setTimeout(show_received_document,1000);
+	}
+	else if(typeof url_parameter_file == 'string'){
+		setTimeout(parse_file_from_url,1000);
+	}
+	else if(typeof window.received_prompt == 'string'){
+		setTimeout(show_received_prompt,1000);
+	}
+	
+	/*
 	if(typeof window.received_prompt == 'string'){
-		console.log("there is a received prompt to handle next");
+		//console.log("there is a received prompt to handle next");
 		show_received_prompt();
 	}
+	*/
 	//update_assistant_property('example_prompt', share_prompt_input_el.value); // on assistants with example_input it's always a dictionary with language options. Could perhaps change the current language one.. why though.
 });
 
 
 run_the_received_prompt_button_el.addEventListener("click", () => {
-	console.log("clicked on run received prompt button");
-	document.body.classList.remove('received-prompt');
+	//console.log("clicked on run received prompt button");
+	remove_body_class('received-prompt');
 	do_prompt(null,received_prompt_textarea_el.value);
 	//window.received_prompt = null;
 	//update_assistant_property('example_prompt', share_prompt_input_el.value); // on assistants with example_input it's always a dictionary with language options. Could perhaps change the current language one.. why though.
 });
+
+
+
+save_the_received_document_button_el.addEventListener("click", () => {
+	//console.log("clicked on save received document button");
+	//remove_body_class('received-document');
+	save_received_document();
+});
+
+run_the_received_document_button_el.addEventListener("click", () => {
+	//console.log("clicked on run received document button");
+	//remove_body_class('received-document');	
+	save_received_document(true);
+});
+
+
+
+async function save_received_document(run_it_too=false){
+	console.log("in save_received_document. run_it_too?: ", run_it_too);
+	
+	let new_filename = received_document_filename_el.value.trim();
+	new_filename = sanitize_filename(new_filename);
+	if(new_filename.length && new_filename.indexOf('.') == -1){
+		new_filename += '.txt';
+	}
+	if(new_filename.length){
+		received_document_dialog_el.close();
+		await create_new_document(received_document_textarea_el.value, received_document_filename_el.value);
+		if(typeof current_file_name == 'string' && current_file_name != unsaved_file_name){
+			await open_file(current_file_name);
+		}
+	
+		if(run_it_too){
+			setTimeout(start_play_document,2000); // give it a little time to settle
+		}
+		
+	}
+	else{
+		flash_message(get_translation('Invalid_file_name'),2000,'warn');
+	}
+	
+	if(typeof url_parameter_file == 'string'){
+		setTimeout(parse_file_from_url,1000);
+	}
+	else if(typeof window.received_prompt == 'string'){
+		setTimeout(show_received_prompt,1000);
+	}
+	
+}
+
+
 
 
 
@@ -4986,6 +5842,15 @@ share_prompt_model_download_url_el.addEventListener("input", (event) => {
 	create_share_prompt_link();
 	update_assistant_property('download_url', share_prompt_model_download_url_el.value);
 });
+share_prompt_model_download_url_el.addEventListener("blur", (event) => {
+	//console.log("share_prompt_model_download_url_el value changed to: ", share_prompt_model_download_url_el.value);
+	if(share_prompt_model_download_url_el.value.toLowerCase().indexOf('.gguf') == -1){
+		flash_message(get_translation('Invalid_URL'),2000,'warn');
+	}
+	create_share_prompt_link();
+	update_assistant_property('download_url', share_prompt_model_download_url_el.value);
+});
+
 share_prompt_model_config_url_el.addEventListener("input", (event) => {
 	//console.log("share_prompt_model_config_url_el value changed to: ", share_prompt_model_config_url_el.value);
 	create_share_prompt_link();
@@ -4995,7 +5860,6 @@ share_prompt_model_config_url_el.addEventListener("input", (event) => {
 
 share_prompt_model_system_prompt_el.addEventListener("input", (event) => {
 	//console.log("share_prompt_model_system_prompt_el value changed to: ", share_prompt_model_system_prompt_el.value);
-	
 	update_assistant_property('system_prompt', share_prompt_model_system_prompt_el.value);
 	create_share_prompt_link();
 });
@@ -5006,18 +5870,25 @@ share_prompt_model_second_prompt_el.addEventListener("input", (event) => {
 	create_share_prompt_link();
 });
 
-
 document.getElementById('share-prompt-copy-to-clipboard-button').addEventListener("click", (event) => {
-	//console.log("copying to clipboard");
-	navigator.clipboard.writeText(share_prompt_link_el.innerText);
+	console.log("copying to clipboard");
+	navigator.clipboard.writeText(share_prompt_link_el.value);
 	share_prompt_dialog_el.close();
+	flash_message(get_translation("Copied_link_to_clipboard"));
+});
+
+document.getElementById('share-document-copy-to-clipboard-button').addEventListener("click", (event) => {
+	//console.log("copying to clipboard");
+	navigator.clipboard.writeText(share_document_link_text_el.value);
+	received_document_dialog_el.close();
 	flash_message(get_translation("Copied_link_to_clipboard"));
 });
 
 
 
+
 function update_assistant_property(property,value){
-	//console.log("in update_assistant_property:  property,value", property,value);
+	//console.log("in update_assistant_property:  property,value, window.ai_being_edited", property,value, window.ai_being_edited);
 	
 	if(typeof window.ai_being_edited == 'string' && window.ai_being_edited.length && typeof property == 'string' && property.length && typeof value == 'string'){
 		/*
@@ -5464,10 +6335,10 @@ speaker_voice_select_el.addEventListener("change", (event) => {
 
 interrupt_speaking_select_el.addEventListener("change", (event) => {	
 	if(interrupt_speaking_select_el.value == 'Yes' || interrupt_speaking_select_el.value == 'Auto'){
-		document.body.classList.add('interrupt-speaking');
+		add_body_class('interrupt-speaking');
 	}
 	else{
-		document.body.classList.remove('interrupt-speaking');
+		remove_body_class('interrupt-speaking');
 	}
 	window.settings.interrupt_speaking = interrupt_speaking_select_el.value;
 	save_settings();
@@ -5477,13 +6348,13 @@ interrupt_speaking_select_el.addEventListener("change", (event) => {
 
 // Manage disk space / models
 show_models_list_button_el.addEventListener("click", () => {
-	console.log("clicked on show_models_list_button_el");
+	//console.log("clicked on show_models_list_button_el");
 	show_models_info();
 	if(window.innerWidth < 981){
 		close_sidebar();
 	}
 	if(window.innerWidth < 641){
-		document.body.classList.remove('show-document')
+		remove_body_class('show-document')
 	}
 });
 
@@ -5515,10 +6386,10 @@ function update_brightness(brightness){
 			save_settings();
 		}
 		if(window.settings.brightness == 'light'){
-			document.body.classList.add('light');
+			add_body_class('light');
 		}
 		else{
-			document.body.classList.remove('light');
+			remove_body_class('light');
 		}
 		setTimeout(() => {
 			if(setting_brightness_dropdown_el){
@@ -5607,10 +6478,10 @@ document.getElementById('import-settings-backup-button').addEventListener("click
 					window.settings = {...window.settings, ...new_settings}
 					save_settings();
 					generate_ui();
-					document.body.classList.remove('viewing-settings-file');
+					remove_body_class('viewing-settings-file');
 					setTimeout(() => {
 						if(current_file_name == 'papeg_ai_settings.json' && typeof playground_live_backups['/papeg_ai_settings.json'] == 'string'){
-							document.body.classList.add('viewing-settings-file');
+							add_body_class('viewing-settings-file');
 						}
 					},10000);
 					flash_message(get_translation('Settings_imported'));
@@ -5776,7 +6647,7 @@ function restore_conversation(conversation,assistant_id=null){
 			}
 		}
 		if(added_a_chat_message && assistant_id == window.settings.assistant){
-			document.body.classList.add('has-conversation');
+			add_body_class('has-conversation');
 		}
 	}
 }
@@ -5818,17 +6689,17 @@ function restore_conversations(){
 	}
 	window.unread_messages = {};
 	generate_ui();
-	
 }
 
 
 
-// Gets called when the IndexDB worker in pjs/main.js is done loading the live_backups data
+// Gets called when the IndexDB worker in pjs/main.js is done loading the files data into playground_live_backups
 async function file_data_loaded(){
 	//console.log("\n\nIN FILE_DATA_LOADED. playground_saved_files keys: ", JSON.stringify(keyz(playground_saved_files),null,2));
 	//console.log("- playground_live_backups keys: ", JSON.stringify(keyz(playground_live_backups),null,2));
 	
-	window.generate_recent_documents_list();
+	//await load_codemirror();
+	window.files_loaded = true;
 	restore_conversations();
 	
 	document.getElementById('tutorial-menu').style.maxHeight = '50px';
@@ -5876,13 +6747,48 @@ function clear_cache() {
 }
 
 
-clear_site_cache_button_el.addEventListener("click", () => {
-	window.update_site();
+clear_site_cache_button_el.addEventListener("click", async () => {
+	if(window.settings.version == 'number'){
+		console.warn("DELETING CACHE: ", 'v' + window.settings.version);
+		await caches.delete('v' + window.settings.version);
+	}
+	
+	//window.update_site();
 });
 
 
 document.getElementById('apply-update-button').addEventListener("click", () => {
-	window.location.reload(true);
+	if(typeof window.update_service_worker != 'undefined'){
+		//console.log("calling window.update_service_worker");
+		window.update_service_worker();
+	}
+	remove_body_class('update-downloading');
+	remove_body_class('update-available');
+});
+
+
+
+// Notifications
+
+if(typeof Notification != 'undefined'){
+	if(window.settings.show_notifications === true){
+		//console.log("Notification.permission: ", Notification.permission);  // default (not asked user yet), granted, or denied
+		window.settings.show_notifications = (Notification.permission === 'granted');
+	}
+}
+else{
+	window.settings.show_notifications = false;
+}
+
+if(window.settings.show_notifications){
+	enable_notifications_checkbox_el.checked = true;
+}
+
+enable_notifications_checkbox_el.addEventListener("change", () => {
+	if(typeof window.set_notifications != 'undefined'){
+		//console.log("calling window.set_notifications");
+		window.set_notifications();
+	}
 });
 
 
@@ -5893,7 +6799,7 @@ if(typeof window.settings.limit_memory == 'number'){
 		window.available_memory = window.ram;
 		document.getElementById('total-memory').textContent = Math.round(window.ram / 1000) + "GB";
 		document.getElementById('limited-ram').textContent = Math.round(window.ram / 1000) + "GB";
-		console.log("window.ram is now: ", window.ram);
+		//console.log("window.ram is now: ", window.ram);
 	}
 	
 }
@@ -5917,7 +6823,7 @@ document.getElementById('settings-limit-memory-use-select').addEventListener("ch
 	window.available_memory = window.ram;
 	document.getElementById('total-memory').textContent = Math.round(window.ram / 1000) + "GB";
 	document.getElementById('limited-ram').textContent = Math.round(window.ram / 1000) + "GB";
-	console.log("window.ram is now: ", window.ram);
+	//console.log("window.ram is now: ", window.ram);
 });
 
 
@@ -5931,6 +6837,61 @@ clear_local_storage_button_el.addEventListener("click", () => {
 		window.location.reload(true);
 	}
 });
+
+
+document.getElementById('tutorial-content').addEventListener("click", async (event) => {
+	let target_el = event.target;
+	//console.log("event.target.tagName: ", event.target.tagName );
+	if(event.target.tagName != 'BUTTON'){
+		target_el = event.target.closest('button');
+	}
+	//console.log("target_el: ", target_el);
+	
+	if(target_el && typeof target_el.tagName == 'string' && target_el.tagName == 'BUTTON'){
+		await load_runners();
+		window.only_allow_voice_commands = false;
+		
+		let classes = target_el.className.split(' ');
+		for(let c = 0; c < classes.length; c++){
+			if(classes[c].startsWith('functionality-button-')){
+				const functionality_name = classes[c].replace('functionality-button-','');
+				do_functionality(functionality_name);
+				break;
+			}
+			else if(classes[c].startsWith('characters-button-')){
+				const functionality_name = classes[c].replace('characters-button-','');
+				//console.log("character key: ", functionality_name);
+				for (let [key, details] of Object.entries(window.characters)) {
+					if(key == functionality_name){
+						//console.log("clicked on special character button: ", key);
+						if(typeof details.function == 'string'){
+							//console.log("clicked on special character button -> running function: ", details.function);
+							window[details.function]();
+						}
+						else{
+							create_custom_ai(details);
+						}
+						break
+					}
+				}
+				break;
+			}
+			
+			else if(classes[c].startsWith('blueprints-button-')){
+				//console.log("clicked on blueprint button");
+				const functionality_name = classes[c].replace('blueprints-button-','');
+				for (let [key, details] of Object.entries(window.blueprints)) {
+					if(key == functionality_name){
+						add_blueprint(details);
+						break
+					}
+				}
+				break
+			}
+		}
+	}
+});
+
 
 /*
 clear_cache_button_el.addEventListener("click", (e) => {
@@ -6068,7 +7029,7 @@ function start_ocr(){
 		switch_assistant('any_writer');
 		window.start_camera();
 		camera_do_ocr_details_el.open = true;
-		document.body.classList.add('doing-ocr');
+		add_body_class('doing-ocr');
 		camera_container_el.classList.remove('ocr-scan-complete');
 		window.continuous_ocr_enabled = true;
 		//console.log("window.settings.continuous_ocr_scan: ", window.settings.continuous_ocr_scan);
@@ -6133,7 +7094,7 @@ window.start_ocr = start_ocr;
 
 function stop_ocr(){
 	window.ocr_blobs = [];
-	document.body.classList.remove('doing-ocr');
+	remove_body_class('doing-ocr');
 	window.only_allow_voice_commands = false;
 }
 window.stop_ocr = stop_ocr;
@@ -6165,8 +7126,8 @@ window.detect_page_in_video = function(){
 			}
 			else{
 				console.error("detect_page_in_video: video_canvas_el was null");
-				document.body.classList.remove('show-camera');
-				document.body.classList.remove('doing-ocr');
+				remove_body_class('show-camera');
+				remove_body_class('doing-ocr');
 			}
 		}
 		catch(err){
@@ -6208,6 +7169,10 @@ window.detect_page_in_video = function(){
 
 window.extract_page_from_canvas = function(canvas_element){
 	//console.log("in extract_page_from_canvas:  canvas_element.width: ", canvas_element.width, ", canvas_element.height: ", canvas_element.height);
+	if(typeof canvas_element == 'undefined' || canvas_element == null){
+		console.error("extract_page_from_canvas: provided canvas_element was invalid");
+		return null;
+	}
 	let canvas_element_ctx = canvas_element.getContext('2d', { willReadFrequently: false });
 	
 	//console.log("extract_page_from_canvas: camera resolution: ", window.camera_width, window.camera_height);
@@ -6476,13 +7441,13 @@ window.post_ocr_blob_addition = async function() {
 		doing_ocr_scan_counter_el.textContent = '';
 	
 		if(window.continuous_ocr_enabled){
-			document.body.classList.add('camera-sleeping');
+			add_body_class('camera-sleeping');
 		}
 	
 		if(window.ocr_blobs.length && window.doing_ocr_scan == 0){
 			//console.log("post_ocr_blob_addition: all blobs for OCR have been collected");
 			await window.perform_ocr_on_blobs();
-			document.body.classList.remove('doing-ocr-scan');
+			remove_body_class('doing-ocr-scan');
 			// clear camera_overlay_canvas_el
 			if(camera_overlay_context){
 				//console.log("post_ocr_blob_addition: clearing camera overlay");
@@ -6494,10 +7459,10 @@ window.post_ocr_blob_addition = async function() {
 		window.ocr_blobs = [];
 		window.ocr_blobs.length = 0;
 		if(window.continuous_ocr_enabled){
-			document.body.classList.add('camera-sleeping');
+			add_body_class('camera-sleeping');
 			
 			setTimeout(() => {
-				document.body.classList.remove('camera-sleeping');
+				remove_body_class('camera-sleeping');
 				if(window.continuous_ocr_enabled){
 					window.doing_ocr_scan = window.settings.continuous_ocr_scan_intensity;
 				}
@@ -6617,8 +7582,8 @@ window.create_svg = create_svg;
 function scan_blob(image_blob){
 	window.add_script('./camera_module.js',true) // add it as a module
 	.then(() => {
-		document.body.classList.add('show-rewrite');
-		document.body.classList.add('doing-ocr');
+		add_body_class('show-rewrite');
+		add_body_class('doing-ocr');
 		camera_do_ocr_details_el.open = true;
 	})
 	.catch((err) => {
@@ -6631,7 +7596,7 @@ stop_camera_button_el.addEventListener("click", (e) => {
 	//console.log("stop_camera_button clicked");
 	window.stop_camera();
 	window.only_allow_voice_commands = false;
-	document.body.classList.remove('show-camera');
+	remove_body_class('show-camera');
 });
 
 
@@ -6642,7 +7607,7 @@ camera_do_ocr_summary_button_el.addEventListener("click", (e) => {
 	if(camera_do_ocr_details_el.open){
 		//console.log("OCR stopped");
 		window.continuous_ocr_enabled = false;
-		document.body.classList.remove('doing-ocr');
+		remove_body_class('doing-ocr');
 	}
 	else{
 		//console.log("OCR starting");
@@ -6650,7 +7615,7 @@ camera_do_ocr_summary_button_el.addEventListener("click", (e) => {
 			console.error("somehow image_to_text_ocr was active while the rewrite tools were also active");
 			switch_assistant('any_writer');
 		}
-		document.body.classList.add('doing-ocr');
+		add_body_class('doing-ocr');
 		camera_container_el.classList.remove('ocr-scan-complete');
 		//window.continuous_ocr_enabled = true;
 		window.do_continuous_ocr();
@@ -6680,7 +7645,7 @@ window.start_an_ocr_scan = () => {
 		window.ocr_scans = [];
 		window.ocr_blobs = [];
 		window.doing_ocr_scan = window.settings.ocr_scan_intensity;
-		//document.body.classList.add('doing-ocr-scan');
+		//add_body_class('doing-ocr-scan');
 		camera_container_el.classList.remove('ocr-scan-complete');
 		window.do_continuous_ocr();
 	}
@@ -6689,7 +7654,7 @@ window.start_an_ocr_scan = () => {
 	window.ocr_scans = [];
 	window.ocr_blobs = [];
 	window.doing_ocr_scan = window.settings.ocr_scan_intensity;
-	//document.body.classList.add('doing-ocr-scan');
+	//add_body_class('doing-ocr-scan');
 	camera_container_el.classList.remove('ocr-scan-complete');
 	window.do_continuous_ocr();
 	
@@ -6702,7 +7667,7 @@ window.start_an_ocr_scan = () => {
 camera_ocr_improve_button_el.addEventListener("click", (e) => {
 	//console.log("camera_ocr_improve_button clicked");
 	window.doing_ocr_scan = window.settings.ocr_scan_intensity;
-	//document.body.classList.add('doing-ocr-scan');
+	//add_body_class('doing-ocr-scan');
 	camera_container_el.classList.remove('ocr-scan-complete');
 	window.do_continuous_ocr();
 });
@@ -6750,19 +7715,19 @@ camera_image_to_text_summary_button_el.addEventListener("click", (e) => {
 	window.only_allow_voice_commands = false;
 	if(camera_image_to_text_details_el.open){ // is reversed (sic)
 		//console.log("EYE stopped");
-		document.body.classList.remove('doing-image-to-text');
+		remove_body_class('doing-image-to-text');
 		window.continuous_image_to_text_enabled = false;
 	}
 	else{
 		//console.log("EYE starting");
 		switch_assistant('any_writer');
-		document.body.classList.add('doing-image-to-text');
+		add_body_class('doing-image-to-text');
 
 		//window.start_camera();
 		// Disable any OCR that was going on
 		camera_do_ocr_details_el.open = false;
-		document.body.classList.remove('doing-ocr');
-		document.body.classList.remove('doing-ocr-scan');
+		remove_body_class('doing-ocr');
+		remove_body_class('doing-ocr-scan');
 		//camera_container_el.classList.remove('ocr-scan-complete');
 		window.continuous_ocr_enabled = false;
 		
@@ -6796,7 +7761,7 @@ function toggle_image_to_text_camera(){
 		
 		if(window.showing_camera_still == null){
 			window.showing_camera_still = true;
-			document.body.classList.remove('hide-camera-still');
+			remove_body_class('hide-camera-still');
 			console.warn("window.showing_camera_still was still null. Starting camera.");
 			
 			window.add_script('./camera_module.js',true) // add it as a module
@@ -6811,7 +7776,7 @@ function toggle_image_to_text_camera(){
 		if(typeof window.showing_camera_still == 'boolean'){
 			window.showing_camera_still = !window.showing_camera_still;s
 			if(window.showing_camera_still){
-				document.body.classList.remove('hide-camera-still');
+				remove_body_class('hide-camera-still');
 				window.get_camera_jpeg_blob()
 				.then((blob_from_camera) => {
 					//console.log("BLOB FROM CAMERA: ", blob_from_camera); 
@@ -6824,7 +7789,7 @@ function toggle_image_to_text_camera(){
 				})
 			}
 			else{
-				document.body.classList.add('hide-camera-still');
+				add_body_class('hide-camera-still');
 			}
 		}
 		
@@ -6849,7 +7814,7 @@ image_to_text_upload_input_el.addEventListener("change", async (event) => {
 	//console.log("image_to_text_upload_input_el changed");
 	
 	window.showing_camera_still = null;
-	document.body.classList.remove('hide-camera-still');
+	remove_body_class('hide-camera-still');
 	
 	if(window.camera_streaming === true){
 		window.stop_camera();
@@ -6890,7 +7855,7 @@ camera_image_to_text_describe_button_el.addEventListener("click", (e) => {
 	//console.log("camera_ocr_scan_button clicked");
 	window.continuous_image_to_text_enabled = false;
 	window.continuous_ocr_enabled = false;
-	document.body.classList.remove('doing-ocr-scan');
+	remove_body_class('doing-ocr-scan');
 	camera_image_to_text_auto_scan_input_el.checked = false;
 	window.settings['continous_image_to_text'] = false;
 	camera_overlay_svg_container_el.innerHTML = '';
@@ -6972,7 +7937,7 @@ camera_image_to_text_save_auto_scan_input_el.addEventListener("change", (e) => {
 document.getElementById('clear-recent-files-button').addEventListener("click", (e) => {
 	window.settings.docs.recent = [];
 	save_settings();
-	document.body.classList.remove('has-recent-documents');
+	remove_body_class('has-recent-documents');
 	recently_opened_documents_list_el.innerHTML = '';
 });
 
@@ -7014,6 +7979,10 @@ document.getElementById('share-prompt-model-system-prompt-examples').addEventLis
 			if(!second_prompt_example_text.startsWith('prompt')){
 				share_prompt_model_second_prompt_el.value = second_prompt_example_text;
 			}
+			
+			update_assistant_property('system_prompt', share_prompt_model_system_prompt_el.value);
+			update_assistant_property('second_prompt', share_prompt_model_second_prompt_el.value);
+			create_share_prompt_link();
 		}
 	}
 	catch(err){
@@ -7044,10 +8013,13 @@ function show_model_info(){
 	//console.log("in show_model_info");
 	
 	model_info_container_el.innerHTML = '';
-	new_custom_ai_model_emoji_editor_container_el.innerHTML = ''; // avoid having two emoji  editors open at the same time
+	if(new_custom_ai_model_emoji_editor_container_el){
+		new_custom_ai_model_emoji_editor_container_el.innerHTML = ''; // avoid having two emoji  editors open at the same time
+	}
 	
-	document.body.classList.remove('busy-editing-assistant');
-	document.body.classList.remove('busy-editing-received-ai');
+	
+	remove_body_class('busy-editing-assistant');
+	remove_body_class('busy-editing-received-ai');
 	
 	if(window.settings.assistant == 'speak'){
 		window.settings.assistant = 'speaker';
@@ -7190,8 +8162,20 @@ function show_model_info(){
 		let debug_detail_el = document.createElement('li');
 		debug_detail_el.classList.add('model-info-detail-simple');
 		debug_detail_el.classList.add('show-if-developer');
-		debug_detail_el.innerHTML = '<span class="model-info-detail-label">assistant_id</span><span class="model-info-detail-value">' + window.settings.assistant + '</span>';
+		debug_detail_el.innerHTML = '<span class="model-info-detail-label">assistant ID</span><span class="model-info-detail-value">' + window.settings.assistant + '</span>';
 		model_info_details_el.appendChild(debug_detail_el);
+		
+		
+		// REAL ASSISTANT NAME
+		
+		if(typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant].real_name == 'string'){
+			let real_name_detail_el = document.createElement('li');
+			real_name_detail_el.classList.add('model-info-detail-simple');
+			real_name_detail_el.innerHTML = '<span class="model-info-detail-label">' + get_translation('Real_name') + '</span><span class="model-info-detail-value">' + window.assistants[window.settings.assistant].real_name + '</span>';
+			model_info_details_el.appendChild(real_name_detail_el);
+		}
+		
+		
 		
 	
 		
@@ -7200,7 +8184,7 @@ function show_model_info(){
 		if(typeof window.settings.assistants[window.settings.assistant].clone_original == 'string' && window.settings.assistants[window.settings.assistant].clone_original.length > 1){ // && window.settings.settings_complexity != 'normal'
 			let clone_original_detail_el = document.createElement('li');
 			clone_original_detail_el.classList.add('model-info-detail-simple');
-			clone_original_detail_el.classList.add('show-if-advanced');
+			//clone_original_detail_el.classList.add('show-if-advanced');
 			clone_original_detail_el.innerHTML = '<span class="model-info-detail-label" data-i18n="Clone_of">' + get_translation('Clone_of') + '</span>';
 			
 			let clone_original_name_el = document.createElement('span');
@@ -7216,7 +8200,10 @@ function show_model_info(){
 			
 			clone_original_name_el.addEventListener('click', () => {
 				//console.log("clicked on clone original name");
-				switch_assistant(window.settings.assistants[window.settings.assistant].clone_original);
+				if(window.settings.assistants[window.settings.assistant].clone_original != 'custom_received'){
+					switch_assistant(window.settings.assistants[window.settings.assistant].clone_original);
+				}
+				
 			})
 			clone_original_detail_el.appendChild(clone_original_name_el);
 			
@@ -7458,6 +8445,9 @@ function show_model_info(){
 			if(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && typeof window.settings.assistants[window.settings.assistant].temperature == 'number' ){
 				model_temperature = window.settings.assistants[window.settings.assistant].temperature;
 			}
+			else if(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && typeof window.settings.assistants[window.settings.assistant].temperature == 'string' ){
+				model_temperature = parseFloat(window.settings.assistants[window.settings.assistant].temperature);
+			}
 			else if(typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant].temperature == 'number'){
 				model_temperature = window.assistants[window.settings.assistant].temperature;
 			}
@@ -7686,16 +8676,6 @@ function show_model_info(){
 			
 			let options_data = [
 				{	
-					'setting_id':'cache_type_k',
-					'setting_id_type':'select',
-					'setting_id_options':['f16','q8_0','q4_0']  // 'f16' | 'q8_0' | 'q4_0',
-				},
-				{	
-					'setting_id':'huggingface_id', // For image to text
-					'setting_id_type':'select',
-					//'setting_id_options':['onnx-community/Florence-2-base-ft','Xenova/nanoLlava','Xenova/moondream2']
-				},
-				{	
 					'setting_id':'ollama_host',
 					'setting_id_type':'text'
 				},
@@ -7730,6 +8710,20 @@ function show_model_info(){
 					'setting_id':'prefered_voice_gender',
 					'setting_id_type':'select',
 					'setting_id_options':['male','female']
+				},
+				{	
+					'setting_id':'huggingface_id', // For image to text
+					'setting_id_type':'select',
+					//'setting_id_options':['onnx-community/Florence-2-base-ft','Xenova/nanoLlava','Xenova/moondream2']
+				},
+				{	
+					'setting_id':'cache_type_k',
+					'setting_id_type':'select',
+					'setting_id_options':['f16','q8_0','q4_0']  // 'f16' | 'q8_0' | 'q4_0',
+				},
+				{	
+					'setting_id':'seed',
+					'setting_id_type':'number',
 				},
 				
 			]
@@ -7800,6 +8794,13 @@ function show_model_info(){
 				else if(setting_id == 'cache_type_k' && typeof window.assistants[window.settings.assistant].runner == 'string' && window.assistants[window.settings.assistant].runner != 'llama_cpp'){
 					continue
 				}
+				if(setting_id == 'seed' && typeof window.settings.assistants[window.settings.assistant].runner == 'string' && window.settings.assistants[window.settings.assistant].runner != 'llama_cpp'){
+					continue
+				}
+				else if(setting_id == 'seed' && typeof window.assistants[window.settings.assistant].runner == 'string' && window.assistants[window.settings.assistant].runner != 'llama_cpp'){
+					continue
+				}
+				
 				if(setting_id == 'add_timestamps' && window.settings.assistant != 'scribe'){
 					continue
 				}
@@ -7817,7 +8818,7 @@ function show_model_info(){
 				}
 				
 				if(setting_id == 'prefered_voice_gender'){
-					console.log("checking prefered_voice_gender setting");
+					//console.log("checking prefered_voice_gender setting");
 					if(window.settings.assistant == 'translator'){
 						
 					}
@@ -7852,13 +8853,9 @@ function show_model_info(){
 				let advanced_toggles_container_el = document.createElement('div');
 				advanced_toggles_container_el.classList.add('model-info-advanced-toggles-container');
 			
-				
-				
-			
 				// Checkbox wrapper
 				let model_setting_wrapper_el = document.createElement('div');
 				model_setting_wrapper_el.classList.add('model-info-toggle-wrapper');
-			
 			
 				// setting label
 				let model_setting_label_el = document.createElement('label');
@@ -7889,18 +8886,23 @@ function show_model_info(){
 				model_setting_input_el.setAttribute('id','model-info-' + setting_id + '-input');
 				
 				// setting input element
-				if(setting_id_type == 'text'){
+				if(setting_id_type == 'text' || setting_id_type == 'number'){
 					model_setting_input_el.setAttribute('type',setting_id_type);
 				
 					
-					if(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && typeof window.settings.assistants[window.settings.assistant][setting_id] == 'string'){
+					if(typeof window.settings.assistants[window.settings.assistant] != 'undefined' && (typeof window.settings.assistants[window.settings.assistant][setting_id] == 'string' || typeof window.settings.assistants[window.settings.assistant][setting_id] == 'number')){
 						model_setting_input_el.value = window.settings.assistants[window.settings.assistant][setting_id];
 					}
-					else if(typeof window.assistants[window.settings.assistant] != 'undefined' && typeof window.assistants[window.settings.assistant][setting_id] == 'string'){
+					else if(typeof window.assistants[window.settings.assistant] != 'undefined' && (typeof window.assistants[window.settings.assistant][setting_id] == 'string' || typeof window.assistants[window.settings.assistant][setting_id] == 'number')){
 						model_setting_input_el.value = window.assistants[window.settings.assistant][setting_id];
 					}
 				
-					model_setting_input_el.addEventListener('input',(event) => {
+					//const update_input_value = () => {
+					//	console.log("in update_input_value");
+					//}
+				
+					model_setting_input_el.addEventListener('input', (event) => {
+						//update_input_value();
 						if(typeof window.settings.assistants[window.settings.assistant] == 'undefined'){
 							window.settings.assistants[window.settings.assistant] = {};
 						}
@@ -7908,16 +8910,41 @@ function show_model_info(){
 						if(model_setting_input_el.value == ''){
 							delete window.settings.assistants[window.settings.assistant][setting_id];
 						}
+						/*
+						else if(setting_id_type == 'number' && !isNaN(model_setting_input_el.value)){
+							window.settings.assistants[window.settings.assistant][setting_id] = parseFloat(model_setting_input_el.value);
+						}
+						*/
 						else if(model_setting_input_el.value){
-							//console.log("model_setting_input_el.value: ", model_setting_input_el.value);
-							window.settings.assistants[window.settings.assistant][setting_id] = model_setting_input_el.value;
+							console.log("model_setting_input_el.value: ", setting_id, typeof model_setting_input_el.value, model_setting_input_el.value);
+							//window.settings.assistants[window.settings.assistant][setting_id] = model_setting_input_el.value;
+							if(setting_id_type == 'number'){
+								if(typeof model_setting_input_el.value == 'string'){
+									window.settings.assistants[window.settings.assistant][setting_id] = parseFloat(model_setting_input_el.value);
+								}
+								else if(typeof model_setting_input_el.value == 'number'){
+									window.settings.assistants[window.settings.assistant][setting_id] = model_setting_input_el.value;
+								}
+								
+							}
+							else{
+								window.settings.assistants[window.settings.assistant][setting_id] = model_setting_input_el.value;
+							}
+							
 						}
 						save_settings();
+						//create_share_prompt_link(); // handled by save_settings
 						model_setting_wrapper_el.classList.add('model-info-setting-saved');
 						setTimeout(() => {
 							model_setting_wrapper_el.classList.remove('model-info-setting-saved');
 						},500);
 					});
+					/*
+					// Not necessary
+					model_setting_input_el.addEventListener('blur',(event) => {
+						update_input_value();
+					});
+					*/
 				
 				}
 				else if(setting_id_type == 'checkbox'){
@@ -8286,7 +9313,26 @@ function show_model_info(){
 						}
 						system_prompt_el.value = system_prompt_text;
 						
-						system_prompt_el.addEventListener("change", () => {
+						system_prompt_el.addEventListener("input", () => {
+							//console.log("manually set system prompt to: ", system_prompt_el.value);
+							if( typeof window.settings.assistants[window.settings.assistant] == 'undefined'){
+								window.settings.assistants[window.settings.assistant] = {};
+							}
+							window.settings.assistants[window.settings.assistant]['system_prompt'] = system_prompt_el.value;
+							save_settings();
+							system_prompt_el.classList.add('model-info-prompt-saved');
+							setTimeout(() => {
+								system_prompt_el.classList.remove('model-info-prompt-saved');
+							},200);
+							
+							if(typeof window.settings.assistants[window.settings.assistant]['system_prompt'] == 'string' && typeof window.assistants[window.settings.assistant]['system_prompt'] == 'string' && window.settings.assistants[window.settings.assistant]['system_prompt'] != window.assistants[window.settings.assistant]['system_prompt']){
+								// reset button should be shown
+								system_prompt_reset_button_el.classList.remove('hidden');
+							}
+							
+						});
+						
+						system_prompt_el.addEventListener("blur", () => {
 							//console.log("manually set system prompt to: ", system_prompt_el.value);
 							if( typeof window.settings.assistants[window.settings.assistant] == 'undefined'){
 								window.settings.assistants[window.settings.assistant] = {};
@@ -8321,7 +9367,7 @@ function show_model_info(){
 						
 						
 						function populate_presets(){
-							console.log("in populate_presets");
+							//console.log("in populate_presets");
 							system_prompt_presets_select_el.classList.remove('hidden');
 							
 							let first_preset_option_el = document.createElement('option');
@@ -8332,7 +9378,7 @@ function show_model_info(){
 							
 							window.add_script('./more_characters.js')
 							.then((value) => {
-								console.log("more_characters.js has/is loaded");
+								//console.log("more_characters.js has/is loaded");
 								if(typeof more_characters != 'undefined'){
 									
 									let characters_language = 'en';
@@ -8356,7 +9402,7 @@ function show_model_info(){
 									}
 									
 									system_prompt_presets_select_el.addEventListener('change', () => {
-										console.log("selected an example system prompt.  system_prompt_presets_select_el.value: ", characters_language, system_prompt_presets_select_el.value);
+										//console.log("selected an example system prompt.  system_prompt_presets_select_el.value: ", characters_language, system_prompt_presets_select_el.value);
 										if(typeof more_characters != 'undefined' && typeof more_characters[characters_language] != 'undefined'){
 											for(let mi = 0; mi < more_characters[characters_language].length; mi++){
 												if(more_characters[characters_language][mi].custom_name == system_prompt_presets_select_el.value){
@@ -8370,6 +9416,25 @@ function show_model_info(){
 														
 														system_prompt_el.value = more_characters[characters_language][mi].system_prompt;
 														system_prompt_reset_button_el.classList.remove('hidden');
+														
+														
+														if( typeof window.settings.assistants[window.settings.assistant] == 'undefined'){
+															window.settings.assistants[window.settings.assistant] = {};
+														}
+														window.settings.assistants[window.settings.assistant]['system_prompt'] = system_prompt_el.value;
+														save_settings();
+														system_prompt_el.classList.add('model-info-prompt-saved');
+														setTimeout(() => {
+															system_prompt_el.classList.remove('model-info-prompt-saved');
+														},200);
+							
+														if(typeof window.settings.assistants[window.settings.assistant]['system_prompt'] == 'string' && typeof window.assistants[window.settings.assistant]['system_prompt'] == 'string' && window.settings.assistants[window.settings.assistant]['system_prompt'] != window.assistants[window.settings.assistant]['system_prompt']){
+															// reset button should be shown
+															system_prompt_reset_button_el.classList.remove('hidden');
+														}
+														else{
+															system_prompt_reset_button_el.classList.add('hidden');
+														}
 													}
 													break;
 												}
@@ -8842,14 +9907,14 @@ function show_model_info(){
 			share_clone_title_el.setAttribute('data-i18n','Share_this_AI_model');
 			share_clone_container_el.appendChild(share_clone_title_el);
 		
-			// Share clone link container
+			// Share clone link container ( is now used to share all kinds of URLs)
 			let share_clone_link_container_el = document.createElement('div');
 			share_clone_link_container_el.classList.add('share-prompt-link-container');
 			share_clone_link_container_el.classList.add('flex');
 			share_clone_container_el.appendChild(share_clone_link_container_el);
 		
 			// Share clone link text
-			let share_clone_link_text_el = document.createElement('div');
+			let share_clone_link_text_el = document.createElement('textarea');
 			share_clone_link_text_el.classList.add('share-prompt-link');
 			share_clone_link_text_el.setAttribute('id','model-info-share-clone-link-text');
 			share_clone_link_container_el.appendChild(share_clone_link_text_el);
@@ -8863,7 +9928,7 @@ function show_model_info(){
 			share_clone_link_copy_button_el.innerHTML = '<img src="images/copy_to_clipboard.svg" width="25" height="25">';
 			share_clone_link_copy_button_el.addEventListener("click", (event) => {
 				//console.log("copying to clipboard");
-				navigator.clipboard.writeText(share_clone_link_text_el.innerText);
+				navigator.clipboard.writeText(share_clone_link_text_el.value);
 				flash_message(get_translation("Copied_link_to_clipboard"));
 			});
 			share_clone_link_container_el.appendChild(share_clone_link_copy_button_el);
@@ -8934,7 +9999,7 @@ function show_model_info(){
 			
 			create_clone_button_el.addEventListener("click", () => {
 				
-				document.body.classList.add('no-received-ai');
+				add_body_class('no-received-ai');
 				do_clone_prefill(window.settings.assistant);
 			});
 			
@@ -9246,7 +10311,52 @@ function do_clone_prefill(assistant_id,pre_prefill=null){
 	}
 	
 	// if a custom name is not provided, set a starting custom_name based on the original
-	let clone_prefill = JSON.parse(JSON.stringify(window.assistants[assistant_id]));
+	let clone_prefill = null;
+	
+	
+	
+	if(typeof window.assistants[assistant_id] != 'undefined' && typeof window.assistants[assistant_id].runner == 'string'){
+		clone_prefill = JSON.parse(JSON.stringify(window.assistants[assistant_id]));
+		//console.log("do_clone_prefill: cloning based on assistant from assistants dict: ", assistant_id);
+	}
+	
+	else if(assistant_id.startsWith('custom_saved') && typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].runner == 'string'){
+		clone_prefill = JSON.parse(JSON.stringify(window.assistants[assistant_id]));
+		//console.log("do_clone_prefill: cloning based on existing clone from settings");
+	}
+	
+	else if(
+		typeof window.settings.assistants[assistant_id] != 'undefined' 
+		&& typeof window.settings.assistants[assistant_id].clone_original == 'string' 
+		&& window.settings.assistants[assistant_id].clone_original != assistant_id
+		&& typeof window.assistants[ window.settings.assistants[assistant_id].clone_original ] != 'undefined'
+		&& typeof window.assistants[ window.settings.assistants[assistant_id].clone_original ].runner == 'string'
+	){
+		clone_prefill = JSON.parse(JSON.stringify( window.assistants[window.settings.assistants[assistant_id].clone_original] ));
+		//console.log("do_clone_prefill: the assistant was already a clone, so took an extra step and got data from the clone's original in the assistants dict.  assistant_id: ",  assistant_id, " -> clone_original: ", window.assistants[assistant_id].clone_original);
+	}
+	
+	else if(
+		typeof window.settings.assistants[assistant_id] != 'undefined' 
+		&& typeof window.settings.assistants[assistant_id].clone_original == 'string' 
+		&& window.settings.assistants[assistant_id].clone_original != assistant_id
+		&& typeof window.settings.assistants[ window.settings.assistants[assistant_id].clone_original ] != 'undefined'
+		&& typeof window.settings.assistants[ window.settings.assistants[assistant_id].clone_original ].runner == 'string'
+	){
+		clone_prefill = JSON.parse(JSON.stringify( window.settings.assistants[window.settings.assistants[assistant_id].clone_original] ));
+		//console.log("do_clone_prefill: the assistant was a custom assistant that only existed in settings, so took an extra step and got data from the clone's original in the settings.  assistant_id: ",  assistant_id, " -> clone_original: ", window.assistants[assistant_id].clone_original);
+	}
+	
+	else if(typeof window.settings.assistants[assistant_id] != 'undefined' && typeof window.settings.assistants[assistant_id].runner == 'string'){
+		clone_prefill = JSON.parse(JSON.stringify(window.assistants[assistant_id]));
+		//console.log("do_clone_prefill: cloning based on assistant from settings");
+	}
+	else{
+		console.error("do_clone_prefil: finding original to clone fell through.  assistant_id: ", assistant_id);
+		flash_message(get_translation('An_error_occured'),1000,'fail');
+		return false
+	}
+	 
 	if(typeof clone_prefill['custom_name'] != 'string' && !assistant_id.startsWith('custom')){ 
 		//console.log("clone AI: adding initial custom_name for assistant_id: ", window.settings.assistant);
 		//clone_prefill['custom_name'] = get_translation(window.settings.assistant + '_name');
@@ -9273,9 +10383,325 @@ function do_clone_prefill(assistant_id,pre_prefill=null){
 		clone_prefill = {...clone_prefill,...pre_prefill}
 	}
 	
-	//console.log("clone_prefill: ", clone_prefill, ", based on: ", assistant_id);
-	window.ai_being_edited = assistant_id;
+	if(typeof clone_prefill.availability != 'undefined'){
+		delete clone_prefill.availability;
+	}
+	
+	//console.log("clone_prefill:  clone_prefill: ", clone_prefill, ", based on: ", assistant_id);
+	window.clone_prefill = clone_prefill;
+	window.ai_being_edited = null; // At this point the clone does not have it's own assistant ID yet
 	start_making_custom_ai(clone_prefill,assistant_id);
+}
+
+// Next step in the process: custom_ai_next
+
+
+// This actually creates the new AI
+function custom_ai_next(){
+	//console.log("in custom_ai_next. window.clone_prefill: ", window.clone_prefill);
+	
+	let updated_ai_details = {};
+	
+	if(window.clone_prefill != null){
+		updated_ai_details = window.clone_prefill;
+	}
+	
+	if(typeof updated_ai_details.emoji == 'undefined' || (typeof updated_ai_details.emoji == 'string' && updated_ai_details.emoji == '')){
+		updated_ai_details['emoji'] = '🦜';
+	}
+	if(typeof updated_ai_details.emoji_bg == 'undefined' || (typeof updated_ai_details.emoji_bg == 'string' && updated_ai_details.emoji_bg == '')){
+		updated_ai_details['emoji_bg'] = '#000000';
+	}
+	
+	if(new_custom_ai_model_name_el.value == ''){
+		const custom_ai_error_hint_el = document.getElementById('new-custom-ai-error-hint');
+		if(custom_ai_error_hint_el){
+			custom_ai_error_hint_el.textContent = get_translation("Please_provide_a_name");
+			setTimeout(() => {
+				custom_ai_error_hint_el.textContent = '';
+			},5000);
+		}
+		//flash_message(get_translation("Please_provide_a_name"),3000,'fail');
+		return false
+	}
+	
+	
+	let existing_assistant_id = null;
+	for (const [assistant_id, details] of Object.entries(window.settings.assistants)) {
+		if(typeof details.custom_name == 'string' && new_custom_ai_model_name_el.value.toLowerCase() == details.custom_name.toLowerCase()){
+			//console.log("custom_ai_next: the AI custom_name already exists: ", details.custom_name, " -> ", assistant_id);
+			existing_assistant_id = assistant_id;
+			break
+		}
+		if(typeof details.custom_name == 'string' && get_translation(assistant_id + "_name").toLowerCase() == details.custom_name.toLowerCase()){
+			existing_assistant_id = assistant_id;
+			//console.log("custom_ai_next: the AI name already exists as a translation: ", details.custom_name, " -> ", assistant_id);
+			break
+		}
+	}
+	for (const [assistant_id, details] of Object.entries(window.assistants)) {
+		if(typeof details.custom_name == 'string' && new_custom_ai_model_name_el.value.toLowerCase() == details.custom_name.toLowerCase()){
+			//console.log("custom_ai_next: the AI custom_name already exists in assistants dict: ", details.custom_name, " -> ", assistant_id);
+			existing_assistant_id = assistant_id;
+			break
+		}
+		if(typeof details.custom_name == 'string' && get_translation(assistant_id + "_name").toLowerCase() == details.custom_name.toLowerCase()){
+			existing_assistant_id = assistant_id;
+			//console.log("custom_ai_next: the AI name already exists as a translation: ", details.custom_name, " -> ", assistant_id);
+			break
+		}
+	}
+	
+	
+	let is_new_ai = false;
+	//console.log("custom_ai_next:  existing_assistant_id: ", existing_assistant_id);
+	
+	// Establish a base assistant dictionary first
+	if(typeof existing_assistant_id != 'string'){
+		//console.log("custom_ai_next: existing_assistant_id was not a string");
+		//console.log("custom_ai_next: window.ai_being_edited: ", window.ai_being_edited);
+		is_new_ai = true;
+		
+		// Creating a brand new AI / Clone
+		existing_assistant_id = 'custom_saved_' + makeid(8) + '_' + new_custom_ai_model_name_el.value.trim().replaceAll(' ','_').replaceAll('.','_');
+		existing_assistant_id = existing_assistant_id.replace(/[^a-zA-Z0-9\_\-]/g,'');
+		//console.log("cleaned up new assistant_id, window.ai_being_edited before: ", existing_assistant_id, window.ai_being_edited);
+		if(typeof window.ai_being_edited != 'string'){
+			
+		}
+		window.ai_being_edited = existing_assistant_id;
+		
+		if(typeof window.assistants[window.ai_being_edited] == 'undefined'){
+			//console.log("custom_ai_next: added empty version of assistant to assistants dict");
+			window.assistants[window.ai_being_edited] = {};
+		}
+		//console.log("custom_ai_next: window.ai_being_edited after: ", window.ai_being_edited);
+		
+		
+		
+		/*
+		if(typeof window.ai_being_edited == 'string' && window.ai_being_edited.length && typeof window.assistants[window.ai_being_edited] != 'undefined'){
+			//console.log("custom_ai_next:  window.ai_being_edited: ", window.ai_being_edited);
+			updated_ai_details = JSON.parse(JSON.stringify(window.assistants[window.ai_being_edited]));
+			
+			if(typeof updated_ai_details['clone_original'] == 'undefined'){
+				updated_ai_details['clone_original'] = window.ai_being_edited;
+			}
+			if(window.ai_being_edited != 'custom_received' && typeof window.settings.assistants[window.ai_being_edited] != 'undefined'){
+				updated_ai_details = {...updated_ai_details, ...window.settings.assistants[window.ai_being_edited]} // use the AI that was being edited as the base for the new AI
+				updated_ai_details['clone'] = true;
+			}
+			if(typeof updated_ai_details['clone'] == 'undefined'){
+				updated_ai_details['clone'] = true;
+			}
+			if(typeof updated_ai_details['clone_original'] == 'undefined'){
+				updated_ai_details['clone_original'] = window.ai_being_edited;
+			}
+		}
+		else{
+		*/
+		if(typeof updated_ai_details.runner != 'string'){
+			
+			// Creating a brand new AI from scratch (not currently using this functionality, as there are other ways to do this)
+			const optimal_assistant_id = pick_optimal_text_ai();
+			//console.log("custom_ai_next: picked this optimal_assistant_id as the basis for the new AI: ", optimal_assistant_id);
+			
+			if(typeof window.assistants[optimal_assistant_id] != 'undefined'){
+				updated_ai_details = JSON.parse(JSON.stringify(window.assistants[optimal_assistant_id]));
+			}
+			
+			if(typeof window.settings.assistants[optimal_assistant_id] != 'undefined'){
+				updated_ai_details = {...updated_ai_details, ...window.settings.assistants[optimal_assistant_id]} // use the AI that was being edited as the base for the new AI
+			}
+			if(typeof updated_ai_details['clone'] == 'undefined'){
+				updated_ai_details['clone'] = true;
+			}
+			if(typeof updated_ai_details['clone_original'] == 'undefined'){
+				updated_ai_details['clone_original'] = optimal_assistant_id;
+			}
+		}
+		
+	}
+	else{
+		// editing an existing AI
+		//console.log("custom_ai_next: editing an existing AI");
+		updated_ai_details = window.assistants[existing_assistant_id];
+		if(typeof window.settings.assistants[existing_assistant_id] != 'undefined'){
+			updated_ai_details = {...updated_ai_details, ...window.settings.assistants[existing_assistant_id]} // The name is the same as an existing AI, so assuming that one is being edited
+		}
+	}
+	
+	// The (new) AI exists now, so set the (new) ID as the one being edited
+	window.ai_being_edited = existing_assistant_id;
+	//console.log("custom_ai_next: window.ai_being_edited is now: ", window.ai_being_edited);
+	
+	// Add the info from the first dialog (name, description, icon)
+	updated_ai_details['custom_name'] = new_custom_ai_model_name_el.value;
+	updated_ai_details['custom_description'] = new_custom_ai_model_description_el.value;
+	
+	let emoji_editor_input_el = document.getElementById('new-custom-ai-model-emoji');
+	let emoji_editor_bg_el = document.getElementById('new-custom-ai-model-emoji_bg');
+	if(emoji_editor_input_el){
+		if(typeof emoji_editor_input_el.textContent == 'string' && emoji_editor_input_el.textContent != ''){
+			updated_ai_details['emoji'] = emoji_editor_input_el.textContent.substr(0,4);
+		}
+		if(emoji_editor_bg_el){
+			updated_ai_details['emoji_bg'] = emoji_editor_bg_el.value;
+		}
+	}
+	
+	//console.log("custom_ai_next: about to save this assistant: ", existing_assistant_id, updated_ai_details);
+	if(save_edited_ai(updated_ai_details,existing_assistant_id)){
+		if(is_new_ai){
+			//flash_message(get_translation('A_new_AI_has_been_created')); // can't be seen behind dialog blur
+			switch_assistant(existing_assistant_id);
+		}
+	}
+	else{
+		flash_message(get_translation('An_error_occured'),2000,'fail');
+	}
+	
+	// TODO: Why bring this over to the next dialog manually? Should the next dialog load based on the newly created assistant? Then again, it might come with some existing system_prompt or second_prompt
+	if(emoji_editor_input_el){
+		share_prompt_assistant_emoji_el.textContent = emoji_editor_input_el.textContent;
+	}
+	if(emoji_editor_bg_el){
+		share_prompt_assistant_emoji_el.style['background-color'] = emoji_editor_bg_el.value;
+	}
+	
+	share_prompt_assistant_name_el.textContent = new_custom_ai_model_name_el.value;
+	
+	let runner = get_task_runner({'assistant':existing_assistant_id});
+	share_prompt_dialog_el.classList.add('runner-' + runner.replaceAll(' ','_'));
+	
+	new_custom_ai_dialog_el.close();
+	
+	share_prompt_dialog_el.showModal();
+	
+	generate_ui(true);
+}
+
+
+
+
+add_custom_assistant_button_el.addEventListener("click", (event) => {
+	event.stopPropagation();
+	//console.log("clicked on add-custom-assistant-button");
+	window.ai_being_edited = null;
+	start_making_custom_ai();
+});
+
+
+
+function start_making_custom_ai(prefill=null,assistant_id=null){
+	//console.log("in start_making_custom_ai.  prefill,assistant_id: ", prefill,assistant_id);
+	
+	// clean up first
+	model_info_container_el.innerHTML = ''; // avoid having two emoji editors open at the same time
+	share_prompt_assistant_emoji_el.innerHTML = '';
+	share_prompt_input_el.value = '';
+	
+	if(typeof prefill == 'object' && prefill != null){
+		for (const [prefill_key, prefill_value] of Object.entries(prefill)){
+			//console.log("start_making_custom_ai:  prefill_key, prefill_value: ", prefill_key, prefill_value);
+			let prefill_el = document.getElementById('new-custom-ai-model-' + prefill_key);
+			if(prefill_el){
+				try{
+					prefill_el.value = prefill_value;
+				}
+				catch(err){
+					console.error("start_making_custom_ai: caught error going over prefill values (not an input element?): ", err);
+				}
+			}
+			prefill_el = document.getElementById('share-prompt-model-' + prefill_key);
+			if(prefill_el){
+				try{
+					prefill_el.value = prefill_value;
+				}
+				catch(err){
+					console.error("start_making_custom_ai: caught error going over prefill values (not an input element?): ", err);
+				}
+			}
+			
+		}
+		
+	}
+	
+	add_body_class('busy-editing-assistant');
+	
+	let emoji_editor_el = null;
+	/*
+	if(typeof assistant_id == 'string' && assistant_id.length && (assistant_id.startsWith('custom_saved') || assistant_id == 'custom_received')){
+		//console.log("start_making_custom_ai: assistant_id was provided, creating emoji editor for: ", assistant_id);
+		emoji_editor_el = create_emoji_editor(assistant_id);
+	}
+	else 
+	*/
+	
+	if(typeof prefill == 'object' && prefill != null && typeof prefill.assistant_id == 'string' && prefill.assistant_id.length && prefill.assistant_id.startsWith('custom_saved')){
+		//console.log("start_making_custom_ai: assistant_id was provided in prefill dictionary, creating emoji editor for:  prefill.assistant_id: ", prefill.assistant_id);
+		emoji_editor_el = create_emoji_editor(prefill.assistant_id);
+	}
+	else{
+		//console.log("start_making_custom_ai: creating emoji editor for a brand new AI");
+		emoji_editor_el = create_emoji_editor();
+	}
+	new_custom_ai_model_emoji_editor_container_el.innerHTML = '';
+	if(emoji_editor_el){
+		new_custom_ai_model_emoji_editor_container_el.appendChild(emoji_editor_el);
+	}
+	else{
+		console.error("failed to create emoji editor element?");
+	}
+	
+	
+	//create_share_prompt_link(true); // true == initial creation of share dialog, which populates the textareas for
+	//share_prompt_dialog_el.showModal();
+	new_custom_ai_dialog_el.showModal();
+}
+
+
+
+
+
+
+function save_edited_ai(details=null,assistant_id=null){
+	if(window.settings.settings_complexity == 'developer'){
+		console.warn("in save_edited_ai:  details, assistant_id: ", details, assistant_id);
+	}
+	
+	if(typeof details != 'object' || details == null){
+		console.error("save_edited_ai: no valid details to save provided");
+		return false
+	}
+	if(typeof assistant_id != 'string' && typeof window.ai_being_edited == 'string'){
+		console.error("save_edited_ai:  no assistant_id provided, falling back to window.ai_being_edited: ", window.ai_being_edited);
+		assistant_id = window.ai_being_edited;
+	}
+	//console.log("in save_edited_ai.  assistant_id,details: ", assistant_id, details);
+	if(typeof assistant_id == 'string'){
+		if(typeof window.settings.assistants[assistant_id] == 'undefined'){
+			console.warn("save_edited_ai:  had to create empty dict in window.settings.assistants first.  assistant_id: ", assistant_id);
+			window.settings.assistants[assistant_id] = {};
+			really_generate_ui(true); // this should generate the missing chat pane
+		}
+		window.settings.assistants[assistant_id] = {...window.settings.assistants[assistant_id], ...details};
+		save_settings();
+		
+		if(assistant_id != window.settings.assistant){
+			switch_assistant(assistant_id,true);
+		}
+		
+		
+		//window.ai_being_edited = null;
+		//console.log("save_edited_ai:  OK, SAVED");
+		return true
+	}
+	else{
+		console.error("save_edited_ai: no valid assistant_id, cannot save. details: ", details);
+	}
+	//window.ai_being_edited = null;
+	return false
 }
 
 
@@ -9285,17 +10711,15 @@ function do_clone_prefill(assistant_id,pre_prefill=null){
 
 
 
-
-
-
-
 function show_models_info(show_list=true){
-	console.log("in show_models_info. show_list: ", show_list);
+	//console.log("in show_models_info. show_list: ", show_list);
 	
+	window.ai_being_edited = null;
+	window.clone_prefill = null;
 	
 	check_cache()
 	.then(() => {
-		console.log("show_models_info: called check_cache.  window.cached_urls.length: ", window.cached_urls.length);
+		//console.log("show_models_info: called check_cache.  window.cached_urls.length: ", window.cached_urls.length);
 		// model info content
 		let model_info_content_el = document.createElement('div');
 		model_info_content_el.setAttribute('id','model-info-content');
@@ -9560,8 +10984,6 @@ function show_models_info(show_list=true){
 			total_disk_space_used_el.innerHTML = '<span class="ai-model-size-number">' + total_size + '</span><span class="ai-model-size-gb">GB</span>';
 
 			
-			
-			
 			model_info_content_el.appendChild(models_list_el);
 		
 			
@@ -9683,14 +11105,18 @@ function create_custom_ai(custom_settings={},assistant_id=null){
 }
 
 
-
+if(navigator.onLine === false){
+	window.internet = false;
+	flash_message(get_translation("Running_in_offline_mode"),2000);  // ,'info'
+}
+/*
 window.service_worker_offline = () => {
 	console.warn("in service_worker_offline");
 	window.internet = false;
 	flash_message(get_translation("Running_in_offline_mode"),2000);  // ,'info'
 	//flash_message(get_translation("A_model_has_to_be_downloaded_from_the_internet_but_there_is_no_internet_connection"),4000,'error');
 };
-
+*/
 
 
 //
@@ -9711,13 +11137,53 @@ bar_toggle_italic_el.addEventListener("click", (event) => {
 
 
 
+window.busy_loading_codemirror = false;
+window.codemirror_scripts_loaded = false;
+async function editor_set_value(text){
+	if(window.codemirror_scripts_loaded == false){
+		//console.log("editor_set_value: calling load_codemirror first. text: ", text);
+		await load_codemirror();
+		await delay(500);
+	}
+	
+	if(typeof really_editor_set_value != 'undefined'){
+		really_editor_set_value(text);
+	}
+	else{
+		console.error("editor_set_value called while still busy loading codemirror. provided text: ", text);
+		//flash_message(get_translation('An_error_occured'),3000,'fail');
+	}
+}
 
 
+async function load_codemirror(){
+	if(window.busy_loading_codemirror == false){
+		window.busy_loading_codemirror = true;
+		//console.log("in load_codemirror");
+		//await add_script('./p_docs.js');
+		await add_script('./pjs/codemirror.js');
+		await delay(100);
+		await add_script('./pjs/codemirror-indentation-markers.js');
+		await delay(100);
+		await add_script('./pjs/editor.js');
+		await delay(100);
+		//console.log("codemirror loaded");
+		window.codemirror_scripts_loaded = true;
+	}
+}
 
 
-
-
-
-
-
-
+window.busy_loading_runners = false;
+async function load_runners(){
+	if(window.busy_loading_runners == false){
+		window.busy_loading_runners = true;
+		//console.log("in load_runners");
+		await add_script('./js/eld.M60.min.js');
+		await add_script('./llama_cpp.js', true);
+		await add_script('./web_llm_module.js', true);
+		await add_script('./js/chrono.js');
+		
+		//console.log("runners loaded");
+		//window.runners_loaded = true;
+	}
+}

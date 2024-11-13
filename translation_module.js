@@ -945,13 +945,13 @@ let translation_previous_percentage = 2;
 let last_time_progress_updated = 0;
 
 async function create_translation_worker(){
-	console.log("in create_translation_worker");
+	//console.log("in create_translation_worker");
 	
 	if(window.translation_worker != null){
 		console.warn("create_translation_worker: window.translation_worker wasn't null initially");
 	}
 	else{
-		console.log("create_translation_worker: OK, indow.translation_worker was initially null");
+		//console.log("create_translation_worker: OK, indow.translation_worker was initially null");
 	}
 	
 	return new Promise((resolve, reject) => {
@@ -995,7 +995,7 @@ async function create_translation_worker(){
 								}
 							}
 							if(total_bytes > 0){
-								console.log("translation worker sent download progress message, and calculated total_bytes is now: ", total_bytes);
+								//console.log("translation worker sent download progress message, and calculated total_bytes is now: ", total_bytes);
 								let download_size_el = document.querySelector('.message.pane-translation.download-progress-chat-message .download-message-footer .ai-model-size');
 								if(download_size_el){
 									//console.log("total_bytes: ", total_bytes);
@@ -1062,7 +1062,7 @@ async function create_translation_worker(){
 				
 				}
 				else if(e.data.status == 'exists'){
-					console.log("translation worker sent exists message");
+					//console.log("translation worker sent exists message");
 					window.translation_worker_exists = true;
 					resolve(true);
 				}
@@ -1122,13 +1122,13 @@ async function create_translation_worker(){
 				}
 			
 				else if(e.data.status == 'update'){
-					console.log("translation worker sent update: ", e.data);
+					//console.log("translation worker sent update: ", e.data);
 					if(typeof e.data.data == 'object' && e.data.data != null && e.data.data.length){
 						set_chat_status(e.data.data[0],2);
 					}
 				}
 				else if(e.data.status == 'translation_progress'){
-					console.log("translation worker sent translation progress update: ", e.data);
+					//console.log("translation worker sent translation progress update: ", e.data);
 					if(typeof e.data.task != 'undefined' && typeof e.data.task.index == 'number' && typeof e.data.sentences_count == 'number' && typeof e.data.sentences_total == 'number' && typeof e.data.sentence == 'string'){
 						let document_translation_progress_bar_el = document.getElementById('translation-progress-bar' + e.data.task.index);
 						if(document_translation_progress_bar_el){
@@ -1176,7 +1176,7 @@ async function create_translation_worker(){
 				else if(e.data.status == 'complete' || e.data.status == 'translation_complete' || e.data.status == 'translation_interrupted'){
 					window.translation_worker_busy = false;
 					set_chat_status('',2);
-					//console.log('GOT TRANSLATION COMPLETE.  e.data: ', e.data);
+					//console.log('GOT TRANSLATION COMPLETE.  e.data.status, e.data: ', e.data.status, e.data);
 					//console.log('GOT TRANSLATION COMPLETE.  e.data.translation: ', e.data.translation);
 					//console.log('GOT TRANSLATION COMPLETE.  e.data.task: ', e.data.task);
 				
@@ -1240,13 +1240,6 @@ async function create_translation_worker(){
 				}
 			}
 			
-			if(window.enable_microphone == false){
-				//console.log("translation worker returned audio file, but in the meantime enable_microphone was disabled. Throwing away the data.");
-			}
-			else{
-			
-				
-			}
 	
 		});
 
@@ -1280,7 +1273,7 @@ async function create_translation_worker(){
 
 
 window.do_translation = async function (task){ // translation_queue_item
-	console.log("in do_translation. Task: ", task);
+	//console.log("in do_translation. Task: ", task);
 	
 	//await caches.open(window.cache_name).then((my_cache) => my_cache.add(e.data.file))
 	//await create_translation_worker();
@@ -1303,7 +1296,7 @@ window.do_translation = async function (task){ // translation_queue_item
 		
 		
 		if(window.translation_worker == null){
-			console.log("do_translation: calling create_translation_worker");
+			//console.log("do_translation: calling create_translation_worker");
 			create_translation_worker()
 			.then((value) => {
 				//console.log("do_translation: .then: create_translation_worker should be done now. value: ",value);
@@ -1321,13 +1314,13 @@ window.do_translation = async function (task){ // translation_queue_item
 						'task':task
 					})
 					.then((response) => {
-						console.error("\n\nHURRAY\n\nin promiseWorker then!\n\n");
+						//console.error("\n\nOK\n\ndo_translation: in promiseWorker then\n\n");
 						//console.log("promise worker response: ", response);
 						resolve(response);
 						return response;
 					})
 					.catch((err) => {
-						console.error("promise translation worker: received error which was caught in worker: ", err);
+						console.error("do_translation: translation promise worker: received error which was caught in worker: ", err);
 						window.clean_up_dead_task(task);
 						reject(false);
 						return false;
@@ -1337,7 +1330,7 @@ window.do_translation = async function (task){ // translation_queue_item
 			
 			})
 			.then((value) => {
-				console.log("do_translation: start promise worker: final then: value: ", value);
+				//console.log("do_translation: start promise worker: final then: value: ", value);
 				resolve(value);
 			})
 			.catch((err) => {
@@ -1345,19 +1338,19 @@ window.do_translation = async function (task){ // translation_queue_item
 			})
 		}
 		else{
-			console.log("do_translation: worker already existed. doing postMessage. sending:  task,translation_worker: ", task, window.translation_worker);
+			//console.log("do_translation: worker already existed. doing postMessage. sending:  task,translation_worker: ", task, window.translation_worker);
 			
 			window.translation_worker.postMessage({
 				'task':task
 			})
 			.then((response) => {
-				console.error("\n\nHURRAY\n\nin translation promiseWorker.then!\n\n");
+				console.error("\n\nOK\n\ndo_translation: in translation promiseWorker.then\n\n");
 				//console.log("translation promise worker response: ", response);
 				resolve(response);
 				return response;
 			})
 			.catch((err) => {
-				console.error("promise translation worker: received error which was caught in worker: ", err);
+				console.error("do_translation: promise translation worker: received error which was caught in worker: ", err);
 				reject(false);
 				return false;
 			})
@@ -1371,7 +1364,7 @@ window.do_translation = async function (task){ // translation_queue_item
 
 
 window.interrupt_translation = async function (){
-	console.log("in interrupt_translation");
+	//console.log("in interrupt_translation");
 	if(window.real_translation_worker != null){
 		window.real_translation_worker.postMessage({'action':interrupt})
 	}
