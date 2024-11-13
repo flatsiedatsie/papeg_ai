@@ -76,7 +76,6 @@ export interface SamplingConfig {
     n_prev?: number;
     n_probs?: number;
     min_p?: number;
-    tfs_z?: number;
     typical_p?: number;
     logit_bias?: {
         token: number;
@@ -115,6 +114,23 @@ export interface ContextOptions {
      */
     embeddings: boolean;
 }
+export interface LoadedContextInfo {
+    n_vocab: number;
+    n_ctx: number;
+    n_batch: number;
+    n_ubatch: number;
+    n_ctx_train: number;
+    n_embd: number;
+    n_layer: number;
+    metadata: Record<string, string>;
+    token_bos: number;
+    token_eos: number;
+    token_eot: number;
+    has_encoder: boolean;
+    token_decoder_start: number;
+    add_bos_token: boolean;
+    add_eos_token: boolean;
+}
 /**
  * Logger preset with debug messages suppressed
  */
@@ -140,6 +156,11 @@ export declare const LoggerWithoutDebug: {
     trace(...data: any[]): void;
     warn(...data: any[]): void;
 };
+export type WllamaErrorType = 'model_not_loaded' | 'download_error' | 'load_error' | 'kv_cache_full' | 'unknown_error' | 'inference_error';
+export declare class WllamaError extends Error {
+    type: WllamaErrorType;
+    constructor(message: string, type?: WllamaErrorType);
+}
 export declare class Wllama {
     cacheManager: CacheManager;
     private proxy;
@@ -147,6 +168,7 @@ export declare class Wllama {
     private pathConfig;
     private useMultiThread;
     private useEmbeddings;
+    private loadedContextInfo;
     private bosToken;
     private eosToken;
     private eotToken;
@@ -157,6 +179,7 @@ export declare class Wllama {
     private samplingConfig;
     private hasEncoder;
     private decoderStartToken;
+    private nCachedTokens;
     constructor(pathConfig: AssetsPathConfig, wllamaConfig?: WllamaConfig);
     private logger;
     private checkModelLoaded;
@@ -275,6 +298,7 @@ export declare class Wllama {
      * @param config LoadModelConfig
      */
     loadModel(ggufBlobs: Blob[], config?: LoadModelConfig): Promise<void>;
+    getLoadedContextInfo(): LoadedContextInfo;
     /**
      * Calculate embedding vector for a given text.
      * By default, BOS and EOS tokens will be added automatically. You can use the "skipBOS" and "skipEOS" option to disable it.
@@ -344,6 +368,7 @@ export declare class Wllama {
     encode(tokens: number[], options?: Record<never, never>): Promise<{
         nPast: number;
     }>;
+    private breakTokensIntoBatches;
     /**
      * Sample a new token (remember to samplingInit() at least once before calling this function)
      * @returns the token ID and its detokenized value (which maybe an unfinished unicode)

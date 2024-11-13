@@ -9,6 +9,13 @@ export const LoggerWithoutDebug = {
     ...console,
     debug: () => { },
 };
+export class WllamaError extends Error {
+    type;
+    constructor(message, type = 'unknown_error') {
+        super(message);
+        this.type = type;
+    }
+}
 export class Wllama {
     // The CacheManager singleton, can be accessed by user
     cacheManager;
@@ -18,6 +25,7 @@ export class Wllama {
     useMultiThread = false;
     useEmbeddings = false;
     // available when loaded
+    loadedContextInfo = null;
     bosToken = -1;
     eosToken = -1;
     eotToken = -1;
@@ -28,10 +36,11 @@ export class Wllama {
     samplingConfig = {};
     hasEncoder = false;
     decoderStartToken = -1;
+    nCachedTokens = 0;
     constructor(pathConfig, wllamaConfig = {}) {
         checkEnvironmentCompatible();
         if (!pathConfig)
-            throw new Error('AssetsPathConfig is required');
+            throw new WllamaError('AssetsPathConfig is required');
         this.pathConfig = pathConfig;
         this.config = wllamaConfig;
         this.cacheManager = wllamaConfig.cacheManager ?? new CacheManager();
@@ -41,7 +50,7 @@ export class Wllama {
     }
     checkModelLoaded() {
         if (!this.isModelLoaded()) {
-            throw new Error('loadModel() is not yet called');
+            throw new WllamaError('loadModel() is not yet called', 'model_not_loaded');
         }
     }
     /**
@@ -185,10 +194,10 @@ export class Wllama {
      */
     async downloadModel(modelUrl, config = {}) {
         if (modelUrl.length === 0) {
-            throw new Error('modelUrl must be an URL or a list of URLs (in the correct order)');
+            throw new WllamaError('modelUrl must be an URL or a list of URLs (in the correct order)', 'download_error');
         }
         if (config.useCache === false) {
-            throw new Error('useCache must not be false');
+            throw new WllamaError('useCache must not be false', 'download_error');
         }
         const multiDownloads = new MultiDownloads(this.logger(), this.parseModelUrl(modelUrl), config.parallelDownloads ?? 3, this.cacheManager, {
             progressCallback: config.progressCallback,
@@ -215,7 +224,7 @@ export class Wllama {
      */
     async loadModelFromUrl(modelUrl, config = {}) {
         if (modelUrl.length === 0) {
-            throw new Error('modelUrl must be an URL or a list of URLs (in the correct order)');
+            throw new WllamaError('modelUrl must be an URL or a list of URLs (in the correct order)', 'load_error');
         }
         const skipCache = config.useCache === false;
         const multiDownloads = new MultiDownloads(this.logger(), this.parseModelUrl(modelUrl), config.parallelDownloads ?? 3, this.cacheManager, {
@@ -237,12 +246,12 @@ export class Wllama {
     async loadModel(ggufBlobs, config = {}) {
         const blobs = [...ggufBlobs]; // copy array
         if (blobs.some((b) => b.size === 0)) {
-            throw new Error('Input model (or splits) must be non-empty Blob or File');
+            throw new WllamaError('Input model (or splits) must be non-empty Blob or File', 'load_error');
         }
         maybeSortFileByName(blobs);
         const hasMultipleBuffers = blobs.length > 1;
         if (this.proxy) {
-            throw new Error('Module is already initialized');
+            throw new WllamaError('Module is already initialized', 'load_error');
         }
         // detect if we can use multi-thread
         const supportMultiThread = await isSupportMultiThread();
@@ -280,7 +289,7 @@ export class Wllama {
         // run it
         const startResult = await this.proxy.wllamaStart();
         if (!startResult.success) {
-            throw new Error(`Error while calling start function, result = ${startResult}`);
+            throw new WllamaError(`Error while calling start function, result = ${startResult}`);
         }
         // load the model
         const loadResult = await this.proxy.wllamaAction('load', {
@@ -312,7 +321,16 @@ export class Wllama {
         this.addBosToken = loadResult.add_bos_token;
         this.addEosToken = loadResult.add_eos_token;
         this.chatTemplate = loadResult.metadata['tokenizer.chat_template'];
+        this.loadedContextInfo = loadResult;
         this.logger().debug({ loadResult });
+    }
+    getLoadedContextInfo() {
+        this.checkModelLoaded();
+        if (!this.loadedContextInfo) {
+            throw new WllamaError('Loaded context info is not available');
+        }
+        // copy object
+        return { ...this.loadedContextInfo };
     }
     //////////////////////////////////////////////
     // High level API
@@ -419,7 +437,7 @@ export class Wllama {
             tokens: pastTokens,
         });
         if (!result.success) {
-            throw new Error('Failed to initialize sampling');
+            throw new WllamaError('Failed to initialize sampling');
         }
     }
     /**
@@ -478,28 +496,34 @@ export class Wllama {
     async decode(tokens, options) {
         this.checkModelLoaded();
         if (this.useEmbeddings) {
-            throw new Error('embeddings is enabled. Use wllama.setOptions({ embeddings: false }) to disable it.');
+            throw new WllamaError('embeddings is enabled. Use wllama.setOptions({ embeddings: false }) to disable it.');
         }
         if (tokens.length === 0) {
             // do not call llama_decode if list of tokens is empty
             return {
-                nPast: (await this.getCachedTokens()).length,
+                nPast: this.nCachedTokens,
             };
         }
-        const req = { tokens };
-        if (options.skipLogits) {
-            req.skip_logits = true;
+        if (this.nCachedTokens + tokens.length > this.loadedContextInfo.n_ctx) {
+            throw new WllamaError('Running out of context cache. Please increase n_ctx when loading the model', 'kv_cache_full');
         }
-        const result = await this.proxy.wllamaAction('decode', req);
-        if (result.error) {
-            throw new Error(result.error);
+        const batches = this.breakTokensIntoBatches(tokens, this.loadedContextInfo.n_batch);
+        let result;
+        for (let i = 0; i < batches.length; i++) {
+            const isNotLast = batches.length > 1 && i < batches.length - 1;
+            result = await this.proxy.wllamaAction('decode', {
+                tokens: batches[i],
+                skip_logits: options.skipLogits || isNotLast,
+            });
+            if (result.error) {
+                throw new WllamaError(result.error);
+            }
+            else if (!result.success) {
+                throw new WllamaError('Cannot encode, unknown error');
+            }
         }
-        else if (!result.success) {
-            throw new Error('Cannot decode, unknown error');
-        }
-        else {
-            return { nPast: result.n_past };
-        }
+        this.nCachedTokens = result.n_past;
+        return { nPast: result.n_past };
     }
     /**
      * Run llama_encode()
@@ -512,28 +536,40 @@ export class Wllama {
     options) {
         this.checkModelLoaded();
         if (!this.hasEncoder) {
-            throw new Error('This model does not use encoder-decoder architecture.');
+            throw new WllamaError('This model does not use encoder-decoder architecture.', 'inference_error');
         }
         if (this.useEmbeddings) {
-            throw new Error('embeddings is enabled. Use wllama.setOptions({ embeddings: false }) to disable it.');
+            throw new WllamaError('embeddings is enabled. Use wllama.setOptions({ embeddings: false }) to disable it.', 'inference_error');
         }
         if (tokens.length === 0) {
             // do not call llama_encode if list of tokens is empty
             return {
-                nPast: (await this.getCachedTokens()).length,
+                nPast: this.nCachedTokens,
             };
         }
-        const req = { tokens };
-        const result = await this.proxy.wllamaAction('encode', req);
-        if (result.error) {
-            throw new Error(result.error);
+        if (this.nCachedTokens + tokens.length > this.loadedContextInfo.n_ctx) {
+            throw new WllamaError('Running out of context cache. Please increase n_ctx when loading the model', 'kv_cache_full');
         }
-        else if (!result.success) {
-            throw new Error('Cannot encode, unknown error');
+        const batches = this.breakTokensIntoBatches(tokens, this.loadedContextInfo.n_batch);
+        let result;
+        for (let i = 0; i < batches.length; i++) {
+            result = await this.proxy.wllamaAction('encode', { tokens: batches[i] });
+            if (result.error) {
+                throw new WllamaError(result.error);
+            }
+            else if (!result.success) {
+                throw new WllamaError('Cannot encode, unknown error');
+            }
         }
-        else {
-            return { nPast: result.n_past };
+        this.nCachedTokens = result.n_past;
+        return { nPast: result.n_past };
+    }
+    breakTokensIntoBatches(tokens, maxBatchSize) {
+        const batches = [];
+        for (let i = 0; i < tokens.length; i += maxBatchSize) {
+            batches.push(tokens.slice(i, i + maxBatchSize));
         }
+        return batches;
     }
     /**
      * Sample a new token (remember to samplingInit() at least once before calling this function)
@@ -555,7 +591,7 @@ export class Wllama {
         this.checkModelLoaded();
         const result = await this.proxy.wllamaAction('sampling_accept', { tokens });
         if (!result.success) {
-            throw new Error('samplingAccept unknown error');
+            throw new WllamaError('samplingAccept unknown error');
         }
     }
     /**
@@ -576,14 +612,26 @@ export class Wllama {
     async embeddings(tokens) {
         this.checkModelLoaded();
         if (!this.useEmbeddings) {
-            throw new Error('embeddings is disabled. Use wllama.setOptions({ embeddings: true }) to enable it.');
+            throw new WllamaError('embeddings is disabled. Use wllama.setOptions({ embeddings: true }) to enable it.', 'inference_error');
+        }
+        if (this.nCachedTokens > 0) {
+            this.logger().warn('Embeddings: KV cache is not empty, this may produce incorrect results');
+        }
+        if (this.nCachedTokens + tokens.length > this.loadedContextInfo.n_ctx) {
+            throw new WllamaError('Running out of context cache. Please increase n_ctx when loading the model', 'kv_cache_full');
+        }
+        if (tokens.length > this.loadedContextInfo.n_batch) {
+            throw new WllamaError('Embedding tokens does not fit into batch. Please increase n_batch when loading the model', 'inference_error');
+        }
+        if (tokens.length > this.loadedContextInfo.n_ubatch) {
+            throw new WllamaError('Embedding tokens does not fit into physical batch. Please increase n_ubatch when loading the model', 'inference_error');
         }
         const result = await this.proxy.wllamaAction('embeddings', { tokens });
         if (result.error) {
-            throw new Error(result.error);
+            throw new WllamaError(result.error);
         }
         else if (!result.success) {
-            throw new Error('embeddings unknown error');
+            throw new WllamaError('embeddings unknown error');
         }
         else {
             return result.embeddings;
@@ -602,8 +650,9 @@ export class Wllama {
             n_discard: nDiscard,
         });
         if (!result.success) {
-            throw new Error('kvRemove unknown error');
+            throw new WllamaError('kvRemove unknown error');
         }
+        this.nCachedTokens -= nDiscard;
     }
     /**
      * Clear all tokens in KV cache
@@ -612,8 +661,9 @@ export class Wllama {
         this.checkModelLoaded();
         const result = await this.proxy.wllamaAction('kv_clear', {});
         if (!result.success) {
-            throw new Error('kvClear unknown error');
+            throw new WllamaError('kvClear unknown error');
         }
+        this.nCachedTokens = 0;
     }
     /**
      * Save session to file (virtual file system)
@@ -640,11 +690,13 @@ export class Wllama {
             session_path: filePath,
         });
         if (result.error) {
-            throw new Error(result.error);
+            throw new WllamaError(result.error);
         }
         else if (!result.success) {
-            throw new Error('sessionLoad unknown error');
+            throw new WllamaError('sessionLoad unknown error');
         }
+        const cachedTokens = await this.getCachedTokens();
+        this.nCachedTokens = cachedTokens.length;
     }
     /**
      * Set options for underlaying llama_context
