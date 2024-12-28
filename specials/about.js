@@ -37,7 +37,7 @@ A. Papeg.ai is free for personal use and for use in education and by non-profit 
 A. Yes! Papeg.ai is so privacy friendly that it can be safely used in education, hospitals, law offices and governmental facilities. Any data you work on remains on your own device.
 
 *Q. How secure is Papeg.ai?*
-A. Papeg.ai has a very small 'attack surface'. Since there is no central data storage or processing, there also isn't any place to break in and steal your data. Since there is no login system, there is no risk of leaking paswwords.
+A. Papeg.ai has a very small 'attack surface'. Since there is no central data storage or processing, there also isn't any place to break in and steal your data. Since there is no login system, there is no risk of leaking passwords.
 
 *Q. How long did it take to build?*
 A. 6 months, from february to september 2024.
